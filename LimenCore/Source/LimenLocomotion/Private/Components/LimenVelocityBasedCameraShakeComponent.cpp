@@ -4,8 +4,8 @@
 #include "Components/LimenVelocityBasedCameraShakeComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
-#include "PerlinNoiseCameraShakePattern.h"
-#include "WaveOscillatorCameraShakePattern.h"
+#include "Shakes/PerlinNoiseCameraShakePattern.h"
+#include "Shakes/WaveOscillatorCameraShakePattern.h"
 
 
 ULimenVelocityBasedCameraShakeComponent::ULimenVelocityBasedCameraShakeComponent()	
@@ -36,7 +36,7 @@ void ULimenVelocityBasedCameraShakeComponent::BeginPlay()
 	{
 		const APawn* OwnerPawn = Cast<APawn>(GetOwner());
 		const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
-		if (PlayerController)
+		if (PlayerController && !CameraShakeClass.IsNull())
 		{
 			CameraShake = PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass.LoadSynchronous(), 1.f, ECameraShakePlaySpace::CameraLocal);
 			PerlinNoisePattern = Cast<UPerlinNoiseCameraShakePattern>(CameraShake->GetRootShakePattern());
@@ -55,7 +55,7 @@ void ULimenVelocityBasedCameraShakeComponent::TickComponent(float DeltaTime, ELe
 	
 	if (CameraShake != nullptr && IsActive())
 	{
-		// If the speed is 0, set the scale to 1 so it doesn't completely stop
+		// If the speed is 0, set the scale to 1, so it doesn't completely stop
 		if (PerlinNoisePattern != nullptr)
 		{
 			PerlinNoisePattern->LocationAmplitudeMultiplier = GetSpeed() * MaxLocationAmplitude / MaxSpeed + 1;
@@ -87,8 +87,7 @@ void ULimenVelocityBasedCameraShakeComponent::Activate(bool bReset)
 	Super::Activate(bReset);
 
 	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
-	if (PlayerController)
+	if (const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController()))
 	{
 		CameraShake = PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass.LoadSynchronous(), 1.f, ECameraShakePlaySpace::CameraLocal);
 		PerlinNoisePattern = Cast<UPerlinNoiseCameraShakePattern>(CameraShake->GetRootShakePattern());

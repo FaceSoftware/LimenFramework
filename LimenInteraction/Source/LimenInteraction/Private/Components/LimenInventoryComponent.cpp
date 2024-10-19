@@ -68,10 +68,12 @@ bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 {
 	check(NewItem != nullptr);
 
-	if (!HasCapacity())
+	if (!HasCapacity() || ContainsItemInstance(NewItem))
 	{
 		return false;
 	}
+
+	NewItem->SetOwner(GetOwner());
 	
 	if (IsFirstOfType(NewItem->GetClass()))
 	{
@@ -79,13 +81,13 @@ bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 		Registry.ItemClass = NewItem->GetClass();
 		Registry.ItemInstances.Push(NewItem);
 		ItemRegistries.Push(Registry);
-		OnItemAdded.Broadcast(NewItem->GetClass());
+		OnItemAdded.Broadcast(NewItem);
 	}
 	else
 	{
 		FItemRegistry* Registry = FindItemRegistry(NewItem->GetClass());
 		Registry->ItemInstances.Push(NewItem);
-		OnItemUpdated.Broadcast(NewItem->GetClass());
+		OnItemUpdated.Broadcast(NewItem);
 	}
 	
 	OnInventoryUpdated.Broadcast(this);
@@ -111,7 +113,7 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALim
 		
 		if (Registry->ItemInstances.Num() == 0)
 		{
-			OnItemRemoved.Broadcast(TempItem->GetClass());
+			OnItemRemoved.Broadcast(TempItem);
 			return OutItems;
 		}
 	}
@@ -226,6 +228,26 @@ TMap<TSubclassOf<ALimenItemBase>, int32> ULimenInventoryComponent::PeekItems(con
 	return Out;
 }
 
+bool ULimenInventoryComponent::ContainsItemInstance(const ALimenItemBase* Item) const
+{
+	check(Item);
+	const FItemRegistry* Registry = FindItemRegistry(Item->GetClass());
+	if (Registry == nullptr || Registry->ItemInstances.IsEmpty())
+	{
+		return false;
+	}
+
+	for (ALimenItemBase* Instance : Registry->ItemInstances)
+	{
+		if (Instance == Item)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 int32 ULimenInventoryComponent::GetItemQuantity(const TSubclassOf<ALimenItemBase>& ItemClass) const
 {
 	if (ItemClass == nullptr)
@@ -301,6 +323,19 @@ void ULimenInventoryComponent::UpdateInventoryLoad()
 FItemRegistry* ULimenInventoryComponent::FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass)
 {
 	for (FItemRegistry& Entry : ItemRegistries)
+	{
+		if (ItemClass->GetPathName().Compare(Entry.ItemClass->GetPathName()) == 0)
+		{
+			return &Entry;
+		}
+	}
+
+	return nullptr;
+}
+
+const FItemRegistry* ULimenInventoryComponent::FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass) const
+{
+	for (const FItemRegistry& Entry : ItemRegistries)
 	{
 		if (ItemClass->GetPathName().Compare(Entry.ItemClass->GetPathName()) == 0)
 		{

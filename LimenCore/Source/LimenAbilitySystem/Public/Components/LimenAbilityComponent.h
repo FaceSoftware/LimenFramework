@@ -17,10 +17,11 @@ class LIMENABILITYSYSTEM_API ULimenAbilityComponent : public UActorComponent
 
 public:
 	explicit ULimenAbilityComponent(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
+	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	void LoadAbilities(AActor* Owner);
-	void LoadAttributes(AActor* Owner);
+	void LoadAbilities();
+	void LoadAttributes();
 	void AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass);
 	void AddAttribute(const TSubclassOf<ULimenAttributeBase>& AttributeClass);
 

@@ -91,8 +91,8 @@ public:
 	float SafeModifyValueBy(const float Value);
 
 	/**
-	 * @brief Modifies the current value by a specific percentage (negative percentages would decrement the attribute).
-	 * @param Percent The percentage to modify by.
+	 * @brief Modifies the current value by a specific percentage.
+	 * @param Percent The percentage to modify by. If > 1 will increment the attribute or if < 1 will decrement.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
 	void ModifyValuePercentageBy(const float Percent);

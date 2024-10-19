@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "LimenGameModeBase.generated.h"
 
+
+class ALimenGameStateBase;
 class ALimenGameState;
 class ALimenGameplayManager;
 class ALimenBasePlayerController;
@@ -21,7 +23,7 @@ public:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
 
-	ALimenGameState* GetLimenGameState();
+	ALimenGameStateBase* GetLimenGameState();
 	
 protected:
 
@@ -32,7 +34,7 @@ private:
 	TArray<TObjectPtr<ALimenGameplayManager>> ManagersList;
 
 	UPROPERTY()
-	TObjectPtr<ALimenGameState> LimenGameState;
+	TObjectPtr<ALimenGameStateBase> LimenGameState;
 	
 	virtual void SpawnManagers();
 };

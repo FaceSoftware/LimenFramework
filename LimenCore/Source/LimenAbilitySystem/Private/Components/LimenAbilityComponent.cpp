@@ -15,6 +15,14 @@ ULimenAbilityComponent::ULimenAbilityComponent(const FObjectInitializer& InObjec
 	bAttributesLoaded = false;
 }
 
+void ULimenAbilityComponent::BeginPlay()
+{
+	LoadAbilities();
+	LoadAttributes();
+
+	Super::BeginPlay();
+}
+
 void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
@@ -32,7 +40,7 @@ void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Attributes.Empty();
 }
 
-void ULimenAbilityComponent::LoadAbilities(AActor* Owner)
+void ULimenAbilityComponent::LoadAbilities()
 {
 	Abilities.Empty(AbilityClasses.Num());
 	for (auto& AbilityClass : AbilityClasses)
@@ -41,14 +49,14 @@ void ULimenAbilityComponent::LoadAbilities(AActor* Owner)
 	
 		TObjectPtr<ULimenAbilityBase> Temp = NewObject<ULimenAbilityBase>(this, AbilityClass.LoadSynchronous());
 		check(Temp != nullptr);
-		Temp->Initialize(Owner);
+		Temp->Initialize(GetOwner());
 		Abilities.Push(Temp);
 	}
 
 	bAbilitiesLoaded = true;
 }
 
-void ULimenAbilityComponent::LoadAttributes(AActor* Owner)
+void ULimenAbilityComponent::LoadAttributes()
 {
 	Attributes.Empty(AttributeClasses.Num());
 	for (auto& AttributeClass : AttributeClasses)
@@ -57,7 +65,7 @@ void ULimenAbilityComponent::LoadAttributes(AActor* Owner)
 		
 		TObjectPtr<ULimenAttributeBase> Temp = NewObject<ULimenAttributeBase>(this, AttributeClass.LoadSynchronous());
 		check(Temp != nullptr);
-		Temp->Initialize(Owner);
+		Temp->Initialize(GetOwner());
 		Attributes.Push(Temp);
 	}
 

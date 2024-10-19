@@ -10,6 +10,7 @@ public class ProceduralMaps : ModuleRules
             new string[]
             {
                 "Core",
+                
                 "LimenLevelTransitions", 
                 "LimenSaveSystem",
             }
@@ -23,6 +24,8 @@ public class ProceduralMaps : ModuleRules
                 "Slate",
                 "SlateCore",
                 "NavigationSystem",
+                "AdpcmAudioDecoder",
+                
                 "LimenCore",
                 "LimenProceduralGeneration",
             }

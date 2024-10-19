@@ -2,3 +2,9 @@
 
 
 #include "PlayerStates/LimenBasePlayerState.h"
+
+
+ALimenBasePlayerState::ALimenBasePlayerState()
+{
+	bReplicates = true;
+}

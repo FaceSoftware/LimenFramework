@@ -137,7 +137,7 @@ float ULimenAttributeBase::SafeModifyValueBy(const float Value)
 
 void ULimenAttributeBase::ModifyValuePercentageBy(const float Percent)
 {
-	if (const float Test = CurrentValue + CurrentValue * Percent;
+	if (const float Test = CurrentValue * Percent;
 		Test > MaxValue)
 	{
 		SetCurrentValueAsMax();

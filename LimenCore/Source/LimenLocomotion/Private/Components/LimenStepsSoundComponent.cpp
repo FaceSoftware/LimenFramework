@@ -36,9 +36,12 @@ void ULimenStepsSoundComponent::BeginPlay()
 	OwnerMovement = GetOwner()->GetComponentByClass<UPawnMovementComponent>();
 	check(OwnerMovement)
 
-	UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
-	AIPerceptionSystem = AISystem->GetPerceptionSystem();
-	check(AIPerceptionSystem != nullptr);
+	if (GetNetMode() < NM_Client)
+	{
+		UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
+		AIPerceptionSystem = AISystem->GetPerceptionSystem();
+		check(AIPerceptionSystem != nullptr);
+	}
 }
 
 void ULimenStepsSoundComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

@@ -24,9 +24,6 @@ ALimenTool::ALimenTool()
 void ALimenTool::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AbilityComponent->LoadAbilities(this);
-	AbilityComponent->LoadAttributes(this);
 	
 	BatteryAttribute = AbilityComponent->GetAttribute<ULimenBatteryAttribute>();
 	check(BatteryAttribute != nullptr);

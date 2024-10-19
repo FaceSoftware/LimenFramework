@@ -35,6 +35,10 @@ TArray<ULimenItemAction*> ALimenItemBase::GetItemActions(ULimenInventoryComponen
 
 ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+	bReplicates = true;
+	bAlwaysRelevant = false;
+	SetReplicatingMovement(false);
+
 	bHasBeenLoaded = false;
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 }
@@ -103,9 +107,22 @@ TArray<ULimenItemAction*> ALimenItemBase::GetItemActions()
 	return ItemActions;
 }
 
+void ALimenItemBase::SetOwner(AActor* NewOwner)
+{
+	Super::SetOwner(NewOwner);
+
+	OwnerPawn = Cast<APawn>(NewOwner);
+}
+
+APawn* ALimenItemBase::GetOwnerPawn() const
+{
+	return OwnerPawn.Get();
+}
+
 void ALimenItemBase::Interact(AController* InController, APawn* InPawn)
 {
 	Super::Interact(InController, InPawn);
+	
 	RemoveFromGameplay();
 }
 

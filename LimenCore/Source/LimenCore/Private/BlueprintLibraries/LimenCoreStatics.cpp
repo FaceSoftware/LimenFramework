@@ -47,7 +47,7 @@ void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, c
 	{
 		check(GEngine)
 		const FString Message = FString::Printf(TEXT("%s: %s"), *Caller->GetClass()->GetName(), *LogText);
-		GEngine->AddOnScreenDebugMessage(-1, DisplayTime, TextColor, Message);
+		UKismetSystemLibrary::PrintString(Caller, Message, bPrintToScreen, false, TextColor.ReinterpretAsLinear(), DisplayTime);
 	}
 #endif
 }
@@ -345,4 +345,3 @@ FString ULimenCoreStatics::GetGameTransitionMap()
 {
 	return GetDefault<UGameMapsSettings>()->TransitionMap.GetAssetName();
 }
-

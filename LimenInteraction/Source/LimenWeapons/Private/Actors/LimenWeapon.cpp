@@ -5,22 +5,14 @@
 
 #include "AISystem.h"
 #include "Actors/LimenAmmo.h"
-#include "Camera/CameraComponent.h"
-#include "Components/LimenCameraTiltComponent.h"
-#include "Components/LimenInventoryComponent.h"
-#include "LogMacros/LimenLogMacros.h"
-#include "LogMacros/LimenInteractionLogMacros.h"
+#include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Hearing.h"
 
 
-ALimenWeapon::ALimenWeapon() : Super()
+ALimenWeapon::ALimenWeapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	AimDownSightsCamera = CreateDefaultSubobject<ULimenCameraTiltComponent>(TEXT("AimDownSightsCamera"));
-	check(AimDownSightsCamera != nullptr);
-	AimDownSightsCamera->SetupAttachment(GetRootComponent());
 
 	BaseDamage = 0.f;
 	RoundsPerSecond = 0.f;
@@ -30,7 +22,6 @@ ALimenWeapon::ALimenWeapon() : Super()
 	bIsHoldingTrigger = false;
 	bIsFireRateCooldownOver = true;
 	bIsReloading = false;
-	CurrentWeaponState = EWeaponState::None;
 	bIsAutomatic = false;
 	bIsNextShotReady = true;
 	bIsFiring = false;
@@ -48,20 +39,23 @@ void ALimenWeapon::BeginPlay()
 	{
 		TimeBetweenShots = 1 / static_cast<double>(RoundsPerSecond);
 		ensureAlways(TimeBetweenShots > 0);
-		
-		UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
-		AIPerceptionSystem = AISystem->GetPerceptionSystem();
-		check(AIPerceptionSystem != nullptr);
+
+		if (GetNetMode() < NM_Client)
+		{
+			UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
+			AIPerceptionSystem = AISystem->GetPerceptionSystem();
+			check(AIPerceptionSystem != nullptr);
+		}
 	}
 }
 
-void ALimenWeapon::Drop()
+void ALimenWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	OwningController = nullptr;
-	OwningPawn = nullptr;
-	SetOwner(nullptr);
-	CurrentWeaponState = EWeaponState::None;
-	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ALimenWeapon, CurrentAmmo);
+	DOREPLIFETIME(ALimenWeapon, bIsReloading);
+	DOREPLIFETIME(ALimenWeapon, bIsFiring);
 }
 
 void ALimenWeapon::StartFiring()
@@ -71,7 +65,7 @@ void ALimenWeapon::StartFiring()
 	{
 		if (CurrentAmmo <= 0)
 		{
-			OnWeaponFiredWithoutAmmo();
+			WeaponFiredWithoutAmmo();
 		}
 		
 		return;
@@ -79,8 +73,6 @@ void ALimenWeapon::StartFiring()
 	
 	bIsFiring = true;
 	GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ThisClass::Fire, TimeBetweenShots, bIsAutomatic, 0.f);
-
-	LIMEN_LOG(LogLimenInteraction, Log, this, "Started firing")
 }
 
 void ALimenWeapon::StopFiring()
@@ -97,20 +89,14 @@ void ALimenWeapon::StopFiring()
 
 	bIsHoldingTrigger = false;
 	bIsFiring = false;
-	
-	LIMEN_LOG(LogLimenInteraction, Log, this, "Stopped firing")
 }
 
-bool ALimenWeapon::StartReloading(ULimenInventoryComponent* PlayerInventory)
+void ALimenWeapon::StartReloading()
 {
-	if (!CanReload(PlayerInventory))
-	{
-		return false;
-	}
+	check(CanReload());
 	
 	StopFiring();
-	StartReloadTimer(PlayerInventory);
-	return true;
+	StartReloadTimer();
 }
 
 void ALimenWeapon::StopReloading()
@@ -126,12 +112,12 @@ bool ALimenWeapon::IsFiring() const
 	return bIsFiring;
 }
 
-double ALimenWeapon::GetSecondsPerShot() const
+float ALimenWeapon::GetSecondsPerShot() const
 {
 	return TimeBetweenShots;
 }
 
-double ALimenWeapon::GetReloadTime() const
+float ALimenWeapon::GetReloadTime() const
 {
 	return ReloadTimeInSeconds;
 }
@@ -141,14 +127,14 @@ bool ALimenWeapon::IsReloading() const
 	return bIsReloading;
 }
 
-bool ALimenWeapon::CanReload(const ULimenInventoryComponent* PlayerInventory) const
+bool ALimenWeapon::CanReload() const
 {
-	return !bIsReloading && CurrentAmmo != MagazineCapacity && PlayerInventory->GetItemQuantity(CompatibleAmmo) != 0;
+	return !bIsReloading && CurrentAmmo != MagazineCapacity;
 }
 
 bool ALimenWeapon::CanFire() const
 {
-	if  (!bIsHoldingTrigger || bIsReloading)
+	if (!bIsHoldingTrigger || bIsReloading)
 	{
 		return false;
 	}
@@ -162,24 +148,9 @@ bool ALimenWeapon::CanFire() const
 	return CurrentAmmo > 0;
 }
 
-double ALimenWeapon::GetBaseDamage() const
+float ALimenWeapon::GetBaseDamage() const
 {
 	return BaseDamage;
-}
-
-AController* ALimenWeapon::GetOwningController() const
-{
-	return OwningController.Get();
-}
-
-APawn* ALimenWeapon::GetOwningPawn() const
-{
-	return OwningPawn.Get();
-}
-
-bool ALimenWeapon::HasGameRelevantOwner() const
-{
-	return GetOwningPawn() && GetOwningController();
 }
 
 const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const
@@ -187,26 +158,39 @@ const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const
 	return CompatibleAmmo;
 }
 
-uint8 ALimenWeapon::GetCurrentAmmo() const
+int32 ALimenWeapon::GetCurrentAmmo() const
 {
 	return CurrentAmmo;
 }
 
-uint8 ALimenWeapon::GetAmmoCountUntilFull() const
+int32 ALimenWeapon::GetAmmoCountUntilFull() const
 {
 	check(MagazineCapacity >= CurrentAmmo);
 	return MagazineCapacity - CurrentAmmo;
-}
-
-UCameraComponent* ALimenWeapon::GetAimDownSightsCamera() const
-{
-	return AimDownSightsCamera.Get();
 }
 
 void ALimenWeapon::DecrementAmmo(const int Value)
 {
 	CurrentAmmo -= Value;
 	OnAmmoUpdated.Broadcast(CurrentAmmo);
+}
+
+void ALimenWeapon::SetCurrentAmmo(const int32 NewValue)
+{
+	CurrentAmmo = NewValue;
+	OnAmmoUpdated.Broadcast(CurrentAmmo);
+}
+
+void ALimenWeapon::OnReloadStart(const float ReloadTimeSeconds)
+{
+}
+
+void ALimenWeapon::WeaponFired()
+{
+}
+
+void ALimenWeapon::WeaponFiredWithoutAmmo()
+{
 }
 
 void ALimenWeapon::Fire()
@@ -225,17 +209,18 @@ void ALimenWeapon::Fire()
 	const FAINoiseEvent Event(this, GetActorLocation(), 1, FireSoundRange);
 	AIPerceptionSystem->OnEvent(Event);
 	
-	DecrementAmmo();
-	OnWeaponFired();
 	FireMethod();
+	DecrementAmmo();
+	WeaponFired();
 }
 
-void ALimenWeapon::Interact(AController* InController, APawn* InPawn)
+void ALimenWeapon::FireMethod()
 {
-	Super::Interact(InController, InPawn);
+}
 
-	CurrentWeaponState = EWeaponState::Active;
-	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
+void ALimenWeapon::OnRep_CurrentAmmo()
+{
+	OnAmmoUpdated.Broadcast(CurrentAmmo);
 }
 
 void ALimenWeapon::HandleWeaponCooldown()
@@ -248,32 +233,17 @@ void ALimenWeapon::SetNextShotReady()
 	bIsNextShotReady = true;
 }
 
-void ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
+void ALimenWeapon::Reload()
 {
-	const uint8 AmmoMissingInMagazine = MagazineCapacity - CurrentAmmo;
-	const int32 InventoryAmmo = PlayerInventory->GetItemQuantity(CompatibleAmmo);
-
-	if (InventoryAmmo >= AmmoMissingInMagazine)
-	{
-		PlayerInventory->GetItem(CompatibleAmmo, AmmoMissingInMagazine);
-		CurrentAmmo = MagazineCapacity;
-	}
-	else if (InventoryAmmo < AmmoMissingInMagazine)
-	{
-		PlayerInventory->GetItem(CompatibleAmmo, InventoryAmmo);
-		CurrentAmmo += InventoryAmmo;
-	}
-	
 	bIsReloading = false;
 	OnAmmoUpdated.Broadcast(CurrentAmmo);
 }
 
-
-void ALimenWeapon::StartReloadTimer(ULimenInventoryComponent* PlayerInventory)
+void ALimenWeapon::StartReloadTimer()
 {
 	bIsReloading = true;
-	const FTimerDelegate ReloadDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::Reload, PlayerInventory);
-	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, ReloadDelegate, ReloadTimeInSeconds, false);
+	
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &ThisClass::Reload, ReloadTimeInSeconds, false);
 
 	OnReloadStart(ReloadTimeInSeconds);
 	OnWeaponReload.Broadcast(this, GetReloadTime());

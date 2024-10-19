@@ -58,6 +58,8 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Interact")
 	void BP_OnInteract(AController* InController, APawn* InPawn);
 	virtual void Interact(AController* InController, APawn* InPawn);
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void MulticastRPC_Interact(AController* InController, APawn* InPawn);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Limne|Interaction")
 	void BP_OnInteractionStopped(AController* InController, APawn* InPawn);

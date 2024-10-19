@@ -43,23 +43,13 @@ public:
 	FUnPauseRequestDelegate OnUnPauseRequested;
 
 	explicit ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
-	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
-	virtual void OnPossess(APawn* InPawn) override;
-	virtual void OnUnPossess() override;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Controller")
 	void RequestPause(const EPauseReason Reason);
 	UFUNCTION(BlueprintCallable, Category="Limen|Controller")
 	void RequestUnPause();
 	void ToggleRequestPause(const EPauseReason Reason);
-
-	/**
-	 * @brief Queues a notification for this player.
-	 * @param InParams 
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
-	void QueueNotification(const FNotificationParams& InParams);
 
 	void SetGameInput();
 	void SetUIInput();
@@ -76,23 +66,6 @@ protected:
 	TSoftObjectPtr<UInputMappingContext> PlayerMappingContext;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
 	TSoftObjectPtr<UInputMappingContext> CharacterMappingContext;
-	
-	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
-
-	virtual void BindPawnDelegates(APawn* NewPawn);
-	virtual void UnbindPawnDelegates(APawn* InPawn) PURE_VIRTUAL(ALimenBasePlayerController::UnbindPawnDelegates);
-	
-	virtual bool CreateHudReference();
-	virtual void BindWidgetDelegates() PURE_VIRTUAL(ALimenBasePlayerController::BindWidgetDelegates);
-	virtual void UnbindWidgetDelegates() PURE_VIRTUAL(ALimenBasePlayerController::UnbindWidgetDelegates);
-
-	UFUNCTION()
-	virtual void RequestNotificationPause(const bool bWantsToPause) PURE_VIRTUAL(ALimenBasePlayerController::RequestNotificationPause);
-	UFUNCTION()
-	virtual void NotificationDisplayed(const bool bIsConsent);
-
-	UFUNCTION()
-	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
 	
 private:
 };

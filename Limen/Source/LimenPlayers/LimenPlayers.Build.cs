@@ -40,8 +40,7 @@ public class LimenPlayers : ModuleRules
                 "Limen", 
                 "LimenLevelTransitions",
                 "LimenStorage",
-                "LimenArchives", 
-                "LimenGameSaves", 
+                "LimenArchives",
                 "LimenModals",
                 "LimenProxyInventory",
             }

@@ -24,7 +24,7 @@ struct FItemRegistry
 	TArray<ALimenItemBase*> ItemInstances;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, TSubclassOf<ALimenItemBase>, ItemClass);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, ALimenItemBase*, ItemClass);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryUpdate, ULimenInventoryComponent*, Inventory);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -76,7 +76,7 @@ public:
 		ALimenItemBase* OutItem = Registry->ItemInstances.Pop(true);
 		if (Registry->ItemInstances.Num() == 0)
 		{
-			OnItemRemoved.Broadcast(OutItem->GetClass());
+			OnItemRemoved.Broadcast(OutItem);
 		}
 		OnInventoryUpdated.Broadcast(this);
 	
@@ -203,6 +203,8 @@ public:
 		return Out;
 	}
 
+	bool ContainsItemInstance(const ALimenItemBase* Item) const;
+
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
 	int32 GetItemQuantity(const TSubclassOf<ALimenItemBase>& ItemClass) const;
 
@@ -223,6 +225,7 @@ private:
 	void RemoveItemsFromRegistry(const TSubclassOf<ALimenItemBase>& ItemToRemove, const int32 Count);
 	void UpdateInventoryLoad();
 	FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass);
+	const FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass) const ;
 	
 	bool IsFirstOfType(const TSubclassOf<ALimenItemBase>& ItemClass);
 	

@@ -4,14 +4,14 @@
 #include "Actors/Weapons/LimenLineTraceWeapon.h"
 
 #include "Interfaces/LimenDamageable.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "LogMacros/LimenInteractionLogMacros.h"
 #include "LogMacros/LimenLogMacros.h"
 
-ALimenLineTraceWeapon::ALimenLineTraceWeapon() : Super()
+
+ALimenLineTraceWeapon::ALimenLineTraceWeapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bDebugMode = false;
+	TraceChannel = ECollisionChannel::ECC_Camera;
 }
 
 void ALimenLineTraceWeapon::FireMethod()
@@ -22,7 +22,18 @@ void ALimenLineTraceWeapon::FireMethod()
 	
 	FVector Start;
 	FRotator Rotation;
-	GetOwningController()->GetPlayerViewPoint(Start, Rotation);
+	if (GetOwnerPawn() == nullptr)
+	{
+		return;
+	}
+
+	AController* OwnerController = GetOwnerPawn()->GetController();
+	if (OwnerController == nullptr)
+	{
+		return;
+	}
+	
+	OwnerController->GetPlayerViewPoint(Start, Rotation);
 	const FVector End = Start + Rotation.Vector() * WeaponRange;
 
 	FCollisionQueryParams Params;
@@ -42,12 +53,14 @@ void ALimenLineTraceWeapon::FireMethod()
 		// C++ Interface
 		if (auto* Damageable = Cast<ILimenDamageable>(OutHits[i].GetActor()))
 		{
-			Damageable->ApplyPointDamage(GetOwningController(), GetOwningPawn(), CurrentDamageWithFalloff);
+			Damageable->ApplyPointDamage(OwnerController, this, CurrentDamageWithFalloff);
 			DamageCount++;
 		}
 
 		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;
 	}
+	
+	OnWeaponFired.Broadcast(OwnerController, this, OutHits);
 
 	LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);
 

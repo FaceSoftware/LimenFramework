@@ -182,8 +182,10 @@ void ULimenGameInstance::BindLoadingScreenEvents()
 	PSOBatch->OnCompilationFinished.Remove(BindLoadingScreenEventsDelegateHandle);
 	
 	ULimenLevelTransitionSubsystem* LoadingScreenSubsystem = GetSubsystem<ULimenLevelTransitionSubsystem>();
-	check(LoadingScreenSubsystem);
-	LoadingScreenSubsystem->OnLoadingScreenVisible.AddUObject(this, &ThisClass::StartLoadingScreenShaderCompile);
+	if (LoadingScreenSubsystem != nullptr)
+	{
+		LoadingScreenSubsystem->OnLoadingScreenVisible.AddUObject(this, &ThisClass::StartLoadingScreenShaderCompile);
+	}
 }
 
 void ULimenGameInstance::OpenMainMenu()

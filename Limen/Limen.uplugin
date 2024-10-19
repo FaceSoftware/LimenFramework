@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.3",
+	"EngineAssociation": "5.4",
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "Limen Framework",
@@ -40,21 +40,6 @@
 			"Name": "LimenObjectives",
 			"Enabled": true,
 			"Optional": false
-		},
-		{
-			"Name": "DLSS",
-			"Enabled": true,
-			"Optional": false
-		},
-		{
-			"Name": "Streamline",
-			"Enabled": true,
-			"Optional": false
-		},
-		{
-			"Name": "NIS",
-			"Enabled": true,
-			"Optional": false
 		}
 	],
 	"Modules": [
@@ -75,31 +60,6 @@
 		},
 		{
 			"Name": "LimenAI",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenGameplayFramework",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenGraphicSettings",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenGameSettings",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenAudioSettings",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenGameSaves",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

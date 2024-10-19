@@ -44,6 +44,10 @@ public:
 	virtual void DataSaved() override;
 	
 	TArray<ULimenItemAction*> GetItemActions();
+
+	virtual void SetOwner(AActor* NewOwner) override;
+
+	APawn* GetOwnerPawn() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Item Actions")
@@ -57,10 +61,14 @@ protected:
 	FText Description;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
 	TSoftObjectPtr<UTexture2D> ItemImage;
-	
+
 	virtual void Interact(AController* InController, APawn* InPawn) override;
+
 	virtual void InteractionStopped(AController* InController, APawn* InPawn) override final;
 	
 private:
 	bool bHasBeenLoaded;
+
+	UPROPERTY()
+	TObjectPtr<APawn> OwnerPawn;
 };

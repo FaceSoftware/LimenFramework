@@ -103,3 +103,8 @@ public:
 	static FString GetGameTransitionMap();
 	
 };
+
+static void LimenLog(const UObject* Caller, const FString& LogText, const ELogType Verbosity = ELogType::Log, const bool bPrintToScreen = true)
+{
+	ULimenCoreStatics::LimenLog(Caller, LogText, Verbosity, bPrintToScreen);
+}

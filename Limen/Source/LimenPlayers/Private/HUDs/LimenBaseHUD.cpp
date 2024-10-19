@@ -3,8 +3,6 @@
 
 #include "HUDs/LimenBaseHUD.h"
 
-#include "Components/LimenNotificationComponent.h"
-#include "CppClasses/LimenNotification.h"
 #include "Widgets/LimenWidget.h"
 
 
@@ -12,16 +10,8 @@ ALimenBaseHUD::ALimenBaseHUD() : Super()
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
 	
-	NotificationComponent = CreateDefaultSubobject<ULimenNotificationComponent>(TEXT("NotificationComponent"));
 	bAreWidgetsInitialized = false;
-	SetTickableWhenPaused(true);
-
-#if WITH_EDITORONLY_DATA
-
-	bDisableLoadingScreenInPIE = false;
-
-#endif
-	
+	SetTickableWhenPaused(true);	
 }
 
 void ALimenBaseHUD::HideActiveWidget()
@@ -34,38 +24,19 @@ void ALimenBaseHUD::HideActiveWidget()
 	HideWidget_Internal(ActiveWidget.Get());
 }
 
-ULimenNotificationComponent* ALimenBaseHUD::GetNotificationsComponent() const
-{
-	return NotificationComponent.Get();
-}
-
-ULimenWidget* ALimenBaseHUD::GetActiveWidget() const
+UUserWidget* ALimenBaseHUD::GetActiveWidget() const
 {
 	return ActiveWidget.Get();
 }
 
-void ALimenBaseHUD::DestroyWidgets()
+bool ALimenBaseHUD::InitializeWidget(const TSubclassOf<UUserWidget>& WidgetClass)
 {
+	return WidgetClass.Get() != nullptr;
 }
 
-void ALimenBaseHUD::InitializeWidgets()
+bool ALimenBaseHUD::CanSwitchWidgetsVisibility() const
 {
-}
-
-void ALimenBaseHUD::QueueNotification(const FNotificationParams& InParams)
-{	
-	NotificationComponent->QueueNotification(MakeShared<FLimenNotification>(InParams));
-}
-
-void ALimenBaseHUD::UpdateWidgets(APlayerController* PlayerController, APawn* Pawn)
-{
-	DestroyWidgets();
-	InitializeWidgets();
-	
-	bAreWidgetsInitialized = true;
-	HudInitialized(PlayerController); // C++ call (priority)
-	BP_HudInitialized(PlayerController); // Blueprint events call
-	OnHudInitialized.Broadcast(this);
+	return true;
 }
 
 void ALimenBaseHUD::ShowWidget_Internal(ULimenWidget* Widget)
