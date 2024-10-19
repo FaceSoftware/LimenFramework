@@ -1,0 +1,263 @@
+﻿// Copyright Face Software. All Rights Reserved.
+
+
+#include "Widgets/LimenWidget.h"
+
+#include "Blueprint/WidgetTree.h"
+#include "LogMacros/LimenLogMacros.h"
+
+
+ULimenWidget::ULimenWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+	SetIsFocusable(false);
+	DefaultVisibleState = ESlateVisibility::Visible;
+	DefaultHiddenState = ESlateVisibility::Collapsed;
+	WidgetLevel = 0;
+}
+
+void ULimenWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	TakeWidget()->SetCanTick(true);
+	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::HiddeAnimationFinished_Internal);
+}
+
+void ULimenWidget::ShowWidget()
+{
+	if (bIsAnimating)
+	{
+		return;
+	}
+	
+	if (bIsVisible)
+	{
+		return;
+	}
+	
+	if (!IsInViewport() && !GetParent())
+	{
+		ShowWidgetMethod();
+		LIMEN_LOG(LogLimenCore, Log, this, "Widget added to viewport with ZOrder = %d", WidgetLevel);
+	}
+
+	SetVisibility(DefaultVisibleState);
+	ShowAllChildren();
+	bIsVisible = true;
+	OnWidgetVisible();
+	OnLimenVisibilityChanged.Broadcast(bIsVisible);
+	
+	if (bUseShowAnimation)
+	{
+		PlayOnWidgetVisibleAnimation();
+		bIsAnimating = true;
+	}
+	else
+	{
+		NotifyAnimationFinished(true);
+	}
+}
+
+void ULimenWidget::HideWidget()
+{
+	if (bIsAnimating)
+	{
+		return;
+	}
+	
+	if (!bIsVisible)
+	{
+		return;
+	}
+	
+	if (bUseHideAnimation)
+	{
+		PlayOnWidgetHiddenAnimation();
+		bIsAnimating = true;
+	}
+	else
+	{
+		NotifyAnimationFinished(false);
+	}
+}
+
+void ULimenWidget::HideWidgetWithCallback(FLimenBlueprintWidgetHidden OnWidgetHidden)
+{
+	if (!IsShowing() || !bUseHideAnimation)
+	{
+		if (OnWidgetHidden.IsBound())
+		{
+			OnWidgetHidden.Execute();
+		}
+		
+		return;
+	}
+
+	HideWidget();
+	CurrentBlueprintDelegate = &OnWidgetHidden;
+}
+
+void ULimenWidget::HideWidget(const TSharedPtr<FLimenWidgetHidden>& OnWidgetHidden)
+{
+	if (!IsShowing() || !bUseHideAnimation)
+	{
+		if (OnWidgetHidden->IsBound())
+		{
+			OnWidgetHidden->Execute();
+		}
+		
+		return;
+	}
+
+	HideWidget();
+	CurrentDelegate = OnWidgetHidden;
+}
+
+void ULimenWidget::ToggleWidgetVisibility()
+{
+	if (bIsVisible)
+	{
+		HideWidget();
+	}
+	else
+	{
+		ShowWidget();
+	}
+}
+
+bool ULimenWidget::IsShowing() const
+{
+	return bIsVisible;
+}
+
+bool ULimenWidget::IsAnimating() const
+{
+	return bIsAnimating;
+}
+
+void ULimenWidget::DestroyWidget(const bool bWaitForHideAnimation)
+{
+	if (!bWaitForHideAnimation)
+	{
+		DestroyWidgetInternal();
+		return;
+	}
+
+	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::ULimenWidget::DestroyWidgetInternal);
+	HideWidget();
+}
+
+void ULimenWidget::NotifyAnimationFinished(const bool bIsVisibleAnimation)
+{
+	bIsAnimating = false;
+	
+	if (bIsVisibleAnimation)
+	{
+		// Nothing to do here, if it's the visible animation the logic should go on the "ShowWidget" function
+	}
+	else
+	{
+		HideAllChildren();
+		SetVisibility(DefaultHiddenState);
+		OnWidgetHidden();
+		bIsVisible = false;
+		OnLimenVisibilityChanged.Broadcast(bIsVisible);
+	}
+
+	OnLimenAnimationFinished.Broadcast(bIsVisibleAnimation);
+}
+
+void ULimenWidget::SetWidgetLevel(const int32 NewLevel)
+{
+	WidgetLevel = NewLevel;
+}
+
+uint8 ULimenWidget::GetWidgetLevel() const
+{
+	return WidgetLevel;
+}
+
+void ULimenWidget::SetDefaultVisibleState(const ESlateVisibility NewDefaultVisibleState)
+{
+	DefaultVisibleState = NewDefaultVisibleState;
+}
+
+void ULimenWidget::SetDefaultHiddenState(const ESlateVisibility NewDefaultHiddenState)
+{
+	DefaultHiddenState = NewDefaultHiddenState;
+}
+
+void ULimenWidget::ShowWidgetMethod()
+{
+	AddToViewport(WidgetLevel);
+}
+
+void ULimenWidget::ShowAllChildren()
+{
+	TArray<UWidget*> Widgets;
+	WidgetTree->GetAllWidgets(Widgets);
+	for (UWidget* Widget : Widgets)
+	{
+		auto* Temp = Cast<ULimenWidget>(Widget);
+		if (!Temp)
+		{
+			continue;
+		}
+		
+		Temp->ShowWidget();
+	}
+}
+
+void ULimenWidget::HideAllChildren()
+{
+	if (!WidgetTree)
+	{
+		return;
+	}
+
+	
+	TArray<UWidget*> Widgets;
+	WidgetTree->GetChildWidgets(this, Widgets);
+	for (const auto Widget : Widgets)
+	{
+		auto* Temp = Cast<ULimenWidget>(Widget);
+		if (!Temp)
+		{
+			continue;
+		}
+		
+		Temp->HideAllChildren();
+		Temp->HideWidget();
+	}
+}
+
+void ULimenWidget::HiddeAnimationFinished_Internal(const bool bVisible)
+{
+	if (bIsVisible)
+	{
+		return;
+	}
+	
+	if (CurrentBlueprintDelegate != nullptr && CurrentBlueprintDelegate->IsBound())
+	{
+		CurrentBlueprintDelegate->Execute();
+	}
+	CurrentBlueprintDelegate = nullptr;
+	
+	if (CurrentDelegate.IsValid() && CurrentDelegate->IsBound())
+	{
+		CurrentDelegate->Execute();
+	}
+	CurrentDelegate.Reset();
+}
+
+void ULimenWidget::DestroyWidgetInternal(const bool bIsHideAnimation)
+{
+	if (!bIsHideAnimation)
+	{
+		return;
+	}
+	
+	RemoveFromParent();
+	ConditionalBeginDestroy();
+}

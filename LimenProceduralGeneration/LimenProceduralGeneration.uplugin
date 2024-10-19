@@ -1,0 +1,41 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.3",
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Limen Procedural Generation",
+	"Description": "",
+	"Category": "Gameplay",
+	"CreatedBy": "Face Software",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": true,
+	"Installed": false,
+	"Plugins": [
+		{
+			"Name": "LimenCore",
+			"Enabled": true
+		}
+	],
+	"Modules": [
+		{
+			"Name": "LimenProceduralGeneration",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ProceduralMaps",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ProceduralMesh",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"SupportURL": ""
+}

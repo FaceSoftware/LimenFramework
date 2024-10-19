@@ -1,0 +1,36 @@
+﻿// Copyright Face Software. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Blueprint/UserWidget.h"
+#include "LimenLoadingScreenParameters.generated.h"
+
+/**
+ * 
+ */
+UCLASS(Blueprintable, NotBlueprintType)
+class LIMENLEVELTRANSITIONS_API ULimenLoadingScreenParameters : public UDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditDefaultsOnly)
+	bool bIsShaderPrecompileScreen = false;
+	UPROPERTY(EditDefaultsOnly)
+	TSoftClassPtr<ULimenLoadingScreenWidget> LoadingScreenWidget;
+	UPROPERTY(EditDefaultsOnly)
+	float MinimumDisplayTimeSeconds = 0.f;
+	UPROPERTY(EditDefaultsOnly)
+	float HideLoadingScreenAnimationTime = 0.f;
+	
+	TSubclassOf<UUserWidget> GetLoadingScreenWidgetClass() const
+	{
+		return LoadingScreenWidget.LoadSynchronous();
+	}
+
+	float GetMinimumDisplayTimeSeconds() const
+	{
+		return MinimumDisplayTimeSeconds;
+	}
+};

@@ -1,0 +1,107 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.3",
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Limen Framework",
+	"Description": "Limen Framework extends the Unreal Engine's framework to include common systems used in games.",
+	"Category": "Gameplay",
+	"CreatedBy": "Face Software",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": true,
+	"Installed": false,
+	"Plugins": [
+		{
+			"Name": "EnhancedInput",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "LimenInteraction",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "LimenCore",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "LimenProceduralGeneration",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "LimenObjectives",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "DLSS",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "Streamline",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "NIS",
+			"Enabled": true,
+			"Optional": false
+		}
+	],
+	"Modules": [
+		{
+			"Name": "Limen",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenPlayers",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenGameModes",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenAI",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenGameplayFramework",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenGraphicSettings",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenGameSettings",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenAudioSettings",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenGameSaves",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

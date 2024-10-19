@@ -1,0 +1,31 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.3",
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Limen Objectives",
+	"Description": "",
+	"Category": "Gameplay",
+	"CreatedBy": "Face Software",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Plugins": [
+		{
+			"Name": "LimenCore",
+			"Enabled": true
+		}
+	],
+	"Modules": [
+		{
+			"Name": "LimenObjectives",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"SupportURL": ""
+}

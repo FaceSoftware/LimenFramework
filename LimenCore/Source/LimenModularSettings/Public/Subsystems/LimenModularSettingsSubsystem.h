@@ -1,0 +1,125 @@
+﻿// Copyright Face Software. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Interfaces/LimenSaveObjectInterface.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
+#include "LimenStorage/Public/LimenStorageSubsystem.h"
+#include "Settings/LimenSetting.h"
+#include "LimenModularSettingsSubsystem.generated.h"
+
+
+class ULimenModularSettingsSubsystemDeveloperSettings;
+class ULimenSettingsSaveData;
+
+/**
+ * Base class for settings subsystems. A settings subsystem is essentially a manager for a specific set of settings.
+ * It handles things like saving them, their lifetime and it should act as a wrapper for the settings.
+ * It should not contain any specific information regarding a setting. 
+ */
+UCLASS(Abstract)
+class LIMENMODULARSETTINGS_API ULimenModularSettingsSubsystem : public ULimenStorageSubsystem, public ILimenSaveObjectInterface
+{
+	GENERATED_BODY()
+
+public:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	bool CanEditSetting(const TSubclassOf<ULimenSetting>& Class) const;
+
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	bool EditSelectionSetting(const TSubclassOf<ULimenSetting>& Class, const FString& NewSelection);
+	
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	bool EditToggleSetting(const TSubclassOf<ULimenSetting>& Class, const bool NewState);
+
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	bool EditValueSetting(const TSubclassOf<ULimenSetting>& Class, const float& NewValue);
+
+	template<typename SettingType>
+	bool EditSetting(const TSubclassOf<ULimenSetting>& Class, const SettingType& NewValue)
+	{
+		ULimenSetting* Setting = GetItem<ULimenSetting>(Class);
+		if (Setting == nullptr)
+		{
+			// No setting was found
+			ULimenCoreStatics::LimenLog(this, TEXT("No such setting with dev name '%s' was found"), ELogType::Error);
+			return false;
+		}
+		
+		return EditSetting(Setting, NewValue);
+	}
+
+	template<typename SettingType>
+	bool EditSetting(ULimenSetting* InSetting, const SettingType& NewValue)
+	{
+		if (InSetting == nullptr)
+		{
+			return false;
+		}
+		
+		TLimenEditableSetting<SettingType>* EditableInterface = reinterpret_cast<TLimenEditableSetting<SettingType>*>(InSetting);
+		if (EditableInterface == nullptr)
+		{
+			// No editable interface? Then no edit!
+			return false;
+		}
+		
+		EditableInterface->SetNewValue(NewValue);
+		return true;
+	}
+	
+	template<typename SettingType>
+	bool ReapplySetting(const TSubclassOf<ULimenSetting>& Class)
+	{
+		ULimenSetting* Setting = GetItem<ULimenSetting>(Class);
+		if (Setting == nullptr)
+		{
+			return false;
+		}
+
+		TLimenEditableSetting<SettingType>* EditableInterface = reinterpret_cast<TLimenEditableSetting<SettingType>*>(Setting);
+		if (EditableInterface == nullptr)
+		{
+			// No editable interface? Then no edit!
+			return false;
+		}
+		TLimenReadableSetting<SettingType>* ReadableInterface = reinterpret_cast<TLimenReadableSetting<SettingType>*>(Setting);
+		if (ReadableInterface == nullptr)
+		{
+			// No readable interface? Then no edit!
+			return false;
+		}
+
+		const SettingType& CurrentValue = ReadableInterface->GetCurrentValue();
+		EditableInterface->SetNewValue(CurrentValue);
+		return true;
+	}
+
+	virtual bool ShouldSaveData() const override;
+	virtual bool ShouldLoadData() const override;
+	virtual void DataLoaded() override;
+	virtual void DataSaved() override;
+	
+protected:
+
+	/**
+	 * @brief Used to load the settings list into the 'Settings' variable.
+	 * Needs to be implemented in a child class.
+	 * It is recommended to load from a custom ULimenModularSettingsSubsystemDeveloperSettings-derived class but not mandatory.
+	 * Called before loading the settings so we know which settings still exist.
+	 * @warning Must be overriden
+	 */
+	virtual void LoadDefaultSettingsList() {}
+
+	UFUNCTION()
+	virtual void OnSettingUpdated(const ULimenSetting* UpdatedSetting);
+	
+	virtual void PostWorldInitialization(UWorld* World, const UWorld::InitializationValues InitValues);
+	
+private:
+
+};
