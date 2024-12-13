@@ -18,26 +18,6 @@ ULimenLineTraceInteractionComponent::ULimenLineTraceInteractionComponent(
 	// LineTraceRadius = 1.f;
 }
 
-void ULimenLineTraceInteractionComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	FCollisionQueryParams Params;
-	Params.bIgnoreBlocks = false;
-	Params.bIgnoreTouches = false;
-	Params.bTraceComplex = false;
-	Params.MobilityType = EQueryMobilityType::Any;
-	Params.AddIgnoredActor(GetOwner());
-#if !(UE_BUILD_TEST || UE_BUILD_SHIPPING)
-	Params.bDebugQuery = DebugMode();
-#endif
-
-	QueryParams.AddIgnoredActor(GetOwner());
-	QueryParams.bTraceComplex = false;
-	QueryParams.bIgnoreBlocks = false;
-	QueryParams.bIgnoreTouches = false;
-}
-
 bool ULimenLineTraceInteractionComponent::GetInteractionHitResult(FHitResult& OutHit) const
 {
 	if (!InteractionHitResult.IsSet())
@@ -49,7 +29,20 @@ bool ULimenLineTraceInteractionComponent::GetInteractionHitResult(FHitResult& Ou
 	return true;
 }
 
-void ULimenLineTraceInteractionComponent::UpdateInteraction()
+ECollisionChannel ULimenLineTraceInteractionComponent::GetTraceChannel() const
+{
+	return InteractionCollisionChannel;
+}
+
+void ULimenLineTraceInteractionComponent::SetupInteraction()
+{
+	QueryParams.AddIgnoredActor(GetOwner());
+	QueryParams.bTraceComplex = false;
+	QueryParams.bIgnoreBlocks = false;
+	QueryParams.bIgnoreTouches = false;
+}
+
+void ULimenLineTraceInteractionComponent::UpdateInteraction(const float DeltaTime)
 {
 	FVector Start, End;
 	if (!GetOwnerLineOfSightStartAndEndVectors(Start, End))
@@ -62,10 +55,12 @@ void ULimenLineTraceInteractionComponent::UpdateInteraction()
 	// GetWorld()->SweepMultiByChannel(InteractionResults, Start, End, FQuat::Identity, InteractionCollisionChannel, FCollisionShape::MakeSphere(LineTraceRadius), CollisionQueryParams, CollisionResponseParams);
 
 #if WITH_EDITORONLY_DATA
+	
 	if (DebugMode())
 	{
-		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 1.f, 0, 2);
+		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, DeltaTime, 0, 0);
 	}
+	
 #endif
 	
 	CurrentInteractableInterface = nullptr;
@@ -115,9 +110,15 @@ void ULimenLineTraceInteractionComponent::UpdateInteraction()
 			InteractionHitResult = *InteractionHit;
 		}
 	}
+
+#if WITH_EDITORONLY_DATA
 	
 	if (DebugMode())
 	{
-		DrawDebugSphere(GetWorld(), InteractionHitResult.IsSet() ? InteractionHitResult.GetValue().ImpactPoint : End, 1.f, 4, FColor::Blue, false);
+		DrawDebugSphere(GetWorld(), InteractionHitResult.IsSet() ? InteractionHitResult.GetValue().ImpactPoint : End,
+						16.f, 4, FColor::Blue, false, DeltaTime, 0.f, 0.f);
 	}
+	
+#endif WITH_EDITORONLY_DATA
+	
 }

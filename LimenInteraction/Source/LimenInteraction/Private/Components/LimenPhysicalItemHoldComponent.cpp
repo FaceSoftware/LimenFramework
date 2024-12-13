@@ -30,6 +30,8 @@ void ULimenPhysicalItemHoldComponent::Hold(ALimenPhysicalItem* InPhysicalItem)
 
 	bIsHoldingSomething = true;
 	PhysicalItem = InPhysicalItem;
+	PhysicalItem->AddToGameplay();
+	PhysicalItem->SetActorEnableCollision(false);
 	
 	OnItemChanged.Broadcast(OldItem, PhysicalItem.Get());
 }
@@ -38,23 +40,21 @@ void ULimenPhysicalItemHoldComponent::StopHolding()
 {
 	check(PhysicalItem != nullptr)
 	
+	
+	PhysicalItem->RemoveFromGameplay();
+
 	OnItemChanged.Broadcast(PhysicalItem.Get(), nullptr);
 
 	PhysicalItem = nullptr;
 	bIsHoldingSomething = false;
+
+}
+
+void ULimenPhysicalItemHoldComponent::Drop()
+{
 }
 
 bool ULimenPhysicalItemHoldComponent::IsHoldingSomething() const
 {
 	return bIsHoldingSomething;
-}
-
-ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
-{
-	return PhysicalItem.Get();
-}
-
-TSubclassOf<ALimenPhysicalItem> ULimenPhysicalItemHoldComponent::GetPhysicalItemParentClass() const
-{
-	return PhysicalItemParentClass.LoadSynchronous();
 }

@@ -20,13 +20,13 @@ EBTNodeResult::Type UChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 	}
 
 	AAIController* Controller = OwnerComp.GetAIOwner();
-	if (!Controller->IsValidLowLevelFast())
+	if (Controller == nullptr)
 	{
 		return EBTNodeResult::Type::Failed;
 	}
 
 	AActor* Player = UGameplayStatics::GetPlayerPawn(this, PlayerId);
-	if (!Player->IsValidLowLevelFast())
+	if (Player == nullptr)
 	{
 		return EBTNodeResult::Type::Failed;
 	}

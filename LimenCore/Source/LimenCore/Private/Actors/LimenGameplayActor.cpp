@@ -3,20 +3,11 @@
 
 #include "Actors/LimenGameplayActor.h"
 
-#include "Net/UnrealNetwork.h"
-
 
 ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bIsRemovedFromGameplay = false;
-}
-
-void ALimenGameplayActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(ALimenGameplayActor, bIsRemovedFromGameplay, COND_InitialOnly);
 }
 
 void ALimenGameplayActor:: BeginPlay()
@@ -32,6 +23,11 @@ void ALimenGameplayActor::Initialize()
 
 void ALimenGameplayActor::RemoveFromGameplay()
 {
+	if (bIsRemovedFromGameplay)
+	{
+		return;
+	}
+	
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 	bIsRemovedFromGameplay = true;
@@ -39,6 +35,11 @@ void ALimenGameplayActor::RemoveFromGameplay()
 
 void ALimenGameplayActor::AddToGameplay()
 {
+	if (!bIsRemovedFromGameplay)
+	{
+		return;
+	}
+	
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 	bIsRemovedFromGameplay = false;
@@ -47,16 +48,4 @@ void ALimenGameplayActor::AddToGameplay()
 bool ALimenGameplayActor::IsRemovedFromGameplay() const
 {
 	return bIsRemovedFromGameplay;
-}
-
-void ALimenGameplayActor::OnRep_bIsRemovedFromGameplay()
-{
-	if (bIsRemovedFromGameplay)
-	{
-		RemoveFromGameplay();
-	}
-	else
-	{
-		AddToGameplay();
-	}
 }

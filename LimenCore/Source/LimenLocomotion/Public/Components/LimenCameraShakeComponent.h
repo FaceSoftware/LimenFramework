@@ -3,8 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Object.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
+#include "Components/ActorComponent.h"
 #include "LimenCameraShakeComponent.generated.h"
+
+
+class UPawnMovementComponent;
+class UCameraShakeBase;
+class UWaveOscillatorCameraShakePattern;
+class UPerlinNoiseCameraShakePattern;
+
 
 /**
  * 
@@ -15,47 +23,32 @@ class LIMENLOCOMOTION_API ULimenCameraShakeComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	ULimenCameraShakeComponent();
+	explicit ULimenCameraShakeComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION(BlueprintCallable)
-	void PlayStandCameraShake();
-	UFUNCTION(BlueprintCallable)
-	void PlayWalkCameraShake();
-	UFUNCTION(BlueprintCallable)
-	void PlaySprintCameraShake();
-	UFUNCTION(BlueprintCallable)
-	void StopCameraShake();
-	UFUNCTION(BlueprintCallable)
-	bool IsPlayingCameraShake() const;
-	UFUNCTION(BlueprintCallable)
-	bool IsPlayingStandCameraShake() const;
-	UFUNCTION(BlueprintCallable)
-	bool IsPlayingWalkCameraShake() const;
-	UFUNCTION(BlueprintCallable)
-	bool IsPlayingSprintCameraShake() const;
-	
-	virtual void SetActive(bool bNewActive, bool bReset) override;
-	
+	virtual void Activate(bool bReset) override;
+	virtual void Deactivate() override;
+
 protected:
-	void PlayCameraShake();
+	UPROPERTY(EditAnywhere, Category="Limen")
+	FPair SlowestSpeedScale;
+	UPROPERTY(EditAnywhere, Category="Limen")
+	FPair FastestSpeedScale;
+	UPROPERTY(EditAnywhere, Category="Limen")
+	TSoftClassPtr<UCameraShakeBase> CameraShakeClass;
+	UPROPERTY()
+	TObjectPtr<UCameraShakeBase> CameraShake;
+	
+	float GetSpeed() const;
 
 private:
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
-	TSubclassOf<UCameraShakeBase> StandCameraShake;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
-	TSubclassOf<UCameraShakeBase> WalkCameraShake;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
-	TSubclassOf<UCameraShakeBase> SprintCameraShake;
-
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
-	ECameraShakePlaySpace CameraShakePlaySpace;
-
 	UPROPERTY()
-	TObjectPtr<UCameraShakeBase> ActiveCameraShake;
+	TObjectPtr<UPerlinNoiseCameraShakePattern> PerlinNoisePattern;
 	UPROPERTY()
-	TSubclassOf<UCameraShakeBase> ActiveCameraShakeClass;
+	TObjectPtr<UWaveOscillatorCameraShakePattern> WaveOscillatorPattern;
 
-	FTimerHandle CameraShakeTimer;
+	TWeakObjectPtr<UPawnMovementComponent> MovementComponent;
+
+	const FVector* VelocityPtr;
 };

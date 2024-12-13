@@ -4,17 +4,7 @@
 #include "Managers/LimenProceduralMapManager.h"
 
 
-void ALimenProceduralMapManager::MapBuilt(UProceduralMapDataAsset* MapData)
+void ALimenProceduralMapManager::MapBuilt(ULimenProceduralMap* Map)
 {
-	check(MapData != nullptr);
-}
-
-void ALimenProceduralMapManager::NotifyMapComplete() const
-{
-	OnMapComplete.Broadcast();
-}
-
-void ALimenProceduralMapManager::NotifyMapComplete()
-{
-	OnMapComplete.Broadcast();
+	check(Map != nullptr);
 }

@@ -19,7 +19,7 @@ EBTNodeResult::Type UFindClosestDoor::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	}
 
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
-	if (!BlackboardComponent->IsValidLowLevelFast())
+	if (BlackboardComponent == nullptr)
 	{
 		return EBTNodeResult::Failed;
 	}

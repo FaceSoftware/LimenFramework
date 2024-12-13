@@ -24,8 +24,6 @@ ALimenGameplayManager* ALimenGameplayManager::GetGameplayManager(UObject* WorldC
 
 ALimenGameplayManager::ALimenGameplayManager(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	bReplicates = false;
-	
 	PrimaryActorTick.bTickEvenWhenPaused = true;
 	PrimaryActorTick.bCanEverTick = true;
 	bHasInitialized = false;

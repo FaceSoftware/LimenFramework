@@ -53,17 +53,6 @@ public:
 
 		return nullptr;
 	}
-
-	template<typename ManagerClass>
-	static void GetGameplayManagers(UWorld* World, TArray<ManagerClass*>& OutManagers)
-	{
-		static_assert(std::is_base_of_v<ALimenGameplayManager, ManagerClass>);
-		for (TActorIterator<ManagerClass> It(World); It; ++It)
-		{
-			OutManagers.Push(*It);
-		}
-	}
-	
 	
 public:
 	FObjectInitializeDelegate OnObjectInitialized;

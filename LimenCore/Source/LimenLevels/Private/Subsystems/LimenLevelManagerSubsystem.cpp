@@ -62,6 +62,12 @@ void ULimenLevelManagerSubsystem::OpenLocalLevel(const TSoftObjectPtr<UWorld>& L
 	UGameplayStatics::OpenLevelBySoftObjectPtr(this, Level, bAbsolute, InOptions);
 }
 
+int32 ULimenLevelManagerSubsystem::GetIndexOfGameLevel(const UWorld* InLevel)
+{
+	check(InLevel != nullptr);
+	return static_cast<int32>(ULimenLevelsDeveloperSettings::GetGameLevelIndex(InLevel));
+}
+
 bool ULimenLevelManagerSubsystem::OpenInitializationLevel()
 {
 	if (const TSoftObjectPtr<UWorld> Level = ULimenLevelsDeveloperSettings::GetInitializationLevel(); !Level.IsNull())

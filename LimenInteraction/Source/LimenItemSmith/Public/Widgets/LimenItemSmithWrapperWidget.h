@@ -3,14 +3,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Widgets/LimenGameMenuWidget.h"
+#include "Widgets/LimenMenuWrapperWidget.h"
 #include "LimenItemSmithWrapperWidget.generated.h"
 
+class ILimenSellableItem;
+class ILimenUpgradable;
 /**
  * 
  */
 UCLASS()
-class LIMENITEMSMITH_API ULimenItemSmithWrapperWidget : public ULimenGameMenuWidget
+class LIMENITEMSMITH_API ULimenItemSmithWrapperWidget : public ULimenMenuWrapperWidget
 {
 	GENERATED_BODY()
 

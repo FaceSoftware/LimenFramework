@@ -27,6 +27,23 @@ TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetGameLevel(const uint8 I
 	return Settings->GameLevels[Index];
 }
 
+uint8 ULimenLevelsDeveloperSettings::GetGameLevelIndex(const UWorld* Level)
+{
+	check(Level != nullptr);
+	
+	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();
+	check(Settings != nullptr);
+	for (int32 i = 0; i < Settings->GameLevels.Num(); i++)
+	{
+		if (Settings->GameLevels[i].ToSoftObjectPath() == FSoftObjectPath(Level))
+		{
+			return static_cast<uint8>(i);
+		}
+	}
+	
+	return INDEX_NONE;
+}
+
 bool ULimenLevelsDeveloperSettings::ShouldUseSubsystem()
 {
 	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();

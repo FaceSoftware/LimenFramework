@@ -15,58 +15,49 @@ ULimenAbilityComponent::ULimenAbilityComponent(const FObjectInitializer& InObjec
 	bAttributesLoaded = false;
 }
 
-void ULimenAbilityComponent::BeginPlay()
-{
-	LoadAbilities();
-	LoadAttributes();
-
-	Super::BeginPlay();
-}
-
 void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-	
-	for (ULimenAbilityBase* Ability : Abilities)
+	for (TStrongObjectPtr<ULimenAbilityBase>& Ability : Abilities)
 	{
-		Ability->ConditionalBeginDestroy();
+		Ability.Reset();
 	}
 	Abilities.Empty();
 
-	for (ULimenAttributeBase* Attribute : Attributes)
+	for (TStrongObjectPtr<ULimenAttributeBase>& Attribute : Attributes)
 	{
-		Attribute->ConditionalBeginDestroy();
+		Attribute.Reset();
 	}
 	Attributes.Empty();
+	
+	Super::EndPlay(EndPlayReason);
 }
 
-void ULimenAbilityComponent::LoadAbilities()
+void ULimenAbilityComponent::LoadAbilities(AActor* Owner)
 {
 	Abilities.Empty(AbilityClasses.Num());
+	
 	for (auto& AbilityClass : AbilityClasses)
 	{
 		check(!AbilityClass.IsNull());
-	
-		TObjectPtr<ULimenAbilityBase> Temp = NewObject<ULimenAbilityBase>(this, AbilityClass.LoadSynchronous());
-		check(Temp != nullptr);
-		Temp->Initialize(GetOwner());
-		Abilities.Push(Temp);
+		
+		ULimenAbilityBase* Temp = NewObject<ULimenAbilityBase>(this, AbilityClass.LoadSynchronous());
+		Temp->Initialize(Owner);
+		Abilities.Push(TStrongObjectPtr(Temp));
 	}
 
 	bAbilitiesLoaded = true;
 }
 
-void ULimenAbilityComponent::LoadAttributes()
+void ULimenAbilityComponent::LoadAttributes(AActor* Owner)
 {
 	Attributes.Empty(AttributeClasses.Num());
 	for (auto& AttributeClass : AttributeClasses)
 	{
 		check(!AttributeClass.IsNull());
 		
-		TObjectPtr<ULimenAttributeBase> Temp = NewObject<ULimenAttributeBase>(this, AttributeClass.LoadSynchronous());
-		check(Temp != nullptr);
-		Temp->Initialize(GetOwner());
-		Attributes.Push(Temp);
+		ULimenAttributeBase* Temp = NewObject<ULimenAttributeBase>(this, AttributeClass.LoadSynchronous());
+		Temp->Initialize(Owner);
+		Attributes.Push(TStrongObjectPtr(Temp));
 	}
 
 	bAttributesLoaded = true;
@@ -75,17 +66,21 @@ void ULimenAbilityComponent::LoadAttributes()
 void ULimenAbilityComponent::AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass)
 {
 	check(AbilityClass != nullptr);
+	
 	AbilityClasses.Push(TSoftClassPtr<ULimenAbilityBase>(AbilityClass));
+	
 	ULimenAbilityBase* Ability = NewObject<ULimenAbilityBase>(this, AbilityClass);
-	Abilities.Push(Ability);
+	Abilities.Push(TStrongObjectPtr(Ability));
 }
 
 void ULimenAbilityComponent::AddAttribute(const TSubclassOf<ULimenAttributeBase>& AttributeClass)
 {
 	check(AttributeClass != nullptr);
+	
 	AttributeClasses.Push(TSoftClassPtr<ULimenAttributeBase>(AttributeClass));
+	
 	ULimenAttributeBase* Attribute = NewObject<ULimenAttributeBase>(this, AttributeClass);
-	Attributes.Push(Attribute);
+	Attributes.Push(TStrongObjectPtr(Attribute));
 }
 
 bool ULimenAbilityComponent::IsReadyForGameplay() const
@@ -95,20 +90,21 @@ bool ULimenAbilityComponent::IsReadyForGameplay() const
 
 void ULimenAbilityComponent::DeactivateAllAbilities()
 {
-	for (ULimenAbilityBase* Ability : Abilities)
+	for (const TStrongObjectPtr<ULimenAbilityBase>& Ability : Abilities)
 	{
-		check(Ability != nullptr)
+		check(Ability.IsValid())
 		Ability->ForceDeactivateAbility();
 	}
 }
 
 ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAbilityBase> AbilityClass)
 {
-	for (ULimenAbilityBase* Ability : Abilities)
+	for (const TStrongObjectPtr<ULimenAbilityBase>& Ability : Abilities)
 	{
+		check(Ability.IsValid())
 		if (Ability->GetClass() == AbilityClass)
 		{
-			return Ability;
+			return Ability.Get();
 		}
 	}
 
@@ -117,23 +113,39 @@ ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAb
 
 ULimenAttributeBase* ULimenAbilityComponent::GetAttribute(const TSubclassOf<ULimenAttributeBase> AttributeClass)
 {
-	for (ULimenAttributeBase* Attribute : Attributes)
+	for (const TStrongObjectPtr<ULimenAttributeBase>& Attribute : Attributes)
 	{
 		if (Attribute->GetClass() == AttributeClass || Attribute->GetClass()->IsChildOf(AttributeClass))
 		{
-			return Attribute;
+			return Attribute.Get();
 		}
 	}
 
 	return nullptr;
 }
 
-const TArray<ULimenAbilityBase*>& ULimenAbilityComponent::GetAbilities()
+TArray<ULimenAbilityBase*> ULimenAbilityComponent::GetAbilities() const
 {
-	return Abilities;
+	TArray<ULimenAbilityBase*> Out;
+	Out.Reserve(Abilities.Num());
+	
+	for (auto& Ability : Abilities)
+	{
+		Out.Push(Ability.Get());
+	}
+	
+	return Out;
 }
 
-const TArray<ULimenAttributeBase*>& ULimenAbilityComponent::GetAttributes()
+TArray<ULimenAttributeBase*> ULimenAbilityComponent::GetAttributes() const
 {
-	return Attributes;
+	TArray<ULimenAttributeBase*> Out;
+	Out.Reserve(Attributes.Num());
+	
+	for (auto& Attribute : Attributes)
+	{
+		Out.Push(Attribute.Get());
+	}
+	
+	return Out;
 }

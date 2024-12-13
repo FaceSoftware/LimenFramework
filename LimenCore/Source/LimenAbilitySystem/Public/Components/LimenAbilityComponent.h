@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "UObject/StrongObjectPtr.h"
 #include "LimenAbilityComponent.generated.h"
 
 
@@ -17,11 +18,10 @@ class LIMENABILITYSYSTEM_API ULimenAbilityComponent : public UActorComponent
 
 public:
 	explicit ULimenAbilityComponent(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
-	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	void LoadAbilities();
-	void LoadAttributes();
+	void LoadAbilities(AActor* Owner);
+	void LoadAttributes(AActor* Owner);
 	void AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass);
 	void AddAttribute(const TSubclassOf<ULimenAttributeBase>& AttributeClass);
 
@@ -40,9 +40,9 @@ public:
 	{
 		static_assert(std::is_base_of_v<ULimenAbilityBase, AbilityClass>);
 		
-		for (ULimenAbilityBase* Ability : Abilities)
+		for (TStrongObjectPtr<ULimenAbilityBase>& Ability : Abilities)
 		{
-			AbilityClass* Temp = dynamic_cast<AbilityClass*>(Ability);
+			AbilityClass* Temp = Cast<AbilityClass>(Ability.Get());
 			if (Temp != nullptr)
 			{
 				return Temp;
@@ -57,9 +57,9 @@ public:
 	{
 		static_assert(std::is_base_of_v<ULimenAttributeBase, AttributeClass>);
 		
-		for (ULimenAttributeBase* Attribute : Attributes)
+		for (TStrongObjectPtr<ULimenAttributeBase>& Attribute : Attributes)
 		{
-			AttributeClass* Temp = dynamic_cast<AttributeClass*>(Attribute);
+			AttributeClass* Temp = Cast<AttributeClass>(Attribute.Get());
 			if (Temp != nullptr)
 			{
 				return Temp;
@@ -69,8 +69,8 @@ public:
 		return nullptr;
 	}
 
-	const TArray<ULimenAbilityBase*>& GetAbilities();
-	const TArray<ULimenAttributeBase*>& GetAttributes();
+	TArray<ULimenAbilityBase*> GetAbilities() const;
+	TArray<ULimenAttributeBase*> GetAttributes() const;
 	
 	template<typename AbilityClass>
 	void InitializeAbilityDependency();
@@ -79,17 +79,15 @@ public:
 	void InitializeAttributeDependency();
 	
 protected:
-
-private:
 	UPROPERTY(EditDefaultsOnly, Category="Limen")
 	TArray<TSoftClassPtr<ULimenAbilityBase>> AbilityClasses;
-	UPROPERTY()
-	TArray<TObjectPtr<ULimenAbilityBase>> Abilities;
-	
 	UPROPERTY(EditDefaultsOnly, Category="Limen")
 	TArray<TSoftClassPtr<ULimenAttributeBase>> AttributeClasses;
-	UPROPERTY()
-	TArray<TObjectPtr<ULimenAttributeBase>> Attributes;
+
+private:
+	TArray<TStrongObjectPtr<ULimenAbilityBase>> Abilities;
+	
+	TArray<TStrongObjectPtr<ULimenAttributeBase>> Attributes;
 
 	bool bAbilitiesLoaded;
 	bool bAttributesLoaded;
