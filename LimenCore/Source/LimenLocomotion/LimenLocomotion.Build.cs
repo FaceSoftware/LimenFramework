@@ -10,6 +10,7 @@ public class LimenLocomotion : ModuleRules
             new string[]
             {
                 "Core",
+                "LimenCore",
             }
         );
 
@@ -20,9 +21,9 @@ public class LimenLocomotion : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "AIModule",
-                "GameplayCameras",
                 "EngineCameras",
+                "GameplayCameras",
+                "AIModule",
                 
                 "LimenCore",
                 "PhysicsCore",

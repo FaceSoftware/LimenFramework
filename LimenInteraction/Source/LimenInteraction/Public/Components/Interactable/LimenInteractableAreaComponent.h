@@ -24,7 +24,11 @@ public:
 	ULimenInteractableAreaComponent();
 	virtual void OnComponentCreated() override;
 
-	/// ILimenInteractableComponent
+	virtual void Activate(bool bReset) override;
+	virtual void Deactivate() override;
+
+#pragma region ILimenInteractableComponent
+
 	virtual FInteractableComponentDelegate* GetInteractionDelegate() override;
 	virtual FInteractableComponentDelegate* GetInteractionStoppedDelegate() override;
 	virtual FBPInteractableComponentDelegate* GetBlueprintInteractionDelegate() override;
@@ -32,7 +36,8 @@ public:
 	virtual UPrimitiveComponent* GetPrimitiveComponent() override;
 	virtual void Interact(AController* InController, APawn* InPawn) override;
 	virtual void StopInteraction(AController* InController, APawn* InPawn) override;
-	///
+
+	#pragma endregion ILimenInteractableComponent
 protected:
 
 private:

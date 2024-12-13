@@ -3,7 +3,9 @@
 
 #include "Components/LimenStepsSoundComponent.h"
 
+#include "TimerManager.h"
 #include "DataAssets/LimenCharacterMovementAudioData.h"
+#include "Engine/HitResult.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Hearing.h"
@@ -36,12 +38,9 @@ void ULimenStepsSoundComponent::BeginPlay()
 	OwnerMovement = GetOwner()->GetComponentByClass<UPawnMovementComponent>();
 	check(OwnerMovement)
 
-	if (GetNetMode() < NM_Client)
-	{
-		UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
-		AIPerceptionSystem = AISystem->GetPerceptionSystem();
-		check(AIPerceptionSystem != nullptr);
-	}
+	UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
+	AIPerceptionSystem = AISystem->GetPerceptionSystem();
+	check(AIPerceptionSystem != nullptr);
 }
 
 void ULimenStepsSoundComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)

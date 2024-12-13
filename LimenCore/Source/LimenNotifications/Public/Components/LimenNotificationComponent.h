@@ -7,49 +7,44 @@
 #include "LimenNotificationComponent.generated.h"
 
 
-class ULimenNotificationWidget;
+struct FNotificationParams;
 class FLimenNotification;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENNOTIFICATIONS_API ULimenNotificationComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotificationPauseRequestDelegate, const bool, bWantsToPause);
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNotificationDisplayedDelegate, const bool, bWasConsetNotification);
+	
 	
 public:
-	FNotificationPauseRequestDelegate OnPauseRequested;
-	FNotificationDisplayedDelegate OnNotificationDisplayed;
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNewNotificationDelegate, const FNotificationParams&, NotificationParams);
+
+	UPROPERTY(BlueprintAssignable)
+	FNewNotificationDelegate OnNewNotification;
 
 	explicit ULimenNotificationComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
-	void QueueNotification(const TSharedRef<FLimenNotification>& InNotification);
-	void SetNotificationsHidden(const bool bHide);
+	void QueueNotification(const TSharedRef<const FLimenNotification>& InNotification);
 
 protected:
 	void TryAssignPlayerController();
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Rules")
-	bool bIgnoreDuplicate;
+	float DefaultNotificationDisplayTime;
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Rules")
-	bool bConsentPauseGame;	
+	bool bIgnoreDuplicate;
+
+	UPROPERTY(EditDefaultsOnly, Category="Limen|Rules")
+	int32 MaxConsecutiveNotifications;
 	
-	UPROPERTY(EditAnywhere, Category="Limen|Classes")
-	TSoftClassPtr<ULimenNotificationWidget> NotificationWidgetClass;
-	UPROPERTY()
-	TObjectPtr<ULimenNotificationWidget> NotificationWidget;
-	TArray<TSharedRef<FLimenNotification>> PendingNotifications;
-	FTimerHandle NotificationTimer;
-	
-	bool bShowHints;
+	TArray<TSharedRef<const FLimenNotification>> PendingNotifications;
+	TMap<TSharedRef<const FLimenNotification>, FTimerHandle> ActiveNotifications;
 	
 	UPROPERTY()
 	TObjectPtr<APlayerController> BoundPlayerController;
 
 	void DisplayNextNotification();
-	void DestroyLastNotification();
-
-	bool IsNotificationDuplicate(const TSharedRef<FLimenNotification>& Test);
+	
+	bool IsNotificationDuplicate(const TSharedRef<const FLimenNotification>& Test);
 };

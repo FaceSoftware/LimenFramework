@@ -12,11 +12,6 @@ FThreadedFunction::FThreadedFunction(const TFunction<void()>& InFunction, const 
 	StopCallback = InStopCallback;
 }
 
-FSingleThreadRunnable* FThreadedFunction::GetSingleThreadInterface()
-{
-	return FRunnable::GetSingleThreadInterface();
-}
-
 uint32 FThreadedFunction::Run()
 {
 	Function();

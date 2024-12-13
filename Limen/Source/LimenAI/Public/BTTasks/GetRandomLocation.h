@@ -22,6 +22,8 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere)
+	int32 MaxAttempts;
+	UPROPERTY(EditAnywhere)
 	FBlackboardKeySelector OutLocation;
 	UPROPERTY(EditAnywhere)
 	float MaxRadius;

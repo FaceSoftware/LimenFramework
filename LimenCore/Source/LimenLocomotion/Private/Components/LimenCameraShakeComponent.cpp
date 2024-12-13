@@ -3,95 +3,106 @@
 
 #include "Components/LimenCameraShakeComponent.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
+#include "Shakes/PerlinNoiseCameraShakePattern.h"
+#include "Shakes/WaveOscillatorCameraShakePattern.h"
 
-ULimenCameraShakeComponent::ULimenCameraShakeComponent()
+
+ULimenCameraShakeComponent::ULimenCameraShakeComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	CameraShakePlaySpace = ECameraShakePlaySpace::CameraLocal;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.TickInterval = 1 / 64;
+	PrimaryComponentTick.bTickEvenWhenPaused = false;
+	bAllowConcurrentTick = true;
+	bAutoActivate = true;
+	
+	VelocityPtr = nullptr;
+	CameraShakeClass = nullptr;
+	CameraShake = nullptr;
 }
 
-void ULimenCameraShakeComponent::PlayStandCameraShake()
+void ULimenCameraShakeComponent::BeginPlay()
 {
-	if (!IsActive() || !StandCameraShake || ActiveCameraShakeClass == StandCameraShake)
-	{
-		return;
-	}
+	Super::BeginPlay();
+	
+	MovementComponent = GetOwner()->GetComponentByClass<UPawnMovementComponent>();
+	VelocityPtr = &MovementComponent->Velocity;
 
-	ActiveCameraShakeClass = StandCameraShake;
-	PlayCameraShake();
-}
-
-void ULimenCameraShakeComponent::PlayWalkCameraShake()
-{
-	if (!IsActive() || !WalkCameraShake || ActiveCameraShakeClass == WalkCameraShake)
+	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
+	if (PlayerController == nullptr)
 	{
 		return;
 	}
 	
-	ActiveCameraShakeClass = WalkCameraShake;
-	PlayCameraShake();
-}
-
-void ULimenCameraShakeComponent::PlaySprintCameraShake()
-{
-	if (!IsActive() || !SprintCameraShake || ActiveCameraShakeClass == SprintCameraShake)
+	CameraShake = PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass.LoadSynchronous(), 1.f, ECameraShakePlaySpace::CameraLocal);	
+	if (CameraShake != nullptr)
 	{
-		return;
+		PerlinNoisePattern = Cast<UPerlinNoiseCameraShakePattern>(CameraShake->GetRootShakePattern());
+		WaveOscillatorPattern = Cast<UWaveOscillatorCameraShakePattern>(CameraShake->GetRootShakePattern());
 	}
-
-	ActiveCameraShakeClass = SprintCameraShake;
-	PlayCameraShake();
 }
 
-void ULimenCameraShakeComponent::StopCameraShake()
+void ULimenCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+															FActorComponentTickFunction* ThisTickFunction)
 {
-	if (!ActiveCameraShake)
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (const float CurrentSpeed = GetSpeed(); !FMath::IsNaN(CurrentSpeed) && CameraShake != nullptr)
+	{
+		float NewScale = CurrentSpeed * FastestSpeedScale.B / FastestSpeedScale.A;
+		if (NewScale > FastestSpeedScale.B)
+		{
+			NewScale = FastestSpeedScale.B;
+		}
+		else if (NewScale < SlowestSpeedScale.B)
+		{
+			NewScale = SlowestSpeedScale.B;
+		}
+
+		FMinimalViewInfo Temp;
+		CameraShake->ShakeScale = NewScale;
+		CameraShake->UpdateAndApplyCameraShake(DeltaTime, 1.f, Temp);
+	}
+}
+
+void ULimenCameraShakeComponent::Activate(bool bReset)
+{
+	Super::Activate(bReset);
+
+	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+	const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
+	if (PlayerController == nullptr)
 	{
 		return;
 	}
 	
-	ActiveCameraShake->StopShake(false);
-	// Let garbage collection have these ones
-	ActiveCameraShake = nullptr;
-	ActiveCameraShakeClass = nullptr;
-}
-
-bool ULimenCameraShakeComponent::IsPlayingCameraShake() const
-{
-	return ActiveCameraShake != nullptr;
-}
-
-bool ULimenCameraShakeComponent::IsPlayingStandCameraShake() const
-{
-	return IsPlayingCameraShake() && ActiveCameraShake->GetClass() == StandCameraShake;
-}
-
-bool ULimenCameraShakeComponent::IsPlayingWalkCameraShake() const
-{
-	return IsPlayingCameraShake() && ActiveCameraShake->GetClass() == WalkCameraShake;
-}
-
-bool ULimenCameraShakeComponent::IsPlayingSprintCameraShake() const
-{
-	return IsPlayingCameraShake() && ActiveCameraShake->GetClass() == SprintCameraShake;
-}
-
-void ULimenCameraShakeComponent::PlayCameraShake()
-{
-	check(ActiveCameraShakeClass)
-	StopCameraShake();
-	ActiveCameraShake = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->StartCameraShake(ActiveCameraShakeClass, 1.f, CameraShakePlaySpace);
-}
-
-void ULimenCameraShakeComponent::SetActive(bool bNewActive, bool bReset)
-{
-	Super::SetActive(bNewActive, bReset);
-
-	if (bNewActive)
+	CameraShake = PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass.LoadSynchronous(), 1.f, ECameraShakePlaySpace::CameraLocal);	
+	if (CameraShake != nullptr)
 	{
-		
+		PerlinNoisePattern = Cast<UPerlinNoiseCameraShakePattern>(CameraShake->GetRootShakePattern());
+		WaveOscillatorPattern = Cast<UWaveOscillatorCameraShakePattern>(CameraShake->GetRootShakePattern());
 	}
-	else
+}
+
+void ULimenCameraShakeComponent::Deactivate()
+{
+	Super::Deactivate();
+
+	if (CameraShake && CameraShake->IsActive())
 	{
-		StopCameraShake();
+		CameraShake->StopShake();
 	}
+}
+
+float ULimenCameraShakeComponent::GetSpeed() const
+{
+	if (VelocityPtr == nullptr)
+	{
+		return NAN;
+	}
+
+	return VelocityPtr->Length();
 }

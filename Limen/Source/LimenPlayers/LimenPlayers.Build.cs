@@ -42,6 +42,7 @@ public class LimenPlayers : ModuleRules
                 "LimenStorage",
                 "LimenArchives",
                 "LimenModals",
+                "LimenHints",
             }
         );
     }

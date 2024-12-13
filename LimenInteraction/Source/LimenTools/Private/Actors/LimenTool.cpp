@@ -3,9 +3,12 @@
 
 #include "Actors/LimenTool.h"
 
+#include "TimerManager.h"
 #include "Actors/LimenBattery.h"
 #include "Attributes/LimenBatteryAttribute.h"
 #include "Components/LimenAbilityComponent.h"
+#include "Engine/World.h"
+
 
 ALimenTool::ALimenTool()
 {
@@ -24,9 +27,14 @@ ALimenTool::ALimenTool()
 void ALimenTool::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AbilityComponent->LoadAbilities(this);
+	AbilityComponent->LoadAttributes(this);
 	
 	BatteryAttribute = AbilityComponent->GetAttribute<ULimenBatteryAttribute>();
 	check(BatteryAttribute != nullptr);
+	BatteryAttribute->SetRechargeRate(DrainPerSecond > 0 ? -DrainPerSecond : DrainPerSecond);
+	BatteryAttribute->OnAttributeEmpty.AddUniqueDynamic(this, &ThisClass::ALimenTool::BatteryEmpty);
 
 	if (bStartActive)
 	{
@@ -127,4 +135,9 @@ void ALimenTool::RechargeFinished()
 void ALimenTool::CurrentBatteryCapacityChanged(const float NewValue)
 {
 	CurrentBatteryPercentage = NewValue;
+}
+
+void ALimenTool::BatteryEmpty(const float NewValue)
+{
+	DeactivateTool();
 }

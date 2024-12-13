@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interactables/LimenInteractable.h"
 #include "Interfaces/LimenSaveObjectInterface.h"
+#include "UObject/StrongObjectPtr.h"
 #include "LimenItemBase.generated.h"
 
 
@@ -27,8 +28,10 @@ public:
 	static FText GetDisplayName(const TSubclassOf<ALimenItemBase>& ItemClass);
 	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure)
 	static FText GetDescription(const TSubclassOf<ALimenItemBase>& ItemClass);
-	UFUNCTION(BlueprintCallable, Category="Limen|Items|Actions", BlueprintPure)
-	static TArray<ULimenItemAction*> GetItemActions(ULimenInventoryComponent* InventoryComponent, const TSubclassOf<ALimenItemBase>& ItemClass);
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Limen|Items", BlueprintPure)
+	UStaticMesh* GetItemMesh() const;
+	virtual UStaticMesh* GetItemMesh_Implementation() const;
 	
 public:
 	explicit ALimenItemBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -43,17 +46,13 @@ public:
 	virtual void DataLoaded() override;
 	virtual void DataSaved() override;
 	
-	TArray<ULimenItemAction*> GetItemActions();
-
-	virtual void SetOwner(AActor* NewOwner) override;
-
-	APawn* GetOwnerPawn() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Items|Actions", BlueprintPure)
+	TArray<ULimenItemAction*> GetItemActions() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Item Actions")
 	TArray<TSubclassOf<ULimenItemAction>> ItemActionsClass;
-	UPROPERTY()
-	TArray<ULimenItemAction*> ItemActions;
+	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
 	FText DisplayName;
@@ -61,14 +60,10 @@ protected:
 	FText Description;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
 	TSoftObjectPtr<UTexture2D> ItemImage;
-
+	
 	virtual void Interact(AController* InController, APawn* InPawn) override;
-
 	virtual void InteractionStopped(AController* InController, APawn* InPawn) override final;
 	
 private:
 	bool bHasBeenLoaded;
-
-	UPROPERTY()
-	TObjectPtr<APawn> OwnerPawn;
 };

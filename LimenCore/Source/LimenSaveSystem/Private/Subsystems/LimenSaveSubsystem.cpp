@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "SaveGames/LimenSaveData.h"
 
+
 void ULimenSaveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
@@ -22,24 +23,25 @@ ULimenSaveSubsystem* ULimenSaveSubsystem::Get(const UWorld* World)
 	return SaveSubsystem;
 }
 
-bool ULimenSaveSubsystem::SaveData(ULimenSaveData* SaveData, const FName& DataName)
+bool ULimenSaveSubsystem::SaveData(ULimenSaveData* SaveData, const FString& DataName)
 {
-	if (!IsValid(SaveData) || DataName.GetStringLength() == 0)
+	if (SaveData == nullptr || DataName.IsEmpty())
 	{
 		return false;
 	}
-	
-	return UGameplayStatics::SaveGameToSlot(SaveData, DataName.ToString(), 0);
+
+	return UGameplayStatics::SaveGameToSlot(SaveData, DataName, 0);
 }
 
-bool ULimenSaveSubsystem::SaveDataAsync(ULimenSaveData* SaveData, const FName& DataName, const TFunction<void(const FString&, const int32, const bool)>& SaveFinishCallback)
+bool ULimenSaveSubsystem::SaveDataAsync(ULimenSaveData* SaveData, const FString& DataName, const TFunction<void(const FString&, const int32, const bool)>& SaveFinishCallback)
 {
-	if (!IsValid(SaveData) || DataName.GetStringLength() == 0)
+	if (SaveData == nullptr || DataName.IsEmpty())
 	{
 		return false;
 	}
 
-	// Do not pass the "SaveFinishCallback" by reference, pass it by copy, or the variable will go out of scope and reference nothing...
+	// Do not pass the "SaveFinishCallback" by reference, pass it by copy,
+	// or the variable will go out of scope causing the reference to be lost...
 	FAsyncSaveGameToSlotDelegate SaveDelegate;
 	SaveDelegate.BindLambda([this, SaveFinishCallback] (const FString& StringDataName, const int32 UserIndex, const bool bSuccess)
 	{
@@ -50,19 +52,14 @@ bool ULimenSaveSubsystem::SaveDataAsync(ULimenSaveData* SaveData, const FName& D
 
 	bIsAsyncOperationInProgress = true;
 	OnSaveStateChanged.Broadcast(ESaveState::Saving);
-	UGameplayStatics::AsyncSaveGameToSlot(SaveData, DataName.ToString(), 0, SaveDelegate);
+	UGameplayStatics::AsyncSaveGameToSlot(SaveData, DataName, 0, SaveDelegate);
 	return true;
 }
 
-ULimenSaveData* ULimenSaveSubsystem::LoadData(const FName& DataName)
+ULimenSaveData* ULimenSaveSubsystem::LoadData(const FString& DataName)
 {
-	auto* LoadedData = Cast<ULimenSaveData>(UGameplayStatics::LoadGameFromSlot(DataName.ToString(), 0));
-	if (!IsValid(LoadedData))
-	{
-		return nullptr;
-	}
-	
-	return LoadedData;
+	USaveGame* LoadedData = UGameplayStatics::LoadGameFromSlot(DataName, 0);
+	return LoadedData == nullptr ? nullptr : Cast<ULimenSaveData>(LoadedData);
 }
 
 bool ULimenSaveSubsystem::LoadDataAsync(const FName& DataName, const TFunction<void(const FString&, const int32, ULimenSaveData*)>& LoadFinishCallback)
