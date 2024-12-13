@@ -14,7 +14,6 @@ public class LimenSaveSystem : ModuleRules
 				"Core",
 				"CoreUObject",
 				"Engine",
-				"DeveloperSettings",
 			}
 		);
 		

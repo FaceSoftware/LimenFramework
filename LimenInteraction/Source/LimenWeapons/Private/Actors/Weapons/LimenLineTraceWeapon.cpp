@@ -3,15 +3,23 @@
 
 #include "Actors/Weapons/LimenLineTraceWeapon.h"
 
+#include "CollisionQueryParams.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/HitResult.h"
+#include "Engine/World.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/Pawn.h"
 #include "Interfaces/LimenDamageable.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "LogMacros/LimenInteractionLogMacros.h"
 #include "LogMacros/LimenLogMacros.h"
+#include "Perception/AIPerceptionSystem.h"
+#include "Perception/AISense_Damage.h"
 
-
-ALimenLineTraceWeapon::ALimenLineTraceWeapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+ALimenLineTraceWeapon::ALimenLineTraceWeapon() : Super()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bDebugMode = false;
-	TraceChannel = ECollisionChannel::ECC_Camera;
 }
 
 void ALimenLineTraceWeapon::FireMethod()
@@ -22,18 +30,7 @@ void ALimenLineTraceWeapon::FireMethod()
 	
 	FVector Start;
 	FRotator Rotation;
-	if (GetOwnerPawn() == nullptr)
-	{
-		return;
-	}
-
-	AController* OwnerController = GetOwnerPawn()->GetController();
-	if (OwnerController == nullptr)
-	{
-		return;
-	}
-	
-	OwnerController->GetPlayerViewPoint(Start, Rotation);
+	GetOwningController()->GetPlayerViewPoint(Start, Rotation);
 	const FVector End = Start + Rotation.Vector() * WeaponRange;
 
 	FCollisionQueryParams Params;
@@ -53,14 +50,17 @@ void ALimenLineTraceWeapon::FireMethod()
 		// C++ Interface
 		if (auto* Damageable = Cast<ILimenDamageable>(OutHits[i].GetActor()))
 		{
-			Damageable->ApplyPointDamage(OwnerController, this, CurrentDamageWithFalloff);
+			Damageable->ApplyPointDamage(GetOwningController(), GetOwningPawn(), CurrentDamageWithFalloff, OutHits[i].BoneName);
+			
 			DamageCount++;
+			
+			const FAIDamageEvent DamageEvent(OutHits[i].GetActor(), this, CurrentDamageWithFalloff, GetActorLocation());
+			check(DamageEvent.IsValid())
+			GetAIPerceptionSystem()->OnEvent(DamageEvent);
 		}
 
 		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;
 	}
-	
-	OnWeaponFired.Broadcast(OwnerController, this, OutHits);
 
 	LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);
 

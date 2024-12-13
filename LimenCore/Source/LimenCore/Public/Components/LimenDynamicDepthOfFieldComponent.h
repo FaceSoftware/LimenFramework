@@ -7,6 +7,8 @@
 #include "LimenDynamicDepthOfFieldComponent.generated.h"
 
 
+struct FPostProcessSettings;
+struct FCollisionQueryParams;
 class ULimenRecurrentAction;
 class APostProcessVolume;
 class UCameraComponent;
@@ -22,35 +24,27 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	virtual void Activate(bool bReset) override;
+	virtual void Deactivate() override;
 	
-protected:
-	void FindGlobalPostProcess();
-	UFUNCTION()
-	virtual void GlobalPostProcessFound();
+protected:	
+	UPROPERTY(EditDefaultsOnly)
+	TEnumAsByte<ECollisionChannel> LineTraceChannel;
+	UPROPERTY(EditDefaultsOnly)
+	bool bTraceIgnoresOwner;
+	
+	FCollisionQueryParams QueryParams;
 	
 	float GetLookAtDistance() const;
 
 private:
-	UPROPERTY(EditDefaultsOnly)
-	FName GlobalPostProcessTag;
-	UPROPERTY(EditDefaultsOnly)
-	TEnumAsByte<ECollisionChannel> LineTraceChannel;
-	UPROPERTY()
-	TObjectPtr<APawn> OwnerPawn;
-	UPROPERTY()
-	TObjectPtr<APlayerController> OwnerPlayerController;
-
-	FCollisionQueryParams QueryParams;
-
-	UPROPERTY()
-	TObjectPtr<APostProcessVolume> GlobalPostProcess;
-
-	UPROPERTY()
-	TObjectPtr<ULimenRecurrentAction> FindGlobalPostProcessAction;
+	static constexpr float MaxFocalDistance = 64000.f;
+	
+	TArray<UCameraComponent*> OwnerCameras;
+	TWeakObjectPtr<UCameraComponent> ActiveCamera;
+	FPostProcessSettings* CurrentCameraPostProcessSettings;
 
 	UFUNCTION()
-	void SetPostProcess();
+	void ActiveCameraChanged(UActorComponent* Component, bool bReset);
 
-	UFUNCTION()
-	bool HasFoundGlobalPostProcess();
+	bool IsAnyCameraViewTarget() const;
 };

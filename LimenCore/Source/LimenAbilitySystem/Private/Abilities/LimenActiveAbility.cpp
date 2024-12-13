@@ -6,7 +6,6 @@
 
 ULimenActiveAbility::ULimenActiveAbility() : Super()
 {
-	DamageLineTraceChannel = ECC_Camera;
 	AbilityCooldown = 0;
 	bIsCooldownOver = true;
 	bIsActive = false;
@@ -94,7 +93,10 @@ void ULimenActiveAbility::AbilityActivated_Wrapper(AController* Controller, APaw
 	AbilityActivated(Controller, Pawn);
 	BP_OnAbilityActivated(Controller, Pawn);
 
-	bIsActive = false;
-	bIsCooldownOver = false;
-	GetWorld()->GetTimerManager().SetTimer(AbilityCooldownTimer, this, &ThisClass::SetCooldownOver, AbilityCooldown, false);
+	if (!FMath::IsNearlyZero(AbilityCooldown))
+	{
+		bIsActive = false;
+		bIsCooldownOver = false;
+		GetWorld()->GetTimerManager().SetTimer(AbilityCooldownTimer, this, &ThisClass::SetCooldownOver, AbilityCooldown, false);
+	}
 }

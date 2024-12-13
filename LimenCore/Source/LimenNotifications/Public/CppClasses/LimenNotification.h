@@ -23,7 +23,10 @@ struct FNotificationParams
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DisplayTime = 4.f;
+	bool bUseCustomDisplayTime = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DisplayTime = 3.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText NotificationTitle = FText();
@@ -39,14 +42,17 @@ public:
 	explicit FLimenNotification(const FNotificationParams& InNotificationParams);
 	~FLimenNotification();
 	
+	bool UseCustomDisplayTime() const;
 	float GetDisplayTime() const;
-	const FText& GetNotificationTitle();
-	const FText& GetNotificationMessage();
+	const FText& GetNotificationTitle() const;
+	const FText& GetNotificationMessage() const;
 
 	bool operator==(const FLimenNotification* Other) const;
 
+	explicit operator FNotificationParams() const;
+	const FNotificationParams& GetParameters() const;
+
 private:
-	float DisplayTime;
-	FText NotificationTitle;
-	FText NotificationMessage;
+	FNotificationParams Params;
+
 };

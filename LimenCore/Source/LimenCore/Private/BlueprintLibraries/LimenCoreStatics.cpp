@@ -7,7 +7,6 @@
 #include "GameMapsSettings.h"
 #include "NavigationSystem.h"
 #include "Engine/PostProcessVolume.h"
-#include "Kismet/GameplayStatics.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Namespaces/GlobalInfo.h"
 #include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
@@ -47,7 +46,7 @@ void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, c
 	{
 		check(GEngine)
 		const FString Message = FString::Printf(TEXT("%s: %s"), *Caller->GetClass()->GetName(), *LogText);
-		UKismetSystemLibrary::PrintString(Caller, Message, bPrintToScreen, false, TextColor.ReinterpretAsLinear(), DisplayTime);
+		GEngine->AddOnScreenDebugMessage(-1, DisplayTime, TextColor, Message);
 	}
 #endif
 }
@@ -94,9 +93,11 @@ void ULimenCoreStatics::StaticLimenLog(const FString FunctionName, const FString
 
 void ULimenCoreStatics::IsGamePlayingInEditor(UObject* Caller, bool& bIsEditorGame)
 {
-	check(GEngine)
-	const auto* World = GEngine->GetWorldFromContextObject(Caller, EGetWorldErrorMode::Assert);
-	bIsEditorGame = World->IsPlayInEditor();
+#if WITH_EDITOR
+	bIsEditorGame = true;
+#else
+	bIsEditorGame = false;
+#endif
 }
 
 void ULimenCoreStatics::SetDynamicGlobalIlluminationMethod(APostProcessVolume* PostProcessVolume,
@@ -344,4 +345,58 @@ FString ULimenCoreStatics::GetGameDefaultMap()
 FString ULimenCoreStatics::GetGameTransitionMap()
 {
 	return GetDefault<UGameMapsSettings>()->TransitionMap.GetAssetName();
+}
+
+bool ULimenCoreStatics::SetCharacterAtIndex(const FString& String, const int32 Index, const FString& Char,
+	FString& OutString)
+{
+	if (!String.IsValidIndex(Index) || Char.IsEmpty())
+	{
+		return false;
+	}
+
+	OutString.Empty();
+
+	OutString = String;
+	OutString[Index] = Char[0];
+	return true;
+}
+
+FString ULimenCoreStatics::GetProjectTitle()
+{
+	FString ProjectTitle;
+	verify(GConfig->GetString(
+		TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+		TEXT("ProjectName"),
+		ProjectTitle,
+		GGameIni
+	));
+
+	return ProjectTitle;
+}
+
+FString ULimenCoreStatics::GetProjectVersion()
+{
+	FString AppVersion;
+	verify(GConfig->GetString(
+		TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+		TEXT("ProjectVersion"),
+		AppVersion,
+		GGameIni
+	));
+
+	return AppVersion;
+}
+
+FString ULimenCoreStatics::GetCopyrightNotice()
+{
+	FString CopyrightNotice;
+	verify(GConfig->GetString(
+		TEXT("/Script/EngineSettings.GeneralProjectSettings"),
+		TEXT("CopyrightNotice"),
+		CopyrightNotice,
+		GGameIni
+	));
+
+	return CopyrightNotice;
 }

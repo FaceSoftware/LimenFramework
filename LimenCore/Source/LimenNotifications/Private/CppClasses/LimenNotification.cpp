@@ -8,31 +8,47 @@
 
 FLimenNotification::FLimenNotification(const FNotificationParams& InNotificationParams)
 {
-	DisplayTime = InNotificationParams.DisplayTime;
-	NotificationTitle = InNotificationParams.NotificationTitle;
-	NotificationMessage = InNotificationParams.NotificationMessage;
+	Params.DisplayTime = InNotificationParams.DisplayTime;
+	Params.NotificationTitle = InNotificationParams.NotificationTitle;
+	Params.NotificationMessage = InNotificationParams.NotificationMessage;
 }
 
 FLimenNotification::~FLimenNotification()
 {
 }
 
+bool FLimenNotification::UseCustomDisplayTime() const
+{
+	return Params.bUseCustomDisplayTime;
+}
+
 float FLimenNotification::GetDisplayTime() const
 {
-	return DisplayTime;
+	return Params.DisplayTime;
 }
 
-const FText& FLimenNotification::GetNotificationTitle()
+const FText& FLimenNotification::GetNotificationTitle() const
 {
-	return NotificationTitle;
+	return Params.NotificationTitle;
 }
 
-const FText& FLimenNotification::GetNotificationMessage()
+const FText& FLimenNotification::GetNotificationMessage() const
 {
-	return NotificationMessage;
+	return Params.NotificationMessage;
 }
 
 bool FLimenNotification::operator==(const FLimenNotification* Other) const
 {
-	return NotificationTitle.ToString() == Other->NotificationTitle.ToString() && NotificationMessage.ToString() == Other->NotificationMessage.ToString();
+	return Params.NotificationTitle.ToString() == Other->Params.NotificationTitle.ToString() &&
+		Params.NotificationMessage.ToString() == Other->Params.NotificationMessage.ToString();
+}
+
+FLimenNotification::operator FNotificationParams() const
+{
+	return GetParameters();
+}
+
+const FNotificationParams& FLimenNotification::GetParameters() const
+{
+	return Params;
 }

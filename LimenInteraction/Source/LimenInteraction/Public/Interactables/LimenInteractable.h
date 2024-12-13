@@ -58,21 +58,19 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Interact")
 	void BP_OnInteract(AController* InController, APawn* InPawn);
 	virtual void Interact(AController* InController, APawn* InPawn);
-	UFUNCTION(NetMulticast, Reliable)
-	virtual void MulticastRPC_Interact(AController* InController, APawn* InPawn);
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Limne|Interaction")
 	void BP_OnInteractionStopped(AController* InController, APawn* InPawn);
 	virtual void InteractionStopped(AController* InController, APawn* InPawn);
 	
 private:
-	void OnInteract_Internal(AController* InController, APawn* InPawn);
-	void OnInteractionStopped_Internal(AController* InController, APawn* InPawn);
-
 	UPROPERTY(SaveGame)
 	bool bWasInteracted;
 	UPROPERTY(SaveGame)
 	int32 InteractionCount;
 	
 	bool bIsBeingContinuouslyInteracted;
+	
+	void OnInteract_Internal(AController* InController, APawn* InPawn);
+	void OnInteractionStopped_Internal(AController* InController, APawn* InPawn);
 };

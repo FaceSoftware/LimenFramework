@@ -21,27 +21,15 @@ public:
 	
 	virtual void BeginPlay() override;
 	
-	virtual void Hold(ALimenPhysicalItem* InPhysicalItem);
-	virtual void StopHolding();
+	void Hold(ALimenPhysicalItem* InPhysicalItem);
+	void StopHolding();
+	void Drop();
 	bool IsHoldingSomething() const;
-
-	UFUNCTION(BlueprintCallable)
-	ALimenPhysicalItem* GetPhysicalItem() const;
-
-	template<typename T>
-	T* GetPhysicalItem() const
-	{
-		static_assert(std::is_base_of_v<ALimenPhysicalItem, T>);
-		return Cast<T>(GetPhysicalItem());
-	}
-
-	TSubclassOf<ALimenPhysicalItem> GetPhysicalItemParentClass() const;
+	
+	ALimenPhysicalItem* GetPhysicalItem() const { return PhysicalItem.Get(); }
 
 private:
 	bool bIsHoldingSomething;
-
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
-	TSoftClassPtr<ALimenPhysicalItem> PhysicalItemParentClass;
 
 	UPROPERTY()
 	TObjectPtr<ALimenPhysicalItem> PhysicalItem;

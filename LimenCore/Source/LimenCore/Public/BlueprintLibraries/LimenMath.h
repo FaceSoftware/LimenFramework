@@ -66,4 +66,19 @@ public:
 											const FCollisionResponseParams& ResponseParams,
 											const float TraceResolution,
 											const bool bThreadSafe = true);
+
+	static bool IsInteger(const double Test);
+
+	template<typename T>
+	static T WrappedClamp(T Value, T Min, T Max);
 };
+
+template <typename T>
+T ULimenMath::WrappedClamp(T Value, T Min, T Max)
+{
+	static_assert(TIsArithmetic<T>());
+	check(Min <= Max);
+	
+	T Range = Max - Min;
+	return Min + ((Value - Min) % Range + Range) % Range;
+}

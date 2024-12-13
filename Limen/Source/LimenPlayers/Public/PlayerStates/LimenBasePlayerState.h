@@ -20,7 +20,6 @@ class LIMENPLAYERS_API ALimenBasePlayerState : public APlayerState
 	GENERATED_BODY()
 
 public:
-	ALimenBasePlayerState();
 
 private:
 };

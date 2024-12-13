@@ -23,13 +23,14 @@ class PROCEDURALMAPS_API ILimenStartTileInterface
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	FVector GetDefaultSpawnLocation() const;
+	FTransform GetSpawnTransform() const;
 
-protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayerTeleported(AController* Controller, APawn* Pawn);
 
+protected:
 	virtual FVector GetDefaultSpawnLocation_Implementation() const { return FVector(0); }
+	
 private:
 	
 };

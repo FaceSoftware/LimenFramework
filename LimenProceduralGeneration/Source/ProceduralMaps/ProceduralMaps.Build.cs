@@ -24,7 +24,6 @@ public class ProceduralMaps : ModuleRules
                 "Slate",
                 "SlateCore",
                 "NavigationSystem",
-                "AdpcmAudioDecoder",
                 
                 "LimenCore",
                 "LimenProceduralGeneration",
