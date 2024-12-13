@@ -5,10 +5,7 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
-#include "GameFramework/HUD.h"
-#include "HUDs/LimenBaseHUD.h"
 #include "LogMacros/LimenLogMacros.h"
-#include "Subsystems/LimenLevelTransitionSubsystem.h"
 
 
 ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -25,51 +22,13 @@ void ALimenPlayerControllerBase::SetupInputComponent()
 
 	if (!PlayerMappingContext.IsNull())
 	{
-		InputSystem->AddMappingContext(PlayerMappingContext.LoadSynchronous(), 1);
+		InputSystem->AddMappingContext(PlayerMappingContext.LoadSynchronous(), 0);
 	}
 
 	if (!CharacterMappingContext.IsNull())
 	{
-		InputSystem->AddMappingContext(CharacterMappingContext.LoadSynchronous(), 0);
+		InputSystem->AddMappingContext(CharacterMappingContext.LoadSynchronous(), 1);
 	}
-
-	ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>();
-	LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::LoadingScreenVisibilityChanged);
-	LoadingScreenVisibilityChanged(LevelTransitionHandler->IsLoadingScreenActive());
-}
-
-void ALimenPlayerControllerBase::OnPossess(APawn* InPawn)
-{	
-	Super::OnPossess(InPawn);
-
-	if (InPawn != nullptr)
-	{
-		if (InPawn->HasActorBegunPlay())
-		{
-			BindPawnDelegates(InPawn);
-		}
-		else
-		{
-			InPawn->OnPawnBeginPlay.AddUObject(this, &ThisClass::BindPawnDelegates);
-		}
-	}
-
-	if (CreateHudReference())
-	{
-		LimenBaseHUD->UpdateWidgets(this, GetPawn());
-		BindWidgetDelegates();
-	}
-}
-
-void ALimenPlayerControllerBase::OnUnPossess()
-{
-	UnbindPawnDelegates(GetPawn());
-	if (CreateHudReference())
-	{
-		UnbindWidgetDelegates();
-	}
-	
-	Super::OnUnPossess();
 }
 
 void ALimenPlayerControllerBase::RequestPause(const EPauseReason Reason)
@@ -114,13 +73,18 @@ void ALimenPlayerControllerBase::SetGameInput()
 }
 
 void ALimenPlayerControllerBase::SetUIInput()
-{	
+{
+	if (!IsValid(this))
+	{
+		return;
+	}
+	
 	// Do not flush or this will behave the same as UI Only
 	FInputModeGameAndUI InputMode;
 	InputMode.SetHideCursorDuringCapture(false);
+	
 	SetInputMode(InputMode);
 	SetShowMouseCursor(true);
-	
 	LIMEN_LOG(LogLimenCore, Log, this, "UI input set");
 }
 
@@ -195,46 +159,4 @@ bool ALimenPlayerControllerBase::CanSeeActor(const AActor* OtherActor) const
 	}
 
 	return true;
-}
-
-void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
-{
-	if (NewPawn == GetPawn())
-	{
-		GetPawn()->OnPawnBeginPlay.RemoveAll(this);
-	}
-}
-
-void ALimenPlayerControllerBase::QueueNotification(const FNotificationParams& InParams)
-{
-	auto* HUDInstance = Cast<ALimenBaseHUD>(GetHUD());
-	if (!IsValid(HUDInstance))
-	{
-		return;
-	}
-
-	HUDInstance->QueueNotification(InParams);
-}
-
-void ALimenPlayerControllerBase::LoadingScreenVisibilityChanged(const bool bIsVisible)
-{
-	if (bIsVisible)
-	{
-		DisableInput(this);
-	}
-	else // Is hidden
-	{
-		EnableInput(this);
-	}
-}
-
-bool ALimenPlayerControllerBase::CreateHudReference()
-{
-	if (LimenBaseHUD.IsValid())
-	{
-		return true;
-	}
-
-	LimenBaseHUD = Cast<ALimenBaseHUD>(GetHUD());
-	return LimenBaseHUD.IsValid();
 }

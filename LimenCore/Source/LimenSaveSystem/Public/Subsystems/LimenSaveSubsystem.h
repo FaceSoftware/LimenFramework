@@ -26,7 +26,7 @@ class LIMENSAVESYSTEM_API ULimenSaveSubsystem : public UGameInstanceSubsystem
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAsyncSaveStateChanged, const ESaveState, CurrentSaveState);
 	
-public:	
+public:
 	UPROPERTY(BlueprintAssignable)
 	FAsyncSaveStateChanged OnSaveStateChanged;
 	
@@ -35,15 +35,15 @@ public:
 	static ULimenSaveSubsystem* Get(const UWorld* World);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Save System")
-	bool SaveData(ULimenSaveData* SaveData, const FString& DataName);
+	bool SaveData(ULimenSaveData* SaveData, const FName& DataName);
 	
-	bool SaveDataAsync(ULimenSaveData* SaveData, const FString& DataName, const TFunction<void(const FString&, const int32, const bool)>& SaveFinishCallback);
+	bool SaveDataAsync(ULimenSaveData* SaveData, const FName& DataName, const TFunction<void(const FString&, const int32, const bool)>& SaveFinishCallback);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Save System")
-	ULimenSaveData* LoadData(const FString& DataName);
+	ULimenSaveData* LoadData(const FName& DataName);
 
 	template<typename SaveDataClass>
-	SaveDataClass* LoadData(const FString& DataName)
+	SaveDataClass* LoadData(const FName& DataName)
 	{
 		static_assert(std::is_base_of_v<ULimenSaveData, SaveDataClass>);
 		return Cast<SaveDataClass>(LoadData(DataName));
@@ -57,6 +57,4 @@ protected:
 	bool bIsAsyncOperationInProgress;
 	
 private:
-	
-	
 };

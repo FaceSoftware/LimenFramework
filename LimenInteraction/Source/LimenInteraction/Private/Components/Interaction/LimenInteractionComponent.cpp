@@ -48,7 +48,7 @@ void ULimenInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickT
 		return;
 	}
 	
-	UpdateInteraction(DeltaTime);
+	UpdateInteraction();
 	if (CurrentInteractableInterface != PreviousInteractableInterface)
 	{
 		AActor* TempOwner = nullptr;
@@ -79,7 +79,9 @@ bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPa
 	}
 	
 	bIsInteracting = true;
-	UpdateInteraction(0.f);
+	UpdateInteraction();
+	
+	LIMEN_LOG(LogLimenInteraction, Log, this, "Attempted to interact")
 	
 	if (CurrentInteractableInterface)
 	{
@@ -100,7 +102,7 @@ bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPa
 	TArray<UActorComponent*> Components = SpecificInteractable->GetComponentsByInterface(ULimenInteractableComponent::StaticClass());
 	if (Components.IsEmpty())
 	{
-		LIMEN_LOG(LogLimenInteraction, Error, this, "Cannot interact with %s because it does not have an interactable component", *SpecificInteractable->GetName());
+		LIMEN_LOG(LogLimenInteraction, Error, this, "Cannot interact with %s. It does not have an interactable component", *SpecificInteractable->GetName());
 		return false;
 	}
 	
@@ -118,7 +120,7 @@ bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPa
 {
 	if (!SpecificInteractableComponent->Implements<ULimenInteractionComponent>())
 	{
-		LIMEN_LOG(LogLimenInteraction, Error, this, "Cannot interact with %s because it does not have an interactable component", *SpecificInteractableComponent->GetOwner()->GetName());
+		LIMEN_LOG(LogLimenInteraction, Error, this, "Cannot interact with %s. It does not have an interactable component", *SpecificInteractableComponent->GetOwner()->GetName());
 		return false;
 	}
 

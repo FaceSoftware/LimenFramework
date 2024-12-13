@@ -19,7 +19,7 @@ class LIMENABILITYSYSTEM_API ULimenAttributeBase : public ULimenStorageItem, pub
 {
 	GENERATED_BODY()
 
-public:
+	public:
 	/**
 	 * @brief Delegate fired when the attribute is empty.
 	 */
@@ -64,13 +64,6 @@ public:
 	virtual bool IsTickableInEditor() const override;
 	virtual UWorld* GetTickableGameObjectWorld() const override;
 	/// FTickableGameObject Interface End 
-
-	/**
-	 * @brief Sets the attribute recharge rate.
-	 * @param Value The new recharge rate per second.
-	 */
-	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	void SetRechargeRate(const float Value);
 	
 	/**
 	 * @brief Sets the attribute to a new value.
@@ -98,8 +91,8 @@ public:
 	float SafeModifyValueBy(const float Value);
 
 	/**
-	 * @brief Modifies the current value by a specific percentage (negative percentages would decrement the attribute).
-	 * @param Percent The percentage to modify by.
+	 * @brief Modifies the current value by a specific percentage.
+	 * @param Percent The percentage to modify by. If > 1 will increment the attribute or if < 1 will decrement.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
 	void ModifyValuePercentageBy(const float Percent);
@@ -199,7 +192,7 @@ public:
 
 protected:
 	/**
-	 * @brief The amount to recharge every second.
+	 * @brief The amount to recharge every second. If less or equal to 0 it won't recharge
 	 */
 	UPROPERTY(EditAnywhere, Category="Limen")
 	float RechargeRate;

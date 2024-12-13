@@ -3,17 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenWidget.h"
+#include "LimenGameMenuWidget.h"
 #include "LimenBaseHudWidget.generated.h"
 
 /**
  * 
  */
-UCLASS(Abstract, NotBlueprintable)
-class LIMENWIDGETS_API ULimenBaseHudWidget : public ULimenWidget
+UCLASS(Abstract, Blueprintable)
+class LIMENWIDGETS_API ULimenBaseHudWidget : public ULimenGameMenuWidget
 {
 	GENERATED_BODY()
 
 public:
-	ULimenBaseHudWidget(const FObjectInitializer& ObjectInitializer);
+	explicit ULimenBaseHudWidget(const FObjectInitializer& ObjectInitializer);
 };

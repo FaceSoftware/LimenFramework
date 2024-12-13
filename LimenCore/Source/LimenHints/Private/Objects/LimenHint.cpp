@@ -3,6 +3,8 @@
 
 #include "Objects/LimenHint.h"
 
+#include "Blueprint/UserWidget.h"
+#include "Developer/LimenHintsDeveloperSettings.h"
 #include "UMG/LimenHintWidget.h"
 
 
@@ -12,19 +14,21 @@ ULimenHint::ULimenHint()
 	bHasTriedToShowHint = false;
 }
 
-void ULimenHint::SetHintWidgetClass(const TSubclassOf<ULimenHintWidget>& InClass)
-{
-	HintWidgetClass = InClass;
-}
-
 void ULimenHint::Initialize()
 {
-	check(HintWidgetInstance == nullptr);
-	check(HintWidgetClass != nullptr);
+	const ULimenHintsDeveloperSettings* Settings = GetDefault<ULimenHintsDeveloperSettings>();
+	if (Settings->DefaultHintWidget.IsNull())
+	{
+		return;
+	}
 	
-	HintWidgetInstance = CreateWidget<ULimenHintWidget>(GetWorld()->GetFirstPlayerController(), HintWidgetClass);
+	HintWidgetInstance = CreateWidget<ULimenHintWidget>(GetWorld(), Settings->DefaultHintWidget.LoadSynchronous());
+	check(HintWidgetInstance != nullptr);
 
-	PreSetup();
+	FText Title, Body;
+	SetHintText(Title, Body);
+	HintWidgetInstance->SetHintText(Title, Body);
+	
 	SetupShowHint();
 	SetupHideHint();
 }
@@ -54,16 +58,7 @@ void ULimenHint::Disable()
 	HideHint();
 }
 
-bool ULimenHint::HasEverBeenVisible() const
-{
-	return bHasTriedToShowHint;
-}
-
 void ULimenHint::SetHintText(FText& OutTitle, FText& OutBody)
-{
-}
-
-void ULimenHint::PreSetup()
 {
 }
 
@@ -94,9 +89,6 @@ void ULimenHint::ShowHint()
 		return;
 	}
 	
-	FText Title, Body;
-	SetHintText(Title, Body);
-	HintWidgetInstance->SetHintText(Title, Body);
 	HintWidgetInstance->ShowWidget();
 }
 
@@ -113,6 +105,7 @@ void ULimenHint::HideHint()
 	}
 	
 	OnHintDismissed.Broadcast();
-	HintWidgetInstance->DestroyWidget();
+	HintWidgetInstance->DestroyWidget(true);
 	HintWidgetInstance = nullptr;
+	ConditionalBeginDestroy();
 }

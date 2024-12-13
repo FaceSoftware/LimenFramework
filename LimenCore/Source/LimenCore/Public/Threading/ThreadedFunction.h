@@ -13,6 +13,7 @@ class LIMENCORE_API FThreadedFunction final : public FRunnable
 public:
 	explicit FThreadedFunction(const TFunction<void()>& InFunction, const TFunction<void()>& InStopCallback = [] {} );
     virtual ~FThreadedFunction() override = default;
+    virtual FSingleThreadRunnable* GetSingleThreadInterface() override;
     virtual uint32 Run() override;
 	virtual void Stop() override;
 

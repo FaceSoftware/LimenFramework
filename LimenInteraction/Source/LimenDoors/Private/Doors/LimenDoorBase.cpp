@@ -7,7 +7,8 @@
 ALimenDoorBase::ALimenDoorBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
 	bStartOpen = false;
-	DoorState = EDoorState::Undefined;
+	bIsOpen = false;
+	bUseAnimationOnStart = true;
 }
 
 void ALimenDoorBase::BeginPlay()
@@ -16,11 +17,11 @@ void ALimenDoorBase::BeginPlay()
 
 	if (bStartOpen)
 	{
-		OpenDoorWithoutAnimation();
+		bUseAnimationOnStart ? OpenDoor() : OpenDoorWithoutAnimation();
 	}
 	else
 	{
-		CloseDoorWithoutAnimation();
+		bUseAnimationOnStart ? CloseDoor() : CloseDoorWithoutAnimation();
 	}
 }
 
@@ -31,73 +32,70 @@ void ALimenDoorBase::SetStartOpen(const bool bNewStartOpen)
 
 void ALimenDoorBase::OpenDoor(AController* InController, APawn* InPawn, const bool bIgnoreRestrictions)
 {
-	if (DoorState == EDoorState::Open || DoorState == EDoorState::Opening)
+	if (bIsOpen)
 	{
 		return;
 	}
 
 	DoorOpenAnimation();
-	DoorState = EDoorState::Opening;
-	
-	OnDoorStateChanged.Broadcast(DoorState);
+	bIsOpen = true;
+	DoorStateChanged(bIsOpen);
 }
 
 void ALimenDoorBase::OpenDoorWithoutAnimation(AController* InController, APawn* InPawn, const bool bIgnoreRestrictions)
 {
-	if (DoorState == EDoorState::Open)
+	if (bIsOpen)
 	{
 		return;
 	}
+	
+	if (!bIgnoreRestrictions)
+	{
+
+		ToggleOpenState();
+	}
 
 	SetDoorOpenWithoutAnimation();
-	DoorState = EDoorState::Open;
-	
-	OnDoorStateChanged.Broadcast(DoorState);
+	bIsOpen = true;
+	DoorStateChanged(bIsOpen);
 }
 
 void ALimenDoorBase::CloseDoor(AController* InController, APawn* InPawn)
 {
-	if (DoorState == EDoorState::Closed || DoorState == EDoorState::Closing)
+	if (!bIsOpen)
 	{
 		return;
 	}
 	
 	DoorCloseAnimation();
-	DoorState = EDoorState::Closing;
-	
-	OnDoorStateChanged.Broadcast(DoorState);
+	bIsOpen = false;
+	DoorStateChanged(bIsOpen);
 }
 
 void ALimenDoorBase::CloseDoorWithoutAnimation(AController* InController, APawn* InPawn)
 {
-	if (DoorState == EDoorState::Closed)
+	if (!bIsOpen)
 	{
 		return;
 	}
 	
 	SetDoorCloseWithoutAnimation();
-	DoorState = EDoorState::Closed;
-	
-	OnDoorStateChanged.Broadcast(DoorState);
+	bIsOpen = false;
+	DoorStateChanged(bIsOpen);
 }
 
 bool ALimenDoorBase::IsOpen() const
 {
-	return DoorState == EDoorState::Open;
-}
-
-EDoorState ALimenDoorBase::GetDoorState() const
-{
-	return DoorState;
+	return bIsOpen;
 }
 
 void ALimenDoorBase::Interact(AController* InController, APawn* InPawn)
 {
-	if (DoorState == EDoorState::Open || DoorState == EDoorState::Opening)
+	if (bIsOpen)
 	{
-		CloseDoor(InController, InPawn);
+		CloseDoor();
 	}
-	else if (DoorState == EDoorState::Closed || DoorState == EDoorState::Closing)
+	else
 	{
 		OpenDoor(InController, InPawn);
 	}
@@ -105,38 +103,29 @@ void ALimenDoorBase::Interact(AController* InController, APawn* InPawn)
 
 void ALimenDoorBase::ToggleOpenState()
 {
-	if (DoorState == EDoorState::Open || DoorState == EDoorState::Opening)
+	if (IsOpen())
 	{
 		CloseDoor();
 	}
-	else if (DoorState == EDoorState::Closed || DoorState == EDoorState::Closing)
+	else
 	{
 		OpenDoor();
 	}
 }
 
-void ALimenDoorBase::NotifyAnimationFinished(const bool bIsOpenAnimation)
+void ALimenDoorBase::DoorStateChanged(const bool bDoorIsOpen)
 {
-	DoorState = bIsOpenAnimation ? EDoorState::Open : EDoorState::Closed;
-	
 	TArray<UActorComponent*> PrimitiveComponents = GetComponentsByTag(UPrimitiveComponent::StaticClass(), DoorComponentTag);
 	check(PrimitiveComponents.Num() <= 1);
 	if (PrimitiveComponents.IsValidIndex(0))
 	{
-		PrimitiveComponents[0]->SetCanEverAffectNavigation(bIsOpenAnimation);
+		PrimitiveComponents[0]->SetCanEverAffectNavigation(bDoorIsOpen);
 	}
 	
-	if (bIsOpenAnimation)
+	if (bIsOpen)
 	{
 	}
 	else
 	{
 	}
-
-	OnDoorStateChanged.Broadcast(DoorState);
-}
-
-void ALimenDoorBase::SetDoorState(const EDoorState NewState)
-{
-	DoorState = NewState;
 }

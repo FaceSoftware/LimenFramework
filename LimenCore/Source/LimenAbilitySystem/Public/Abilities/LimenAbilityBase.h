@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Tickable.h"
 #include "Components/LimenAbilityComponent.h"
 #include "LimenStorage/Public/LimenStorageItem.h"
 #include "LimenAbilityBase.generated.h"

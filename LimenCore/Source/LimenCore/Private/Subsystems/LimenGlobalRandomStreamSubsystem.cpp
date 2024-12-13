@@ -63,7 +63,7 @@ float ULimenGlobalRandomStreamSubsystem::RandomFloatRange(const float Max, const
 
 TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateRandomUniqueNumbers(const int& Max, const int& Min, const int Count)
 {
-	return GenerateValidRandomUniqueNumbers(Max, Min, Count);
+	return GenerateValidRandomNumbers(Max, Min, Count);
 }
 
 TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateRandomNumbers(const int& Max, const int& Min, const int Count)

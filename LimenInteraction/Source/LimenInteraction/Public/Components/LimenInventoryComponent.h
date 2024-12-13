@@ -17,18 +17,14 @@ enum class EInventoryFeedback : uint8
 	Full,
 	Success
 };
-USTRUCT()
+
 struct FItemRegistry
 {
-	GENERATED_BODY();
-	
 	TSoftClassPtr<ALimenItemBase> ItemClass;
-
-	UPROPERTY()
 	TArray<ALimenItemBase*> ItemInstances;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, TSubclassOf<ALimenItemBase>, ItemClass);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, ALimenItemBase*, ItemClass);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryUpdate, ULimenInventoryComponent*, Inventory);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -63,30 +59,6 @@ public:
 	bool AddItem(ALimenItemBase* NewItem);
 	/**
 	 * @brief Gets an item, removing it from the inventory.
-	 * @return The item instance.
-	 */
-	template<typename T>
-	T* GetItem()
-	{
-		static_assert(std::is_base_of_v<ALimenItemBase, T>);
-		
-		FItemRegistry* Registry = FindItemRegistry(T::StaticClass());
-		if (Registry == nullptr)
-		{
-			return nullptr;
-		}
-
-		ALimenItemBase* OutItem = Registry->ItemInstances.Pop(EAllowShrinking::Yes);
-		if (Registry->ItemInstances.Num() == 0)
-		{
-			OnItemRemoved.Broadcast(OutItem->GetClass());
-		}
-		OnInventoryUpdated.Broadcast(this);
-	
-		return Cast<T>(OutItem);
-	}
-	/**
-	 * @brief Gets an item, removing it from the inventory.
 	 * @param Class The class of the item.
 	 * @return The item instance.
 	 */
@@ -101,10 +73,10 @@ public:
 			return nullptr;
 		}
 
-		ALimenItemBase* OutItem = Registry->ItemInstances.Pop(EAllowShrinking::Yes);
+		ALimenItemBase* OutItem = Registry->ItemInstances.Pop(true);
 		if (Registry->ItemInstances.Num() == 0)
 		{
-			OnItemRemoved.Broadcast(OutItem->GetClass());
+			OnItemRemoved.Broadcast(OutItem);
 		}
 		OnInventoryUpdated.Broadcast(this);
 	
@@ -123,7 +95,7 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
 	TMap<TSubclassOf<ALimenItemBase>, int32> PeekInventory() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Inventory", meta=(DeterminesOutputType="Class"))
+	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
 	TArray<ALimenItemBase*> PeekInventoryInstances(const TSubclassOf<ALimenItemBase> Class) const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory", meta=(DeterminesOutputType="Class"))
 	ALimenItemBase* PeekInventoryInstance(const TSubclassOf<ALimenItemBase> Class) const;
@@ -131,15 +103,15 @@ public:
 	TMap<TSubclassOf<ALimenItemBase>, int32> PeekItems() const;
 	TArray<TSubclassOf<ALimenItemBase>> PeekItemsClass() const;
 	/**
-	 * @brief Gets inventory items from a specific class, without removing them.
+	 * @brief Gets all of the inventory items from a specific class, without removing them.
 	 * @param ItemClass The class to search.
-	 * @return A map containing the inventory items of the specified class and their respective quantity.
+	 * @return An array containing the inventory items of the specified class.
 	 */
 	TMap<TSubclassOf<ALimenItemBase>, int32> PeekItems(const TSubclassOf<ALimenItemBase>& ItemClass) const;
 	/**
-	 * @brief Gets inventory items from a specific class, without removing them.
+	 * @brief Gets all of the inventory items from a specific class, without removing them.
 	 * @param InterfaceClass The interface class to search.
-	 * @return A map containing the inventory items using the specified interface and their respective quantity.
+	 * @return An array containing the inventory items of the specified class.
 	 */
 	TMap<TSubclassOf<ALimenItemBase>, int32> PeekItems(const UClass* InterfaceClass) const;
 	/**
@@ -171,7 +143,7 @@ public:
 		static_assert(std::is_base_of_v<ALimenItemBase, T>);
 		for (FItemRegistry& Registry : ItemRegistries)
 		{
-			T* Item = Registry.ItemInstances.IsEmpty() ? nullptr : Cast<T>(Registry.ItemInstances[0]);
+			T* Item = Cast<T>(Registry.ItemInstances[0]);
 			if (Item != nullptr)
 			{
 				return Item;
@@ -191,27 +163,21 @@ public:
 	template<typename T>
 	TArray<T*> PeekItemInstances()
 	{
-		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
+		static_assert(std::is_base_of_v<ALimenItemBase, T>);
 		
 		TArray<T*> Out;
 		Out.Reserve(ItemRegistries.Num());
 		for (FItemRegistry& Registry : ItemRegistries)
 		{
-			if (Registry.ItemInstances.IsEmpty() || !Registry.ItemClass->IsChildOf<T>() ||
-				Registry.ItemClass == T::StaticClass())
+			if (Registry.ItemInstances.IsEmpty())
 			{
 				continue;
 			}
-
-			for (ALimenItemBase* Instance : Registry.ItemInstances)
+			
+			T* Item = Cast<T>(Registry.ItemInstances[0]);
+			if (Item != nullptr)
 			{
-				check(Instance != nullptr);
-				
-				T* Item = Cast<T>(Instance);
-				if (Item != nullptr)
-				{
-					Out.Push(Item);
-				}
+				Out.Push(Item);
 			}
 		}
 		
@@ -220,7 +186,7 @@ public:
 	template<typename InterfaceClass>
 	TArray<ALimenItemBase*> PeekItemInstancesByInterface()
 	{
-		static_assert(TIsDerivedFrom<InterfaceClass, UInterface>::Value);
+		static_assert(std::is_base_of_v<UInterface, InterfaceClass>);
 		
 		TArray<ALimenItemBase*> Out;
 		for (FItemRegistry& Registry : ItemRegistries)
@@ -237,6 +203,8 @@ public:
 		return Out;
 	}
 
+	bool ContainsItemInstance(const ALimenItemBase* Item) const;
+
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
 	int32 GetItemQuantity(const TSubclassOf<ALimenItemBase>& ItemClass) const;
 
@@ -250,14 +218,14 @@ protected:
 	
 private:
 	uint16 InventoryLoad;
-
-	UPROPERTY()
+	
 	TArray<FItemRegistry> ItemRegistries;
 	
 	void AddItemToRegistry(ALimenItemBase* NewItem);
 	void RemoveItemsFromRegistry(const TSubclassOf<ALimenItemBase>& ItemToRemove, const int32 Count);
 	void UpdateInventoryLoad();
 	FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass);
+	const FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass) const ;
 	
 	bool IsFirstOfType(const TSubclassOf<ALimenItemBase>& ItemClass);
 	

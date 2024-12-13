@@ -23,19 +23,19 @@ EBTNodeResult::Type UOpenDoor::ExecuteTask(UBehaviorTreeComponent& OwnerComp, ui
 	}
 
 	const UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
-	if (BlackboardComponent == nullptr)
+	if (!BlackboardComponent->IsValidLowLevelFast())
 	{
 		return EBTNodeResult::Failed;
 	}
 
 	UObject* TempDoorPtr = BlackboardComponent->GetValueAsObject(DoorActor.SelectedKeyName);
-	if (TempDoorPtr == nullptr)
+	if (!TempDoorPtr->IsValidLowLevelFast())
 	{
 		return EBTNodeResult::Failed;
 	}
 
 	ALimenDoorBase* DoorPtr = Cast<ALimenDoorBase>(TempDoorPtr);
-	if (DoorPtr == nullptr)
+	if (!DoorPtr->IsValidLowLevelFast())
 	{
 		return EBTNodeResult::Failed;
 	}

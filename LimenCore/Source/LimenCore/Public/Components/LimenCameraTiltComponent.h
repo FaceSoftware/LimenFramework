@@ -6,14 +6,6 @@
 #include "Camera/CameraComponent.h"
 #include "LimenCameraTiltComponent.generated.h"
 
-
-UENUM(BlueprintType)
-enum class ETiltFunction : uint8
-{
-	Linear,
-	EaseIn,
-};
-
 /**
  * 
  */
@@ -24,35 +16,24 @@ class LIMENCORE_API ULimenCameraTiltComponent : public UCameraComponent
 
 public:
 	ULimenCameraTiltComponent();
+	virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void SetTiltEnabled(const bool bEnabled);
 	void NotifyYawInput(const float InputValue);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
-	ETiltFunction TiltFunction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
 	float MaxCameraTilt;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
 	float CameraTiltRecoverSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
-	bool bTiltTowardsMovement;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
-	bool bEnableTilt;
 
-	void CalculateCurrentTilt(const float DeltaTime);
-	
 private:
-	TWeakObjectPtr<APlayerController> PlayerController;
-	FRotator OriginalRelativeRotation;
+	FRotator PreviousComponentRotation;
+	UPROPERTY()
+	TWeakObjectPtr<APawn> OwnerPawn;
 
 	float CurrentTilt;
-	bool bIsTiltEnabled;
 
-	bool bOriginalUsePawnControlRotation;
-
-	void CalculateLinearTilt(const float DeltaTime);
-	void CalculateEaseInTilt(const float DeltaTime);
+	void CalculateCurrentTilt(const float DeltaTime);
 };

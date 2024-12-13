@@ -4,7 +4,6 @@
 #include "GameplayManagers/LimenHintsManager.h"
 
 #include "Objects/LimenHint.h"
-#include "UMG/LimenHintWidget.h"
 
 
 ALimenHintsManager::ALimenHintsManager()
@@ -12,29 +11,23 @@ ALimenHintsManager::ALimenHintsManager()
 	bHintsEnabled = false;
 }
 
-void ALimenHintsManager::SetHintWidgetClass(const TSubclassOf<ULimenHintWidget>& InClass)
-{
-	HintWidgetClass = InClass;
-}
-
 void ALimenHintsManager::InitializeHints()
 {
-	ensureAlways(!HintWidgetClass.IsNull());
-	
 	Hints.Reserve(HintClasses.Num());
 	for (TSoftClassPtr<ULimenHint>& HintClass : HintClasses)
 	{
-		check(!HintClass.IsNull());
+		if (HintClass.IsNull())
+		{
+			continue;
+		}
 
 		ULimenHint* Hint = NewObject<ULimenHint>(this, HintClass.LoadSynchronous());
 		check(IsValid(Hint));		
 		Hints.Push(Hint);
 	}	
 	
-	check(HintWidgetClass != nullptr);
 	for (ULimenHint* Hint : Hints)
 	{
-		Hint->SetHintWidgetClass(HintWidgetClass.LoadSynchronous());
 		Hint->Initialize();
 		bHintsEnabled ? Hint->Enable() : Hint->Disable();
 	}

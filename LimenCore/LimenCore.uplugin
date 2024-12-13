@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.3",
+	"EngineAssociation": "5.4",
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "Limen Core",
@@ -22,6 +22,16 @@
 		},
 		{
 			"Name": "GameplayCameras",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "EngineCameras",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "AutomationUtils",
 			"Enabled": true,
 			"Optional": false
 		}
@@ -98,17 +108,7 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "LimenManagedSpawns",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenSocialLinkIntegration",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenCinematics",
+			"Name": "LimenThreadPool",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

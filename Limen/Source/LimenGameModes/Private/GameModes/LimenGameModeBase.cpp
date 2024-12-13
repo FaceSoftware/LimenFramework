@@ -4,22 +4,23 @@
 #include "GameModes/LimenGameModeBase.h"
 
 #include "Actors/LimenGameplayManager.h"
-#include "GameStates/LimenGameState.h"
+#include "Characters/LimenCharacterBase.h"
+#include "GameStates/LimenGameStateBase.h"
 #include "HUDs/LimenBaseHUD.h"
-#include "Characters/LimenPlayerCharacter.h"
 #include "PlayerControllers/LimenPlayerControllerBase.h"
 #include "PlayerStates/LimenBasePlayerState.h"
+
 
 ALimenGameModeBase::ALimenGameModeBase()
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
 
 	bUseSeamlessTravel = true;
-	DefaultPawnClass = ALimenPlayerCharacter::StaticClass();
+	DefaultPawnClass = ALimenCharacterBase::StaticClass();
 	PlayerControllerClass = ALimenPlayerControllerBase::StaticClass();
 	HUDClass = ALimenBaseHUD::StaticClass();
 	PlayerStateClass = ALimenBasePlayerState::StaticClass();
-	GameStateClass = ALimenGameState::StaticClass();
+	GameStateClass = ALimenGameStateBase::StaticClass();
 }
 
 void ALimenGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
@@ -34,20 +35,12 @@ void ALimenGameModeBase::BeginPlay()
 	Super::BeginPlay();
 }
 
-ALimenGameState* ALimenGameModeBase::GetLimenGameState()
+ALimenGameStateBase* ALimenGameModeBase::GetLimenGameState()
 {
-	LimenGameState = GetGameState<ALimenGameState>();
+	LimenGameState = GetGameState<ALimenGameStateBase>();
 	check(LimenGameState)
 	
 	return LimenGameState.Get();
-}
-
-void ALimenGameModeBase::ResetManagers()
-{
-	for (TObjectPtr<ALimenGameplayManager>& Manager : ManagersList)
-	{
-		Manager->Reset();
-	}
 }
 
 void ALimenGameModeBase::SpawnManagers()

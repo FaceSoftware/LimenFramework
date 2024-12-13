@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataAsset.h"
+#include "Blueprint/UserWidget.h"
 #include "LimenLoadingScreenParameters.generated.h"
 
 /**
@@ -15,6 +15,8 @@ class LIMENLEVELTRANSITIONS_API ULimenLoadingScreenParameters : public UDataAsse
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditDefaultsOnly)
+	bool bIsShaderPrecompileScreen = false;
 	UPROPERTY(EditDefaultsOnly)
 	TSoftClassPtr<ULimenLoadingScreenWidget> LoadingScreenWidget;
 	UPROPERTY(EditDefaultsOnly)

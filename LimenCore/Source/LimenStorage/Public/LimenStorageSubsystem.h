@@ -119,7 +119,7 @@ public:
 	}
 
 protected:
-	FString SaveDataName;
+	FName SaveDataName;
 	
 	void AddItem(ULimenStorageItem* NewItem);
 

@@ -5,7 +5,6 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Abilities/LimenVariableMovementAbility.h"
 #include "Components/LimenMovementComponent.h"
 #include "Components/LimenNotificationComponent.h"
 #include "CppClasses/LimenNotification.h"
@@ -13,12 +12,12 @@
 #include "LimenAbilitySystem/Public/Components/LimenAbilityComponent.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "PlayerControllers/LimenPlayerControllerBase.h"
-#include "PlayerStates/LimenBasePlayerState.h"
 
 
 ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
 
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationPitch = false;
@@ -42,29 +41,6 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->SetCastShadow(true);
 	GetMesh()->bEditableWhenInherited = true;
-
-	AbilityComponent = CreateDefaultSubobject<ULimenAbilityComponent>(TEXT("AbilityComponent"));
-}
-
-void ALimenCharacterBase::BeginPlay()
-{
-	Super::BeginPlay();
-
-	VariableMovementAbility = GetAbilityComponent()->GetAbility<ULimenVariableMovementAbility>();
-}
-
-void ALimenCharacterBase::EnableInput(class APlayerController* InPlayerController)
-{
-	Super::EnableInput(InPlayerController);
-	
-	GetComponentByClass<UEnhancedInputComponent>()->Activate();
-}
-
-void ALimenCharacterBase::DisableInput(class APlayerController* InPlayerController)
-{
-	Super::DisableInput(InPlayerController);
-	
-	GetComponentByClass<UEnhancedInputComponent>()->Deactivate();
 }
 
 void ALimenCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -73,10 +49,9 @@ void ALimenCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 	auto* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	check(EnhancedInput)
-	
+
 	EnhancedInput->BindAction(MoveInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::MoveInput);
 	EnhancedInput->BindAction(LookInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::LookInput);
-	EnhancedInput->BindAction(SprintInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::SprintInput);
 }
 
 bool ALimenCharacterBase::QueueNotification(const FNotificationParams& InParams)
@@ -98,46 +73,6 @@ bool ALimenCharacterBase::QueueNotification(const FNotificationParams& InParams)
 	return true;
 }
 
-void ALimenCharacterBase::StartSprinting()
-{
-	if (VariableMovementAbility == nullptr)
-	{
-		return;
-	}
-
-	if (VariableMovementAbility->CanActivateAbility())
-	{
-		VariableMovementAbility->ActivateAbility(GetController(), this);
-	}
-}
-
-void ALimenCharacterBase::StopSprinting()
-{
-	if (VariableMovementAbility == nullptr)
-	{
-		return;
-	}
-	
-	VariableMovementAbility->CancelAbility(GetController(), this);
-}
-
-void ALimenCharacterBase::ToggleSprint()
-{
-	if (VariableMovementAbility == nullptr)
-	{
-		return;
-	}
-	
-	if (VariableMovementAbility->IsActive())
-	{
-		StartSprinting();
-	}
-	else
-	{
-		StopSprinting();
-	}
-}
-
 ALimenPlayerControllerBase* ALimenCharacterBase::GetLimenBasePlayerController() const
 {
 	return LimenBasePlayerController.Get();
@@ -151,11 +86,6 @@ const FMouseParameters& ALimenCharacterBase::GetMouseParameters() const
 void ALimenCharacterBase::SetMouseParameters(const FMouseParameters& InNewParams)
 {
 	MouseParameters = InNewParams;
-}
-
-ULimenAbilityComponent* ALimenCharacterBase::GetAbilityComponent() const
-{
-	return AbilityComponent.Get();
 }
 
 APlayerController* ALimenCharacterBase::GetPlayerController() const
@@ -178,40 +108,9 @@ const TSoftObjectPtr<UInputAction>& ALimenCharacterBase::GetSprintInputAction() 
 	return SprintInputAction;
 }
 
-FVector ALimenCharacterBase::GetLookTarget(const float MaxDistance) const
-{
-	FVector EyesLocation;
-	FRotator EyesDirection;
-	GetActorEyesViewPoint(EyesLocation, EyesDirection);
-
-	FVector& Start = EyesLocation;
-	FVector End = EyesLocation + (EyesDirection.Vector() * MaxDistance);
-
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	FHitResult Hit;
-	if (!GetWorld()->LineTraceSingleByChannel(Hit, EyesLocation,
-											  EyesLocation + (EyesDirection.Vector() * MaxDistance),
-											  ECollisionChannel::ECC_Visibility, Params))
-	{
-		return End;
-	}
-
-	return Hit.Location;
-}
-
-void ALimenCharacterBase::OnHealthAttributeEmpty(const float NewValue)
-{
-	GetCharacterMovement()->DisableMovement();
-	AbilityComponent->DeactivateAllAbilities();
-}
-
 void ALimenCharacterBase::MoveInput(const FInputActionInstance& Instance)
 {
-	OnMovementInput.Broadcast();
-	const auto Input = Instance.GetValue().Get<FVector2D>();
-	if (!Input.IsZero())
+	if (const FVector2D Input = Instance.GetValue().Get<FVector2D>(); !Input.IsZero())
 	{
 		AddMovementInput(GetActorForwardVector(), Input.X);
 		AddMovementInput(GetActorRightVector(), Input.Y);
@@ -220,21 +119,11 @@ void ALimenCharacterBase::MoveInput(const FInputActionInstance& Instance)
 
 void ALimenCharacterBase::LookInput(const FInputActionInstance& Instance)
 {
-	const auto Input = Instance.GetValue().Get<FVector2D>();
-	AddControllerYawInput((MouseParameters.bInvertAxisX ? -Input.X : Input.X) * MouseParameters.SensitivityX);
-	AddControllerPitchInput((MouseParameters.bInvertAxisY ? Input.Y : -Input.Y) * MouseParameters.SensitivityY);
-}
-
-void ALimenCharacterBase::SprintInput(const FInputActionInstance& Instance)
-{
-	OnSprintInput.Broadcast();
-	if (Instance.GetValue().Get<bool>())
+	const FVector2D Input = Instance.GetValue().Get<FVector2D>();
+	if (!Input.IsZero())
 	{
-		StartSprinting();
-	}
-	else
-	{
-		StopSprinting();
+		AddControllerYawInput((MouseParameters.bInvertAxisX ? -Input.X : Input.X) * MouseParameters.SensitivityX);
+		AddControllerPitchInput((MouseParameters.bInvertAxisY ? Input.Y : -Input.Y) * MouseParameters.SensitivityY);
 	}
 }
 
@@ -244,16 +133,4 @@ void ALimenCharacterBase::PossessedBy(AController* NewController)
 
 	PlayerController = Cast<APlayerController>(NewController);
 	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(NewController);
-	LimenBasePlayerState = NewController->GetPlayerState<ALimenBasePlayerState>();
-
-	if (!AbilityComponent->IsReadyForGameplay())
-	{
-		AbilityComponent->LoadAbilities(this);
-		AbilityComponent->LoadAttributes(this);
-	}
-}
-
-ALimenBasePlayerState* ALimenCharacterBase::GetLimenBasePlayerState() const
-{
-	return LimenBasePlayerState.Get();
 }

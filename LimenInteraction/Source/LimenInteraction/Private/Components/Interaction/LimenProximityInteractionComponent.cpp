@@ -5,7 +5,6 @@
 
 #include "EngineUtils.h"
 #include "Components/SphereComponent.h"
-#include "Interfaces/LimenInteractableComponent.h"
 
 
 const TArray<UPrimitiveComponent*>& ULimenProximityInteractionComponent::GetAllInteractablesInRange() const
@@ -25,6 +24,8 @@ void ULimenProximityInteractionComponent::RestartInteraction()
 
 void ULimenProximityInteractionComponent::SetupInteraction()
 {
+	Super::SetupInteraction();
+
 	if (InteractionSphere)
 	{
 		InteractionSphere->DestroyComponent();
@@ -50,8 +51,10 @@ void ULimenProximityInteractionComponent::SetupInteraction()
 	CheckActorsInInsideRadius();
 }
 
-void ULimenProximityInteractionComponent::UpdateInteraction(const float DeltaTime)
+void ULimenProximityInteractionComponent::UpdateInteraction()
 {
+	Super::UpdateInteraction();
+
 	FVector Start, End;
 	if (!GetOwnerLineOfSightStartAndEndVectors(Start, End))
 	{
@@ -62,12 +65,6 @@ void ULimenProximityInteractionComponent::UpdateInteraction(const float DeltaTim
 	float ClosestDistance = TNumericLimits<double>::Max();
 	for (auto* Component : ComponentsInSphere)
 	{
-		if (Component == nullptr)
-		{
-			// For some reason there was a null component inside the sphere
-			continue;
-		}
-		
 		const float CurrentDistance = FVector::DistSquared(End, Component->GetComponentLocation());
 		if (CurrentDistance > ClosestDistance)
 		{
@@ -82,8 +79,7 @@ void ULimenProximityInteractionComponent::UpdateInteraction(const float DeltaTim
 
 	if (DebugMode())
 	{
-		DrawDebugSphere(GetWorld(), GetOwner()->GetRootComponent()->GetComponentLocation(),
-						GetInteractionRange(), 16, FColor::Green, false, DeltaTime);
+		DrawDebugSphere(GetWorld(), GetOwner()->GetRootComponent()->GetComponentLocation(), GetInteractionRange(), 16, FColor::Green);
 	}
 }
 

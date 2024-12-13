@@ -22,4 +22,5 @@ protected:
 	FText Title;
 	UPROPERTY(BlueprintReadOnly)
 	FText Text;
+	
 };
