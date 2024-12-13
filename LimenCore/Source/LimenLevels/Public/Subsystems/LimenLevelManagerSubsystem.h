@@ -27,6 +27,8 @@ public:
 	void OpenLocalLevel(const UWorld* Level);
 	void OpenLocalLevel(const TSoftObjectPtr<UWorld>& Level, bool bAbsolute, const FString& InOptions);
 
+	static int32 GetIndexOfGameLevel(const UWorld* InLevel);
+
 	bool OpenInitializationLevel();
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void OpenMainMenu();

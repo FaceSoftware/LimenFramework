@@ -4,9 +4,9 @@
 #include "Components/Interactable/LimenInteractableAreaComponent.h"
 
 
-ULimenInteractableAreaComponent::ULimenInteractableAreaComponent()
+ULimenInteractableAreaComponent::ULimenInteractableAreaComponent() : Super()
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 	SetGenerateOverlapEvents(true);
 }
 
@@ -14,6 +14,20 @@ void ULimenInteractableAreaComponent::OnComponentCreated()
 {
 	Super::OnComponentCreated();
 	SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+}
+
+void ULimenInteractableAreaComponent::Activate(bool bReset)
+{
+	Super::Activate(bReset);
+
+	SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+}
+
+void ULimenInteractableAreaComponent::Deactivate()
+{
+	Super::Deactivate();
+
+	SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 }
 
 FInteractableComponentDelegate* ULimenInteractableAreaComponent::GetInteractionDelegate()

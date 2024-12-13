@@ -6,49 +6,26 @@
 #include "Actors/LimenGameplayManager.h"
 #include "LimenProceduralMapManager.generated.h"
 
+
+class ULimenProceduralMap;
 class ALimenProceduralMapBuilder;
-class UProceduralMapDataAsset;
+class UProceduralMapParameters;
 
 UCLASS(Abstract)
 class PROCEDURALMAPS_API ALimenProceduralMapManager : public ALimenGameplayManager
 {
 	GENERATED_BODY()
 
-	DECLARE_MULTICAST_DELEGATE(FMapCompleteDelegate);
-
 public:
-	FMapCompleteDelegate OnMapComplete;
-	
-	virtual void MapBuilt(UProceduralMapDataAsset* MapData);
+	/**
+	 * @brief Called from the map builder class to notify the manager that the map has been built.
+	 * Do not call this directly!
+	 * @param Map The built map;
+	 */
+	virtual void MapBuilt(ULimenProceduralMap* Map);
 
 protected:
-	/**
-	 * @brief Notifies the map builder that the map is complete and starts loading the next map.
-	 * @note Const version.
-	 */
-	UFUNCTION()
-	void NotifyMapComplete() const;
-	/**
-	 * @brief Notifies the map builder that the map is complete and starts loading the next map.
-	 * @note Non-const version.
-	 */
-	void NotifyMapComplete();
-
-	template<typename T = ALimenProceduralMapBuilder>
-	T* GetGameplayManager() const
-	{
-		static_assert(std::is_base_of_v<ALimenProceduralMapBuilder, T>());
-		
-		if (MapBuilder == nullptr)
-		{
-			MapBuilder = ALimenGameplayManager::GetGameplayManager<T>(this);
-		}
-		
-		return static_cast<T>(MapBuilder);
-	}
 
 private:
-	UPROPERTY()
-	TWeakObjectPtr<ALimenProceduralMapBuilder> MapBuilder;
 	
 };

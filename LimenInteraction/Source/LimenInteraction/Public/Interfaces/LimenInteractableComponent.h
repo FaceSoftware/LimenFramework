@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "LimenInteractableComponent.generated.h"
 
-class FInteractionDelegate;
+
 // This class does not need to be modified.
 UINTERFACE(Blueprintable, BlueprintType)
 class LIMENINTERACTION_API ULimenInteractableComponent : public UInterface

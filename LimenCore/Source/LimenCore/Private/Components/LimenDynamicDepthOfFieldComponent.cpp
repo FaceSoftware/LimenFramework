@@ -3,44 +3,49 @@
 
 #include "Components/LimenDynamicDepthOfFieldComponent.h"
 
+#include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
-#include "BlueprintAsyncActions/LimenRecurrentAction.h"
-#include "Engine/PostProcessVolume.h"
+#include "Camera/CameraComponent.h"
+#include "Engine/HitResult.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 
 
 ULimenDynamicDepthOfFieldComponent::ULimenDynamicDepthOfFieldComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.TickInterval = 1 / 32;
-	GlobalPostProcessTag = TEXT("GlobalPostProcess");
+	PrimaryComponentTick.TickInterval = 1.f / 32.f;
+	bTraceIgnoresOwner = true;
 
 	bAutoActivate = true;
-
+	CurrentCameraPostProcessSettings = nullptr;
 	LineTraceChannel = ECC_Camera;
 }
 
 void ULimenDynamicDepthOfFieldComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	Deactivate();
-
-	OwnerPawn = Cast<APawn>(GetOwner());
-	check(OwnerPawn != nullptr);
-	AController* Controller = OwnerPawn->GetController();
-	if (Controller != nullptr)
+	
+	GetOwner()->GetComponents<UCameraComponent>(OwnerCameras);
+	if (OwnerCameras.IsEmpty())
 	{
-		OwnerPlayerController = Cast<APlayerController>(Controller);
-		if (OwnerPlayerController == nullptr)
-		{
-			Deactivate();
-		}
-		else
-		{
-			QueryParams.AddIgnoredActor(OwnerPawn.Get());
-			QueryParams.bTraceComplex = true;
+		Deactivate();
+		return;
+	}
 
-			FindGlobalPostProcess();
+	if (bTraceIgnoresOwner)
+	{
+		QueryParams.AddIgnoredActor(GetOwner());
+	}
+	QueryParams.bTraceComplex = true;
+	
+	for (UCameraComponent* Camera : OwnerCameras)
+	{
+		Camera->OnComponentActivated.AddUniqueDynamic(this, &ThisClass::ActiveCameraChanged);
+		if (Camera->IsActive())
+		{
+			ActiveCamera = Camera;
+			CurrentCameraPostProcessSettings = &ActiveCamera->PostProcessSettings;
 		}
 	}
 }
@@ -50,86 +55,71 @@ void ULimenDynamicDepthOfFieldComponent::TickComponent(float DeltaTime, ELevelTi
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!IsActive())
+	if (!IsAnyCameraViewTarget())
 	{
 		return;
 	}
 
 	const float Distance = GetLookAtDistance();
-	if (Distance == -1)
+	if (CurrentCameraPostProcessSettings != nullptr)
 	{
-		GlobalPostProcess->Settings.DepthOfFieldScale = 0;
-	}
-	else
-	{
-		GlobalPostProcess->Settings.DepthOfFieldScale = 1;
-		GlobalPostProcess->Settings.DepthOfFieldFocalDistance = Distance;
+		CurrentCameraPostProcessSettings->DepthOfFieldScale = 1.f;
+		CurrentCameraPostProcessSettings->DepthOfFieldFocalDistance = Distance;
+		ActiveCamera->MarkRenderStateDirty();		
 	}
 }
 
 void ULimenDynamicDepthOfFieldComponent::Activate(bool bReset)
 {
-	if (!HasFoundGlobalPostProcess())
+	Super::Activate(bReset);
+
+	if (CurrentCameraPostProcessSettings != nullptr)
 	{
-		FindGlobalPostProcess();
-	}
-	else
-	{
-		Super::Activate(bReset);
+		CurrentCameraPostProcessSettings->bOverride_DepthOfFieldScale = true;
+		CurrentCameraPostProcessSettings->bOverride_DepthOfFieldFocalDistance = true;
+		ActiveCamera->MarkRenderStateDirty();		
 	}
 }
 
-void ULimenDynamicDepthOfFieldComponent::FindGlobalPostProcess()
+void ULimenDynamicDepthOfFieldComponent::Deactivate()
 {
-	FRecurrentActionDelegate Action;
-	Action.BindDynamic(this, &ThisClass::SetPostProcess);
-
-	FRecurrentActionStopCondition StopCondition;
-	StopCondition.BindDynamic(this, &ThisClass::HasFoundGlobalPostProcess);
-	
-	FindGlobalPostProcessAction = ULimenRecurrentAction::StartRecurrentAction(this, Action, 100, .1, StopCondition);
-	FindGlobalPostProcessAction->OnSuccess.AddUniqueDynamic(this, &ThisClass::GlobalPostProcessFound);
-	FindGlobalPostProcessAction->Activate();
-}
-
-void ULimenDynamicDepthOfFieldComponent::GlobalPostProcessFound()
-{
-	if (bAutoActivate)
+	if (CurrentCameraPostProcessSettings != nullptr)
 	{
-		Activate(true);
+		CurrentCameraPostProcessSettings->bOverride_DepthOfFieldScale = false;
+		CurrentCameraPostProcessSettings->bOverride_DepthOfFieldFocalDistance = false;
+		ActiveCamera->MarkRenderStateDirty();
 	}
+
+	Super::Deactivate();
 }
 
 float ULimenDynamicDepthOfFieldComponent::GetLookAtDistance() const
 {
-	check(OwnerPlayerController != nullptr);
+	const FVector Start = ActiveCamera->GetComponentLocation();
+	const FVector End = Start + ActiveCamera->GetForwardVector() * MaxFocalDistance;
 
-	FVector EyesLocation;
-	FRotator EyesRotation;
-	OwnerPlayerController->GetActorEyesViewPoint(EyesLocation, EyesRotation);
-
+	float OutDistance;
 	FHitResult Hit;
-	if (!GetWorld()->LineTraceSingleByChannel(Hit, EyesLocation, EyesLocation + EyesRotation.Vector() * 50000, LineTraceChannel, QueryParams))
+	if (!GetWorld()->LineTraceSingleByChannel(Hit, Start, End, LineTraceChannel, QueryParams))
 	{
-		return -1;
+		OutDistance = MaxFocalDistance;
+	}
+	else
+	{
+		OutDistance = Hit.Distance;
 	}
 
-	return Hit.Distance;
+	return OutDistance;
 }
 
-void ULimenDynamicDepthOfFieldComponent::SetPostProcess()
+void ULimenDynamicDepthOfFieldComponent::ActiveCameraChanged(UActorComponent* Component, bool bReset)
 {
-	for (TActorIterator<APostProcessVolume> It(GetWorld()); It; ++It)
-	{
-		if (It->Tags.Contains(GlobalPostProcessTag))
-		{
-			GlobalPostProcess = *It;
-			return;
-		}
-	}
+	ActiveCamera = CastChecked<UCameraComponent>(Component);
+	check(OwnerCameras.Contains(ActiveCamera))
+	CurrentCameraPostProcessSettings = &ActiveCamera->PostProcessSettings;
 }
 
-bool ULimenDynamicDepthOfFieldComponent::HasFoundGlobalPostProcess()
+bool ULimenDynamicDepthOfFieldComponent::IsAnyCameraViewTarget() const
 {
-	return GlobalPostProcess != nullptr;
+	return GetWorld()->GetFirstPlayerController()->GetViewTarget() == GetOwner();
 }

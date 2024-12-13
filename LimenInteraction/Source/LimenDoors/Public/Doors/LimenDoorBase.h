@@ -7,7 +7,17 @@
 #include "LimenDoorBase.generated.h"
 
 
+class ULimenLock;
 class ALimenKey;
+
+enum class EDoorState : uint8
+{
+	Undefined,
+	Open,
+	Closed,
+	Opening,
+	Closing,
+};
 
 UCLASS(Abstract, Blueprintable, BlueprintType)
 class LIMENDOORS_API ALimenDoorBase : public ALimenInteractable
@@ -15,6 +25,10 @@ class LIMENDOORS_API ALimenDoorBase : public ALimenInteractable
 	GENERATED_BODY()
 
 public:
+	DECLARE_MULTICAST_DELEGATE_OneParam(FOpenStateChangedDelegate, EDoorState /* DoorState */);
+	
+	FOpenStateChangedDelegate OnDoorStateChanged;
+	
 	explicit ALimenDoorBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
 
@@ -22,24 +36,24 @@ public:
 	void SetStartOpen(const bool bNewStartOpen);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Doors")
-	void OpenDoor(AController* InController = nullptr, APawn* InPawn = nullptr, const bool bIgnoreRestrictions = true);
+	virtual void OpenDoor(AController* InController = nullptr, APawn* InPawn = nullptr, const bool bIgnoreRestrictions = true);
 	UFUNCTION(BlueprintCallable, Category="Limen|Doors")
-	void OpenDoorWithoutAnimation(AController* InController = nullptr, APawn* InPawn = nullptr, const bool bIgnoreRestrictions = true);
+	virtual void OpenDoorWithoutAnimation(AController* InController = nullptr, APawn* InPawn = nullptr, const bool bIgnoreRestrictions = true);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Doors")
-	void CloseDoor(AController* InController = nullptr, APawn* InPawn = nullptr);
+	virtual void CloseDoor(AController* InController = nullptr, APawn* InPawn = nullptr);
 	UFUNCTION(BlueprintCallable, Category="Limen|Doors")
-	void CloseDoorWithoutAnimation(AController* InController = nullptr, APawn* InPawn = nullptr);
+	virtual void CloseDoorWithoutAnimation(AController* InController = nullptr, APawn* InPawn = nullptr);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Doors")
 	bool IsOpen() const;
 
+	EDoorState GetDoorState() const;
+
 protected:
 	UPROPERTY(EditAnywhere, Category="Limen|Config")
 	bool bStartOpen;
-	UPROPERTY(EditAnywhere)
-	bool bUseAnimationOnStart;
-	UPROPERTY(EditAnywhere, Category="Limen")
+	UPROPERTY(EditDefaultsOnly, Category="Limen")
 	FName DoorComponentTag;
 	
 	virtual void Interact(AController* InController, APawn* InPawn) override;
@@ -56,8 +70,11 @@ protected:
 
 	void ToggleOpenState();
 
-	void DoorStateChanged(const bool bDoorIsOpen);
+	UFUNCTION(BlueprintCallable)
+	void NotifyAnimationFinished(const bool bIsOpenAnimation);
+
+	void SetDoorState(const EDoorState NewState);
 	
 private:
-	bool bIsOpen;
+	EDoorState DoorState;
 };

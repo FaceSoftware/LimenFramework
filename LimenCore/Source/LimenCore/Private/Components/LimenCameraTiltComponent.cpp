@@ -3,74 +3,114 @@
 
 #include "Components/LimenCameraTiltComponent.h"
 
+#include "BlueprintLibraries/LimenCoreStatics.h"
+#include "Engine/World.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/PlayerController.h"
+
 ULimenCameraTiltComponent::ULimenCameraTiltComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.TickInterval = 1 / 16;
+	PrimaryComponentTick.TickInterval = 1.f / 30.f;
 	bAutoActivate = true;
 	bUsePawnControlRotation = false;
-	
+
+	TiltFunction = ETiltFunction::EaseIn;
 	MaxCameraTilt = 20;
 	CameraTiltRecoverSpeed = 30;
+	bTiltTowardsMovement = false;
+	bEnableTilt = true;
 	CurrentTilt = 0;
+	bIsTiltEnabled = true;
 
-}
-
-void ULimenCameraTiltComponent::OnComponentCreated()
-{
-	Super::OnComponentCreated();
-	
-	bUsePawnControlRotation = false;
+	bOriginalUsePawnControlRotation = false;
 }
 
 void ULimenCameraTiltComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwnerPawn = Cast<APawn>(GetOwner());
+	bOriginalUsePawnControlRotation = bUsePawnControlRotation;
+	
+	bIsTiltEnabled = bEnableTilt;
+	SetTiltEnabled(bIsTiltEnabled);
+	
+	PlayerController = GetWorld()->GetFirstPlayerController();
+	OriginalRelativeRotation = GetRelativeRotation();
 }
 
 void ULimenCameraTiltComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
+											  FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	
-	if (!IsActive())
+
+	if (!bIsTiltEnabled)
 	{
 		return;
 	}
 
 #if WITH_EDITOR
+	
 	if (!GetWorld()->IsGameWorld())
 	{
 		return;
 	}
+	
 #endif
 	
 	CalculateCurrentTilt(DeltaTime);
-	if (OwnerPawn != nullptr && OwnerPawn->GetController() != nullptr)
+	FRotator NewRotation = GetRelativeRotation();
+	NewRotation.Roll = CurrentTilt;
+	SetRelativeRotation(NewRotation);
+}
+
+void ULimenCameraTiltComponent::SetTiltEnabled(const bool bEnabled)
+{
+	bIsTiltEnabled = bEnabled;
+	if (bIsTiltEnabled)
 	{
-		SetWorldRotation(OwnerPawn->GetController()->GetControlRotation());
+		bUsePawnControlRotation = false;
 	}
-	
-	AddRelativeRotation(FRotator(0, 0, CurrentTilt));
-	PreviousComponentRotation = GetComponentRotation();
+	else
+	{
+		bUsePawnControlRotation = bOriginalUsePawnControlRotation;
+	}
 }
 
 void ULimenCameraTiltComponent::NotifyYawInput(const float InputValue)
 {
-	CurrentTilt += InputValue;
+	bTiltTowardsMovement ? CurrentTilt += InputValue : CurrentTilt -= InputValue;
 }
 
 void ULimenCameraTiltComponent::CalculateCurrentTilt(const float DeltaTime)
 {
-	const float NewTilt = CurrentTilt - CameraTiltRecoverSpeed * CurrentTilt * DeltaTime;
-	if (FMath::IsNegativeOrNegativeZero(NewTilt))
+	switch (TiltFunction)
 	{
-		CurrentTilt = FMath::Clamp(NewTilt, -MaxCameraTilt, 0.f);
+	case ETiltFunction::Linear:
+		CalculateLinearTilt(DeltaTime);
+		break;
+		
+	case ETiltFunction::EaseIn:
+		CalculateEaseInTilt(DeltaTime);
+		break;
 	}
-	else
+}
+
+void ULimenCameraTiltComponent::CalculateLinearTilt(const float DeltaTime)
+{
+	const float Decrement = CameraTiltRecoverSpeed * DeltaTime;
+    
+	if (CurrentTilt > 0.f)
 	{
-		CurrentTilt = FMath::Clamp(NewTilt, 0.f, MaxCameraTilt);
+		CurrentTilt = FMath::Max(CurrentTilt - Decrement, 0.f);
 	}
+	else if (CurrentTilt < 0.f)
+	{
+		CurrentTilt = FMath::Min(CurrentTilt + Decrement, 0.f);
+	}
+}
+
+void ULimenCameraTiltComponent::CalculateEaseInTilt(const float DeltaTime)
+{
+	CurrentTilt = FMath::FInterpTo(CurrentTilt, OriginalRelativeRotation.Roll, DeltaTime, CameraTiltRecoverSpeed);
 }

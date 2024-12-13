@@ -100,4 +100,6 @@ private:
 
 	UFUNCTION()
 	void CurrentBatteryCapacityChanged(const float NewValue);
+	UFUNCTION()
+	void BatteryEmpty(const float NewValue);
 };

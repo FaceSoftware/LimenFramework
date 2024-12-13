@@ -9,7 +9,10 @@ public class LimenDoors : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core", "LimenCore",
+                "Core", 
+                
+                "LimenCore",
+                "LimenInteraction",
             }
         );
 
@@ -20,8 +23,9 @@ public class LimenDoors : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
+                
                 "LimenCore",
-                "LimenInteraction"
+                "LimenNotifications",
             }
         );
     }

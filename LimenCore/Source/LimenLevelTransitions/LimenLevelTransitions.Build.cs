@@ -10,7 +10,9 @@ public class LimenLevelTransitions : ModuleRules
             new string[]
             {
                 "Core",
-                "DeveloperSettings", 
+                "Engine",
+                "DeveloperSettings",
+                
                 "LimenCore",
             }
         );

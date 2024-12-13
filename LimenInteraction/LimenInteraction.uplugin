@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.4",
+	"EngineAssociation": "5.3",
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "Limen Interaction",
@@ -55,6 +55,11 @@
 		},
 		{
 			"Name": "LimenArchives",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenProxyInventory",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
