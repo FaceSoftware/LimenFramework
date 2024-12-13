@@ -1,8 +1,9 @@
 ﻿#include "Misc/AutomationTest.h"
 #include "Subsystems/LimenThreadPoolSubsystem.h"
 
+
 BEGIN_DEFINE_SPEC(FThreadPoolSpec, "LimenFramework.LimenCore.Source.LimenThreadPool.ThreadPoolTest",
-				  EAutomationTestFlags::ApplicationContextMask | EAutomationTestFlags::FeatureMask |
+				  EAutomationTestFlags::EditorContext | EAutomationTestFlags::CommandletContext |
 				  EAutomationTestFlags::HighPriority | EAutomationTestFlags::ProductFilter)
 
 int32 CompletedJobs;

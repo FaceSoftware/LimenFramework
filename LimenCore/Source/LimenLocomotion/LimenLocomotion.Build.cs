@@ -22,6 +22,7 @@ public class LimenLocomotion : ModuleRules
                 "SlateCore",
                 "AIModule",
                 "GameplayCameras",
+                "EngineCameras",
                 
                 "LimenCore",
                 "PhysicsCore",

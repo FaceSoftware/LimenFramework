@@ -50,7 +50,7 @@ uint32 ULimenThreadPoolSubsystem::FPoolWorker::Run()
 			// Lock the critical section before accessing the queue
 			FScopeLock Lock(&QueueSection);
 			// Dequeue and execute the job
-			CurrentJob = QueuedJobs.Pop(true);
+			CurrentJob = QueuedJobs.Pop(EAllowShrinking::Yes);
 		}
 		
 		check(CurrentJob != nullptr);
