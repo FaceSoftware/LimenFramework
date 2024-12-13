@@ -21,6 +21,11 @@
 			"Optional": false
 		},
 		{
+			"Name": "EngineCameras",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
 			"Name": "GameplayCameras",
 			"Enabled": true,
 			"Optional": false
