@@ -136,7 +136,7 @@ void ULimenStorageSubsystem::Save_Internal()
 	}
 
 	auto* SaveSystem = GetGameInstance()->GetSubsystem<ULimenSaveSubsystem>();
-	verify(SaveSystem->SaveData(CurrentSaveData.Get(), SaveDataName));
+	verify(SaveSystem->SaveData(CurrentSaveData, SaveDataName))
 }
 
 void ULimenStorageSubsystem::Load_Internal()

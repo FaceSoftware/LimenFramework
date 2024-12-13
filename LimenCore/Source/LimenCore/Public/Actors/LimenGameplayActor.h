@@ -25,6 +25,9 @@ public:
 	FObjectInitializationDelegate OnActorInitialized;
 
 	explicit ALimenGameplayActor(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	virtual void BeginPlay() override;
 	virtual void Initialize() override;
 	
@@ -44,6 +47,9 @@ public:
 protected:
 	
 private:
+	UPROPERTY(ReplicatedUsing="OnRep_bIsRemovedFromGameplay")
 	bool bIsRemovedFromGameplay;
-	
+
+	UFUNCTION()
+	void OnRep_bIsRemovedFromGameplay();
 };

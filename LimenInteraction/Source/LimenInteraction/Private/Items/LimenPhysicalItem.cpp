@@ -6,8 +6,8 @@
 #include "Components/LimenUpgradeManager.h"
 
 
-ALimenPhysicalItem::ALimenPhysicalItem()
-{
+ALimenPhysicalItem::ALimenPhysicalItem(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{	
 	PrimaryActorTick.bCanEverTick = true;
 	bIsHolstered = true;
 	CurrentUpgrade = 0;
@@ -36,15 +36,6 @@ UTexture2D* ALimenPhysicalItem::GetImage_Implementation() const
 	return ItemImage.LoadSynchronous();
 }
 
-void ALimenPhysicalItem::Interact(AController* InController, APawn* InPawn)
+void ALimenPhysicalItem::SetDroppedState_Implementation()
 {
-	Super::Interact(InController, InPawn);
-
-	check(InController != nullptr);
-	check(InPawn != nullptr);
-	
-	OwningController = InController;
-	OwningPawn = InPawn;
-	
-	SetOwner(OwningPawn.Get());
 }

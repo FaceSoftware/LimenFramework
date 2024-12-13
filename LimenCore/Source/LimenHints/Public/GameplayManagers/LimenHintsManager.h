@@ -7,7 +7,6 @@
 #include "LimenHintsManager.generated.h"
 
 
-class ULimenHintWidget;
 class ULimenHint;
 
 UCLASS()
@@ -18,7 +17,6 @@ class LIMENHINTS_API ALimenHintsManager : public ALimenGameplayManager
 public:
 	ALimenHintsManager();
 	
-	void SetHintWidgetClass(const TSubclassOf<ULimenHintWidget>& InClass);
 	void InitializeHints();
 	void EnableHints();
 	void DisableHints();
@@ -43,12 +41,7 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, Category="Limen")
 	TArray<TSoftClassPtr<ULimenHint>> HintClasses;
-
 	UPROPERTY()
 	TArray<ULimenHint*> Hints;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
-	TSoftClassPtr<ULimenHintWidget> HintWidgetClass;
-	
 	bool bHintsEnabled;
 };

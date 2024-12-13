@@ -4,25 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 #include "LimenCoreStatics.generated.h"
 
 
-class ULimenGlobalRandomStreamSubsystem;
 class APostProcessVolume;
-
-USTRUCT(BlueprintType)
-struct FPair
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float A;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float B;
-	
-	FPair() : A(0.f), B(0.f) {}
-};
 
 UENUM(BlueprintType)
 enum class ELogType : uint8
@@ -116,40 +101,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Navigation", BlueprintPure)
 	static FString GetGameTransitionMap();
-
-	template <typename T>
-	static TArray<T> ShuffleArray(const TArray<T>& In);
 	
-	UFUNCTION(BlueprintCallable, Category="Limen|String", meta=(ExpandEnumAsExecs="ReturnValue"))
-	static bool SetCharacterAtIndex(const FString& String, const int32 Index, const FString& Char, FString& OutString);
-
-	UFUNCTION(BlueprintCallable, Category = "Game Config", BlueprintPure)
-	static FString GetProjectTitle();
-	
-	UFUNCTION(BlueprintCallable, Category = "Game Config", BlueprintPure)
-	static FString GetProjectVersion();
-
-	UFUNCTION(BlueprintCallable, Category = "Game Config", BlueprintPure)
-	static FString GetCopyrightNotice();
 };
 
-template <typename T>
-TArray<T> ULimenCoreStatics::ShuffleArray(const TArray<T>& In)
+static void LimenLog(const UObject* Caller, const FString& LogText, const ELogType Verbosity = ELogType::Log, const bool bPrintToScreen = true)
 {
-	TArray<T> Out = In;
-	ULimenGlobalRandomStreamSubsystem* RandomStream = ULimenGlobalRandomStreamSubsystem::Get();
-	
-	if (Out.Num() > 1)
-	{
-		for (int32 i = 0; i < Out.Num(); i++)
-		{
-			const int32 j = RandomStream->RandomIntRange(Out.Num() - 1, i);
-			if (i != j)
-			{
-				Out.Swap(i, j);
-			}
-		}
-	}
-
-	return Out;
+	ULimenCoreStatics::LimenLog(Caller, LogText, Verbosity, bPrintToScreen);
 }

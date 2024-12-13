@@ -3,18 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Tickable.h"
-#include "Engine/TimerHandle.h"
-#include "GameFramework/Actor.h"
 #include "Interface/LimenAsyncInitializer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "LimenLevelTransitionSubsystem.generated.h"
 
 
-class IInputProcessor;
 class ULimenLoadingScreenParameters;
 class ULimenLoadingScreenWidget;
-
 /**
  * 
  */
@@ -25,15 +20,14 @@ class LIMENLEVELTRANSITIONS_API ULimenLevelTransitionSubsystem : public UGameIns
 
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLoadingScreenEvent, const bool, bIsShowing);
 	DECLARE_MULTICAST_DELEGATE(FLoadingScreenDelegate);
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FShaderCompilingProgress, const float, CompletedPercentage);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FShaderCompilingProgress, const double, Progress);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShaderCompilingDetailedProgress, const int32, RemainingShaders, const int32, TotalShaders);
 
 public:
 	UPROPERTY(BlueprintAssignable)	
 	FLoadingScreenEvent OnLoadingScreenVisibilityChanged;
 	FLoadingScreenDelegate OnLoadingScreenVisible;
 	FLoadingScreenDelegate OnLoadingScreenHidden;
-	UPROPERTY(BlueprintAssignable)	
-	FShaderCompilingProgress OnShaderCompilationUpdated;
 
 	ULimenLevelTransitionSubsystem();
 	
@@ -50,8 +44,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Level Transition Subsystem")
 	bool IsLoadingScreenActive() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Level Transition Subsystem")
-	bool PlayLoadingScreenForCurrentLevel();
 
 protected:
 	void UpdateLoadingScreen(float DeltaTime);
@@ -93,9 +85,6 @@ private:
 	FTimerHandle RemoveLoadingScreenTimerHandle;
 
 	double TransientMasterVolumeCachedValue;
-
-	uint32 TotalPrecompiles;
-	float CurrentPrecompileDonePercentage;
 	
 	UFUNCTION()
 	void HideLoadingScreen_Internal();
@@ -116,16 +105,5 @@ class LIMENLEVELTRANSITIONS_API AInitializerProxyActor : public AActor, public I
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
-	static AInitializerProxyActor* CreateInitializerProxyActor(UObject* WorldContextObject);
-	UFUNCTION(BlueprintCallable, meta=(WorldContext="WorldContextObject"))
-	static void DestroyInitializerProxyActor(UObject* WorldContextObject, AInitializerProxyActor* InitProxyActor);
-	
-	AInitializerProxyActor();
-
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual bool IsWorking_Implementation() const override;
-
-private:
-	bool bIsWorking;
 };

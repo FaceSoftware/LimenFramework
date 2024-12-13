@@ -4,16 +4,9 @@
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
 
 #include "EngineUtils.h"
-#include "ShaderPipelineCache.h"
-#include "TimerManager.h"
-#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "UMG/LimenLoadingScreenWidget.h"
 #include "Developer/LimenLoadingScreenSettings.h"
-#include "Engine/Engine.h"
-#include "Engine/GameInstance.h"
-#include "Engine/GameViewportClient.h"
 #include "Framework/Application/IInputProcessor.h"
-#include "Framework/Application/SlateApplication.h"
 #include "Objects/LimenLoadingScreenParameters.h"
 
 
@@ -30,8 +23,6 @@ ULimenLevelTransitionSubsystem::ULimenLevelTransitionSubsystem()
 	bIsPreLoadingLevel = false;
 	bIsLoadingScreenNotifiedToHide = false;
 	TransientMasterVolumeCachedValue = 0;
-	TotalPrecompiles = 0;
-	CurrentPrecompileDonePercentage = 0;
 }
 
 bool ULimenLevelTransitionSubsystem::ShouldCreateSubsystem(UObject* Outer) const
@@ -100,35 +91,6 @@ bool ULimenLevelTransitionSubsystem::IsLoadingScreenActive() const
 	return LoadingScreenWidget->IsShowing();
 }
 
-bool ULimenLevelTransitionSubsystem::PlayLoadingScreenForCurrentLevel()
-{
-	if (IsLoadingScreenActive())
-	{
-		HideLoadingScreen_Internal();
-	}
-	
-	
-	const FSoftObjectPath LevelPath = GetWorld();
-	const FString MapName = UWorld::RemovePIEPrefix(LevelPath.GetAssetName());
-	for (const auto& MapLoadingScreen : LoadingScreens)
-	{
-		if (MapLoadingScreen.Key.GetLongPackageName().Contains(MapName))
-		{
-			CurrentLoadingScreenSettings = MapLoadingScreen.Value.LoadSynchronous();
-			if (CurrentLoadingScreenSettings == nullptr)
-			{
-				return false;
-			}
-			
-			break;
-		}
-	}
-
-	DisplayLoadingScreen();
-	
-	return true;
-}
-
 void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 {
 	if (CurrentLoadingScreenSettings == nullptr)
@@ -141,36 +103,6 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 		if (IsLoadingScreenActive())
 		{
 			SecondsShown += DeltaTime;
-
-#if !WITH_EDITOR
-			const uint32 ShadersLeft = FShaderPipelineCache::NumPrecompilesRemaining();
-			if (ShadersLeft == 0)
-			{
-				if (!FShaderPipelineCache::IsBatchingPaused())
-				{
-					FShaderPipelineCache::PauseBatching();
-				}
-				
-				OnShaderCompilationUpdated.Broadcast(1.f);
-				return;
-			}
-			if (FShaderPipelineCache::IsBatchingPaused())
-			{
-				// Somehow it pauses sometimes, even though resume was called...
-				FShaderPipelineCache::ResumeBatching();
-			}
-			
-			if (ShadersLeft > TotalPrecompiles)
-			{
-				TotalPrecompiles = ShadersLeft;
-			}
-			
-			GEngine->AddOnScreenDebugMessage(FName(TEXT("ShaderPrecompilation")).ToUnstableInt(), 1.f, FColor::Cyan, FString::Printf(TEXT("Compiling %u shaders"), ShadersLeft));
-
-			const float TempPercentageDone = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
-			CurrentPrecompileDonePercentage = TempPercentageDone < CurrentPrecompileDonePercentage ? CurrentPrecompileDonePercentage : TempPercentageDone;
-			OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage);
-#endif
 			return;
 		}
 
@@ -208,27 +140,6 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 	ChangePerformanceSettings(true);
 	BlockInput();
 	DisableAudio();
-
-#if !WITH_EDITOR
-	FShaderPipelineCache::PauseBatching();
-
-	FShaderPipelineCache::SetBatchMode(FShaderPipelineCache::BatchMode::Precompile);
-	
-	TotalPrecompiles = FShaderPipelineCache::NumPrecompilesRemaining();
-	ULimenCoreStatics::LimenLog(this, FString::Printf(TEXT("Compiling %u shaders"), TotalPrecompiles));
-
-	if (TotalPrecompiles == 0)
-	{
-		OnShaderCompilationUpdated.Broadcast(1.f);
-		CurrentPrecompileDonePercentage = 1.f;
-	}
-	else
-	{
-		OnShaderCompilationUpdated.Broadcast(0.f);
-		CurrentPrecompileDonePercentage = 0.f;
-		FShaderPipelineCache::ResumeBatching();
-	}
-#endif
 	
 	OnLoadingScreenVisible.Broadcast();
 }
@@ -244,9 +155,6 @@ void ULimenLevelTransitionSubsystem::HideLoadingScreen()
 
 	EnableAudio();
 	CurrentLoadingScreenSettings = nullptr;
-
-	OnShaderCompilationUpdated.Broadcast(1.f);
-	FShaderPipelineCache::PauseBatching();
 }
 
 bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
@@ -256,11 +164,6 @@ bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
 	bShouldShowLoadingScreen |= bIsPreLoadingLevel;
 
 	if (bShouldShowLoadingScreen)
-	{
-		return true;
-	}
-
-	if (FShaderPipelineCache::NumPrecompilesRemaining() > 0)
 	{
 		return true;
 	}
@@ -278,7 +181,7 @@ bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
 
 void ULimenLevelTransitionSubsystem::HandlePreLoadMap(const FWorldContext& WorldContext, const FString& MapName)
 {
-	for (const TTuple<TSoftObjectPtr<UWorld>, TSoftObjectPtr<ULimenLoadingScreenParameters>>& MapLoadingScreen : LoadingScreens)
+	for (auto& MapLoadingScreen : LoadingScreens)
 	{
 		if (MapName.Contains(MapLoadingScreen.Key.GetLongPackageName()) &&
 			MapName.Contains(MapLoadingScreen.Key.GetAssetName()))
@@ -382,43 +285,7 @@ void ULimenLevelTransitionSubsystem::DisableAudio()
 	// AudioDevice->SetTransientPrimaryVolume(0);
 }
 
-AInitializerProxyActor* AInitializerProxyActor::CreateInitializerProxyActor(UObject* WorldContextObject)
-{
-	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
-	if (World == nullptr)
-	{
-		return nullptr;
-	}
-
-	AInitializerProxyActor* InitProxy = World->SpawnActor<AInitializerProxyActor>();
-	check(InitProxy != nullptr);
-	check(InitProxy->IsWorking())
-	return InitProxy;
-}
-
-void AInitializerProxyActor::DestroyInitializerProxyActor(UObject* WorldContextObject,
-	AInitializerProxyActor* InitProxyActor)
-{
-	if (InitProxyActor == nullptr)
-	{
-		return;
-	}
-
-	verify(InitProxyActor->Destroy());
-}
-
-AInitializerProxyActor::AInitializerProxyActor()
-{
-	bIsWorking = true;
-}
-
-void AInitializerProxyActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	bIsWorking = false;
-	Super::EndPlay(EndPlayReason);
-}
-
 bool AInitializerProxyActor::IsWorking_Implementation() const
 {
-	return bIsWorking;
+	return true;
 }

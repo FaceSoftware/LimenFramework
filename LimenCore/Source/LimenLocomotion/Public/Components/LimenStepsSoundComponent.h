@@ -8,7 +8,6 @@
 #include "LimenStepsSoundComponent.generated.h"
 
 
-struct FCollisionQueryParams;
 class UAIPerceptionSystem;
 enum class EHumanMovementSound : uint8;
 class ULimenCharacterMovementAudioData;
@@ -23,11 +22,9 @@ public:
 	ULimenStepsSoundComponent();
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	UFUNCTION(BlueprintCallable, Category="Limen")
-	void PlayStepAudio();
 	
 protected:
+	void PlayStepAudio();
 	virtual UPhysicalMaterial* GetStepPhysicalMaterial() const;
 	virtual FVector2D GetStepAudioDelayAndVolumeLevelForVelocity(const double Velocity) const;
 	virtual USoundBase* GetStepSoundToPlay(const UPhysicalMaterial* PhysicalMaterial);

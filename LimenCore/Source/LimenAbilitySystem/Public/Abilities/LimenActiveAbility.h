@@ -28,7 +28,7 @@ public:
 	 * @return True if the ability was activated and false if not.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
-	virtual void ActivateAbility(AController* Controller, APawn* Pawn);
+	void ActivateAbility(AController* Controller, APawn* Pawn);
 	/**
 	 * @brief Called to cancel an ability (e.g. jumping).
 	 * @param Controller The controller that is controlling the pawn who canceled this ability
@@ -53,6 +53,8 @@ public:
 	bool IsActive() const;
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, Category="Limen")
+	TEnumAsByte<ECollisionChannel> DamageLineTraceChannel;
 	/**
 	 * @brief The cooldown time that must pass before activating this ability again
 	 */

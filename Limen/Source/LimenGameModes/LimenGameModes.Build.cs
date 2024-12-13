@@ -21,6 +21,7 @@ public class LimenGameModes : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
+                "AdpcmAudioDecoder",
                 
                 "LimenCore",
                 "LimenWidgets",
@@ -30,7 +31,6 @@ public class LimenGameModes : ModuleRules
                 "Limen", 
                 "LimenAbilitySystem",
                 "LimenInteraction",
-                "LimenGameSaves",
                 "LimenLevels",
             }
         );

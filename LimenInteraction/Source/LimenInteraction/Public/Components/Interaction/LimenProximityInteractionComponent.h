@@ -22,7 +22,7 @@ public:
 
 protected:
 	virtual void SetupInteraction() override;
-	virtual void UpdateInteraction(const float DeltaTime) override;
+	virtual void UpdateInteraction() override;
 
 	UFUNCTION()
 	virtual void OnInteractionSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

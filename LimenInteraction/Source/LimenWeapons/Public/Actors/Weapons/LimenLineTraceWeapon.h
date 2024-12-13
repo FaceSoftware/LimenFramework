@@ -11,12 +11,16 @@ class LIMENWEAPONS_API ALimenLineTraceWeapon : public ALimenWeapon
 {
 	GENERATED_BODY()
 
+	DECLARE_MULTICAST_DELEGATE_ThreeParams(FWeaponFiredDelegate, AController* /* Instigator */, AActor* /* Causer */, const TArray<FHitResult>& /* Hits */);
+
 public:
-	ALimenLineTraceWeapon();
+	FWeaponFiredDelegate OnWeaponFired;
+	
+	explicit ALimenLineTraceWeapon(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 protected:
 	
-private:
+private:	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Debug")
 	bool bDebugMode;
 	

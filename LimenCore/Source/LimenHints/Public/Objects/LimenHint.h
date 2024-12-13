@@ -23,19 +23,13 @@ public:
 	FHintDelegate OnHintDismissed;
 
 	ULimenHint();
-
-	void SetHintWidgetClass(const TSubclassOf<ULimenHintWidget>& InClass);
 	
 	void Initialize();
 	void Enable();
 	void Disable();
-
-	bool HasEverBeenVisible() const;
 	
 protected:
 	virtual void SetHintText(FText& OutTitle, FText& OutBody);
-
-	virtual void PreSetup();
 	virtual void SetupShowHint();
 	virtual void SetupHideHint();
 
@@ -45,8 +39,6 @@ protected:
 private:
 	UPROPERTY()
 	TObjectPtr<ULimenHintWidget> HintWidgetInstance;
-	UPROPERTY()
-	TSubclassOf<ULimenHintWidget> HintWidgetClass;
 
 	bool bIsEnabled;
 	bool bHasTriedToShowHint;

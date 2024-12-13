@@ -34,7 +34,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
-	virtual void RestartInteraction() PURE_VIRTUAL()
+	virtual void RestartInteraction() { PURE_VIRTUAL(RestartInteraction); }
 
 	bool Interact(AController* InController, APawn* InPawn);
 	bool Interact(AController* InController, APawn* InPawn, AActor* SpecificInteractable);
@@ -47,8 +47,8 @@ protected:
 	
 	bool GetOwnerLineOfSightStartAndEndVectors(FVector& Start, FVector& End) const;
 	
-	virtual void SetupInteraction() PURE_VIRTUAL()
-	virtual void UpdateInteraction(const float DeltaTime) PURE_VIRTUAL()
+	virtual void SetupInteraction() {} // Pure virtual
+	virtual void UpdateInteraction() {} // Pure virtual
 
 	float GetInteractionRange() const;
 	bool DebugMode() const;

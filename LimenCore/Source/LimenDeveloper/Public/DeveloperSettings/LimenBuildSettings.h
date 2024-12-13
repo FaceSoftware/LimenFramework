@@ -60,11 +60,9 @@ public:
 		const ULimenBuildSettings* Settings = GetDefault<ULimenBuildSettings>();
 		
 #if !WITH_EDITOR
-		
 		return Settings->BuildInfoString;
+#endif
 
-#else
-		
 		const FString FullFilePath = FPaths::ConvertRelativePathToFull(Settings->BuildCounterFilePath.FilePath);
 		FString TempBuildNumber;
 		if (!FFileHelper::LoadFileToString(TempBuildNumber, *FullFilePath))
@@ -126,7 +124,6 @@ public:
 		}
 		
 		return FString::Printf(TEXT("%s_%s_%s.%s"), *ProjectName, *DevelopmentStage, *ProjectVersion, *BuildNumber);
-#endif
 	}
 
 private:

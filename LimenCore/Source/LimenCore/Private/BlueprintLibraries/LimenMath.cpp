@@ -267,7 +267,7 @@ bool ULimenMath::ConeTraceMultiByProfile(const UWorld* World, FConeData& InConeD
 										 const FCollisionResponseParams& ResponseParams,
 										 const float TraceResolution, const bool bThreadSafe)
 {
-	if (World == nullptr)
+	if (!World->IsValidLowLevelFast())
 	{
 		return false;
 	}
@@ -326,9 +326,4 @@ bool ULimenMath::ConeTraceMultiByProfile(const UWorld* World, FConeData& InConeD
 	}
 
 	return bBlockingHit;
-}
-
-bool ULimenMath::IsInteger(const double Test)
-{
-	return FMath::Abs(Test - FMath::RoundToInt(Test)) < UE_DOUBLE_KINDA_SMALL_NUMBER;
 }

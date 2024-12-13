@@ -6,6 +6,7 @@
 
 ALimenInteractable::ALimenInteractable(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
+	bReplicates = true;
 	bWasInteracted = false;
 	InteractionCount = 0;
 	bIsBeingContinuouslyInteracted = false;
@@ -15,10 +16,13 @@ void ALimenInteractable::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (ILimenInteractableComponent* InteractableAreaComponent : GetInteractableComponents())
+	if (GetNetMode() < NM_Client)
 	{
-		InteractableAreaComponent->GetInteractionDelegate()->AddUObject(this, &ThisClass::OnInteract_Internal);
-		InteractableAreaComponent->GetInteractionStoppedDelegate()->AddUObject(this, &ThisClass::OnInteractionStopped_Internal);
+		for (ILimenInteractableComponent* InteractableAreaComponent : GetInteractableComponents())
+		{
+			InteractableAreaComponent->GetInteractionDelegate()->AddUObject(this, &ThisClass::OnInteract_Internal);
+			InteractableAreaComponent->GetInteractionStoppedDelegate()->AddUObject(this, &ThisClass::OnInteractionStopped_Internal);
+		}
 	}
 }
 
@@ -61,8 +65,14 @@ void ALimenInteractable::SimulateInteraction()
 
 void ALimenInteractable::Interact(AController* InController, APawn* InPawn)
 {
+	check(GetNetMode() < NM_Client);
+	
 	bWasInteracted = true;
 	bIsBeingContinuouslyInteracted = true;
+}
+
+void ALimenInteractable::MulticastRPC_Interact_Implementation(AController* InController, APawn* InPawn)
+{
 }
 
 void ALimenInteractable::InteractionStopped(AController* InController, APawn* InPawn)
@@ -72,9 +82,14 @@ void ALimenInteractable::InteractionStopped(AController* InController, APawn* In
 
 void ALimenInteractable::OnInteract_Internal(AController* InController, APawn* InPawn)
 {
+	check(GetNetMode() < NM_Client)
+
 	InteractionCount++;
+	
+	MulticastRPC_Interact(InController, InPawn);
 	Interact(InController, InPawn);
 	BP_OnInteract(InController, InPawn);
+
 	OnInteract.Broadcast(InController, InPawn);
 }
 
@@ -82,5 +97,6 @@ void ALimenInteractable::OnInteractionStopped_Internal(AController* InController
 {
 	InteractionStopped(InController, InPawn);
 	BP_OnInteractionStopped(InController, InPawn);
+
 	OnInteractionStopped.Broadcast(InController, InPawn);
 }

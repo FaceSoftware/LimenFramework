@@ -25,13 +25,20 @@ FText ALimenItemBase::GetDescription(const TSubclassOf<ALimenItemBase>& ItemClas
 	return ItemClass->GetDefaultObject<ALimenItemBase>()->GetDescription();
 }
 
-UStaticMesh* ALimenItemBase::GetItemMesh_Implementation() const
+TArray<ULimenItemAction*> ALimenItemBase::GetItemActions(ULimenInventoryComponent* InventoryComponent, const TSubclassOf<ALimenItemBase>& ItemClass)
 {
-	return nullptr;
+	check(ItemClass != nullptr);
+	ALimenItemBase* Item = InventoryComponent->PeekItemInstance<ALimenItemBase>(ItemClass);
+	check(Item != nullptr);	
+	return Item->GetItemActions();
 }
 
 ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+	bReplicates = true;
+	bAlwaysRelevant = false;
+	SetReplicatingMovement(false);
+
 	bHasBeenLoaded = false;
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 }
@@ -39,17 +46,12 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 void ALimenItemBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	for (const TSubclassOf<ULimenItemAction>& ActionClass : ItemActionsClass)
 	{
-		if (!ensureAlwaysMsgf(ActionClass != nullptr, TEXT("Item contains an invalid item action. Please remove it to prevent unnecessary overhead!!")))
-		{
-			continue;
-		}
-		
 		ULimenItemAction* Action = NewObject<ULimenItemAction>(this, ActionClass);
 		Action->SetupAction(this);
-		ItemActions.Push(TStrongObjectPtr(Action));
+		ItemActions.Push(Action);
 	}
 }
 
@@ -87,22 +89,40 @@ void ALimenItemBase::DataSaved()
 {
 }
 
-TArray<ULimenItemAction*> ALimenItemBase::GetItemActions() const
+TArray<ULimenItemAction*> ALimenItemBase::GetItemActions()
 {
-	TArray<ULimenItemAction*> Out;
-	Out.Reserve(ItemActions.Num());
-	
-	for (auto& Action : ItemActions)
+	for (ULimenItemAction* Action : ItemActions)
 	{
-		Out.Push(Action.Get());
+		Action->ConditionalBeginDestroy();
+	}
+	ItemActions.Empty();
+	
+	for (const TSubclassOf<ULimenItemAction>& ActionClass : ItemActionsClass)
+	{
+		ULimenItemAction* Action = NewObject<ULimenItemAction>(this, ActionClass);
+		Action->SetupAction(this);
+		ItemActions.Push(Action);
 	}
 	
-	return Out;
+	return ItemActions;
+}
+
+void ALimenItemBase::SetOwner(AActor* NewOwner)
+{
+	Super::SetOwner(NewOwner);
+
+	OwnerPawn = Cast<APawn>(NewOwner);
+}
+
+APawn* ALimenItemBase::GetOwnerPawn() const
+{
+	return OwnerPawn.Get();
 }
 
 void ALimenItemBase::Interact(AController* InController, APawn* InPawn)
 {
 	Super::Interact(InController, InPawn);
+	
 	RemoveFromGameplay();
 }
 

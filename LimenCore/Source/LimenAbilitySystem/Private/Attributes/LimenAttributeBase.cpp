@@ -79,11 +79,6 @@ UWorld* ULimenAttributeBase::GetTickableGameObjectWorld() const
 	return GetWorld();
 }
 
-void ULimenAttributeBase::SetRechargeRate(const float Value)
-{
-	RechargeRate = Value;
-}
-
 void ULimenAttributeBase::SetValue(const float Value)
 {
 	if (Value > MaxValue)
@@ -142,7 +137,7 @@ float ULimenAttributeBase::SafeModifyValueBy(const float Value)
 
 void ULimenAttributeBase::ModifyValuePercentageBy(const float Percent)
 {
-	if (const float Test = CurrentValue + CurrentValue * Percent;
+	if (const float Test = CurrentValue * Percent;
 		Test > MaxValue)
 	{
 		SetCurrentValueAsMax();

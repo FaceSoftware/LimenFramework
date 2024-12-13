@@ -31,11 +31,9 @@ public:
 	}
 
 #if WITH_EDITOR
-
-	virtual FText GetSectionText() const override
+    virtual FText GetSectionText() const override
 	{
 		return FText::FromName(SectionName);
 	}
-	
 #endif
 };
