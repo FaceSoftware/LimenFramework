@@ -36,6 +36,7 @@ public:
 public:
 	explicit ALimenItemBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UTexture2D* GetItemImage() const;
 	const FText& GetDisplayName() const;
