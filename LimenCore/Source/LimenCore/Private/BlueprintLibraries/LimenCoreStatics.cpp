@@ -15,7 +15,7 @@
 void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, const ELogType Verbosity, const bool bPrintToScreen)
 {
 	float DisplayTime = 0.f;
-	FColor TextColor;
+	FColor TextColor = FColor();
 	
 	switch (Verbosity)
 	{
@@ -55,7 +55,7 @@ void ULimenCoreStatics::StaticLimenLog(const FString FunctionName, const FString
 	const bool bPrintToScreen)
 {
 	float DisplayTime = 0.f;
-	FColor TextColor;
+	FColor TextColor = FColor();
 	
 	switch (Verbosity)
 	{
