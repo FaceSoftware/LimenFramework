@@ -53,6 +53,13 @@ void ALimenItemBase::BeginPlay()
 	}
 }
 
+void ALimenItemBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	ItemActions.Empty();
+	
+	Super::EndPlay(EndPlayReason);
+}
+
 UTexture2D* ALimenItemBase::GetItemImage() const
 {
 	return ItemImage.LoadSynchronous();

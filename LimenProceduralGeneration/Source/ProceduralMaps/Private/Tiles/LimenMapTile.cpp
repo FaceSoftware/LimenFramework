@@ -246,7 +246,7 @@ bool ALimenMapTile::SelectRandomScenario()
 		{
 			Scenarios[i]->SetVisibility(false, true);
 			RecursivelyDestroyChildComponents(Scenarios[i]);
-			Scenarios.RemoveAt(i, 1, true);
+			Scenarios.RemoveAt(i, 1, EAllowShrinking::Yes);
 
 			if (i-- < SelectedScenarioIndex)
 			{

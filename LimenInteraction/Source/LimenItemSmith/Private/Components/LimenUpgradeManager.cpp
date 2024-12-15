@@ -107,14 +107,14 @@ EUpgradeResponse ULimenUpgradeManager::CanUpgrade(APlayerController* Controller,
 	return EUpgradeResponse::Success;
 }
 
-int32 ULimenUpgradeManager::GetCurrentUpgradeLevel(const ULimenUpgradeDataAsset* Upgrade) const
+int32 ULimenUpgradeManager::GetCurrentUpgradeLevel(ULimenUpgradeDataAsset* Upgrade) const
 {
 	check(Upgrade);
 	check(UpgradesData.Find(Upgrade) != INDEX_NONE);
 	return Upgrade->CurrentLevel;
 }
 
-int32 ULimenUpgradeManager::GetCurrentUpgradeLevel(const TSoftObjectPtr<const ULimenUpgradeDataAsset>& Upgrade) const
+int32 ULimenUpgradeManager::GetCurrentUpgradeLevel(const TSoftObjectPtr<ULimenUpgradeDataAsset>& Upgrade) const
 {
 	check(!Upgrade.IsNull());
 	return GetCurrentUpgradeLevel(Upgrade.LoadSynchronous());

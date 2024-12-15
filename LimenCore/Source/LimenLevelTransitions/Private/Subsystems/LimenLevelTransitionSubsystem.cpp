@@ -144,16 +144,6 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 
 #if !WITH_EDITOR
 			const uint32 ShadersLeft = FShaderPipelineCache::NumPrecompilesRemaining();
-			if (ShadersLeft == 0)
-			{
-				if (!FShaderPipelineCache::IsBatchingPaused())
-				{
-					FShaderPipelineCache::PauseBatching();
-				}
-				
-				OnShaderCompilationUpdated.Broadcast(1.f);
-				return;
-			}
 			if (FShaderPipelineCache::IsBatchingPaused())
 			{
 				// Somehow it pauses sometimes, even though resume was called...
@@ -182,6 +172,8 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 	{
 		if (!bIsLoadingScreenNotifiedToHide)
 		{
+			TotalPrecompiles = 0;
+			FShaderPipelineCache::PauseBatching();
 			HideLoadingScreen();
 		}
 	}
@@ -246,7 +238,6 @@ void ULimenLevelTransitionSubsystem::HideLoadingScreen()
 	CurrentLoadingScreenSettings = nullptr;
 
 	OnShaderCompilationUpdated.Broadcast(1.f);
-	FShaderPipelineCache::PauseBatching();
 }
 
 bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const

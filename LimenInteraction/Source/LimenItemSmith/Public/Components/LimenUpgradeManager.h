@@ -33,8 +33,8 @@ public:
 	virtual EUpgradeResponse CanUpgrade(APlayerController* Controller, APawn* Pawn, const ULimenUpgradeDataAsset* Upgrade);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Upgrades")
-	int32 GetCurrentUpgradeLevel(const ULimenUpgradeDataAsset* Upgrade) const;
-	int32 GetCurrentUpgradeLevel(const TSoftObjectPtr<const ULimenUpgradeDataAsset>& Upgrade) const;
+	int32 GetCurrentUpgradeLevel(ULimenUpgradeDataAsset* Upgrade) const;
+	int32 GetCurrentUpgradeLevel(const TSoftObjectPtr<ULimenUpgradeDataAsset>& Upgrade) const;
 	
 	/**
 	 * @brief Getter for the cost of the next upgrade

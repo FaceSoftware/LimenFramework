@@ -3,6 +3,7 @@
 
 #include "Components/LimenConeTraceComponent.h"
 
+#include "CollisionQueryParams.h"
 #include "Namespaces/LimenCoreMath.h"
 
 
@@ -45,7 +46,7 @@ void ULimenConeTraceComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 				continue;
 			}
 			
-			LineTraceQueryParams.ClearIgnoredActors();
+			LineTraceQueryParams.ClearIgnoredSourceObjects();
 			IgnoredActors[0] = Actor.Key;
 			LineTraceQueryParams.AddIgnoredActors(IgnoredActors);
 			
