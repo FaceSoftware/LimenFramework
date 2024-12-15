@@ -3,6 +3,8 @@
 
 #include "Settings/LimenRayTracingTwoSidedGeometrySetting.h"
 
+#include "HAL/IConsoleManager.h"
+
 
 ULimenRayTracingTwoSidedGeometrySetting::ULimenRayTracingTwoSidedGeometrySetting()
 {
@@ -24,7 +26,7 @@ void ULimenRayTracingTwoSidedGeometrySetting::ApplyCurrentSetting()
 
 	check(Variable != nullptr);
 
-	Variable->Set(GetCurrentValue(), ECVF_SetByCode);
+	Variable->Set(GetCurrentValue(), EConsoleVariableFlags::ECVF_SetByHotfix);
 }
 
 void ULimenRayTracingTwoSidedGeometrySetting::SetDefaults()
