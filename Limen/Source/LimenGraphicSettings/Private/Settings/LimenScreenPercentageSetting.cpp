@@ -3,6 +3,8 @@
 
 #include "Settings/LimenScreenPercentageSetting.h"
 
+#include "HAL/IConsoleManager.h"
+
 
 ULimenScreenPercentageSetting::ULimenScreenPercentageSetting()
 {
@@ -17,7 +19,7 @@ void ULimenScreenPercentageSetting::ApplyCurrentSetting()
 	Super::ApplyCurrentSetting();
 
 	IConsoleVariable* CVarScreenPercentage = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ScreenPercentage"));
-	CVarScreenPercentage->Set(GetCurrentValue());
+	CVarScreenPercentage->Set(GetCurrentValue(), EConsoleVariableFlags::ECVF_SetByGameOverride);
 }
 
 void ULimenScreenPercentageSetting::SetDefaults()

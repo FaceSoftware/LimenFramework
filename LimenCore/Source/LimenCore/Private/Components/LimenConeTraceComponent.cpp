@@ -46,7 +46,7 @@ void ULimenConeTraceComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 				continue;
 			}
 			
-			LineTraceQueryParams.ClearIgnoredSourceObjects();
+			LineTraceQueryParams.ClearIgnoredActors();
 			IgnoredActors[0] = Actor.Key;
 			LineTraceQueryParams.AddIgnoredActors(IgnoredActors);
 			

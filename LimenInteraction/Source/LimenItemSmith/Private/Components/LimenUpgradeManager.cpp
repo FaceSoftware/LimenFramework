@@ -120,7 +120,7 @@ int32 ULimenUpgradeManager::GetCurrentUpgradeLevel(const TSoftObjectPtr<ULimenUp
 	return GetCurrentUpgradeLevel(Upgrade.LoadSynchronous());
 }
 
-float ULimenUpgradeManager::GetNextUpgradeCost(const ULimenUpgradeDataAsset* Upgrade) const
+float ULimenUpgradeManager::GetNextUpgradeCost(ULimenUpgradeDataAsset* Upgrade) const
 {
 	check(IsValid(Upgrade));
 	check(UpgradesData.Find(Upgrade) != INDEX_NONE);

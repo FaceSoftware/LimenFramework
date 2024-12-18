@@ -26,14 +26,14 @@ void ULimenAntiAliasingSetting::ApplyCurrentSetting()
 
 	IConsoleVariable* AntiAliasingAConsoleVariable = IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod"));
 	check(AntiAliasingAConsoleVariable != nullptr);
-	AntiAliasingAConsoleVariable->Set(UnFormatAntiAliasingMode(GetCurrentValue()));
+	AntiAliasingAConsoleVariable->Set(UnFormatAntiAliasingMode(GetCurrentValue()), EConsoleVariableFlags::ECVF_SetByGameOverride);
 }
 
 void ULimenAntiAliasingSetting::SetDefaults()
 {
 	Super::SetDefaults();
 
-	PossibleSelections.Reserve(4);
+	PossibleSelections.Reserve(5);
 	PossibleSelections.Push(NONE);
 	PossibleSelections.Push(FXAA);
 	PossibleSelections.Push(TAA);
@@ -41,6 +41,14 @@ void ULimenAntiAliasingSetting::SetDefaults()
 	PossibleSelections.Push(TSR);
 
 	DefaultSelection = NONE;
+	
+	// IConsoleVariable* FXAAQuality = IConsoleManager::Get().FindConsoleVariable(TEXT("r.FXAA.Quality"));
+	// check(FXAAQuality != nullptr);
+	// FXAAQuality->Set(4, EConsoleVariableFlags::ECVF_SetByGameOverride);
+	
+	// IConsoleVariable* MSAAQuality = IConsoleManager::Get().FindConsoleVariable(TEXT("r.MSAA.Quality"));
+	// check(MSAAQuality != nullptr);
+	// FXAAQuality->Set(4, EConsoleVariableFlags::ECVF_SetByGameOverride);
 }
 
 uint8 ULimenAntiAliasingSetting::UnFormatAntiAliasingMode(const FString& Mode) const
