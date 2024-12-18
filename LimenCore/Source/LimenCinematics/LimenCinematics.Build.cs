@@ -22,7 +22,9 @@ public class LimenCinematics : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore", 
-                "LimenWidgets"
+                "LimenWidgets", 
+                "LevelSequence",
+                "MovieScene"
             }
         );
     }
