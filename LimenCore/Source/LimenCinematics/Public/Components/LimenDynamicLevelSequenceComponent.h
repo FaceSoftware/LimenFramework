@@ -3,9 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MovieSceneSequencePlaybackSettings.h"
 #include "Components/ActorComponent.h"
 #include "UObject/StrongObjectPtr.h"
-#include "DynamicLevelSequenceComponent.generated.h"
+#include "LimenDynamicLevelSequenceComponent.generated.h"
 
 
 class ULevelSequencePlayer;
@@ -13,12 +14,12 @@ class ALevelSequenceActor;
 class ULevelSequence;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LIMENCINEMATICS_API UDynamicLevelSequenceComponent : public UActorComponent
+class LIMENCINEMATICS_API ULimenDynamicLevelSequenceComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
-	UDynamicLevelSequenceComponent();
+	ULimenDynamicLevelSequenceComponent();
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -36,6 +37,8 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<ULevelSequence> LevelSequenceAsset;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Playback", meta=(ShowOnlyInnerProperties, ExposeOnSpawn))
+	FMovieSceneSequencePlaybackSettings PlaybackSettings;
 
 	UFUNCTION()
 	virtual void SequencePlay();

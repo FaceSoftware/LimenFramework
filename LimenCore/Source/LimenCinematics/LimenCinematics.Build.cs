@@ -12,7 +12,8 @@ public class LimenCinematics : ModuleRules
                 "Core",
                 "CoreUObject",
                 
-                "LimenCore",
+                "LimenCore", 
+                "MovieScene",
             }
         );
 
