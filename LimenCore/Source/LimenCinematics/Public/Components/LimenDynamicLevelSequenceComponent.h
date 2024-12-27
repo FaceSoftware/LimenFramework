@@ -20,8 +20,11 @@ class LIMENCINEMATICS_API ULimenDynamicLevelSequenceComponent : public UActorCom
 
 public:	
 	ULimenDynamicLevelSequenceComponent();
-	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
+	virtual void Activate(bool bReset) override;
+	virtual void Deactivate() override;
+	virtual bool ShouldActivate() const override;
 
 	UFUNCTION(BlueprintCallable)
 	void PlaySequence();
@@ -56,6 +59,6 @@ private:
 	TWeakObjectPtr<ALevelSequenceActor> SequenceActor;
 	bool bIsPlaying;
 
-	void InitializeSequence();
-	void DeinitializeSequence();
+	void SetupComponent();
+	void UnSetupComponent();
 };

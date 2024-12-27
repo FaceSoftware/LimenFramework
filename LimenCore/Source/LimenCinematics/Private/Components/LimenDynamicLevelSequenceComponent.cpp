@@ -14,33 +14,57 @@ ULimenDynamicLevelSequenceComponent::ULimenDynamicLevelSequenceComponent()
 	bIsPlaying = false;
 }
 
-void ULimenDynamicLevelSequenceComponent::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 void ULimenDynamicLevelSequenceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (SequenceActor.IsValid())
-	{
-		verify(SequenceActor->Destroy())
-	}
-
-	SequenceActor.Reset();
-	LevelSequence.Reset();
-	SequenceActor.Reset();
+	UnSetupComponent();
 	
 	Super::EndPlay(EndPlayReason);
 }
 
+void ULimenDynamicLevelSequenceComponent::Activate(bool bReset)
+{
+	const bool bShouldActivate = ShouldActivate();
+	Super::Activate(bReset);
+	
+	if (bReset)
+	{
+		UnSetupComponent();
+		SetupComponent();
+	}
+	else if (bShouldActivate) 
+	{
+		SetupComponent();
+	}
+}
+
+void ULimenDynamicLevelSequenceComponent::Deactivate()
+{
+	const bool bShouldDeactivate = !ShouldActivate();
+	Super::Deactivate();
+
+	if (bShouldDeactivate)
+	{
+		UnSetupComponent();
+	}
+}
+
+bool ULimenDynamicLevelSequenceComponent::ShouldActivate() const
+{
+	if (!Super::ShouldActivate())
+	{
+		return false;
+	}
+
+	return !LevelSequenceAsset.IsNull();
+}
+
 void ULimenDynamicLevelSequenceComponent::PlaySequence()
 {
-	if (LevelSequenceAsset.IsNull())
+	if (!IsActive())
 	{
 		return;
 	}
 	
-	InitializeSequence();
 	GetWorld()->GetTimerManager().SetTimerForNextTick([this]
 	{
 		GetSequencePlayer()->Play();
@@ -49,6 +73,11 @@ void ULimenDynamicLevelSequenceComponent::PlaySequence()
 
 void ULimenDynamicLevelSequenceComponent::StopSequence()
 {
+	if (!IsActive())
+	{
+		return;
+	}
+	
 	if (!LevelSequence.IsValid() || !SequenceActor.IsValid())
 	{
 		return;
@@ -89,26 +118,13 @@ void ULimenDynamicLevelSequenceComponent::SequenceFinished()
 {
 }
 
-void ULimenDynamicLevelSequenceComponent::InitializeSequence()
+void ULimenDynamicLevelSequenceComponent::SetupComponent()
 {
-	if (LevelSequenceAsset.IsNull())
-	{
-		return;
-	}
+	check(!SequenceActor.IsValid())
+	check(!LevelSequence.IsValid())
 	
-	if (SequenceActor.IsValid())
-	{
-		verify(SequenceActor->Destroy());
-		SequenceActor.Reset();
-	}
-
-	if (!LevelSequence.IsValid())
-	{
-		LevelSequence = TStrongObjectPtr(LevelSequenceAsset.LoadSynchronous());
-	}
-
+	LevelSequence = TStrongObjectPtr(LevelSequenceAsset.LoadSynchronous());
 	SequenceActor = GetWorld()->SpawnActor<ALevelSequenceActor>();
-	check(SequenceActor.IsValid())
 	
 	SequenceActor->PlaybackSettings = PlaybackSettings;
 	SequenceActor->GetSequencePlayer()->SetPlaybackSettings(PlaybackSettings);
@@ -122,11 +138,19 @@ void ULimenDynamicLevelSequenceComponent::InitializeSequence()
 	SequenceActor->GetSequencePlayer()->OnFinished.AddUniqueDynamic(this, &ULimenDynamicLevelSequenceComponent::SequenceFinished);
 }
 
-void ULimenDynamicLevelSequenceComponent::DeinitializeSequence()
-{
-	SequenceActor->GetSequencePlayer()->OnPlay.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequencePlay);
-	SequenceActor->GetSequencePlayer()->OnPlayReverse.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequencePlayReverse);
-	SequenceActor->GetSequencePlayer()->OnStop.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequenceStop);
-	SequenceActor->GetSequencePlayer()->OnPause.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequencePause);
-	SequenceActor->GetSequencePlayer()->OnFinished.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequenceFinished);
+void ULimenDynamicLevelSequenceComponent::UnSetupComponent()
+{	
+	if (LevelSequence.IsValid()) LevelSequence.Reset();
+	
+	if (SequenceActor.IsValid())
+	{
+		SequenceActor->GetSequencePlayer()->OnPlay.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequencePlay);
+		SequenceActor->GetSequencePlayer()->OnPlayReverse.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequencePlayReverse);
+		SequenceActor->GetSequencePlayer()->OnStop.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequenceStop);
+		SequenceActor->GetSequencePlayer()->OnPause.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequencePause);
+		SequenceActor->GetSequencePlayer()->OnFinished.RemoveDynamic(this, &ULimenDynamicLevelSequenceComponent::SequenceFinished);
+		
+		verify(SequenceActor->Destroy());
+		SequenceActor.Reset();
+	}
 }
