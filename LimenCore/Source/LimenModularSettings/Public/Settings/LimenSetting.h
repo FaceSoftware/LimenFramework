@@ -107,9 +107,6 @@ private:
 };
 
 
-/// Delegates
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEditableStateDelegate, const bool, bCanEdit);
-
 
 /**
  * @brief Interface for readable settings. Not intended to be directly inherited, see TLimenReadableSetting for that
