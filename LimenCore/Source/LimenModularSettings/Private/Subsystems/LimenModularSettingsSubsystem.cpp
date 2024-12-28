@@ -35,15 +35,12 @@ bool ULimenModularSettingsSubsystem::CanEditSetting(const TSubclassOf<ULimenSett
 	ULimenSetting* Setting = GetItem<ULimenSetting>(Class);
 	if (Setting == nullptr)
 	{
-		// No setting was found
-		ULimenCoreStatics::LimenLog(this, TEXT("No such setting with dev name '%s' was found"), ELogType::Error);
 		return false;
 	}
 
 	const FLimenEditableSetting* EditableInterface = reinterpret_cast<FLimenEditableSetting*>(Setting);
 	if (EditableInterface == nullptr)
 	{
-		// No editable interface? No edit!
 		return false;
 	}
 
