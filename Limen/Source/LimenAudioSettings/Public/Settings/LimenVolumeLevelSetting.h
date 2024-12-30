@@ -6,6 +6,8 @@
 #include "Settings/LimenValueSetting.h"
 #include "LimenVolumeLevelSetting.generated.h"
 
+class USoundClass;
+
 /**
  * 
  */
