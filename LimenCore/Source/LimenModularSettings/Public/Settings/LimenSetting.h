@@ -24,6 +24,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FSettingUpdated OnSettingUpdated;
 	UPROPERTY(BlueprintAssignable)
+	FSettingUpdated OnSettingApplied;
+	UPROPERTY(BlueprintAssignable)
 	FSettingUpdated OnSettingEditableStateChanged;
 	
 	ULimenSetting();
@@ -32,11 +34,6 @@ public:
 	const FText& GetDescription() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")	
 	void ApplySetting();
-	/**
-	 * @brief (For blueprints) Applies the current settings
-	 */
-	UFUNCTION(BlueprintImplementableEvent, Category="Limen|Modular Settings", DisplayName="Apply Setting")
-	void BP_ApplySetting();
 	
 	virtual void SetDefaultValue();
 
@@ -188,5 +185,7 @@ public:
 	 * @brief Getter for the current selection
 	 * @return The current selection
 	 */
-	virtual const SettingType& GetCurrentValue() const = 0;
+	virtual SettingType GetCurrentValue() const = 0;
+
+	virtual SettingType GetPreviousValue() const = 0;
 };

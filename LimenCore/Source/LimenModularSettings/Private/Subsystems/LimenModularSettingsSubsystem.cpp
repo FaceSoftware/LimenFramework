@@ -57,9 +57,25 @@ bool ULimenModularSettingsSubsystem::EditToggleSetting(const TSubclassOf<ULimenS
 	return EditSetting<bool>(Class, NewState);
 }
 
-bool ULimenModularSettingsSubsystem::EditValueSetting(const TSubclassOf<ULimenSetting>& Class, const float& NewValue)
+bool ULimenModularSettingsSubsystem::EditValueSetting(const TSubclassOf<ULimenSetting>& Class, const float NewValue)
 {
 	return EditSetting<float>(Class, NewValue);
+}
+
+void ULimenModularSettingsSubsystem::ResetAllToDefault()
+{
+	for (auto*& Setting : GetItems<ULimenSetting>())
+	{
+		Setting->SetDefaultValue();
+		Setting->ApplySetting();
+	}
+}
+
+void ULimenModularSettingsSubsystem::ResetSettingToDefault(const TSubclassOf<ULimenSetting>& Class)
+{
+	auto* const& Setting = GetItem<ULimenSetting>(Class);
+	Setting->SetDefaultValue();
+	Setting->ApplySetting();
 }
 
 bool ULimenModularSettingsSubsystem::ShouldSaveData() const
@@ -77,6 +93,10 @@ void ULimenModularSettingsSubsystem::DataLoaded()
 }
 
 void ULimenModularSettingsSubsystem::DataSaved()
+{
+}
+
+void ULimenModularSettingsSubsystem::LoadDefaultSettingsList()
 {
 }
 

@@ -25,14 +25,14 @@ const FText& ULimenSetting::GetDescription() const
 void ULimenSetting::ApplySetting()
 {
 	ApplyCurrentSetting();
-	OnSettingUpdated.Broadcast(this);
+	OnSettingApplied.Broadcast(this);
 
 	LIMEN_LOG(LogLimen, Log, this, "Applying setting %s", *GetDevelopmentName().ToString());
-	BP_ApplySetting();
 }
 
 void ULimenSetting::SetDefaultValue()
 {
+	OnSettingUpdated.Broadcast(this);
 }
 
 void ULimenSetting::InitializeSetting()
@@ -75,10 +75,6 @@ void ULimenSetting::ActionUnsuccessful()
 
 void ULimenSetting::SetDefaults()
 {
-	if (bUseRecurrentAction)
-	{
-
-	}
 }
 
 void ULimenSetting::ApplyCurrentSetting()

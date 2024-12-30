@@ -23,7 +23,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	virtual const TArray<bool>& GetSettingValues() const override final;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
-	virtual const bool& GetCurrentValue() const override final;
+	virtual bool GetCurrentValue() const override final;
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	virtual bool GetPreviousValue() const override final;
 
 	/// Editable Interface
 	virtual bool IsValueValid(const bool& Test) override;
@@ -33,17 +35,17 @@ public:
 	virtual bool SetNewValue(const bool& NewSelection) override;
 
 	/// LimenSetting
+	virtual void SetDefaults() override;
 	virtual void SetDefaultValue() override final;
+	virtual void DataLoaded() override final;
 	
 protected:
 	UPROPERTY(EditAnywhere)
 	bool bDefaultSettingState;
 	TArray<bool> PossibleStates;
 	
-	/// LimenSetting
-	virtual void SetDefaults() override {} // PURE_VIRTUAL(InitializeSetting);
-	
 private:
 	UPROPERTY(SaveGame)
 	bool bCurrentSettingState;
+	bool bPreviousSettingState;
 };

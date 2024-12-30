@@ -19,9 +19,14 @@ const TArray<FString>& ULimenSelectionSetting::GetSettingValues() const
 	return PossibleSelections;
 }
 
-const FString& ULimenSelectionSetting::GetCurrentValue() const
+FString ULimenSelectionSetting::GetCurrentValue() const
 {
 	return CurrentSelection;
+}
+
+FString ULimenSelectionSetting::GetPreviousValue() const
+{
+	return PreviousSelection;
 }
 
 bool ULimenSelectionSetting::IsValueValid(const FString& Test)
@@ -48,22 +53,31 @@ bool ULimenSelectionSetting::SetNewValue(const FString& NewSelection)
 		ULimenCoreStatics::LimenLog(this, FString::Printf(TEXT("Error setting '%s' to '%s'"), *GetDisplayName().ToString(), *NewSelection), ELogType::Error);
 		return false;
 	}
- 	
+	
+	PreviousSelection = CurrentSelection;
 	CurrentSelection = NewSelection;
+	OnSettingUpdated.Broadcast(this);
 	return true;
+}
+
+void ULimenSelectionSetting::SetDefaults()
+{
+	Super::SetDefaults();
+	
+	PreviousSelection = CurrentSelection;
 }
 
 void ULimenSelectionSetting::SetDefaultValue()
 {
-	if (DefaultSelection == TEXT("DefaultSelection"))
-	{
-		return;
-	}
-	
+	PreviousSelection = CurrentSelection;
 	CurrentSelection = DefaultSelection;
+
+	Super::SetDefaultValue();
 }
 
 void ULimenSelectionSetting::DataLoaded()
 {
+	PreviousSelection = CurrentSelection;
+	
 	Super::DataLoaded();
 }
