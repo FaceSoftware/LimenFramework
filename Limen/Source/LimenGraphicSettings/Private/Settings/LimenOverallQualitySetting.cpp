@@ -13,7 +13,7 @@ ULimenOverallQualitySetting::ULimenOverallQualitySetting()
 	Description = FText::FromString(TEXT("Overall quality"));
 }
 
-void ULimenOverallQualitySetting::ApplyCurrentSetting()
+void ULimenOverallQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

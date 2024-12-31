@@ -19,7 +19,7 @@ bool ULimenRayTracingTwoSidedGeometrySetting::CanEdit() const
 	return true;
 }
 
-void ULimenRayTracingTwoSidedGeometrySetting::ApplyCurrentSetting()
+void ULimenRayTracingTwoSidedGeometrySetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	const IConsoleManager* ConsoleManager = &IConsoleManager::Get();
 	IConsoleVariable* Variable = ConsoleManager->FindConsoleVariable(TEXT("r.RayTracing.Shadows.EnableTwoSidedGeometry"));

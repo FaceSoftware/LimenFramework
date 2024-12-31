@@ -12,7 +12,8 @@ public class LimenCinematics : ModuleRules
                 "Core",
                 "CoreUObject",
                 
-                "LimenCore",
+                "LimenCore", 
+                "MovieScene",
             }
         );
 
@@ -22,7 +23,9 @@ public class LimenCinematics : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore", 
-                "LimenWidgets"
+                "LimenWidgets", 
+                "LevelSequence",
+                "MovieScene"
             }
         );
     }

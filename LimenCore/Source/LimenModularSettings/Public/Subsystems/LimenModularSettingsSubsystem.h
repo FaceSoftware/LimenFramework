@@ -38,67 +38,22 @@ public:
 	bool EditToggleSetting(const TSubclassOf<ULimenSetting>& Class, const bool NewState);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
-	bool EditValueSetting(const TSubclassOf<ULimenSetting>& Class, const float& NewValue);
+	bool EditValueSetting(const TSubclassOf<ULimenSetting>& Class, const float NewValue);
+	
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	void ResetAllToDefault();
+	
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	void ResetSettingToDefault(const TSubclassOf<ULimenSetting>& Class);
 
 	template<typename SettingType>
-	bool EditSetting(const TSubclassOf<ULimenSetting>& Class, const SettingType& NewValue)
-	{
-		ULimenSetting* Setting = GetItem<ULimenSetting>(Class);
-		if (Setting == nullptr)
-		{
-			// No setting was found
-			ULimenCoreStatics::LimenLog(this, TEXT("No such setting with dev name '%s' was found"), ELogType::Error);
-			return false;
-		}
-		
-		return EditSetting(Setting, NewValue);
-	}
+	bool EditSetting(const TSubclassOf<ULimenSetting>& Class, const SettingType& NewValue);
 
 	template<typename SettingType>
-	bool EditSetting(ULimenSetting* InSetting, const SettingType& NewValue)
-	{
-		if (InSetting == nullptr)
-		{
-			return false;
-		}
-		
-		TLimenEditableSetting<SettingType>* EditableInterface = reinterpret_cast<TLimenEditableSetting<SettingType>*>(InSetting);
-		if (EditableInterface == nullptr)
-		{
-			// No editable interface? Then no edit!
-			return false;
-		}
-		
-		EditableInterface->SetNewValue(NewValue);
-		return true;
-	}
+	bool EditSetting(ULimenSetting* InSetting, const SettingType& NewValue);
 	
 	template<typename SettingType>
-	bool ReapplySetting(const TSubclassOf<ULimenSetting>& Class)
-	{
-		ULimenSetting* Setting = GetItem<ULimenSetting>(Class);
-		if (Setting == nullptr)
-		{
-			return false;
-		}
-
-		TLimenEditableSetting<SettingType>* EditableInterface = reinterpret_cast<TLimenEditableSetting<SettingType>*>(Setting);
-		if (EditableInterface == nullptr)
-		{
-			// No editable interface? Then no edit!
-			return false;
-		}
-		TLimenReadableSetting<SettingType>* ReadableInterface = reinterpret_cast<TLimenReadableSetting<SettingType>*>(Setting);
-		if (ReadableInterface == nullptr)
-		{
-			// No readable interface? Then no edit!
-			return false;
-		}
-
-		const SettingType& CurrentValue = ReadableInterface->GetCurrentValue();
-		EditableInterface->SetNewValue(CurrentValue);
-		return true;
-	}
+	bool ReapplySetting(const TSubclassOf<ULimenSetting>& Class);
 
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
@@ -114,7 +69,7 @@ protected:
 	 * Called before loading the settings so we know which settings still exist.
 	 * @warning Must be overriden
 	 */
-	virtual void LoadDefaultSettingsList() {}
+	virtual void LoadDefaultSettingsList();
 
 	UFUNCTION()
 	virtual void OnSettingUpdated(const ULimenSetting* UpdatedSetting);
@@ -124,3 +79,58 @@ protected:
 private:
 
 };
+
+template <typename SettingType>
+bool ULimenModularSettingsSubsystem::EditSetting(const TSubclassOf<ULimenSetting>& Class, const SettingType& NewValue)
+{
+	ULimenSetting* Setting = GetItem<ULimenSetting>(Class);
+	if (Setting == nullptr)
+	{
+		return false;
+	}
+		
+	return EditSetting(Setting, NewValue);
+}
+
+template <typename SettingType>
+bool ULimenModularSettingsSubsystem::EditSetting(ULimenSetting* InSetting, const SettingType& NewValue)
+{
+	if (InSetting == nullptr)
+	{
+		return false;
+	}
+		
+	TLimenEditableSetting<SettingType>* EditableInterface = reinterpret_cast<TLimenEditableSetting<SettingType>*>(InSetting);
+	if (EditableInterface == nullptr)
+	{
+		return false;
+	}
+		
+	EditableInterface->SetNewValue(NewValue);
+	return true;
+}
+
+template <typename SettingType>
+bool ULimenModularSettingsSubsystem::ReapplySetting(const TSubclassOf<ULimenSetting>& Class)
+{
+	ULimenSetting* Setting = GetItem<ULimenSetting>(Class);
+	if (Setting == nullptr)
+	{
+		return false;
+	}
+
+	TLimenEditableSetting<SettingType>* EditableInterface = reinterpret_cast<TLimenEditableSetting<SettingType>*>(Setting);
+	if (EditableInterface == nullptr)
+	{
+		return false;
+	}
+	TLimenReadableSetting<SettingType>* ReadableInterface = reinterpret_cast<TLimenReadableSetting<SettingType>*>(Setting);
+	if (ReadableInterface == nullptr)
+	{
+		return false;
+	}
+
+	const SettingType& CurrentValue = ReadableInterface->GetCurrentValue();
+	EditableInterface->SetNewValue(CurrentValue);
+	return true;
+}

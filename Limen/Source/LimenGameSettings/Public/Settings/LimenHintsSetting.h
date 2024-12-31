@@ -16,7 +16,7 @@ class LIMENGAMESETTINGS_API ULimenHintsSetting : public ULimenSelectionSetting
 
 public:
 	ULimenHintsSetting();
-	virtual void ApplyCurrentSetting() override;
+	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 
 protected:
 	virtual void SetDefaults() override;

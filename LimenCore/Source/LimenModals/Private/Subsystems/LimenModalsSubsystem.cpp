@@ -5,6 +5,8 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Developer/LimenModalsDeveloperSettings.h"
+#include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
 
 
 void ULimenModalsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -61,11 +63,11 @@ void UConfirmationModalAsyncAction::Activate()
 	ModalWidget->OnModalResponseReceived.AddDynamic(this, &ThisClass::ModalDismissed);
 }
 
-void UConfirmationModalAsyncAction::ModalDismissed(const bool bAccepted)
+void UConfirmationModalAsyncAction::ModalDismissed(ULimenGenericModalWidget* ModalWidget, const bool bAccepted)
 {
 	if (OnModalDismissed.IsBound())
 	{
-		OnModalDismissed.Broadcast(true);
+		OnModalDismissed.Broadcast(ModalWidget, true);
 	}
 }
 
@@ -87,10 +89,10 @@ void UConsentModalAsyncAction::Activate()
 	ModalWidget->OnModalResponseReceived.AddDynamic(this, &ThisClass::ModalDismissed);
 }
 
-void UConsentModalAsyncAction::ModalDismissed(const bool bAccepted)
+void UConsentModalAsyncAction::ModalDismissed(ULimenGenericModalWidget* ModalWidget, const bool bAccepted)
 {
 	if (OnModalDismissed.IsBound())
 	{
-		OnModalDismissed.Broadcast(bAccepted);
+		OnModalDismissed.Broadcast(ModalWidget, bAccepted);
 	}
 }

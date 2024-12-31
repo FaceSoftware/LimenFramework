@@ -18,7 +18,7 @@ ULimenCameraDistortionSetting::ULimenCameraDistortionSetting()
 	Description = FText::FromString(TEXT("Controls the VHS camera distortion effect."));
 }
 
-void ULimenCameraDistortionSetting::ApplyCurrentSetting()
+void ULimenCameraDistortionSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 	

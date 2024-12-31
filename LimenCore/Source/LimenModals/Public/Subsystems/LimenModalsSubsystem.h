@@ -53,7 +53,7 @@ private:
 	FModalParams Params;
 
 	UFUNCTION()
-	void ModalDismissed(const bool bAccepted);
+	void ModalDismissed(ULimenGenericModalWidget* ModalWidget, const bool bAccepted);
 };
 
 UCLASS()
@@ -76,5 +76,5 @@ private:
 	FModalParams Params;
 
 	UFUNCTION()
-	void ModalDismissed(const bool bAccepted);
+	void ModalDismissed(ULimenGenericModalWidget* ModalWidget, const bool bAccepted);
 };

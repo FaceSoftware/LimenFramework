@@ -21,7 +21,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	virtual const TArray<float>& GetSettingValues() const override final;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
-	virtual const float& GetCurrentValue() const override final;
+	virtual float GetCurrentValue() const override final;
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	virtual float GetPreviousValue() const override final;
 
 	/// Editable Interface
 	virtual bool IsValueValid(const float& Test) override;
@@ -31,7 +33,9 @@ public:
 	virtual bool SetNewValue(const float& NewSelection) override;
 	
 	/// LimenSetting
+	virtual void SetDefaults() override;
 	virtual void SetDefaultValue() override final;
+	virtual void DataLoaded() override final;
 
 protected:
 	/**
@@ -42,13 +46,13 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float DefaultSettingValue;
 
-	virtual void DataLoaded() override final;
 	
 private:	
 	float CurrentSettingValue;
+	float PreviousSettingValue;
 
 	// For serialization.
-	// A float doesn't override it's value after loading if it's 0, don't know why...
+	// A float doesn't override its value after loading if it's 0, don't know why...
 	UPROPERTY(SaveGame)
 	FString StringValue;
 };

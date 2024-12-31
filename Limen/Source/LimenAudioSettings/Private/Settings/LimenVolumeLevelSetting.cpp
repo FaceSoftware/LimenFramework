@@ -13,7 +13,7 @@ ULimenVolumeLevelSetting::ULimenVolumeLevelSetting()
 	Category = FText();
 }
 
-void ULimenVolumeLevelSetting::ApplyCurrentSetting()
+void ULimenVolumeLevelSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

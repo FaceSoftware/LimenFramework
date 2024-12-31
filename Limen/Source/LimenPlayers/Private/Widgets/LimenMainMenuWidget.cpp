@@ -31,7 +31,7 @@ void ULimenMainMenuWidget::QuitButtonPressed()
 	ConsentModalAsyncAction->Activate();
 }
 
-void ULimenMainMenuWidget::QuitGameModalDismissed(const bool bAccepted)
+void ULimenMainMenuWidget::QuitGameModalDismissed(ULimenGenericModalWidget* ULimenGenericModalWidget, const bool bAccepted)
 {
 	if (bAccepted)
 	{

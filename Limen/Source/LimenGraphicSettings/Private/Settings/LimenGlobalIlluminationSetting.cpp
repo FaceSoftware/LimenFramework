@@ -14,7 +14,7 @@ ULimenGlobalIlluminationSetting::ULimenGlobalIlluminationSetting()
 	Description = FText::FromString(TEXT("Sets the method for calculating global illumination. (Warning: Lumen is a lot more computationally expensive than screen space)"));
 }
 
-void ULimenGlobalIlluminationSetting::ApplyCurrentSetting()
+void ULimenGlobalIlluminationSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 	
