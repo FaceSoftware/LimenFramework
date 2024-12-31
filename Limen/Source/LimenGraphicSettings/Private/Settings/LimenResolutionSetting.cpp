@@ -197,7 +197,7 @@ void ULimenResolutionSetting::OnMonitorDisplayUpdated(const ULimenSetting* Setti
 	FScreenResolutionArray SupportedResolutions;
 	PossibleSelections.Empty();
 
-	if (GDynamicRHI->RHIGetAvailableResolutions(SupportedResolutions, true))
+	if (!GDynamicRHI->RHIGetAvailableResolutions(SupportedResolutions, true))
 	{
 		PossibleSelections.Reserve(1);
 		PossibleSelections.Push(DefaultSelection);
