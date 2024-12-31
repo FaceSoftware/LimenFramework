@@ -111,6 +111,11 @@
 			"Name": "LimenCinematics",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenSubtitles",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"SupportURL": ""

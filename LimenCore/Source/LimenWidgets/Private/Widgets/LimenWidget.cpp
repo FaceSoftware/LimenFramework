@@ -143,7 +143,7 @@ void ULimenWidget::DestroyWidget(const bool bWaitForHideAnimation)
 		return;
 	}
 
-	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::ULimenWidget::DestroyWidgetInternal);
+	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::DestroyWidgetInternal);
 	HideWidget();
 }
 
