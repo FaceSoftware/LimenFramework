@@ -8,9 +8,13 @@
 
 
 USTRUCT(BlueprintType)
-struct FModalParams
+struct LIMENMODALS_API FModalParams
 {
 	GENERATED_BODY()
+
+	FModalParams() = default;
+	FModalParams(const FString& InTitle, const FString& InContent);
+	FModalParams(const FText& InTitle, const FText& InContent);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText Title = FText::FromString(TEXT("ModalTile"));
@@ -18,7 +22,7 @@ struct FModalParams
 	FText Content = FText::FromString(TEXT("ModalContent"));;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FModalDelegate, bool, bAccepted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FModalDelegate, ULimenGenericModalWidget*, ModalWidget, bool, bAccepted);
 /**
  * 
  */
@@ -36,6 +40,9 @@ public:
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	FModalParams ModalParams;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void ModalParamsUpdated(const FModalParams& InModalParams);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Modals")
 	void ModalDismissed(const bool bAccepted);

@@ -24,7 +24,7 @@ void ULimenLumenReflectionsQualitySetting::SetDefaults()
 	DefaultSettingValue = 2.f;
 }
 
-void ULimenLumenReflectionsQualitySetting::ApplyCurrentSetting()
+void ULimenLumenReflectionsQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

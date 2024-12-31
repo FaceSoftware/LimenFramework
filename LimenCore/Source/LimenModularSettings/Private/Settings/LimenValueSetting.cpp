@@ -6,10 +6,10 @@
 #include "BlueprintLibraries/LimenCoreStatics.h"
 
 
-ULimenValueSetting::ULimenValueSetting()
+ULimenValueSetting::ULimenValueSetting(): DefaultSettingValue(0),
+										  CurrentSettingValue(0),
+										  PreviousSettingValue(0)
 {
-	CurrentSettingValue = 0.f;
-	DefaultSettingValue = 0.f;
 }
 
 const TArray<float>& ULimenValueSetting::GetSettingValues() const
@@ -17,9 +17,14 @@ const TArray<float>& ULimenValueSetting::GetSettingValues() const
 	return ValueRange;
 }
 
-const float& ULimenValueSetting::GetCurrentValue() const
+float ULimenValueSetting::GetCurrentValue() const
 {
 	return CurrentSettingValue;
+}
+
+float ULimenValueSetting::GetPreviousValue() const
+{
+	return PreviousSettingValue;
 }
 
 bool ULimenValueSetting::IsValueValid(const float& Test)
@@ -35,33 +40,40 @@ bool ULimenValueSetting::CanEdit() const
 
 bool ULimenValueSetting::SetNewValue(const float& NewSelection)
 {
-	if (!TLimenEditableSetting<float>::SetNewValue(NewSelection))
+	if (!TLimenEditableSetting::SetNewValue(NewSelection))
 	{
 		ULimenCoreStatics::LimenLog(this, FString::Printf(TEXT("Error setting '%s' to '%f'"), *GetDisplayName().ToString(), NewSelection), ELogType::Error);
 		return false;
 	}
  	
+	PreviousSettingValue = CurrentSettingValue;
 	CurrentSettingValue = NewSelection;
 	StringValue = FString::Printf(TEXT("%f"), CurrentSettingValue);
+	OnSettingUpdated.Broadcast(this);
 	return true;
+}
+
+void ULimenValueSetting::SetDefaults()
+{
+	Super::SetDefaults();
+	
+	PreviousSettingValue = CurrentSettingValue;
 }
 
 void ULimenValueSetting::SetDefaultValue()
 {
-	Super::SetDefaultValue();
-	
-	if (FMath::IsNearlyEqualByULP(CurrentSettingValue, DefaultSettingValue, 2))
-	{
-		return;
-	}
-	
+	PreviousSettingValue = CurrentSettingValue;
 	CurrentSettingValue = DefaultSettingValue;
 	StringValue = FString::Printf(TEXT("%f"), DefaultSettingValue);
+
+	Super::SetDefaultValue();
 }
 
 void ULimenValueSetting::DataLoaded()
 {
-	CurrentSettingValue = FCString::Atof(*StringValue);
 	Super::DataLoaded();
+	
+	CurrentSettingValue = FCString::Atof(*StringValue);
+	PreviousSettingValue = CurrentSettingValue;
 }
 

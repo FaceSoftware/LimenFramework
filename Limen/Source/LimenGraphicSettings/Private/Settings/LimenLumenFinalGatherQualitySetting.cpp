@@ -24,7 +24,7 @@ void ULimenLumenFinalGatherQualitySetting::SetDefaults()
 	DefaultSettingValue = 2.f;
 }
 
-void ULimenLumenFinalGatherQualitySetting::ApplyCurrentSetting()
+void ULimenLumenFinalGatherQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

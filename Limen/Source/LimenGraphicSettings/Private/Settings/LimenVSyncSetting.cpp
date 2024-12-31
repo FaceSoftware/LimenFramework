@@ -13,7 +13,7 @@ ULimenVSyncSetting::ULimenVSyncSetting()
 	Description = FText::FromString(TEXT("Refreshes the screen's pixels in sync to avoid tearing."));
 }
 
-void ULimenVSyncSetting::ApplyCurrentSetting()
+void ULimenVSyncSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

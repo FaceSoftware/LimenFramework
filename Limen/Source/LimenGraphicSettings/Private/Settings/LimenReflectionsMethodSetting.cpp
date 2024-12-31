@@ -14,7 +14,7 @@ ULimenReflectionsMethodSetting::ULimenReflectionsMethodSetting()
 	Description = FText::FromString(TEXT("Sets the method for calculating reflections. (Warning: Lumen is a lot more computationally expensive than screen space)"));
 }
 
-void ULimenReflectionsMethodSetting::ApplyCurrentSetting()
+void ULimenReflectionsMethodSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

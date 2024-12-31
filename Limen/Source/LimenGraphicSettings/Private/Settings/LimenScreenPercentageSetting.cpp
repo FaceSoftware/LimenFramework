@@ -14,7 +14,7 @@ ULimenScreenPercentageSetting::ULimenScreenPercentageSetting()
 	Description = FText::FromString(TEXT(""));
 }
 
-void ULimenScreenPercentageSetting::ApplyCurrentSetting()
+void ULimenScreenPercentageSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

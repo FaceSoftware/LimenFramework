@@ -12,7 +12,7 @@ ULimenFramesPerSecondLimitSetting::ULimenFramesPerSecondLimitSetting()
 	Description = FText::FromString(TEXT("Limits the amount of frames displayed each second."));
 }
 
-void ULimenFramesPerSecondLimitSetting::ApplyCurrentSetting()
+void ULimenFramesPerSecondLimitSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
