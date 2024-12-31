@@ -15,9 +15,9 @@ public:
 	FLimenSubtitleCue() = default;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float StartTime;
+	float StartTime = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float EndTime;
+	float EndTime = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText SubtitleText;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
