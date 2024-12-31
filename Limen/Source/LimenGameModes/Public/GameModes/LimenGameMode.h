@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameModes/LimenGameModeBase.h"
+#include "GameMode/LimenGameModeBase.h"
 #include "LimenGameMode.generated.h"
 
 class ALimenPlayerControllerBase;

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenCharacterBase.h"
+#include "Pawn/LimenCharacterBase.h"
 #include "LimenSpectatorCharacter.generated.h"
 
 UCLASS(Abstract)

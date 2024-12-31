@@ -15,7 +15,8 @@ public class LimenPlayers : ModuleRules
                 "LimenInteraction",
                 "LimenObjectives",
                 "LimenNotifications", 
-                "LimenWeapons",
+                "LimenWeapons", 
+                "LimenGameFramework",
             }
         );
 

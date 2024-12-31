@@ -1,18 +1,17 @@
 ﻿using UnrealBuildTool;
 
-public class LimenGameSettings : ModuleRules
+public class LimenGameFramework : ModuleRules
 {
-    public LimenGameSettings(ReadOnlyTargetRules Target) : base(Target)
+    public LimenGameFramework(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
-                "DeveloperSettings",
-                
-                "LimenModularSettings",
+                "Core", 
+                "Engine",
+                "LimenCore",
             }
         );
 
@@ -22,16 +21,14 @@ public class LimenGameSettings : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore", 
+                "SlateCore",
+                "EnhancedInput", 
                 
-                "LimenCore",
-                "LimenPlayers",
                 "LimenNotifications",
-                "LimenSaveSystem",
-                "LimenStorage", 
+                "LimenWidgets",
                 "LimenLocomotion", 
-                "LimenHints",
-                "LimenGameFramework",
+                "LimenAbilitySystem",
+                "LimenLevelTransitions", 
             }
         );
     }

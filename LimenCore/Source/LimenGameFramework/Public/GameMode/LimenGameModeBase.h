@@ -6,13 +6,12 @@
 #include "GameFramework/GameModeBase.h"
 #include "LimenGameModeBase.generated.h"
 
-class ALimenGameState;
+
 class ALimenGameplayManager;
-class ALimenBasePlayerController;
-class ALimenBaseCharacter;
+class ALimenGameStateBase;
 
 UCLASS(Abstract, NotBlueprintable)
-class LIMENGAMEMODES_API ALimenGameModeBase : public AGameModeBase
+class LIMENGAMEFRAMEWORK_API ALimenGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
@@ -21,7 +20,7 @@ public:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
 
-	ALimenGameState* GetLimenGameState();
+	ALimenGameStateBase* GetLimenGameState();
 
 	void ResetManagers();
 	
@@ -34,7 +33,7 @@ private:
 	TArray<TObjectPtr<ALimenGameplayManager>> ManagersList;
 
 	UPROPERTY()
-	TObjectPtr<ALimenGameState> LimenGameState;
+	TObjectPtr<ALimenGameStateBase> LimenGameState;
 	
 	virtual void SpawnManagers();
 };

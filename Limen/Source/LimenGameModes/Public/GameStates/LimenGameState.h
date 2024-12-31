@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenGameStateBase.h"
+#include "GameState/LimenGameStateBase.h"
 #include "LimenGameState.generated.h"
 
 class ALimenPlayerState;
@@ -18,17 +18,8 @@ class LIMENGAMEMODES_API ALimenGameState : public ALimenGameStateBase
 
 
 public:
-	explicit ALimenGameState(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
-	
-	void AddPlayerToPlayerList(ALimenPlayerState* InPlayerState);
-	
+
 protected:
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
-	UFUNCTION()
-	virtual void OnRep_LimenPlayerList(const TArray<ALimenPlayerState*>& NewLimenPlayerList);
 
 private:
-	UPROPERTY(ReplicatedUsing="OnRep_LimenPlayerList")
-	TArray<ALimenPlayerState*> LimenPlayerList;
 };

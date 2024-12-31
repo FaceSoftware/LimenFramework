@@ -3,10 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenBasePlayerState.h"
-#include "Interfaces/LimenSaveObjectInterface.h"
 #include "Managers/LimenObjective.h"
 #include "Items/LimenItemBase.h"
+#include "PlayerState/LimenPlayerStateBase.h"
 #include "LimenPlayerState.generated.h"
 
 class ALimenPhysicalItem;
@@ -16,7 +15,7 @@ class ULimenInventoryComponent;
  * 
  */
 UCLASS()
-class LIMENPLAYERS_API ALimenPlayerState : public ALimenBasePlayerState
+class LIMENPLAYERS_API ALimenPlayerState : public ALimenPlayerStateBase
 {
 	GENERATED_BODY()
 

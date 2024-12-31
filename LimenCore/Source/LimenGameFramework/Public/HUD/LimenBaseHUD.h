@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/HUD.h"
 #include "Actors/LimenGameplayActor.h"
+#include "GameFramework/HUD.h"
 #include "LimenBaseHUD.generated.h"
 
 
@@ -17,7 +17,7 @@ class ULimenWidget;
  * 
  */
 UCLASS(Abstract, NotBlueprintable)
-class LIMENPLAYERS_API ALimenBaseHUD : public AHUD
+class LIMENGAMEFRAMEWORK_API ALimenBaseHUD : public AHUD
 {
 	GENERATED_BODY()
 	
@@ -26,7 +26,9 @@ public:
 	FObjectInitializationDelegate OnHudInitialized;
 	
 	ALimenBaseHUD();
+	virtual void ShowHUD() override;
 	
+	void ShowActiveWidget();
 	void HideActiveWidget();
 
 	/**

@@ -10,7 +10,7 @@
 class ALimenPlayerControllerBase;
 class ULimenVariableMovementAbility;
 class ULimenAbilityComponent;
-class ALimenBasePlayerState;
+class ALimenPlayerStateBase;
 struct FNotificationParams;
 struct FInputActionInstance;
 class UInputAction;
@@ -34,7 +34,7 @@ DECLARE_MULTICAST_DELEGATE(FInputDelegate);
  * and is able to queue notifications if the controller class is the LimenPlayerController.
  */
 UCLASS(Abstract, NotBlueprintable)
-class LIMENPLAYERS_API ALimenCharacterBase : public ACharacter
+class LIMENGAMEFRAMEWORK_API ALimenCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -112,7 +112,7 @@ protected:
 
 	virtual void PossessedBy(AController* NewController) override;
 
-	ALimenBasePlayerState* GetLimenBasePlayerState() const;
+	ALimenPlayerStateBase* GetLimenBasePlayerState() const;
 	
 private:
 	UPROPERTY()
@@ -120,7 +120,7 @@ private:
 	UPROPERTY()
 	TWeakObjectPtr<ALimenPlayerControllerBase> LimenBasePlayerController;
 	UPROPERTY()
-	TWeakObjectPtr<ALimenBasePlayerState> LimenBasePlayerState;
+	TWeakObjectPtr<ALimenPlayerStateBase> LimenBasePlayerState;
 	UPROPERTY()
 	TWeakObjectPtr<APlayerController> PlayerController;
 };
