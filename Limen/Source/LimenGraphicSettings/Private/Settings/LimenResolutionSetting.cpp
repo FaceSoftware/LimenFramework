@@ -110,18 +110,18 @@ UWorld* ULimenResolutionSetting::GetTickableGameObjectWorld() const
 	return FTickableGameObject::GetTickableGameObjectWorld();
 }
 
-void ULimenResolutionSetting::ApplyCurrentSetting()
+void ULimenResolutionSetting::ApplyCurrentSetting(const bool bUserRequest)
 {	
 	Super::ApplyCurrentSetting();
 
-	if (GetCurrentValue() == GetPreviousValue() || GetCurrentValue() == DefaultSelection)
+	GEngine->GetGameUserSettings()->SetScreenResolution(DeFormatResolution(GetCurrentValue()));
+	GEngine->GetGameUserSettings()->ApplySettings(false);
+
+	if (!bUserRequest)
 	{
 		return;
 	}
 	
-	GEngine->GetGameUserSettings()->SetScreenResolution(DeFormatResolution(GetCurrentValue()));
-	GEngine->GetGameUserSettings()->ApplySettings(false);
-
 	const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
 	ModalWidget = ModalsSubsystem->DisplayConfirmationModal({
 		ConfirmationModalTitle, FormatModalText(10)

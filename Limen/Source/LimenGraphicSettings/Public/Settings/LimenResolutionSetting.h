@@ -38,7 +38,7 @@ public:
 	
 #pragma endregion
 
-	virtual void ApplyCurrentSetting() override;
+	virtual void ApplyCurrentSetting(const bool bUserRequest) override;
 	virtual void SetDefaults() override;
 
 private:

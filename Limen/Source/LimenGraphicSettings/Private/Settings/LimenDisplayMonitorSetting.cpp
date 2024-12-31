@@ -21,7 +21,7 @@ bool ULimenDisplayMonitorSetting::CanEdit() const
 	return true;
 }
 
-void ULimenDisplayMonitorSetting::ApplyCurrentSetting()
+void ULimenDisplayMonitorSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

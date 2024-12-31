@@ -22,7 +22,7 @@ public:
 	
 protected:
 	virtual void SetDefaults() override;
-	virtual void ApplyCurrentSetting() override;
+	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 
 private:
 	UPROPERTY()

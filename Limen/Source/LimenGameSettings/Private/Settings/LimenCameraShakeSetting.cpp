@@ -29,7 +29,7 @@ void ULimenCameraShakeSetting::SetDefaults()
 	DefaultSelection = Enabled;
 }
 
-void ULimenCameraShakeSetting::ApplyCurrentSetting()
+void ULimenCameraShakeSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

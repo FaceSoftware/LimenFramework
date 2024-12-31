@@ -22,7 +22,7 @@ public:
 	ULimenCameraDistortionSetting();
 
 protected:
-	virtual void ApplyCurrentSetting() override;
+	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 	virtual void SetDefaults() override;
 
 	virtual void GlobalPostProcessFound(APostProcessVolume* PostProcess);

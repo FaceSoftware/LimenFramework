@@ -33,7 +33,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	const FText& GetDescription() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")	
-	void ApplySetting();
+	void ApplySetting(bool bUserRequest = false);
 	
 	virtual void SetDefaultValue();
 
@@ -82,7 +82,7 @@ protected:
 	 * @brief Should apply the current setting without notifying the OnSettingChanged delegate
 	 * @warning Must be overriden
 	 */
-	virtual void ApplyCurrentSetting();
+	virtual void ApplyCurrentSetting(bool bUserRequest = false);
 	
 	virtual void DataLoaded() override;
 	

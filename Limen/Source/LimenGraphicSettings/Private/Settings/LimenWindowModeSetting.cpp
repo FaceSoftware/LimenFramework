@@ -13,7 +13,7 @@ ULimenWindowModeSetting::ULimenWindowModeSetting()
 	Description = FText::FromString(TEXT("Defines the window mode of the game."));
 }
 
-void ULimenWindowModeSetting::ApplyCurrentSetting()
+void ULimenWindowModeSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

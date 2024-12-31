@@ -20,7 +20,7 @@ ULimenAntiAliasingSetting::ULimenAntiAliasingSetting()
 	Description = FText::FromString(TEXT("Anti-aliasing reduces visual artifacts such as jagged edges by smoothing the transitions between contrasting pixels."));
 }
 
-void ULimenAntiAliasingSetting::ApplyCurrentSetting()
+void ULimenAntiAliasingSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

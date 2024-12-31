@@ -17,7 +17,7 @@ ULimenDynamicDepthOfFieldSetting::ULimenDynamicDepthOfFieldSetting()
 	Description = FText::FromString(TEXT("Adds a level of realism by only focusing on what the camera is looking at."));
 }
 
-void ULimenDynamicDepthOfFieldSetting::ApplyCurrentSetting()
+void ULimenDynamicDepthOfFieldSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

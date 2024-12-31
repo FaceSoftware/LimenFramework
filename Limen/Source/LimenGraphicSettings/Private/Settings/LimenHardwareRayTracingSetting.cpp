@@ -28,7 +28,7 @@ bool ULimenHardwareRayTracingSetting::CanEdit() const
 	return GRHIGlobals.RayTracing.Supported;
 }
 
-void ULimenHardwareRayTracingSetting::ApplyCurrentSetting()
+void ULimenHardwareRayTracingSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

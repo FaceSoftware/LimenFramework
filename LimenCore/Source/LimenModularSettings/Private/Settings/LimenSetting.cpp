@@ -22,9 +22,9 @@ const FText& ULimenSetting::GetDescription() const
 	return Description;
 }
 
-void ULimenSetting::ApplySetting()
+void ULimenSetting::ApplySetting(const bool bUserRequest)
 {
-	ApplyCurrentSetting();
+	ApplyCurrentSetting(bUserRequest);
 	OnSettingApplied.Broadcast(this);
 
 	LIMEN_LOG(LogLimen, Log, this, "Applying setting %s", *GetDevelopmentName().ToString());
@@ -77,7 +77,7 @@ void ULimenSetting::SetDefaults()
 {
 }
 
-void ULimenSetting::ApplyCurrentSetting()
+void ULimenSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	if (!bUseRecurrentAction)
 	{

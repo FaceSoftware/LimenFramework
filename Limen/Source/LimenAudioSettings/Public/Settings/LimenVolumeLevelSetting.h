@@ -18,7 +18,7 @@ class LIMENAUDIOSETTINGS_API ULimenVolumeLevelSetting : public ULimenValueSettin
 
 public:
 	ULimenVolumeLevelSetting();
-	virtual void ApplyCurrentSetting() override;
+	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")

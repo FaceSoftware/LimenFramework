@@ -19,7 +19,7 @@ public:
 
 	virtual bool CanEdit() const override;
 	
-	virtual void ApplyCurrentSetting() override;
+	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 	virtual void SetDefaults() override;
 
 private:
