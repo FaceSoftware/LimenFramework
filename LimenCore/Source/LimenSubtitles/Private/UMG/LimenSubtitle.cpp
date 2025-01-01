@@ -7,6 +7,17 @@
 #include "LimenCore/Public/LogMacros/LimenLogMacros.h"
 
 
+ULimenSubtitle::ULimenSubtitle(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer), SubtitleIndex(0)
+{
+}
+
+void ULimenSubtitle::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	HideWidget();
+}
+
 void ULimenSubtitle::BeginDestroy()
 {
 	if (GetWorld() != nullptr)
@@ -33,10 +44,19 @@ void ULimenSubtitle::StartDisplayingSubtitles()
 	}
 	
 	SubtitleIndex = 0;
-	DisplayNextSubtitle();
+	
+	if (const FLimenSubtitleCue* CurrentCue = SubtitleRows[SubtitleIndex]; !FMath::IsNearlyZero(CurrentCue->StartTime))
+	{		
+		FTimerManager& TimerManager = GetWorld()->GetTimerManager();
+		TimerManager.SetTimer(CurrentCueTimerHandle, this, &ThisClass::ShowCurrentSubtitle, CurrentCue->StartTime, false);
+	}
+	else
+	{
+		ShowCurrentSubtitle();
+	}
 }
 
-void ULimenSubtitle::DisplayNextSubtitle()
+void ULimenSubtitle::ShowCurrentSubtitle()
 {
 	const FLimenSubtitleCue* CurrentCue = SubtitleRows[SubtitleIndex];
 	if (CurrentCue == nullptr)
@@ -49,23 +69,27 @@ void ULimenSubtitle::DisplayNextSubtitle()
 		SubtitleCueSet(*CurrentCue);
 	}
 	
-	SubtitleIndex++;
-
+	const float CueDuration = CurrentCue->EndTime - CurrentCue->StartTime;
+	
 	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
-	TimerManager.SetTimer(CurrentCueTimerHandle, [this, CurrentCue, &TimerManager]
+	TimerManager.SetTimer(CurrentCueTimerHandle, this, &ThisClass::HideCurrentSubtitle, CueDuration, false);
+}
+
+void ULimenSubtitle::HideCurrentSubtitle()
+{
+	HideWidget();
+	
+	if (!SubtitleRows.IsValidIndex(SubtitleIndex + 1))
 	{
-		if (!SubtitleRows.IsValidIndex(SubtitleIndex))
-		{
-			OnSubtitleFinish.Broadcast(this);
-			return;
-		}
-
-		HideWidget();
-		
-		const FLimenSubtitleCue* NextCue = SubtitleRows[SubtitleIndex];
-		const float NextCueTime = NextCue->StartTime - CurrentCue->StartTime;
-
-		TimerManager.SetTimer(NextCueTimerHandle, this, &ThisClass::DisplayNextSubtitle, NextCueTime);
+		OnSubtitleFinish.Broadcast(this);
+		return;
 	}
-	, CurrentCue->EndTime - CurrentCue->StartTime, false);
+	
+	const FLimenSubtitleCue* CurrentCue = SubtitleRows[SubtitleIndex];
+	const FLimenSubtitleCue* NextCue = SubtitleRows[++SubtitleIndex];
+
+	const float SecondsUntilNextCue = NextCue->StartTime - CurrentCue->EndTime;
+	
+	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
+	TimerManager.SetTimer(CurrentCueTimerHandle, this, &ThisClass::ShowCurrentSubtitle, SecondsUntilNextCue, false);
 }

@@ -19,7 +19,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float EndTime = 0.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText SubtitleText;
+	FText Speaker = FText::FromString("Speaker");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText Speaker;
+	FColor SpeakerTextColor = FColor::Cyan;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText SubtitleText = FText::FromString("SubtitleText");;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FColor SubtitleTextColor = FColor::White;
 };

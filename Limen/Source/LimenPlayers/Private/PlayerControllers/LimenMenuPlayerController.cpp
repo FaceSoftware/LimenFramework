@@ -10,11 +10,6 @@ ALimenMenuPlayerController::ALimenMenuPlayerController()
 {
 }
 
-void ALimenMenuPlayerController::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 void ALimenMenuPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();

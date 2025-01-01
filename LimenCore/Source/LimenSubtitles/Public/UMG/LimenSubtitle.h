@@ -22,6 +22,8 @@ class LIMENSUBTITLES_API ULimenSubtitle : public ULimenWidget
 public:
 	FSubtitleDelegate OnSubtitleFinish;
 
+	explicit ULimenSubtitle(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual void NativeConstruct() override;
 	virtual void BeginDestroy() override;
 	
 	void SetSubtitleData(const FDataTableRowHandle& InSubtitleData);
@@ -39,5 +41,6 @@ private:
 	int32 SubtitleIndex;
 
 	TArray<FLimenSubtitleCue*> SubtitleRows;
-	void DisplayNextSubtitle();
+	void ShowCurrentSubtitle();
+	void HideCurrentSubtitle();
 };

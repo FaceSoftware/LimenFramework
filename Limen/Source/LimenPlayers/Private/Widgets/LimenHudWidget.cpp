@@ -6,7 +6,6 @@
 
 void ULimenHudWidget::BindPawn(APawn* Pawn)
 {
-	check(Pawn)
 	BoundPawn = Pawn;
 	OnPawnBound(BoundPawn.Get());
 }
