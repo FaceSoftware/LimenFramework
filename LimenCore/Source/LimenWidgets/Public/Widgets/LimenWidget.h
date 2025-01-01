@@ -65,6 +65,8 @@ public:
 	void ToggleWidgetVisibility();
 	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
 	bool IsShowing() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
+	bool IsHiding() const;
 	bool IsAnimating() const;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Widget")

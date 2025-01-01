@@ -30,7 +30,7 @@ void ULimenWidget::ShowWidget()
 		return;
 	}
 	
-	if (bIsVisible)
+	if (IsShowing())
 	{
 		return;
 	}
@@ -65,7 +65,7 @@ void ULimenWidget::HideWidget()
 		return;
 	}
 	
-	if (!bIsVisible)
+	if (IsHiding())
 	{
 		return;
 	}
@@ -115,7 +115,7 @@ void ULimenWidget::HideWidget(const TSharedPtr<FLimenWidgetHidden>& OnWidgetHidd
 
 void ULimenWidget::ToggleWidgetVisibility()
 {
-	if (bIsVisible)
+	if (IsShowing())
 	{
 		HideWidget();
 	}
@@ -127,7 +127,12 @@ void ULimenWidget::ToggleWidgetVisibility()
 
 bool ULimenWidget::IsShowing() const
 {
-	return bIsVisible;
+	return GetVisibility() == DefaultVisibleState;
+}
+
+bool ULimenWidget::IsHiding() const
+{
+	return GetVisibility() == DefaultHiddenState;
 }
 
 bool ULimenWidget::IsAnimating() const
@@ -233,7 +238,7 @@ void ULimenWidget::HideAllChildren()
 
 void ULimenWidget::HiddeAnimationFinished_Internal(const bool bVisible)
 {
-	if (bIsVisible)
+	if (IsShowing())
 	{
 		return;
 	}
