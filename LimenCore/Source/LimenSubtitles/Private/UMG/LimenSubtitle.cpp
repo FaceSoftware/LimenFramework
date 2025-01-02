@@ -9,6 +9,7 @@
 
 ULimenSubtitle::ULimenSubtitle(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer), SubtitleIndex(0)
 {
+	SetWidgetLevel(21);
 }
 
 void ULimenSubtitle::NativeConstruct()
@@ -30,10 +31,15 @@ void ULimenSubtitle::BeginDestroy()
 	Super::BeginDestroy();
 }
 
-void ULimenSubtitle::SetSubtitleData(const FDataTableRowHandle& InSubtitleData)
+void ULimenSubtitle::SetSubtitleData(const UDataTable* InSubtitleData)
 {
-	SubtitleData = InSubtitleData;
-	SubtitleData.DataTable->GetAllRows(TEXT("SubtitleData"), SubtitleRows);
+	if (InSubtitleData == nullptr)
+	{
+		return;
+	}
+	
+	SubtitleData = TStrongObjectPtr(InSubtitleData);
+	SubtitleData->GetAllRows(TEXT("SubtitleData"), SubtitleRows);
 }
 
 void ULimenSubtitle::StartDisplayingSubtitles()
@@ -61,7 +67,8 @@ void ULimenSubtitle::ShowCurrentSubtitle()
 	const FLimenSubtitleCue* CurrentCue = SubtitleRows[SubtitleIndex];
 	if (CurrentCue == nullptr)
 	{
-		LIMEN_LOG(LogLimen, Error, this, "A nullptr row was found for \"%p\" subtitle data table", &SubtitleData.RowName);
+		const FName RowName = SubtitleData->GetRowNames()[SubtitleIndex];
+		LIMEN_LOG(LogLimen, Error, this, "Unable to get subtitle data table row with name \"%p\"", &RowName);
 	}
 	else
 	{

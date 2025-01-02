@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Structs/SubtitleCoreStructs.h"
+#include "UObject/StrongObjectPtr.h"
 #include "Widgets/LimenWidget.h"
 #include "LimenSubtitle.generated.h"
 
@@ -26,14 +27,14 @@ public:
 	virtual void NativeConstruct() override;
 	virtual void BeginDestroy() override;
 	
-	void SetSubtitleData(const FDataTableRowHandle& InSubtitleData);
+	void SetSubtitleData(const UDataTable* InSubtitleData);
 	void StartDisplayingSubtitles();
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SubtitleCueSet(const FLimenSubtitleCue& InSubtitleCue);
 	
-	FDataTableRowHandle SubtitleData;
+	TStrongObjectPtr<const UDataTable> SubtitleData;
 
 private:
 	FTimerHandle CurrentCueTimerHandle;

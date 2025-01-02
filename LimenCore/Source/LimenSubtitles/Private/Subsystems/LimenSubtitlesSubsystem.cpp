@@ -4,6 +4,7 @@
 #include "Subsystems/LimenSubtitlesSubsystem.h"
 
 #include "Developer/LimenSubtitlesDeveloperSettings.h"
+#include "LimenCore/Public/LogMacros/LimenLogMacros.h"
 #include "UMG/LimenSubtitle.h"
 #include "UMG/LimenSubtitleDisplay.h"
 
@@ -32,9 +33,15 @@ void ULimenSubtitlesSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void ULimenSubtitlesSubsystem::AddSubtitle(const FDataTableRowHandle& InSubtitleData)
+void ULimenSubtitlesSubsystem::AddSubtitle(const UDataTable* InSubtitleData)
 {
-	if (SubtitleDisplayWidget == nullptr || SubtitleWidgetClass.Get() == nullptr)
+	if (!InSubtitleData->RowStruct->IsChildOf(FLimenSubtitleCue::StaticStruct()))
+	{
+		LIMEN_LOG(LogLimen, Error, this, "Invalid subtitle struct.");
+		return;
+	}
+	
+	if (InSubtitleData == nullptr || SubtitleDisplayWidget == nullptr || SubtitleWidgetClass.Get() == nullptr)
 	{
 		return;
 	}

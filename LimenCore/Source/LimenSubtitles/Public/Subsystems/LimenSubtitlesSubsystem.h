@@ -9,6 +9,7 @@
 #include "LimenSubtitlesSubsystem.generated.h"
 
 
+class UDataTable;
 struct FDataTableRowHandle;
 class ULimenSubtitle;
 class ULimenSubtitleDisplay;
@@ -28,7 +29,7 @@ public:
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable)
-	virtual void AddSubtitle(const FDataTableRowHandle& InSubtitleData);
+	virtual void AddSubtitle(const UDataTable* InSubtitleData);
 
 protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
