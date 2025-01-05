@@ -77,6 +77,13 @@ void ULimenSubtitle::ShowCurrentSubtitle()
 	}
 	
 	const float CueDuration = CurrentCue->EndTime - CurrentCue->StartTime;
+	if (FMath::IsNearlyZero(CueDuration))
+	{
+		// Kind of unnecessary because a cue should be displayed more than 0 seconds...
+		// But in case that happens, this check will prevent things from breaking here.
+		HideCurrentSubtitle();
+		return;
+	}
 	
 	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 	TimerManager.SetTimer(CurrentCueTimerHandle, this, &ThisClass::HideCurrentSubtitle, CueDuration, false);
@@ -96,6 +103,11 @@ void ULimenSubtitle::HideCurrentSubtitle()
 	const FLimenSubtitleCue* NextCue = SubtitleRows[++SubtitleIndex];
 
 	const float SecondsUntilNextCue = NextCue->StartTime - CurrentCue->EndTime;
+	if (FMath::IsNearlyZero(SecondsUntilNextCue))
+	{
+		ShowCurrentSubtitle();
+		return;
+	}
 	
 	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 	TimerManager.SetTimer(CurrentCueTimerHandle, this, &ThisClass::ShowCurrentSubtitle, SecondsUntilNextCue, false);
