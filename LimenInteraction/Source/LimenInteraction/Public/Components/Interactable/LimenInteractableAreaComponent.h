@@ -41,4 +41,6 @@ public:
 protected:
 
 private:
+	TOptional<FCollisionResponseContainer> CachedCollisionResponse;
+	TOptional<ECollisionEnabled::Type> CachedCollisionEnabledType;
 };
