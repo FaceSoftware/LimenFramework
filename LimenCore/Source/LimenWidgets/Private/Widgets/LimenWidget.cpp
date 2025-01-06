@@ -13,7 +13,6 @@ ULimenWidget::ULimenWidget(const FObjectInitializer& ObjectInitializer) : Super(
 	DefaultVisibleState = ESlateVisibility::Visible;
 	DefaultHiddenState = ESlateVisibility::Collapsed;
 	WidgetLevel = 0;
-	SetVisibilityInternal(DefaultHiddenState);
 }
 
 void ULimenWidget::NativeConstruct()
