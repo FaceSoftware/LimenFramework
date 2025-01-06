@@ -104,9 +104,8 @@ bool ULimenLevelTransitionSubsystem::PlayLoadingScreenForCurrentLevel()
 {
 	if (IsLoadingScreenActive())
 	{
-		HideLoadingScreen_Internal();
+		HideLoadingScreen();
 	}
-	
 	
 	const FSoftObjectPath LevelPath = GetWorld();
 	const FString MapName = UWorld::RemovePIEPrefix(LevelPath.GetAssetName());
@@ -135,47 +134,47 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 	{
 		return;
 	}
-	
-	if (ShouldShowLoadingScreen())
+
+	if (IsLoadingScreenActive())
 	{
-		if (IsLoadingScreenActive())
-		{
-			SecondsShown += DeltaTime;
+		SecondsShown += DeltaTime;
 
 #if !WITH_EDITOR
-			const uint32 ShadersLeft = FShaderPipelineCache::NumPrecompilesRemaining();
-			if (FShaderPipelineCache::IsBatchingPaused())
-			{
-				// Somehow it pauses sometimes, even though resume was called...
-				FShaderPipelineCache::ResumeBatching();
-			}
-			
-			if (ShadersLeft > TotalPrecompiles)
-			{
-				TotalPrecompiles = ShadersLeft;
-			}
-			
-			GEngine->AddOnScreenDebugMessage(FName(TEXT("ShaderPrecompilation")).ToUnstableInt(), 1.f, FColor::Cyan, FString::Printf(TEXT("Compiling %u shaders"), ShadersLeft));
-
-			const float TempPercentageDone = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
-			CurrentPrecompileDonePercentage = TempPercentageDone < CurrentPrecompileDonePercentage ? CurrentPrecompileDonePercentage : TempPercentageDone;
-			OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage);
-#endif
-			return;
+		const uint32 ShadersLeft = FShaderPipelineCache::NumPrecompilesRemaining();
+		if (FShaderPipelineCache::IsBatchingPaused() && ShadersLeft > 0)
+		{
+			// Somehow it pauses sometimes, even though resume was called...
+			FShaderPipelineCache::ResumeBatching();
 		}
+			
+		if (ShadersLeft > TotalPrecompiles)
+		{
+			TotalPrecompiles = ShadersLeft;
+		}
+			
+		GEngine->AddOnScreenDebugMessage(FName(TEXT("ShaderPrecompilation")).ToUnstableInt(), 1.f, FColor::Cyan, FString::Printf(TEXT("Compiling %u shaders"), ShadersLeft));
 
+		const float TempPercentageDone = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
+		CurrentPrecompileDonePercentage = TempPercentageDone < CurrentPrecompileDonePercentage ? CurrentPrecompileDonePercentage : TempPercentageDone;
+		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage);
+#endif
+	}
+	
+	if (ShouldShowLoadingScreen() && !IsLoadingScreenActive())
+	{
 		SecondsShown = 0;
 		DisplayLoadingScreen();
 		bIsLoadingScreenNotifiedToHide = false;
 	}
-	else
+	else if (!ShouldShowLoadingScreen() && IsLoadingScreenActive() && !bIsLoadingScreenNotifiedToHide)
 	{
-		if (!bIsLoadingScreenNotifiedToHide)
+		bIsLoadingScreenNotifiedToHide = true;
+		TotalPrecompiles = 0;
+		if (!FShaderPipelineCache::IsBatchingPaused())
 		{
-			TotalPrecompiles = 0;
 			FShaderPipelineCache::PauseBatching();
-			HideLoadingScreen();
 		}
+		HideLoadingScreen();
 	}
 }
 
@@ -186,7 +185,7 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 		return;
 	}
 	
-	if (!LoadingScreenWidget)
+	if (LoadingScreenWidget == nullptr)
 	{
 		UUserWidget* Instance = UUserWidget::CreateWidgetInstance(*GetGameInstance(), CurrentLoadingScreenSettings->GetLoadingScreenWidgetClass(), NAME_None);
 		LoadingScreenWidget = Cast<ULimenLoadingScreenWidget>(Instance);
@@ -229,14 +228,18 @@ void ULimenLevelTransitionSubsystem::HideLoadingScreen()
 {
 	ChangePerformanceSettings(false);
 	bIsLoadingScreenNotifiedToHide = true;
-	GetGameInstance()->GetTimerManager().SetTimer(RemoveLoadingScreenTimerHandle, this,
-												  &ThisClass::HideLoadingScreen_Internal,
-												  CurrentLoadingScreenSettings->HideLoadingScreenAnimationTime,
-												  false);
+	if (LoadingScreenWidget)
+	{
+		LoadingScreenWidget->DestroyWidget(true);
+		LoadingScreenWidget = nullptr;
+	}
 
+	UnblockInput();
 	EnableAudio();
+
 	CurrentLoadingScreenSettings = nullptr;
 
+	OnLoadingScreenHidden.Broadcast();
 	OnShaderCompilationUpdated.Broadcast(1.f);
 }
 
@@ -330,19 +333,6 @@ void ULimenLevelTransitionSubsystem::ChangePerformanceSettings(const bool bEnabl
 			WorldSettings->bHighPriorityLoadingLocal = bEnablingLoadingScreen;
 		}
 	}
-}
-
-void ULimenLevelTransitionSubsystem::HideLoadingScreen_Internal()
-{
-	if (LoadingScreenWidget)
-	{
-		LoadingScreenWidget->DestroyWidget();
-		LoadingScreenWidget = nullptr;
-	}
-		
-	UnblockInput();
-	GetWorld()->GetTimerManager().ClearTimer(RemoveLoadingScreenTimerHandle);
-	OnLoadingScreenHidden.Broadcast();
 }
 
 void ULimenLevelTransitionSubsystem::LoadingScreenAnimationFinished(const bool bIsVisibleAnimation)

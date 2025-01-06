@@ -173,7 +173,7 @@ void ULimenWidget::NotifyAnimationFinished(const bool bIsVisibleAnimation)
 	else
 	{
 		HideAllChildren();
-		SetVisibility(DefaultHiddenState);
+		HideWidgetMethod();
 		OnWidgetHidden();
 		bIsVisible = false;
 		OnLimenVisibilityChanged.Broadcast(bIsVisible);
@@ -202,9 +202,24 @@ void ULimenWidget::SetDefaultHiddenState(const ESlateVisibility NewDefaultHidden
 	DefaultHiddenState = NewDefaultHiddenState;
 }
 
+ESlateVisibility ULimenWidget::GetDefaultVisibleState() const
+{
+	return DefaultVisibleState;
+}
+
+ESlateVisibility ULimenWidget::GetDefaultHiddenState() const
+{
+	return DefaultHiddenState;
+}
+
 void ULimenWidget::ShowWidgetMethod()
 {
 	AddToViewport(WidgetLevel);
+}
+
+void ULimenWidget::HideWidgetMethod()
+{
+	SetVisibility(DefaultHiddenState);
 }
 
 void ULimenWidget::ShowAllChildren()
