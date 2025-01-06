@@ -30,8 +30,9 @@ void ULimenWidget::ShowWidget()
 		return;
 	}
 	
-	if (IsShowing())
+	if (IsVisible())
 	{
+		SetVisibility(DefaultVisibleState);
 		return;
 	}
 	
@@ -65,8 +66,9 @@ void ULimenWidget::HideWidget()
 		return;
 	}
 	
-	if (IsHiding())
+	if (!IsVisible())
 	{
+		SetVisibility(DefaultHiddenState);
 		return;
 	}
 	
@@ -126,22 +128,12 @@ void ULimenWidget::ToggleWidgetVisibility()
 }
 
 bool ULimenWidget::IsShowing() const
-{
-	if (!IsInViewport())
-	{
-		return false;
-	}
-	
+{	
 	return GetVisibility() == DefaultVisibleState;
 }
 
 bool ULimenWidget::IsHiding() const
 {
-	if (!IsInViewport())
-	{
-		return true;
-	}
-	
 	return GetVisibility() == DefaultHiddenState;
 }
 

@@ -33,6 +33,7 @@ void ULimenSubtitleDisplay::AddSubtitle(ULimenSubtitle* InSubtitle)
 	});
 
 	AddToScreen(InSubtitle);
+	InSubtitle->HideWidget();
 	InSubtitle->StartDisplayingSubtitles();
 
 	ActiveSubtitles.Add(InSubtitle);
