@@ -9,7 +9,8 @@ public class LimenGameModes : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
+                "Core", 
+                "LimenGameFramework",
             }
         );
 

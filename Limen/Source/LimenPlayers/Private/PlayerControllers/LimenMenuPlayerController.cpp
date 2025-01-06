@@ -3,17 +3,11 @@
 
 #include "PlayerControllers/LimenMenuPlayerController.h"
 
-#include "HUDs/LimenBaseHUD.h"
 #include "HUDs/LimenMenuHud.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 ALimenMenuPlayerController::ALimenMenuPlayerController()
 {
-}
-
-void ALimenMenuPlayerController::BeginPlay()
-{
-	Super::BeginPlay();
 }
 
 void ALimenMenuPlayerController::SetupInputComponent()

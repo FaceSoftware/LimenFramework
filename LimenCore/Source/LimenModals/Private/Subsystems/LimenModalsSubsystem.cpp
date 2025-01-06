@@ -9,11 +9,6 @@
 #include "Engine/GameInstance.h"
 
 
-void ULimenModalsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-}
-
 ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConfirmationModal(const FModalParams& InParams) const
 {
 	const ULimenModalsDeveloperSettings* Settings = GetDefault<ULimenModalsDeveloperSettings>();
@@ -34,14 +29,11 @@ ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConsentModal(const FModa
 
 ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayModalInternal(const TSubclassOf<ULimenGenericModalWidget>& ModalClass, const FModalParams& InParams) const
 {
-	const ULimenModalsDeveloperSettings* Settings = GetDefault<ULimenModalsDeveloperSettings>();
-	check(Settings != nullptr);
-
-	UUserWidget* Temp = UUserWidget::CreateWidgetInstance(*GetGameInstance(), ModalClass, NAME_None);
-	ULimenGenericModalWidget* ModalWidgetInstance = Cast<ULimenGenericModalWidget>(Temp);
+	ULimenGenericModalWidget* ModalWidgetInstance = CreateWidget<ULimenGenericModalWidget>(GetWorld(), ModalClass);
+	ModalWidgetInstance->HideWidget(); // For some reason the widget turn visible after it's instanced
+	ModalWidgetInstance->ShowWidget();
 	
 	ModalWidgetInstance->SetParams(InParams);
-	ModalWidgetInstance->ShowWidget();
 	return ModalWidgetInstance;
 }
 

@@ -18,7 +18,7 @@ public:
 
 
 USTRUCT(BlueprintType)
-struct FNotificationParams
+struct LIMENNOTIFICATIONS_API FNotificationParams
 {
 	GENERATED_BODY()
 

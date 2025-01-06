@@ -72,8 +72,7 @@ void ALimenHUD::ToggleCharacterHudWidget()
 
 bool ALimenHUD::IsCharacterHudShowing() const
 {
-	if (!CharacterHudWidget)
-		return false;
+	if (CharacterHudWidget == nullptr) return false;
 	
 	return CharacterHudWidget->IsShowing();
 }
@@ -245,8 +244,7 @@ void ALimenHUD::InitializeWidgets()
 	{
 		CharacterHudWidget = ULimenWidget::IsWidgetValid<ULimenHudWidget>(
 			CharacterHudWidget.Get(), GetOwningPlayerController(), CharacterHudWidgetClass.LoadSynchronous(), true);
-
-		check(GetOwningPlayerController()->GetPawn() != nullptr)
+		
 		CharacterHudWidget->BindPawn(GetOwningPlayerController()->GetPawn());
 		CharacterHudWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::OnCharacterHudVisibilityChanged);
 	}

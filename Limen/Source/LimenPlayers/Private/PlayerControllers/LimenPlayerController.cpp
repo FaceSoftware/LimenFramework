@@ -8,6 +8,7 @@
 #include "Attributes/LimenHealthAttribute.h"
 #include "Characters/LimenPlayerCharacter.h"
 #include "Components/LimenAbilityComponent.h"
+#include "Engine/GameInstance.h"
 #include "HUDs/LimenHUD.h"
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
 #include "Widgets/LimenDeathScreen.h"
@@ -88,16 +89,9 @@ void ALimenPlayerController::PauseInput(const FInputActionInstance& Instance)
 {	
 	if (Instance.GetValue().Get<bool>())
 	{
-		check(LimenHUD.IsValid())
-
-		if (LimenHUD->IsCharacterHudShowing())
-		{
-			LimenHUD->TogglePauseMenuWidget();
-		}
-		else // Is not seeing the hud, probably inside a menu
-		{
-			LimenHUD->HideActiveWidget();
-		}
+		verify(CreateHudReference())
+		
+		LimenHUD->TogglePauseMenuWidget();
 	}
 }
 
@@ -109,7 +103,7 @@ bool ALimenPlayerController::CreateHudReference()
 	{
 		return true;
 	}
-		
+	
 	LimenHUD = Cast<ALimenHUD>(GetHUD());
 	return LimenHUD != nullptr;
 }

@@ -32,7 +32,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPauseRequestDelegate, ALimenPlayer
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPauseRequestDelegate, ALimenPlayerControllerBase*, Player);
 
 UCLASS(Abstract, NotBlueprintable)
-class LIMENPLAYERS_API ALimenPlayerControllerBase : public APlayerController
+class LIMENGAMEFRAMEWORK_API ALimenPlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()
 

@@ -1,12 +1,16 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
-#include "PlayerControllers/LimenPlayerControllerBase.h"
+#include "PlayerController/LimenPlayerControllerBase.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
+#include "Engine/GameInstance.h"
+#include "Engine/LocalPlayer.h"
+#include "Engine/World.h"
 #include "GameFramework/HUD.h"
-#include "HUDs/LimenBaseHUD.h"
+#include "GameFramework/Pawn.h"
+#include "HUD/LimenBaseHUD.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
 

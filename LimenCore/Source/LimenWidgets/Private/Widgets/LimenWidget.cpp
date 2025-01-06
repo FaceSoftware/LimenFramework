@@ -30,8 +30,9 @@ void ULimenWidget::ShowWidget()
 		return;
 	}
 	
-	if (bIsVisible)
+	if (IsVisible())
 	{
+		SetVisibility(DefaultVisibleState);
 		return;
 	}
 	
@@ -65,8 +66,9 @@ void ULimenWidget::HideWidget()
 		return;
 	}
 	
-	if (!bIsVisible)
+	if (!IsVisible())
 	{
+		SetVisibility(DefaultHiddenState);
 		return;
 	}
 	
@@ -115,7 +117,7 @@ void ULimenWidget::HideWidget(const TSharedPtr<FLimenWidgetHidden>& OnWidgetHidd
 
 void ULimenWidget::ToggleWidgetVisibility()
 {
-	if (bIsVisible)
+	if (IsShowing())
 	{
 		HideWidget();
 	}
@@ -126,8 +128,13 @@ void ULimenWidget::ToggleWidgetVisibility()
 }
 
 bool ULimenWidget::IsShowing() const
+{	
+	return GetVisibility() == DefaultVisibleState;
+}
+
+bool ULimenWidget::IsHiding() const
 {
-	return bIsVisible;
+	return GetVisibility() == DefaultHiddenState;
 }
 
 bool ULimenWidget::IsAnimating() const
@@ -143,7 +150,7 @@ void ULimenWidget::DestroyWidget(const bool bWaitForHideAnimation)
 		return;
 	}
 
-	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::ULimenWidget::DestroyWidgetInternal);
+	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::DestroyWidgetInternal);
 	HideWidget();
 }
 
@@ -158,7 +165,7 @@ void ULimenWidget::NotifyAnimationFinished(const bool bIsVisibleAnimation)
 	else
 	{
 		HideAllChildren();
-		SetVisibility(DefaultHiddenState);
+		HideWidgetMethod();
 		OnWidgetHidden();
 		bIsVisible = false;
 		OnLimenVisibilityChanged.Broadcast(bIsVisible);
@@ -187,9 +194,24 @@ void ULimenWidget::SetDefaultHiddenState(const ESlateVisibility NewDefaultHidden
 	DefaultHiddenState = NewDefaultHiddenState;
 }
 
+ESlateVisibility ULimenWidget::GetDefaultVisibleState() const
+{
+	return DefaultVisibleState;
+}
+
+ESlateVisibility ULimenWidget::GetDefaultHiddenState() const
+{
+	return DefaultHiddenState;
+}
+
 void ULimenWidget::ShowWidgetMethod()
 {
 	AddToViewport(WidgetLevel);
+}
+
+void ULimenWidget::HideWidgetMethod()
+{
+	SetVisibility(DefaultHiddenState);
 }
 
 void ULimenWidget::ShowAllChildren()
@@ -233,7 +255,7 @@ void ULimenWidget::HideAllChildren()
 
 void ULimenWidget::HiddeAnimationFinished_Internal(const bool bVisible)
 {
-	if (bIsVisible)
+	if (IsShowing())
 	{
 		return;
 	}

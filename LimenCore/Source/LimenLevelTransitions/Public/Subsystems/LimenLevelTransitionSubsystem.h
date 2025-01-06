@@ -96,9 +96,6 @@ private:
 
 	uint32 TotalPrecompiles;
 	float CurrentPrecompileDonePercentage;
-	
-	UFUNCTION()
-	void HideLoadingScreen_Internal();
 
 	UFUNCTION()
 	void LoadingScreenAnimationFinished(const bool bIsVisibleAnimation);

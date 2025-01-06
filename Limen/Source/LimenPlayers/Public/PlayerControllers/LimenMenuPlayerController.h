@@ -22,7 +22,6 @@ public:
 	FLoadGameRequest OnLoadGameRequested;
 	
 	ALimenMenuPlayerController();
-	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* InPawn) override;
 

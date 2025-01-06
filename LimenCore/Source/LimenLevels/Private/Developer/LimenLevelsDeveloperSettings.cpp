@@ -18,6 +18,13 @@ TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetMainMenuLevel()
 	return Settings->MainMenuLevel;
 }
 
+TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetGameEndLevel()
+{
+	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();
+	check(Settings != nullptr);
+	return Settings->GameEndLevel;
+}
+
 TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetGameLevel(const uint8 Index)
 {
 	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();

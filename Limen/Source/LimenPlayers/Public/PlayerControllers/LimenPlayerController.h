@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerControllers/LimenPlayerControllerBase.h"
+#include "PlayerController/LimenPlayerControllerBase.h"
 #include "LimenPlayerController.generated.h"
 
 
