@@ -30,7 +30,6 @@ ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConsentModal(const FModa
 ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayModalInternal(const TSubclassOf<ULimenGenericModalWidget>& ModalClass, const FModalParams& InParams) const
 {
 	ULimenGenericModalWidget* ModalWidgetInstance = CreateWidget<ULimenGenericModalWidget>(GetWorld(), ModalClass);
-	ModalWidgetInstance->HideWidget(); // For some reason the widget turn visible after it's instanced
 	ModalWidgetInstance->ShowWidget();
 	
 	ModalWidgetInstance->SetParams(InParams);

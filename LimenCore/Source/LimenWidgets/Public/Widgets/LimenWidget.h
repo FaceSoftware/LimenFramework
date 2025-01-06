@@ -106,7 +106,6 @@ private:
 	bool bUseHideAnimation = false;
 	UPROPERTY(EditAnywhere, Category="Limen|Animations")
 	bool bUseShowAnimation = false;
-	bool bIsVisible = false;
 	bool bIsAnimating = false;
 	int32 WidgetLevel = 0;
 	UPROPERTY(EditAnywhere, Category="Limen|Animations")
