@@ -127,11 +127,21 @@ void ULimenWidget::ToggleWidgetVisibility()
 
 bool ULimenWidget::IsShowing() const
 {
+	if (!IsInViewport())
+	{
+		return false;
+	}
+	
 	return GetVisibility() == DefaultVisibleState;
 }
 
 bool ULimenWidget::IsHiding() const
 {
+	if (!IsInViewport())
+	{
+		return true;
+	}
+	
 	return GetVisibility() == DefaultHiddenState;
 }
 
