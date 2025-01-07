@@ -30,23 +30,20 @@ void ULimenWidget::ShowWidget()
 		return;
 	}
 	
-	if (IsVisible())
-	{
-		SetVisibility(DefaultVisibleState);
-		return;
-	}
-	
 	if (!IsInViewport() && !GetParent())
 	{
 		ShowWidgetMethod();
 		LIMEN_LOG(LogLimenCore, Log, this, "Widget added to viewport with ZOrder = %d", WidgetLevel);
 	}
-
+	else if (IsShowing())
+	{
+		return;
+	}
+	
 	SetVisibility(DefaultVisibleState);
 	ShowAllChildren();
-	bIsVisible = true;
 	OnWidgetVisible();
-	OnLimenVisibilityChanged.Broadcast(bIsVisible);
+	OnLimenVisibilityChanged.Broadcast(true);
 	
 	if (bUseShowAnimation)
 	{
@@ -66,9 +63,8 @@ void ULimenWidget::HideWidget()
 		return;
 	}
 	
-	if (!IsVisible())
+	if (IsHiding())
 	{
-		SetVisibility(DefaultHiddenState);
 		return;
 	}
 	
@@ -167,8 +163,7 @@ void ULimenWidget::NotifyAnimationFinished(const bool bIsVisibleAnimation)
 		HideAllChildren();
 		HideWidgetMethod();
 		OnWidgetHidden();
-		bIsVisible = false;
-		OnLimenVisibilityChanged.Broadcast(bIsVisible);
+		OnLimenVisibilityChanged.Broadcast(false);
 	}
 
 	OnLimenAnimationFinished.Broadcast(bIsVisibleAnimation);
