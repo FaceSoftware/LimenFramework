@@ -45,9 +45,7 @@ void ULimenLock::SetLockedState(const bool bLocked)
 }
 
 bool ULimenLock::ChangeLockedState(AController* Controller, APawn* Pawn, ALimenKey* Test, const bool bLock)
-{
-	check(Test != nullptr);
-	
+{	
 	if (bLock == bIsLocked)
 	{
 		return true;
@@ -88,9 +86,8 @@ bool ULimenLock::ChangeLockedStateWithKeys(AController* Controller, APawn* Pawn,
 }
 
 bool ULimenLock::TryKey(ALimenKey* Test) const
-{
-	check(Test != nullptr);
-	if (!IsActive())
+{	
+	if (!Keyword.IsNone() && (Test == nullptr || Test->GetKeyword() != Keyword))
 	{
 		return false;
 	}
