@@ -21,11 +21,6 @@
 			"Optional": false
 		},
 		{
-			"Name": "EngineCameras",
-			"Enabled": true,
-			"Optional": false
-		},
-		{
 			"Name": "GameplayCameras",
 			"Enabled": true,
 			"Optional": false
@@ -114,6 +109,16 @@
 		},
 		{
 			"Name": "LimenCinematics",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenSubtitles",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenGameFramework",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

@@ -20,13 +20,24 @@ void ULimenInteractableAreaComponent::Activate(bool bReset)
 {
 	Super::Activate(bReset);
 
-	SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
+	if (!CachedCollisionEnabledType.IsSet() || !CachedCollisionResponse.IsSet())
+	{
+		CachedCollisionResponse = GetCollisionResponseToChannels();
+		CachedCollisionEnabledType = GetCollisionEnabled();
+	}
+
+	SetCollisionEnabled(CachedCollisionEnabledType.GetValue());
+	SetCollisionResponseToChannels(CachedCollisionResponse.GetValue());
 }
 
 void ULimenInteractableAreaComponent::Deactivate()
 {
 	Super::Deactivate();
 
+	CachedCollisionResponse = GetCollisionResponseToChannels();
+	CachedCollisionEnabledType = GetCollisionEnabled();
+	
+	SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 }
 

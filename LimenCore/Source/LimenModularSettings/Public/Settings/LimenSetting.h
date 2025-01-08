@@ -24,6 +24,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FSettingUpdated OnSettingUpdated;
 	UPROPERTY(BlueprintAssignable)
+	FSettingUpdated OnSettingApplied;
+	UPROPERTY(BlueprintAssignable)
 	FSettingUpdated OnSettingEditableStateChanged;
 	
 	ULimenSetting();
@@ -31,12 +33,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	const FText& GetDescription() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")	
-	void ApplySetting();
-	/**
-	 * @brief (For blueprints) Applies the current settings
-	 */
-	UFUNCTION(BlueprintImplementableEvent, Category="Limen|Modular Settings", DisplayName="Apply Setting")
-	void BP_ApplySetting();
+	void ApplySetting(bool bUserRequest = false);
 	
 	virtual void SetDefaultValue();
 
@@ -85,7 +82,7 @@ protected:
 	 * @brief Should apply the current setting without notifying the OnSettingChanged delegate
 	 * @warning Must be overriden
 	 */
-	virtual void ApplyCurrentSetting();
+	virtual void ApplyCurrentSetting(bool bUserRequest = false);
 	
 	virtual void DataLoaded() override;
 	
@@ -106,9 +103,6 @@ private:
 	void DestroyRecurrentActionObject();
 };
 
-
-/// Delegates
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEditableStateDelegate, const bool, bCanEdit);
 
 
 /**
@@ -191,5 +185,7 @@ public:
 	 * @brief Getter for the current selection
 	 * @return The current selection
 	 */
-	virtual const SettingType& GetCurrentValue() const = 0;
+	virtual SettingType GetCurrentValue() const = 0;
+
+	virtual SettingType GetPreviousValue() const = 0;
 };

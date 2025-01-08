@@ -28,17 +28,17 @@ bool ULimenHardwareRayTracingSetting::CanEdit() const
 	return GRHIGlobals.RayTracing.Supported;
 }
 
-void ULimenHardwareRayTracingSetting::ApplyCurrentSetting()
+void ULimenHardwareRayTracingSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
 	const bool HardwareRaytracingEnabled = UnFormatHardwareRayTracingSetting(GetCurrentValue());
 
 	IConsoleVariable* LumenHardwareRayTracingVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Lumen.HardwareRayTracing"));
-	LumenHardwareRayTracingVar->Set(HardwareRaytracingEnabled);
+	LumenHardwareRayTracingVar->Set(HardwareRaytracingEnabled, EConsoleVariableFlags::ECVF_SetByGameOverride);
 
 	IConsoleVariable* RayTracedShadowsVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.RayTracing.Shadows"));
-	RayTracedShadowsVar->Set(HardwareRaytracingEnabled);
+	RayTracedShadowsVar->Set(HardwareRaytracingEnabled, EConsoleVariableFlags::ECVF_SetByGameOverride);
 }
 
 void ULimenHardwareRayTracingSetting::SetDefaults()

@@ -19,8 +19,6 @@ public:
 	TSoftClassPtr<ULimenLoadingScreenWidget> LoadingScreenWidget;
 	UPROPERTY(EditDefaultsOnly)
 	float MinimumDisplayTimeSeconds = 0.f;
-	UPROPERTY(EditDefaultsOnly)
-	float HideLoadingScreenAnimationTime = 0.f;
 	
 	TSubclassOf<UUserWidget> GetLoadingScreenWidgetClass() const
 	{

@@ -42,7 +42,7 @@ public:
 	 * @return The cost or -1 if there is no next available upgrade
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Upgrades")
-	float GetNextUpgradeCost(const ULimenUpgradeDataAsset* Upgrade) const;
+	float GetNextUpgradeCost(ULimenUpgradeDataAsset* Upgrade) const;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Upgrades")
 	bool IsAtMaxLevel(const ULimenUpgradeDataAsset* Upgrade) const;

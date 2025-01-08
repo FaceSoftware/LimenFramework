@@ -1,7 +1,7 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
-#include "HUDs/LimenBaseHUD.h"
+#include "HUD/LimenBaseHUD.h"
 
 #include "Components/LimenNotificationComponent.h"
 #include "CppClasses/LimenNotification.h"
@@ -22,6 +22,23 @@ ALimenBaseHUD::ALimenBaseHUD() : Super()
 
 #endif
 	
+}
+
+void ALimenBaseHUD::ShowHUD()
+{
+	Super::ShowHUD();
+
+	bShowHUD ? ShowActiveWidget() : HideActiveWidget();
+}
+
+void ALimenBaseHUD::ShowActiveWidget()
+{
+	if (!ActiveWidget)
+	{
+		return;
+	}
+	
+	ShowWidget_Internal(ActiveWidget.Get());
 }
 
 void ALimenBaseHUD::HideActiveWidget()

@@ -27,7 +27,10 @@ public class LimenGraphicSettings : ModuleRules
                 
                 "LimenCore",
                 "LimenSaveSystem",
-                "LimenStorage",
+                "LimenStorage", 
+                "LimenModals",
+                "LimenWidgets",
+                "ApplicationCore",
             }
         );
     }

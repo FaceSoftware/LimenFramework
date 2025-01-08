@@ -6,6 +6,7 @@
 #include "Developer/LimenLevelsDeveloperSettings.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
+#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -36,7 +37,7 @@ void ULimenLevelManagerSubsystem::OpenLocalLevelAsync(const TSoftObjectPtr<UWorl
 	
 	Streamable.RequestAsyncLoad(Level.ToSoftObjectPath(), [this, Level, OnLevelLoaded]
 	{
-		 UWorld* LoadedLevel = Level.Get();
+		UWorld* LoadedLevel = Level.Get();
 		check(LoadedLevel != nullptr);
 		
 		UGameplayStatics::OpenLevel(GetWorld(), LoadedLevel->GetFName());
@@ -82,6 +83,11 @@ bool ULimenLevelManagerSubsystem::OpenInitializationLevel()
 void ULimenLevelManagerSubsystem::OpenMainMenu()
 {
 	OpenLocalLevel(ULimenLevelsDeveloperSettings::GetMainMenuLevel());
+}
+
+void ULimenLevelManagerSubsystem::OpenGameEndLevel()
+{
+	OpenLocalLevel(ULimenLevelsDeveloperSettings::GetGameEndLevel());
 }
 
 void ULimenLevelManagerSubsystem::OpenGameLevel(const uint8 Index)

@@ -64,7 +64,9 @@ public:
 	
 	void ToggleWidgetVisibility();
 	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
-	bool IsShowing() const;
+	virtual bool IsShowing() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
+	virtual bool IsHiding() const;
 	bool IsAnimating() const;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Widget")
@@ -96,12 +98,14 @@ protected:
 	void SetDefaultVisibleState(const ESlateVisibility NewDefaultVisibleState);
 	void SetDefaultHiddenState(const ESlateVisibility NewDefaultHiddenState);
 
+	ESlateVisibility GetDefaultVisibleState() const;
+	ESlateVisibility GetDefaultHiddenState() const;
+
 private:
 	UPROPERTY(EditAnywhere, Category="Limen|Animations")
 	bool bUseHideAnimation = false;
 	UPROPERTY(EditAnywhere, Category="Limen|Animations")
 	bool bUseShowAnimation = false;
-	bool bIsVisible = false;
 	bool bIsAnimating = false;
 	int32 WidgetLevel = 0;
 	UPROPERTY(EditAnywhere, Category="Limen|Animations")
@@ -114,6 +118,7 @@ private:
 	 * Default behaviour is calling AddToViewport.
 	 */
 	virtual void ShowWidgetMethod();
+	virtual void HideWidgetMethod();
 
 	void ShowAllChildren();
 	void HideAllChildren();

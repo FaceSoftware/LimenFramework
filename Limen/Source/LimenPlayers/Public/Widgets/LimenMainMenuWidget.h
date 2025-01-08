@@ -8,6 +8,7 @@
 #include "LimenMainMenuWidget.generated.h"
 
 
+class ULimenGenericModalWidget;
 class ULimenSaveData;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FNewGameRequest, APlayerController*);
@@ -42,6 +43,6 @@ protected:
 
 private:
 	UFUNCTION()
-	void QuitGameModalDismissed(const bool bAccepted);
+	void QuitGameModalDismissed(ULimenGenericModalWidget* ULimenGenericModalWidget, const bool bAccepted);
 	
 };

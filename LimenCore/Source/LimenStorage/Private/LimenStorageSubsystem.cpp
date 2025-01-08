@@ -6,6 +6,7 @@
 #include "LimenStorageItem.h"
 #include "LimenStorageSaveData.h"
 #include "BlueprintLibraries/LimenString.h"
+#include "Engine/GameInstance.h"
 #include "Subsystems/LimenSaveSubsystem.h"
 
 void ULimenStorageSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -148,10 +149,13 @@ void ULimenStorageSubsystem::Load_Internal()
 		CurrentSaveData->GetObjectSaveData(i, SaveData);
 
 		// Search the items for the class
-		const TSoftClassPtr<UObject>& ItemClassSoftPtr = SaveData.GetObjectClass();
-		const UClass* ItemClass = ItemClassSoftPtr.LoadSynchronous();
-		check(IsValid(ItemClass));
+		const TSoftClassPtr<>& ItemClassSoftPtr = SaveData.GetObjectClass();
+		if (ItemClassSoftPtr.IsNull())
+		{
+			continue;
+		}
 		
+		const UClass* ItemClass = ItemClassSoftPtr.LoadSynchronous();		
 		for (ULimenStorageItem* Item : StorageItems)
 		{
 			check(IsValid(Item));

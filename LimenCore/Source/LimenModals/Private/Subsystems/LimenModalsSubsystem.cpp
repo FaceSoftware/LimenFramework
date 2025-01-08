@@ -5,12 +5,9 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Developer/LimenModalsDeveloperSettings.h"
+#include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
 
-
-void ULimenModalsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-}
 
 ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConfirmationModal(const FModalParams& InParams) const
 {
@@ -32,14 +29,10 @@ ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConsentModal(const FModa
 
 ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayModalInternal(const TSubclassOf<ULimenGenericModalWidget>& ModalClass, const FModalParams& InParams) const
 {
-	const ULimenModalsDeveloperSettings* Settings = GetDefault<ULimenModalsDeveloperSettings>();
-	check(Settings != nullptr);
-
-	UUserWidget* Temp = UUserWidget::CreateWidgetInstance(*GetGameInstance(), ModalClass, NAME_None);
-	ULimenGenericModalWidget* ModalWidgetInstance = Cast<ULimenGenericModalWidget>(Temp);
+	ULimenGenericModalWidget* ModalWidgetInstance = CreateWidget<ULimenGenericModalWidget>(GetWorld(), ModalClass);
+	ModalWidgetInstance->ShowWidget();
 	
 	ModalWidgetInstance->SetParams(InParams);
-	ModalWidgetInstance->ShowWidget();
 	return ModalWidgetInstance;
 }
 
@@ -61,11 +54,11 @@ void UConfirmationModalAsyncAction::Activate()
 	ModalWidget->OnModalResponseReceived.AddDynamic(this, &ThisClass::ModalDismissed);
 }
 
-void UConfirmationModalAsyncAction::ModalDismissed(const bool bAccepted)
+void UConfirmationModalAsyncAction::ModalDismissed(ULimenGenericModalWidget* ModalWidget, const bool bAccepted)
 {
 	if (OnModalDismissed.IsBound())
 	{
-		OnModalDismissed.Broadcast(true);
+		OnModalDismissed.Broadcast(ModalWidget, true);
 	}
 }
 
@@ -87,10 +80,10 @@ void UConsentModalAsyncAction::Activate()
 	ModalWidget->OnModalResponseReceived.AddDynamic(this, &ThisClass::ModalDismissed);
 }
 
-void UConsentModalAsyncAction::ModalDismissed(const bool bAccepted)
+void UConsentModalAsyncAction::ModalDismissed(ULimenGenericModalWidget* ModalWidget, const bool bAccepted)
 {
 	if (OnModalDismissed.IsBound())
 	{
-		OnModalDismissed.Broadcast(bAccepted);
+		OnModalDismissed.Broadcast(ModalWidget, bAccepted);
 	}
 }

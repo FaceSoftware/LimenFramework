@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenBaseHUD.h"
+#include "HUD/LimenBaseHUD.h"
 #include "LimenHUD.generated.h"
 
 

@@ -31,6 +31,7 @@ public class LimenGameSettings : ModuleRules
                 "LimenStorage", 
                 "LimenLocomotion", 
                 "LimenHints",
+                "LimenGameFramework",
             }
         );
     }

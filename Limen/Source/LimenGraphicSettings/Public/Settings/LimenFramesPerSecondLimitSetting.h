@@ -16,7 +16,7 @@ class LIMENGRAPHICSETTINGS_API ULimenFramesPerSecondLimitSetting : public ULimen
 
 public:
 	ULimenFramesPerSecondLimitSetting();
-	virtual void ApplyCurrentSetting() override;
+	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 	
 protected:
 	virtual void SetDefaults() override;

@@ -5,7 +5,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
-#include "LimenBasePlayerState.generated.h"
+#include "LimenPlayerStateBase.generated.h"
 
 class ALimenBaseCharacter;
 class ALimenTool;
@@ -15,7 +15,7 @@ class ALimenWeapon;
  * 
  */
 UCLASS()
-class LIMENPLAYERS_API ALimenBasePlayerState : public APlayerState
+class LIMENGAMEFRAMEWORK_API ALimenPlayerStateBase : public APlayerState
 {
 	GENERATED_BODY()
 

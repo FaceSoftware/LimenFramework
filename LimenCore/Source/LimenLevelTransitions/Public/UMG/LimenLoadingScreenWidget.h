@@ -18,6 +18,9 @@ class LIMENLEVELTRANSITIONS_API ULimenLoadingScreenWidget : public ULimenWidget
 public:
 	explicit ULimenLoadingScreenWidget(const FObjectInitializer& ObjectInitializer);
 	
+	virtual bool IsShowing() const override;
+	virtual bool IsHiding() const override;
+	
 protected:
 
 private:
@@ -25,4 +28,8 @@ private:
 	 * @brief Overrides default method to keep widget persistent between level changes.
 	 */
 	virtual void ShowWidgetMethod() override;
+	virtual void HideWidgetMethod() override;
+	
+
+	bool bIsShowing;
 };

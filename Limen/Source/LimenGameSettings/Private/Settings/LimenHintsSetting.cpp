@@ -16,7 +16,7 @@ ULimenHintsSetting::ULimenHintsSetting()
 	Description = FText::FromString(TEXT("Whether or not to display tutorial messages."));
 }
 
-void ULimenHintsSetting::ApplyCurrentSetting()
+void ULimenHintsSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 

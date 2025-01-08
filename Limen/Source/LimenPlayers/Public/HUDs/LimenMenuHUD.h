@@ -3,8 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenBaseHUD.h"
-#include "UObject/Object.h"
+#include "HUD/LimenBaseHUD.h"
 #include "Widgets/LimenMainMenuWidget.h"
 #include "LimenMenuHUD.generated.h"
 

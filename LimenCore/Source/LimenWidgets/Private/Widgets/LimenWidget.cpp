@@ -30,22 +30,20 @@ void ULimenWidget::ShowWidget()
 		return;
 	}
 	
-	if (bIsVisible)
-	{
-		return;
-	}
-	
 	if (!IsInViewport() && !GetParent())
 	{
 		ShowWidgetMethod();
 		LIMEN_LOG(LogLimenCore, Log, this, "Widget added to viewport with ZOrder = %d", WidgetLevel);
 	}
-
+	else if (IsShowing())
+	{
+		return;
+	}
+	
 	SetVisibility(DefaultVisibleState);
 	ShowAllChildren();
-	bIsVisible = true;
 	OnWidgetVisible();
-	OnLimenVisibilityChanged.Broadcast(bIsVisible);
+	OnLimenVisibilityChanged.Broadcast(true);
 	
 	if (bUseShowAnimation)
 	{
@@ -65,7 +63,7 @@ void ULimenWidget::HideWidget()
 		return;
 	}
 	
-	if (!bIsVisible)
+	if (IsHiding())
 	{
 		return;
 	}
@@ -115,7 +113,7 @@ void ULimenWidget::HideWidget(const TSharedPtr<FLimenWidgetHidden>& OnWidgetHidd
 
 void ULimenWidget::ToggleWidgetVisibility()
 {
-	if (bIsVisible)
+	if (IsShowing())
 	{
 		HideWidget();
 	}
@@ -126,8 +124,13 @@ void ULimenWidget::ToggleWidgetVisibility()
 }
 
 bool ULimenWidget::IsShowing() const
+{	
+	return GetVisibility() == DefaultVisibleState;
+}
+
+bool ULimenWidget::IsHiding() const
 {
-	return bIsVisible;
+	return GetVisibility() == DefaultHiddenState;
 }
 
 bool ULimenWidget::IsAnimating() const
@@ -143,7 +146,7 @@ void ULimenWidget::DestroyWidget(const bool bWaitForHideAnimation)
 		return;
 	}
 
-	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::ULimenWidget::DestroyWidgetInternal);
+	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::DestroyWidgetInternal);
 	HideWidget();
 }
 
@@ -158,10 +161,9 @@ void ULimenWidget::NotifyAnimationFinished(const bool bIsVisibleAnimation)
 	else
 	{
 		HideAllChildren();
-		SetVisibility(DefaultHiddenState);
+		HideWidgetMethod();
 		OnWidgetHidden();
-		bIsVisible = false;
-		OnLimenVisibilityChanged.Broadcast(bIsVisible);
+		OnLimenVisibilityChanged.Broadcast(false);
 	}
 
 	OnLimenAnimationFinished.Broadcast(bIsVisibleAnimation);
@@ -187,9 +189,24 @@ void ULimenWidget::SetDefaultHiddenState(const ESlateVisibility NewDefaultHidden
 	DefaultHiddenState = NewDefaultHiddenState;
 }
 
+ESlateVisibility ULimenWidget::GetDefaultVisibleState() const
+{
+	return DefaultVisibleState;
+}
+
+ESlateVisibility ULimenWidget::GetDefaultHiddenState() const
+{
+	return DefaultHiddenState;
+}
+
 void ULimenWidget::ShowWidgetMethod()
 {
 	AddToViewport(WidgetLevel);
+}
+
+void ULimenWidget::HideWidgetMethod()
+{
+	SetVisibility(DefaultHiddenState);
 }
 
 void ULimenWidget::ShowAllChildren()
@@ -233,7 +250,7 @@ void ULimenWidget::HideAllChildren()
 
 void ULimenWidget::HiddeAnimationFinished_Internal(const bool bVisible)
 {
-	if (bIsVisible)
+	if (IsShowing())
 	{
 		return;
 	}
