@@ -23,19 +23,6 @@ ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer&
 void ALimenPlayerControllerBase::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-	
-	const ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(Player);
-	UEnhancedInputLocalPlayerSubsystem* InputSystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-
-	if (!PlayerMappingContext.IsNull())
-	{
-		InputSystem->AddMappingContext(PlayerMappingContext.LoadSynchronous(), 1);
-	}
-
-	if (!CharacterMappingContext.IsNull())
-	{
-		InputSystem->AddMappingContext(CharacterMappingContext.LoadSynchronous(), 0);
-	}
 
 	ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>();
 	LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::LoadingScreenVisibilityChanged);

@@ -70,12 +70,6 @@ public:
 	bool CanSeeActor(const AActor* OtherActor) const;
 
 protected:
-	// Input
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
-	TSoftObjectPtr<UInputMappingContext> PlayerMappingContext;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
-	TSoftObjectPtr<UInputMappingContext> CharacterMappingContext;
-	
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
 
 	virtual void BindPawnDelegates(APawn* NewPawn);

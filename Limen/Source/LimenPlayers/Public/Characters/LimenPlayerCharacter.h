@@ -143,6 +143,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
 	TObjectPtr<ULimenPhysicalItemHoldComponent> ToolHold;
 
+	// bool -> true = Toggle visibility
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
+	TSoftObjectPtr<UInputAction> GameMenuInputAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
 	TSoftObjectPtr<UInputAction> InteractInputAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
@@ -156,6 +159,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
 	TSoftObjectPtr<UInputAction> CycleWeaponsInputAction;
 	
+	/**
+	 * @brief Toggles the visibility of the game menu.
+	 * @param Instance 
+	 */
+	void GameMenuInput(const FInputActionInstance& Instance);
 	void InteractInput(const FInputActionInstance& Instance);
 	void FireInput(const FInputActionInstance& Instance);
 	void ReloadInput(const FInputActionInstance& Instance);

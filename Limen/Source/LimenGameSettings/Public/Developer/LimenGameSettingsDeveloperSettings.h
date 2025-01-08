@@ -14,12 +14,7 @@ class LIMENGAMESETTINGS_API ULimenGameSettingsDeveloperSettings : public ULimenM
 {
 	GENERATED_BODY()
 
-public:	
-	UPROPERTY(EditAnywhere, Config, Category="Game Settings")
-	bool bUseSubsystem = false;
-	UPROPERTY(EditAnywhere, Config, Category="Game Settings")
-	TArray<TSoftClassPtr<ULimenSetting>> SettingsList;
-
+public:
 	ULimenGameSettingsDeveloperSettings()
 	{
 		SectionName = TEXT("Limen - Game Settings");

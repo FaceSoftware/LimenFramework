@@ -41,20 +41,12 @@ public:
 	void HandleItemActionRequest(ULimenItemAction* ActionRequested);
 
 protected:
-	// bool -> true = Toggle visibility
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
-	TSoftObjectPtr<UInputAction> GameMenuInputAction;
 	// bool -> true = Toggle pause, false = N/A
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
 	TSoftObjectPtr<UInputAction> PauseMenuInputAction;
 	
 	TWeakObjectPtr<ALimenHUD> LimenHUD;
 	
-	/**
-	 * @brief Toggles the visibility of the game menu.
-	 * @param Instance 
-	 */
-	void GameMenuInput(const FInputActionInstance& Instance);
 	void PauseInput(const FInputActionInstance& Instance);
 
 	virtual bool CreateHudReference() override;

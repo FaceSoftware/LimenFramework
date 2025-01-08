@@ -19,6 +19,11 @@ class LIMENMODULARSETTINGS_API ULimenModularSettingsSubsystemDeveloperSettings :
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, Config, Category="Settings")
+	bool bUseSubsystem = false;
+	UPROPERTY(EditAnywhere, Config, Category="Settings")
+	TArray<TSoftClassPtr<ULimenSetting>> SettingsList;
+	
 	ULimenModularSettingsSubsystemDeveloperSettings()
 	{
 		CategoryName = TEXT("Game");

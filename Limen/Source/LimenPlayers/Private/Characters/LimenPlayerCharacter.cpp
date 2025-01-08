@@ -4,6 +4,7 @@
 #include "Characters/LimenPlayerCharacter.h"
 
 #include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "Actors/LimenTool.h"
 #include "Actors/LimenWeapon.h"
 #include "Items/LimenItemBase.h"
@@ -26,7 +27,11 @@
 #include "Components/LimenDynamicDepthOfFieldComponent.h"
 #include "Components/LimenCameraShakeComponent.h"
 #include "Components/Interactable/LimenInteractableAreaComponent.h"
+#include "Engine/GameInstance.h"
+#include "Engine/LocalPlayer.h"
+#include "HUDs/LimenHUD.h"
 #include "Interfaces/LimenUpgradable.h"
+#include "Subsystems/LimenKeyBindSubsystem.h"
 
 
 const FName ALimenPlayerCharacter::InventoryComponentName = TEXT("InventoryComponent");
@@ -102,7 +107,20 @@ void ALimenPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetPlayerController()->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
+	if (InputSystem != nullptr && KeyBindSubsystem != nullptr)
+	{
+		if (const UInputMappingContext* PlayerMappings = KeyBindSubsystem->GetPawnInputMappingContext(this);
+			PlayerMappings != nullptr)
+		{
+			InputSystem->AddMappingContext(PlayerMappings, 1);
+		}
+	}
+		
+
 	auto* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	EnhancedInput->BindAction(GameMenuInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::GameMenuInput);
 	EnhancedInput->BindAction(InteractInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ALimenPlayerCharacter::InteractInput);
 	EnhancedInput->BindAction(FireInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ALimenPlayerCharacter::FireInput);
 	EnhancedInput->BindAction(ReloadInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ALimenPlayerCharacter::ReloadInput);
@@ -338,6 +356,27 @@ void ALimenPlayerCharacter::SetActorHiddenInGame(const bool bNewHidden)
 	if (IsHoldingWeapon())
 	{
 		WeaponHold->GetPhysicalItem()->SetActorHiddenInGame(bNewHidden);
+	}
+}
+
+void ALimenPlayerCharacter::GameMenuInput(const FInputActionInstance& Instance)
+{
+	ALimenHUD* Hud = GetPlayerController()->GetHUD<ALimenHUD>();
+	if (Hud == nullptr)
+	{
+		return;
+	}
+	
+	if (Instance.GetValue().Get<bool>())
+	{
+		if (Hud->IsCharacterHudShowing())
+		{
+			Hud->ToggleGameMenuWidget();
+		}
+		else // Is not seeing the hud, probably inside a menu
+		{
+			Hud->HideActiveWidget();
+		}
 	}
 }
 
