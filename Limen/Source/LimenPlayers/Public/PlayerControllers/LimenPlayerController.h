@@ -7,6 +7,7 @@
 #include "LimenPlayerController.generated.h"
 
 
+struct FEnhancedActionKeyMapping;
 class ALimenPlayerCharacter;
 class ULimenItemAction;
 class ALimenHUD;
@@ -47,7 +48,7 @@ protected:
 	
 	TWeakObjectPtr<ALimenHUD> LimenHUD;
 	
-	virtual void InputBindUpdated();
+	virtual void InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping);
 	
 	void PauseInput(const FInputActionInstance& Instance);
 

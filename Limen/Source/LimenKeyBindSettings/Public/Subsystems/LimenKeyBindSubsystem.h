@@ -12,7 +12,7 @@
 class UInputMappingContext;
 class ULimenKeyBindDeveloperSettings;
 
-DECLARE_MULTICAST_DELEGATE(FKeyBindUpdate)
+DECLARE_MULTICAST_DELEGATE_OneParam(FKeyBindUpdate, const FEnhancedActionKeyMapping& /* ActionKeyMapping */)
 
 /**
  * 

@@ -7,6 +7,7 @@
 #include "Developer/LimenKeyBindDeveloperSettings.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "MappableKeySettings/LimenPlayerMappableKeySettings.h"
 #include "Subsystems/LimenKeyBindSubsystem.h"
 #include "Subsystems/LimenSaveSubsystem.h"
 
@@ -31,9 +32,16 @@ bool FSaveableEnhancedActionKeyMapping::Serialize(FArchive& Ar)
 	}
 	else if (Ar.IsLoading())
 	{
-		FName KeyName;
-		Ar << KeyName;
-		Key = FKey(KeyName);
+		FName TempName;
+		Ar << TempName;
+		Key = FKey(TempName);
+		
+		Ar << TempName;
+		bShouldBeIgnored = FLimenSerialization::NameToBool(TempName);
+		
+		uint8 ByteValue;
+		Ar << ByteValue;
+		SettingBehavior = static_cast<EPlayerMappableKeySettingBehaviors>(ByteValue);
 	}
 	
 	return true;
@@ -42,10 +50,10 @@ bool FSaveableEnhancedActionKeyMapping::Serialize(FArchive& Ar)
 ULimenKeyBind::ULimenKeyBind()
 {
 	DevelopmentName = TEXT("");
-	Category = FText::FromString(TEXT(""));
-	DisplayName = FText::FromString(TEXT(""));
-	Description = FText::FromString(TEXT(""));
-	bCanEdit = true;
+	Category = FText::FromString(TEXT("KeybindCategory"));
+	DisplayName = FText::FromString(TEXT("KeybindSetting"));
+	Description = FText::FromString(TEXT("This is a keybind setting."));
+	bCanEdit = false;
 }
 
 void ULimenKeyBind::Serialize(FArchive& Ar)
@@ -53,6 +61,23 @@ void ULimenKeyBind::Serialize(FArchive& Ar)
 	Super::Serialize(Ar);
 
 	CurrentKeyMapping.Serialize(Ar);
+}
+
+void ULimenKeyBind::InitializeSetting(const FEnhancedActionKeyMapping& InActionKeyMapping)
+{
+	check(InActionKeyMapping.IsPlayerMappable())
+	
+	const auto* MappableKeySettings = InActionKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
+	
+	DevelopmentName = InActionKeyMapping.GetMappingName();
+	DisplayName = InActionKeyMapping.GetDisplayName();
+	Category = InActionKeyMapping.GetDisplayCategory();
+	Description = MappableKeySettings != nullptr ? MappableKeySettings->Description : FText::FromString(TEXT(""));
+	bCanEdit = true;
+	
+	DefaultSelection = InActionKeyMapping;
+	
+	Super::InitializeSetting();
 }
 
 const TArray<FEnhancedActionKeyMapping>& ULimenKeyBind::GetSettingValues() const
@@ -72,7 +97,7 @@ FEnhancedActionKeyMapping ULimenKeyBind::GetPreviousValue() const
 
 bool ULimenKeyBind::IsValueValid(const FEnhancedActionKeyMapping& Test)
 {
-	return Test.Action == InputAction && Test.Key != EKeys::Invalid;
+	return Test.Key != EKeys::Invalid;
 }
 
 bool ULimenKeyBind::CanEdit() const
@@ -83,7 +108,7 @@ bool ULimenKeyBind::CanEdit() const
 bool ULimenKeyBind::SetNewValue(const FEnhancedActionKeyMapping& NewSelection)
 {
 	if (!TLimenEditableSetting<FEnhancedActionKeyMapping>::SetNewValue(NewSelection))
-	{
+	{ 
 		return false;
 	}
 
@@ -98,7 +123,7 @@ void ULimenKeyBind::ApplyCurrentSetting(bool bUserRequest)
 	Super::ApplyCurrentSetting(bUserRequest);
 	
 	ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
-	verify(KeyBindSubsystem->SetActionKeyMappingByAction(InputAction.Get(), CurrentKeyMapping));
+	verify(KeyBindSubsystem->SetActionKeyMappingByAction(DefaultSelection.Action.Get(), CurrentKeyMapping));
 
 	OnSettingApplied.Broadcast(this);
 }
@@ -107,7 +132,7 @@ void ULimenKeyBind::SetDefaults()
 {
 	Super::SetDefaults();
 
-	if (InputAction == nullptr)
+	if (DefaultSelection.Action == nullptr)
 	{
 		return;
 	}
@@ -121,7 +146,7 @@ void ULimenKeyBind::SetDefaults()
 
 		for (const TStrongObjectPtr MappingContextPtr(InputMappingContextSoftPtr.LoadSynchronous()); auto& Mapping : MappingContextPtr->GetMappings())
 		{
-			if (Mapping.Action != InputAction)
+			if (Mapping.Action != DefaultSelection.Action)
 			{
 				continue;
 			}

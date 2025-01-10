@@ -6,6 +6,7 @@
 #include "Developer/LimenKeyBindDeveloperSettings.h"
 #include "GameFramework/PlayerController.h"
 #include "InputMappingContext.h"
+#include "PlayerMappableKeySettings.h"
 #include "GameFramework/Pawn.h"
 #include "Settings/LimenKeyBind.h"
 
@@ -38,10 +39,25 @@ void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
 		}
 		
 		ULimenSetting* NewSetting = NewObject<ULimenSetting>(this, SettingClass.LoadSynchronous());
-		check(NewSetting != nullptr);
+		
 		NewSetting->InitializeSetting();
-		NewSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
 		AddItem(NewSetting);
+	}
+
+	for (const auto& MappingContext : MappingContexts)
+	{
+		for (auto& Mapping : MappingContext->GetMappings())
+		{
+			if (!Mapping.IsPlayerMappable())
+			{
+				continue;
+			}
+			
+			ULimenKeyBind* KeyBindSetting = NewObject<ULimenKeyBind>(this);
+			KeyBindSetting->InitializeSetting(Mapping);
+			KeyBindSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
+			AddItem(KeyBindSetting);
+		}
 	}
 }
 
@@ -186,5 +202,7 @@ bool ULimenKeyBindSubsystem::SetActionKeyMappingByAction(const UInputAction* Act
 
 void ULimenKeyBindSubsystem::SettingApplied(const ULimenSetting* Setting)
 {
-	OnKeyBindUpdate.Broadcast();
+	const FEnhancedActionKeyMapping KeyMapping = CastChecked<ULimenKeyBind>(Setting)->GetCurrentValue();
+	check(KeyMapping.Action != nullptr);
+	OnKeyBindUpdate.Broadcast(KeyMapping);
 }

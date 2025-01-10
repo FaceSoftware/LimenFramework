@@ -82,7 +82,7 @@ void ALimenPlayerController::HandleItemActionRequest(ULimenItemAction* ActionReq
 	GetLimenCharacter()->HandleItemActionRequests(ActionRequested);
 }
 
-void ALimenPlayerController::InputBindUpdated()
+void ALimenPlayerController::InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping)
 {
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	InputSystem->RequestRebuildControlMappings();

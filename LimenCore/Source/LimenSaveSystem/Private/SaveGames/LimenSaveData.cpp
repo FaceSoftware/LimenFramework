@@ -3,7 +3,10 @@
 
 #include "SaveGames/LimenSaveData.h"
 
+#include "GameFramework/Actor.h"
 #include "Interfaces/LimenSaveObjectInterface.h"
+#include "Serialization/MemoryReader.h"
+#include "Serialization/MemoryWriter.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 
 

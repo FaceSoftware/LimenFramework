@@ -7,6 +7,8 @@
 #include "Settings/LimenSetting.h"
 #include "LimenKeyBind.generated.h"
 
+
+class ULimenPlayerMappableKeySettings;
 class UInputAction;
 
 USTRUCT()
@@ -31,6 +33,7 @@ public:
 	ULimenKeyBind();
 
 	virtual void Serialize(FArchive& Ar) override;
+	void InitializeSetting(const FEnhancedActionKeyMapping& InActionKeyMapping);
 	
 	/// Readable Interface
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
@@ -54,8 +57,6 @@ public:
 	virtual void DataLoaded() override final;
 
 protected:
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UInputAction> InputAction;
 	UPROPERTY(EditAnywhere)
 	bool bCanEdit;
 

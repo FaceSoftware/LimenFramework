@@ -9,7 +9,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "CppClasses/LimenNotification.h"
 #include "GameFramework/HUD.h"
-#include "Abilities/LimenVariableMovementAbility.h"
 #include "Components/LimenAbilityComponent.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "PlayerController/LimenPlayerControllerBase.h"
@@ -46,13 +45,6 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 	AbilityComponent = CreateDefaultSubobject<ULimenAbilityComponent>(TEXT("AbilityComponent"));
 }
 
-void ALimenCharacterBase::BeginPlay()
-{
-	Super::BeginPlay();
-
-	VariableMovementAbility = GetAbilityComponent()->GetAbility<ULimenVariableMovementAbility>();
-}
-
 void ALimenCharacterBase::EnableInput(class APlayerController* InPlayerController)
 {
 	Super::EnableInput(InPlayerController);
@@ -65,18 +57,6 @@ void ALimenCharacterBase::DisableInput(class APlayerController* InPlayerControll
 	Super::DisableInput(InPlayerController);
 	
 	GetComponentByClass<UEnhancedInputComponent>()->Deactivate();
-}
-
-void ALimenCharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	auto* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	check(EnhancedInput)
-	
-	EnhancedInput->BindAction(MoveInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::MoveInput);
-	EnhancedInput->BindAction(LookInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::LookInput);
-	EnhancedInput->BindAction(SprintInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::SprintInput);
 }
 
 bool ALimenCharacterBase::QueueNotification(const FNotificationParams& InParams)
@@ -96,46 +76,6 @@ bool ALimenCharacterBase::QueueNotification(const FNotificationParams& InParams)
 
 	NotificationComponent->QueueNotification(MakeShared<FLimenNotification>(InParams));
 	return true;
-}
-
-void ALimenCharacterBase::StartSprinting()
-{
-	if (VariableMovementAbility == nullptr)
-	{
-		return;
-	}
-
-	if (VariableMovementAbility->CanActivateAbility())
-	{
-		VariableMovementAbility->ActivateAbility(GetController(), this);
-	}
-}
-
-void ALimenCharacterBase::StopSprinting()
-{
-	if (VariableMovementAbility == nullptr)
-	{
-		return;
-	}
-	
-	VariableMovementAbility->CancelAbility(GetController(), this);
-}
-
-void ALimenCharacterBase::ToggleSprint()
-{
-	if (VariableMovementAbility == nullptr)
-	{
-		return;
-	}
-	
-	if (VariableMovementAbility->IsActive())
-	{
-		StartSprinting();
-	}
-	else
-	{
-		StopSprinting();
-	}
 }
 
 ALimenPlayerControllerBase* ALimenCharacterBase::GetLimenBasePlayerController() const
@@ -163,35 +103,20 @@ APlayerController* ALimenCharacterBase::GetPlayerController() const
 	return PlayerController.Get();
 }
 
-const TSoftObjectPtr<UInputAction>& ALimenCharacterBase::GetMoveInputAction() const
-{
-	return MoveInputAction;
-}
-
-const TSoftObjectPtr<UInputAction>& ALimenCharacterBase::GetLookInputAction() const
-{
-	return LookInputAction;
-}
-
-const TSoftObjectPtr<UInputAction>& ALimenCharacterBase::GetSprintInputAction() const
-{
-	return SprintInputAction;
-}
-
 FVector ALimenCharacterBase::GetLookTarget(const float MaxDistance) const
 {
 	FVector EyesLocation;
 	FRotator EyesDirection;
 	GetActorEyesViewPoint(EyesLocation, EyesDirection);
 
-	FVector& Start = EyesLocation;
+	const FVector& Start = EyesLocation;
 	const FVector End = EyesLocation + (EyesDirection.Vector() * MaxDistance);
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
 	FHitResult Hit;
-	if (!GetWorld()->LineTraceSingleByChannel(Hit, EyesLocation,
+	if (!GetWorld()->LineTraceSingleByChannel(Hit, Start,
 											  EyesLocation + (EyesDirection.Vector() * MaxDistance),
 											  ECollisionChannel::ECC_Visibility, Params))
 	{
@@ -205,37 +130,6 @@ void ALimenCharacterBase::OnHealthAttributeEmpty(const float NewValue)
 {
 	GetCharacterMovement()->DisableMovement();
 	AbilityComponent->DeactivateAllAbilities();
-}
-
-void ALimenCharacterBase::MoveInput(const FInputActionInstance& Instance)
-{
-	OnMovementInput.Broadcast();
-	const auto Input = Instance.GetValue().Get<FVector2D>();
-	if (!Input.IsZero())
-	{
-		AddMovementInput(GetActorForwardVector(), Input.X);
-		AddMovementInput(GetActorRightVector(), Input.Y);
-	}
-}
-
-void ALimenCharacterBase::LookInput(const FInputActionInstance& Instance)
-{
-	const auto Input = Instance.GetValue().Get<FVector2D>();
-	AddControllerYawInput((MouseParameters.bInvertAxisX ? -Input.X : Input.X) * MouseParameters.SensitivityX);
-	AddControllerPitchInput((MouseParameters.bInvertAxisY ? Input.Y : -Input.Y) * MouseParameters.SensitivityY);
-}
-
-void ALimenCharacterBase::SprintInput(const FInputActionInstance& Instance)
-{
-	OnSprintInput.Broadcast();
-	if (Instance.GetValue().Get<bool>())
-	{
-		StartSprinting();
-	}
-	else
-	{
-		StopSprinting();
-	}
 }
 
 void ALimenCharacterBase::PossessedBy(AController* NewController)

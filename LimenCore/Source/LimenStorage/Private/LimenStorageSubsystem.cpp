@@ -133,7 +133,10 @@ void ULimenStorageSubsystem::Save_Internal()
 	GenerateNewSaveData();
 	for (ULimenStorageItem* Item : StorageItems)
 	{
-		CurrentSaveData->AddObjectSaveData(Item);
+		if (Item->ShouldSaveData())
+		{
+			CurrentSaveData->AddObjectSaveData(Item);
+		}
 	}
 
 	auto* SaveSystem = GetGameInstance()->GetSubsystem<ULimenSaveSubsystem>();
@@ -160,7 +163,7 @@ void ULimenStorageSubsystem::Load_Internal()
 		{
 			check(IsValid(Item));
 			// Load into the specific item
-			if (Item->GetClass() == ItemClass)
+			if (Item->GetClass() == ItemClass && Item->ShouldLoadData())
 			{
 				SaveData.LoadData(Item);
 				break;
