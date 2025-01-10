@@ -47,6 +47,8 @@ protected:
 	
 	TWeakObjectPtr<ALimenHUD> LimenHUD;
 	
+	virtual void InputBindUpdated();
+	
 	void PauseInput(const FInputActionInstance& Instance);
 
 	virtual bool CreateHudReference() override;

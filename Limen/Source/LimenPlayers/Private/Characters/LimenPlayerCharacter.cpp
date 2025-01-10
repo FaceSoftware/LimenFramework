@@ -115,6 +115,8 @@ void ALimenPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 			PlayerMappings != nullptr)
 		{
 			InputSystem->AddMappingContext(PlayerMappings, 1);
+			
+			KeyBindSubsystem->OnKeyBindUpdate.AddUObject(this, &ThisClass::InputBindUpdated);
 		}
 	}
 		
@@ -357,6 +359,12 @@ void ALimenPlayerCharacter::SetActorHiddenInGame(const bool bNewHidden)
 	{
 		WeaponHold->GetPhysicalItem()->SetActorHiddenInGame(bNewHidden);
 	}
+}
+
+void ALimenPlayerCharacter::InputBindUpdated()
+{
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetPlayerController()->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	InputSystem->RequestRebuildControlMappings();
 }
 
 void ALimenPlayerCharacter::GameMenuInput(const FInputActionInstance& Instance)

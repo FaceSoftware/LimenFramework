@@ -22,6 +22,7 @@ class LIMENMODALS_API ULimenModalsSubsystem : public UGameInstanceSubsystem
 public:	
 	ULimenGenericModalWidget* DisplayConfirmationModal(const FModalParams& InParams) const;
 	ULimenGenericModalWidget* DisplayConsentModal(const FModalParams& InParams) const;
+	ULimenGenericModalWidget* DisplayTimedModal(const FModalParams& InParams) const;
 
 private:
 	ULimenGenericModalWidget* DisplayModalInternal(const TSubclassOf<ULimenGenericModalWidget>& ModalClass, const FModalParams& InParams) const;

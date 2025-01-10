@@ -11,8 +11,11 @@ public class LimenKeyBindSettings : ModuleRules
             {
                 "Core", 
                 "DeveloperSettings",
+                "EnhancedInput",
+                "InputCore",
                 
-                "LimenModularSettings",
+                "LimenModularSettings", 
+                "LimenModals",
             }
         );
 
@@ -23,9 +26,12 @@ public class LimenKeyBindSettings : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "EnhancedInput",
+                "UMG",
                 
+                "LimenCore",
                 "LimenStorage",
+                "LimenWidgets",
+                "LimenGameFramework",
             }
         );
     }

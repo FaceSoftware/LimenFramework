@@ -5,6 +5,7 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
+#include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
@@ -15,9 +16,28 @@
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
 
 
+ALimenPlayerControllerBase* ALimenPlayerControllerBase::GetLimenPlayerControllerBase(UObject* Caller, int32 PlayerIndex)
+{
+	const UWorld* World = GEngine->GetWorldFromContextObject(Caller, EGetWorldErrorMode::ReturnNull);
+	if (World == nullptr)
+	{
+		return nullptr;
+	}
+
+	FConstPlayerControllerIterator It = World->GetPlayerControllerIterator();
+	for (int i = 0; i < PlayerIndex; ++i) ++It;
+	if (It.GetIndex() != PlayerIndex)
+	{
+		return nullptr;
+	}
+
+	return Cast<ALimenPlayerControllerBase>(*It);
+}
+
 ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
+	CurrentInputMode = ELimenInputMode::Undefined;
 }
 
 void ALimenPlayerControllerBase::SetupInputComponent()
@@ -100,6 +120,7 @@ void ALimenPlayerControllerBase::SetGameInput()
 	FlushPressedKeys();
 	SetInputMode(FInputModeGameOnly());
 	SetShowMouseCursor(false);
+	CurrentInputMode = ELimenInputMode::Game;
 
 	LIMEN_LOG(LogLimenCore, Log, this, "Game input set");
 }
@@ -111,6 +132,7 @@ void ALimenPlayerControllerBase::SetUIInput()
 	InputMode.SetHideCursorDuringCapture(false);
 	SetInputMode(InputMode);
 	SetShowMouseCursor(true);
+	CurrentInputMode = ELimenInputMode::UI;
 	
 	LIMEN_LOG(LogLimenCore, Log, this, "UI input set");
 }
@@ -120,8 +142,42 @@ void ALimenPlayerControllerBase::SetUIOnlyInput(const bool bShowMouse /* = true 
 	FlushPressedKeys();
 	SetInputMode(FInputModeUIOnly());
 	SetShowMouseCursor(bShowMouse);
+	CurrentInputMode = ELimenInputMode::UIOnly;
 
 	LIMEN_LOG(LogLimenCore, Log, this, "UI Only input set")
+}
+
+void ALimenPlayerControllerBase::SetInputMode(const FInputModeDataBase& InData)
+{
+	Super::SetInputMode(InData);
+}
+
+void ALimenPlayerControllerBase::SetInputMode(const ELimenInputMode InInputMode)
+{
+	CurrentInputMode = InInputMode;
+	switch (CurrentInputMode)
+	{		
+	case ELimenInputMode::Game:
+		SetGameInput();
+		break;
+		
+	case ELimenInputMode::UI:
+		SetUIInput();
+		break;
+		
+	case ELimenInputMode::UIOnly:
+		SetUIOnlyInput();
+		break;
+
+	default:
+		checkNoEntry()
+		break;
+	}
+}
+
+ELimenInputMode ALimenPlayerControllerBase::GetInputMode() const
+{
+	return CurrentInputMode;
 }
 
 bool ALimenPlayerControllerBase::CanSeeLocation(const FVector& InLocation) const

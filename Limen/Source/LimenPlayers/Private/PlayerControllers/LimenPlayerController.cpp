@@ -40,6 +40,8 @@ void ALimenPlayerController::SetupInputComponent()
 		{
 			InputSystem->AddMappingContext(PlayerMappings, 1);
 		}
+		
+		KeyBindSubsystem->OnKeyBindUpdate.AddUObject(this, &ALimenPlayerController::InputBindUpdated);
 	}
 
 	auto* EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent.Get());
@@ -78,6 +80,12 @@ void ALimenPlayerController::HandleItemActionRequest(ULimenItemAction* ActionReq
 	check(ActionRequested != nullptr);
 	check(GetLimenCharacter() != nullptr);
 	GetLimenCharacter()->HandleItemActionRequests(ActionRequested);
+}
+
+void ALimenPlayerController::InputBindUpdated()
+{
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	InputSystem->RequestRebuildControlMappings();
 }
 
 void ALimenPlayerController::PauseInput(const FInputActionInstance& Instance)

@@ -158,6 +158,8 @@ protected:
 	TSoftObjectPtr<UInputAction> CycleToolsInputAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
 	TSoftObjectPtr<UInputAction> CycleWeaponsInputAction;
+
+	virtual void InputBindUpdated();
 	
 	/**
 	 * @brief Toggles the visibility of the game menu.

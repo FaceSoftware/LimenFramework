@@ -6,6 +6,7 @@
 #include "Developer/LimenModularSettingsSubsystemDeveloperSettings.h"
 #include "LimenKeyBindDeveloperSettings.generated.h"
 
+class UInputAction;
 class UInputMappingContext;
 /**
  * 
@@ -25,8 +26,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, Config)
 	TMap<TSoftClassPtr<APawn>, TSoftObjectPtr<UInputMappingContext>> PawnMappingContexts;
 	
+	
 	ULimenKeyBindDeveloperSettings()
 	{
 		SectionName = TEXT("Limen - Key Bind Settings");
 	}
+
+	TArray<FMappingContextSoftPtr> GetAllInputMappingContexts() const;
 };
