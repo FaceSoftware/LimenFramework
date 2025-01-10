@@ -8,7 +8,36 @@
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Subsystems/LimenKeyBindSubsystem.h"
+#include "Subsystems/LimenSaveSubsystem.h"
 
+
+FSaveableEnhancedActionKeyMapping::FSaveableEnhancedActionKeyMapping(const FEnhancedActionKeyMapping& InKeyMapping)
+	: Super(InKeyMapping)
+{
+}
+
+bool FSaveableEnhancedActionKeyMapping::Serialize(FArchive& Ar)
+{
+	if (Ar.IsSaving())
+	{
+		FName TempValue = Key.GetFName();
+		Ar << TempValue;
+
+		TempValue = FLimenSerialization::BoolToName(bShouldBeIgnored);
+		Ar << TempValue;
+		
+		uint8 ByteValue = static_cast<uint8>(SettingBehavior);
+		Ar << ByteValue;
+	}
+	else if (Ar.IsLoading())
+	{
+		FName KeyName;
+		Ar << KeyName;
+		Key = FKey(KeyName);
+	}
+	
+	return true;
+}
 
 ULimenKeyBind::ULimenKeyBind()
 {
@@ -17,6 +46,13 @@ ULimenKeyBind::ULimenKeyBind()
 	DisplayName = FText::FromString(TEXT(""));
 	Description = FText::FromString(TEXT(""));
 	bCanEdit = true;
+}
+
+void ULimenKeyBind::Serialize(FArchive& Ar)
+{
+	Super::Serialize(Ar);
+
+	CurrentKeyMapping.Serialize(Ar);
 }
 
 const TArray<FEnhancedActionKeyMapping>& ULimenKeyBind::GetSettingValues() const
@@ -52,7 +88,7 @@ bool ULimenKeyBind::SetNewValue(const FEnhancedActionKeyMapping& NewSelection)
 	}
 
 	PreviousKeyMapping = CurrentKeyMapping;
-	CurrentKeyMapping = NewSelection;
+	CurrentKeyMapping = FSaveableEnhancedActionKeyMapping(NewSelection);
 	OnSettingUpdated.Broadcast(this);
 	return true;
 }
@@ -83,8 +119,7 @@ void ULimenKeyBind::SetDefaults()
 			continue;
 		}
 
-		TStrongObjectPtr MappingContextPtr(InputMappingContextSoftPtr.LoadSynchronous());
-		for (auto& Mapping : MappingContextPtr->GetMappings())
+		for (const TStrongObjectPtr MappingContextPtr(InputMappingContextSoftPtr.LoadSynchronous()); auto& Mapping : MappingContextPtr->GetMappings())
 		{
 			if (Mapping.Action != InputAction)
 			{
@@ -102,7 +137,7 @@ void ULimenKeyBind::SetDefaults()
 void ULimenKeyBind::SetDefaultValue()
 {
 	PreviousKeyMapping = CurrentKeyMapping;
-	CurrentKeyMapping = DefaultSelection;
+	CurrentKeyMapping = FSaveableEnhancedActionKeyMapping(DefaultSelection);
 	
 	Super::SetDefaultValue();
 }

@@ -9,6 +9,16 @@
 
 class UInputAction;
 
+USTRUCT()
+struct FSaveableEnhancedActionKeyMapping : public FEnhancedActionKeyMapping
+{
+	GENERATED_BODY()
+
+	FSaveableEnhancedActionKeyMapping() = default;
+	explicit FSaveableEnhancedActionKeyMapping(const FEnhancedActionKeyMapping& InKeyMapping);
+    bool Serialize(FArchive& Ar);
+};
+
 /**
  * 
  */
@@ -19,6 +29,8 @@ class LIMENKEYBINDSETTINGS_API ULimenKeyBind : public ULimenSetting, public TLim
 
 public:
 	ULimenKeyBind();
+
+	virtual void Serialize(FArchive& Ar) override;
 	
 	/// Readable Interface
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
@@ -49,12 +61,10 @@ protected:
 
 private:
 	UPROPERTY(SaveGame)
-	FEnhancedActionKeyMapping CurrentKeyMapping;
+	FSaveableEnhancedActionKeyMapping CurrentKeyMapping;
 	FEnhancedActionKeyMapping PreviousKeyMapping;
 	
 	TArray<FEnhancedActionKeyMapping> PossibleValues;
 
 	FEnhancedActionKeyMapping DefaultSelection;
-
-	const FEnhancedActionKeyMapping* GetDefaultActionKeyMapping() const;
 };
