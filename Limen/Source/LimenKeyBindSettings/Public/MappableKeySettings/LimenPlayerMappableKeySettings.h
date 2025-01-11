@@ -23,7 +23,7 @@ class LIMENKEYBINDSETTINGS_API ULimenPlayerMappableKeySettings : public UPlayerM
 {
 	GENERATED_BODY()
 
-public:
+public:	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	FText Description;
 	
@@ -33,6 +33,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	bool bCanOverrideActionHandlingType = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Settings")
 	EInputActionHandlingType InputHandlingType = EInputActionHandlingType::NotApplicable;
 };

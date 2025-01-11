@@ -4,10 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Developer/LimenModularSettingsSubsystemDeveloperSettings.h"
+#include "MappableKeySettings/LimenPlayerMappableKeySettings.h"
 #include "LimenKeyBindDeveloperSettings.generated.h"
 
+
+enum class EInputActionHandlingType : uint8;
+class UInputTrigger;
 class UInputAction;
 class UInputMappingContext;
+
 /**
  * 
  */

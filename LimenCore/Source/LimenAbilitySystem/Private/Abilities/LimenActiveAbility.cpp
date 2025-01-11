@@ -3,6 +3,9 @@
 
 #include "Abilities/LimenActiveAbility.h"
 
+#include "TimerManager.h"
+#include "Engine/World.h"
+
 
 ULimenActiveAbility::ULimenActiveAbility() : Super()
 {

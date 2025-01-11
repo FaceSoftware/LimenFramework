@@ -5,6 +5,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
 #include "Abilities/LimenVariableMovementAbility.h"
 #include "Actors/LimenTool.h"
 #include "Actors/LimenWeapon.h"
@@ -29,6 +30,7 @@
 #include "Components/Interactable/LimenInteractableAreaComponent.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "HUDs/LimenHUD.h"
 #include "Interfaces/LimenUpgradable.h"
 #include "MappableKeySettings/LimenPlayerMappableKeySettings.h"
@@ -110,9 +112,12 @@ void ALimenPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 			PlayerMappings != nullptr)
 		{
 			InputSystem->AddMappingContext(PlayerMappings, 1);
+			for (auto& Mapping : PlayerMappings->GetMappings())
+			{
+				InputBindUpdated(Mapping);
+			}
 			
 			KeyBindSubsystem->OnKeyBindUpdate.AddUObject(this, &ThisClass::InputBindUpdated);
-			// Todo: Not firing
 		}
 	}
 	
@@ -407,7 +412,13 @@ const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetCrouchInputAction(
 void ALimenPlayerCharacter::InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping)
 {
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetPlayerController()->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-	InputSystem->RequestRebuildControlMappings();
+
+	FModifyContextOptions ContextOptions;
+	ContextOptions.bForceImmediately = false;
+	ContextOptions.bNotifyUserSettings = false;
+	ContextOptions.bIgnoreAllPressedKeysUntilRelease = false;
+
+	InputSystem->RequestRebuildControlMappings(ContextOptions, EInputMappingRebuildType::RebuildWithFlush);
 
 	const auto* Settings = Cast<ULimenPlayerMappableKeySettings>(ActionKeyMapping.GetPlayerMappableKeySettings());
 	if (Settings == nullptr)
@@ -661,27 +672,23 @@ void ALimenPlayerCharacter::LookInput(const FInputActionInstance& Instance)
 
 void ALimenPlayerCharacter::SprintInput(const FInputActionInstance& Instance)
 {
-	OnSprintInput.Broadcast();
+	bool bValue = Instance.GetValue().Get<bool>();
+
+	switch (SprintHandlingType)
+	{
+	case EInputActionHandlingType::Hold:
+		bValue ? StartSprinting() : StopSprinting();
+		break;
+		
+	case EInputActionHandlingType::Toggle:
+		if (bValue) VariableMovementAbility->IsActive() ? StopSprinting() : StartSprinting();
+		break;
+
+	default:
+		break;
+	}
 	
-	if (Instance.GetValue().Get<bool>())
-	{
-		if (SprintHandlingType == EInputActionHandlingType::Hold)
-		{
-			StartSprinting();
-		}
-		else if (VariableMovementAbility->IsActive())
-		{
-			StopSprinting();
-		}
-		else
-		{
-			StartSprinting();
-		}
-	}
-	else
-	{
-			StopSprinting();
-	}
+	OnSprintInput.Broadcast();
 }
 
 void ALimenPlayerCharacter::JumpInput(const FInputActionInstance& Instance)
@@ -698,13 +705,20 @@ void ALimenPlayerCharacter::JumpInput(const FInputActionInstance& Instance)
 
 void ALimenPlayerCharacter::CrouchInput(const FInputActionInstance& Instance)
 {
-	if (Instance.GetValue().Get<bool>())
+	bool bValue = Instance.GetValue().Get<bool>();
+
+	switch (CrouchHandlingType)
 	{
-		Crouch(false);
-	}
-	else
-	{
-		UnCrouch();
+	case EInputActionHandlingType::Hold:
+		bValue ? Crouch() : UnCrouch();
+		break;
+		
+	case EInputActionHandlingType::Toggle:
+		if (bValue) GetCharacterMovement()->bWantsToCrouch ? UnCrouch() : Crouch();
+		break;
+
+	default:
+		break;
 	}
 }
 

@@ -8,6 +8,7 @@
 #include "LimenKeyBind.generated.h"
 
 
+enum class EInputActionHandlingType : uint8;
 class ULimenPlayerMappableKeySettings;
 class UInputAction;
 
@@ -29,7 +30,7 @@ class LIMENKEYBINDSETTINGS_API ULimenKeyBind : public ULimenSetting, public TLim
 {
 	GENERATED_BODY()
 
-public:
+public:		
 	ULimenKeyBind();
 
 	virtual void Serialize(FArchive& Ar) override;
@@ -55,6 +56,9 @@ public:
 	virtual void SetDefaults() override;
 	virtual void SetDefaultValue() override final;
 	virtual void DataLoaded() override final;
+
+	UFUNCTION(BlueprintCallable)
+	void SetInputActionHandlingType(const EInputActionHandlingType NewType);
 
 protected:
 	UPROPERTY(EditAnywhere)

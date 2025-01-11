@@ -163,6 +163,11 @@ void ULimenKeyBind::SetDefaultValue()
 {
 	PreviousKeyMapping = CurrentKeyMapping;
 	CurrentKeyMapping = FSaveableEnhancedActionKeyMapping(DefaultSelection);
+	ULimenPlayerMappableKeySettings* Settings = CurrentKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
+	if (Settings != nullptr)
+	{
+		SetInputActionHandlingType(Settings->InputHandlingType);
+	}
 	
 	Super::SetDefaultValue();
 }
@@ -170,7 +175,17 @@ void ULimenKeyBind::SetDefaultValue()
 void ULimenKeyBind::DataLoaded()
 {
 	PreviousKeyMapping = CurrentKeyMapping;
-	OnSettingUpdated.Broadcast(this);
 	
 	Super::DataLoaded();
+}
+
+void ULimenKeyBind::SetInputActionHandlingType(const EInputActionHandlingType NewType)
+{
+	ULimenPlayerMappableKeySettings* Settings = CurrentKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
+	if (Settings == nullptr || Settings->InputHandlingType == NewType)
+	{
+		return;
+	}
+	
+	Settings->InputHandlingType = NewType;
 }

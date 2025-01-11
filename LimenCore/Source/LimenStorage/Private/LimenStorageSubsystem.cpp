@@ -161,10 +161,10 @@ void ULimenStorageSubsystem::Load_Internal()
 		const UClass* ItemClass = ItemClassSoftPtr.LoadSynchronous();
 		ULimenStorageItem* *const Item = StorageItems.FindByPredicate([this, &ItemClass] (const ULimenStorageItem* Test)
 		{
-			return Test->GetClass() == ItemClass;
+			return Test->GetClass() == ItemClass && Test->ShouldLoadData();
 		});
 		
-		if (Item != nullptr && (*Item)->ShouldLoadData())
+		if (Item != nullptr)
 		{
 			SaveData.LoadData(*Item);
 		}
