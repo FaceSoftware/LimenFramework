@@ -14,12 +14,7 @@ class LIMENAUDIOSETTINGS_API ULimenAudioDeveloperSettings : public ULimenModular
 {
 	GENERATED_BODY()
 
-public:	
-	UPROPERTY(EditAnywhere, Config, Category="Graphical Settings")
-	bool bUseSubsystem = false;
-	UPROPERTY(EditAnywhere, Config, Category="Graphical Settings")
-	TArray<TSoftClassPtr<ULimenSetting>> SettingsList;
-
+public:
 	ULimenAudioDeveloperSettings()
 	{
 		SectionName = TEXT("Limen - Audio Settings");

@@ -21,6 +21,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Config, Category="Limen|Modals")
 	TSoftClassPtr<ULimenGenericModalWidget> ConsentModalClass;
+	
+	UPROPERTY(EditAnywhere, Config, Category="Limen|Modals")
+	TSoftClassPtr<ULimenGenericModalWidget> TimedModalClass;
 
 	ULimenModalsDeveloperSettings()
 	{

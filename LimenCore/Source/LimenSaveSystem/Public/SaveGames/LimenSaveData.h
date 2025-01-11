@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
 #include "Interfaces/LimenSaveObjectInterface.h"
+#include "Serialization/MemoryReader.h"
+#include "Serialization/MemoryWriter.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "LimenSaveData.generated.h"
 
@@ -18,7 +20,7 @@ public:
 	FObjectSaveData() = default;
 	~FObjectSaveData() = default;
 
-	FObjectSaveData(UObject* InObject)
+	explicit FObjectSaveData(UObject* InObject)
 	{
 		SaveObjectData(InObject);
 	}
@@ -40,7 +42,7 @@ public:
 		ObjectClass = FSoftClassPath(InObject->GetClass());
 	}
 	
-	void LoadData(UObject* OutObject)
+	void LoadData(UObject* OutObject) const
 	{
 		ILimenSaveObjectInterface* ObjectSaveInterface = Cast<ILimenSaveObjectInterface>(OutObject);
 		check(ObjectSaveInterface != nullptr);
@@ -121,7 +123,7 @@ public:
 	bool GetActorSaveData(const int Index, FActorSaveData& OutSaveData) const;
 	uint32 GetActorSaveDataCount() const;
 	
-	bool GetObjectSaveData(const int Index, FObjectSaveData& OutSaveData) const;
+	bool GetObjectSaveData(const int32 Index, FObjectSaveData& OutSaveData) const;
 	uint32 GetObjectSaveDataCount() const;
 
 	int AddActorSaveData(const FActorSaveData& ActorSaveData);

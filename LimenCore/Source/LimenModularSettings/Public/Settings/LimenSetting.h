@@ -85,6 +85,7 @@ protected:
 	virtual void ApplyCurrentSetting(bool bUserRequest = false);
 	
 	virtual void DataLoaded() override;
+	virtual bool ShouldLoadData() const override;
 	
 	UPROPERTY(EditAnywhere, Category="Limen")
 	FText Description;
@@ -99,6 +100,8 @@ private:
 	TObjectPtr<ULimenRecurrentAction> RecurrentActionObject;
 
 	bool bHasInitialized;
+
+	bool bShouldLoadData;
 
 	void DestroyRecurrentActionObject();
 };

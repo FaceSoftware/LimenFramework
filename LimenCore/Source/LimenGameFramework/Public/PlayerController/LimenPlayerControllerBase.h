@@ -28,6 +28,14 @@ enum class EPauseReason : uint8
 	Notification,
 };
 
+enum class ELimenInputMode : uint8
+{
+	Undefined,
+	Game,
+	UI,
+	UIOnly,
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPauseRequestDelegate, ALimenPlayerControllerBase*, Player, const EPauseReason, PauseReason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPauseRequestDelegate, ALimenPlayerControllerBase*, Player);
 
@@ -36,11 +44,14 @@ class LIMENGAMEFRAMEWORK_API ALimenPlayerControllerBase : public APlayerControll
 {
 	GENERATED_BODY()
 
-public:
+public:	
 	friend FLimenNotification;
 
 	FPauseRequestDelegate OnPauseRequested;
 	FUnPauseRequestDelegate OnUnPauseRequested;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, meta=(WorldContext="Caller"))
+	static ALimenPlayerControllerBase* GetLimenPlayerControllerBase(UObject* Caller, int32 PlayerIndex = 0);
 
 	explicit ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void SetupInputComponent() override;
@@ -63,6 +74,9 @@ public:
 	void SetGameInput();
 	void SetUIInput();
 	void SetUIOnlyInput(const bool bShowMouse = true);
+	void SetInputMode(const FInputModeDataBase& InData) override;
+	void SetInputMode(const ELimenInputMode InInputMode);
+	ELimenInputMode GetInputMode() const;
 
 	UFUNCTION(BlueprintCallable)
 	bool CanSeeLocation(const FVector& InLocation) const;
@@ -70,12 +84,6 @@ public:
 	bool CanSeeActor(const AActor* OtherActor) const;
 
 protected:
-	// Input
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
-	TSoftObjectPtr<UInputMappingContext> PlayerMappingContext;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
-	TSoftObjectPtr<UInputMappingContext> CharacterMappingContext;
-	
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
 
 	virtual void BindPawnDelegates(APawn* NewPawn);
@@ -89,4 +97,5 @@ protected:
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
 	
 private:
+	ELimenInputMode CurrentInputMode;
 };

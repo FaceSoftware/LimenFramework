@@ -18,10 +18,6 @@ class LIMENGRAPHICSETTINGS_API ULimenGraphicalSettingsDeveloperSettings : public
 public:	
 	UPROPERTY(EditAnywhere, Config, Category="Graphical Settings")
 	FName GlobalPostProcessTag = TEXT("GlobalPostProcess");
-	UPROPERTY(EditAnywhere, Config, Category="Graphical Settings")
-	bool bUseSubsystem = false;
-	UPROPERTY(EditAnywhere, Config, Category="Graphical Settings")
-	TArray<TSoftClassPtr<ULimenSetting>> SettingsList;
 
 	ULimenGraphicalSettingsDeveloperSettings()
 	{

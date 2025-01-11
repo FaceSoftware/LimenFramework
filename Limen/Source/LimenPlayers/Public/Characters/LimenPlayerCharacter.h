@@ -7,6 +7,8 @@
 #include "LimenPlayerCharacter.generated.h"
 
 
+enum class EInputActionHandlingType : uint8;
+struct FEnhancedActionKeyMapping;
 class ULimenCameraShakeComponent;
 class ULimenDynamicDepthOfFieldComponent;
 class ALimenPlayerState;
@@ -48,6 +50,9 @@ public:
 	static const FName DynamicDepthOfFieldComponentName;
 	static const FName ProxyInventoryComponentName;
 	static const FName CameraShakeComponentName;
+	
+	FInputDelegate OnMovementInput;
+	FInputDelegate OnSprintInput;
 	
 	explicit ALimenPlayerCharacter(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
@@ -125,6 +130,15 @@ public:
 
 	virtual void SetActorHiddenInGame(const bool bNewHidden) override;
 	
+	const TSoftObjectPtr<UInputAction>& GetMoveForwardInputAction() const;
+	const TSoftObjectPtr<UInputAction>& GetMoveLeftInputAction() const;
+	const TSoftObjectPtr<UInputAction>& GetMoveBackwardsInputAction() const;
+	const TSoftObjectPtr<UInputAction>& GetMoveRightInputAction() const;
+	const TSoftObjectPtr<UInputAction>& GetLookInputAction() const;
+	const TSoftObjectPtr<UInputAction>& GetSprintInputAction() const;
+	const TSoftObjectPtr<UInputAction>& GetJumpInputAction() const;
+	const TSoftObjectPtr<UInputAction>& GetCrouchInputAction() const;
+	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
 	TObjectPtr<ULimenInventoryComponent> CharacterInventory;
@@ -143,6 +157,34 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
 	TObjectPtr<ULimenPhysicalItemHoldComponent> ToolHold;
 
+	// FVector 2D -> X axis = Move Forward/backwards, Y axis = Move Right/Left
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
+	TSoftObjectPtr<UInputAction> MoveForwardInputAction;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
+	TSoftObjectPtr<UInputAction> MoveLeftInputAction;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
+	TSoftObjectPtr<UInputAction> MoveBackwardsInputAction;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
+	TSoftObjectPtr<UInputAction> MoveRightInputAction;
+	// FVector 2D -> X axis = Look Up/Down, Y axis = Rotate Right/Left
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
+	TSoftObjectPtr<UInputAction> LookInputAction;
+	// bool -> true = Start, false = Un-crouch
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
+	TSoftObjectPtr<UInputAction> SprintInputAction;
+	/**
+	 * @brief bool -> true = jump, false = Stop jumping
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
+	TSoftObjectPtr<UInputAction> JumpInputAction;
+	/**
+	 * @brief bool -> true = crouch, false = Un-crouch
+	 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
+	TSoftObjectPtr<UInputAction> CrouchInputAction;
+	// bool -> true = Toggle visibility
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input")
+	TSoftObjectPtr<UInputAction> GameMenuInputAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
 	TSoftObjectPtr<UInputAction> InteractInputAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
@@ -155,13 +197,28 @@ protected:
 	TSoftObjectPtr<UInputAction> CycleToolsInputAction;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
 	TSoftObjectPtr<UInputAction> CycleWeaponsInputAction;
+
+	virtual void InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping);
 	
-	void InteractInput(const FInputActionInstance& Instance);
-	void FireInput(const FInputActionInstance& Instance);
-	void ReloadInput(const FInputActionInstance& Instance);
-	void ToggleToolInput(const FInputActionInstance& Instance);
-	void CycleToolsInput(const FInputActionInstance& Instance);
-	void CycleWeaponsInput(const FInputActionInstance& Instance);
+	/**
+	 * @brief Toggles the visibility of the game menu.
+	 * @param Instance 
+	 */
+	virtual void MoveForwardInput(const FInputActionInstance& Instance);
+	virtual void MoveLeftInput(const FInputActionInstance& Instance);
+	virtual void MoveBackwardsInput(const FInputActionInstance& Instance);
+	virtual void MoveRightInput(const FInputActionInstance& Instance);
+	virtual void LookInput(const FInputActionInstance& Instance);
+	virtual void SprintInput(const FInputActionInstance& Instance);
+	virtual void JumpInput(const FInputActionInstance& Instance);
+	virtual void CrouchInput(const FInputActionInstance& Instance);
+	virtual void GameMenuInput(const FInputActionInstance& Instance);
+	virtual void InteractInput(const FInputActionInstance& Instance);
+	virtual void FireInput(const FInputActionInstance& Instance);
+	virtual void ReloadInput(const FInputActionInstance& Instance);
+	virtual void ToggleToolInput(const FInputActionInstance& Instance);
+	virtual void CycleToolsInput(const FInputActionInstance& Instance);
+	virtual void CycleWeaponsInput(const FInputActionInstance& Instance);
 
 	UFUNCTION()
 	virtual void OnInteract(AActor* InteractableActor, const TScriptInterface<ILimenInteractableComponent>& InteractableComponent);
@@ -180,6 +237,18 @@ protected:
 
 	virtual void AimDownSights();
 	virtual void StopAimingDownSights();
+	/**
+	 * @brief The player will start sprinting if it can sprint.
+	 */
+	void StartSprinting();
+	/**
+	 * @brief The player will stop sprinting.
+	 */
+	void StopSprinting();
+	/**
+	 * @brief Toggles between StartSprinting or StopSprinting.
+	 */
+	void ToggleSprint();
 
 	/**
 	 * @brief When the character is aiming with the weapon.
@@ -237,7 +306,13 @@ private:
 	TWeakObjectPtr<ALimenPlayerController> LimenPlayerControllerPtr;
 	UPROPERTY()
 	TWeakObjectPtr<ALimenPlayerState> LimenPlayerStatePtr;
+	
+	UPROPERTY()
+	TWeakObjectPtr<ULimenVariableMovementAbility> VariableMovementAbility;
 
 	bool bWasFallingLastUpdate;
 	bool bIsAimingDownSights;
+
+	EInputActionHandlingType SprintHandlingType;
+	EInputActionHandlingType CrouchHandlingType;
 };

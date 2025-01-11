@@ -26,9 +26,7 @@ public:
 	explicit ALimenGameplayCharacter(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void BeginPlay() override;
-
-	const TSoftObjectPtr<UInputAction>& GetJumpInputAction() const;
-	const TSoftObjectPtr<UInputAction>& GetCrouchInputAction() const;
+	
 	ULimenStepsSoundComponent* GetStepsSoundComponent() const;
 
 	/**
@@ -51,19 +49,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<ULimenStepsSoundComponent> StepsSoundComponent;
-	/**
-	 * @brief bool -> true = jump, false = Stop jumping
-	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
-	TSoftObjectPtr<UInputAction> JumpInputAction;
-	/**
-	 * @brief bool -> true = crouch, false = Un-crouch
-	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
-	TSoftObjectPtr<UInputAction> CrouchInputAction;
-	
-	virtual void JumpInput(const FInputActionInstance& Instance);
-	virtual void CrouchInput(const FInputActionInstance& Instance);
 	
 	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
 

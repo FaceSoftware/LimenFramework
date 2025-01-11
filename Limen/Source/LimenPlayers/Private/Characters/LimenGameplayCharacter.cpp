@@ -25,10 +25,7 @@ void ALimenGameplayCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 	auto* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	check(EnhancedInput)
 
-	EnhancedInput->BindAction(JumpInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this,
-						  &ThisClass::JumpInput);
-	EnhancedInput->BindAction(CrouchInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this,
-							  &ThisClass::CrouchInput);
+
 }
 
 void ALimenGameplayCharacter::BeginPlay()
@@ -42,15 +39,7 @@ void ALimenGameplayCharacter::BeginPlay()
 	}
 }
 
-const TSoftObjectPtr<UInputAction>& ALimenGameplayCharacter::GetJumpInputAction() const
-{
-	return JumpInputAction;
-}
 
-const TSoftObjectPtr<UInputAction>& ALimenGameplayCharacter::GetCrouchInputAction() const
-{
-	return CrouchInputAction;
-}
 
 ULimenStepsSoundComponent* ALimenGameplayCharacter::GetStepsSoundComponent() const
 {
@@ -114,30 +103,6 @@ float ALimenGameplayCharacter::ApplyMaxDamage(AController* DamageInstigator, AAc
 
 	DamageReceived(DamageInstigator, DamageCauser, 0);
 	return 0;
-}
-
-void ALimenGameplayCharacter::JumpInput(const FInputActionInstance& Instance)
-{
-	if (Instance.GetValue().Get<bool>())
-	{
-		Jump();
-	}
-	else
-	{
-		StopJumping();
-	}
-}
-
-void ALimenGameplayCharacter::CrouchInput(const FInputActionInstance& Instance)
-{
-	if (Instance.GetValue().Get<bool>())
-	{
-		Crouch();
-	}
-	else
-	{
-		UnCrouch();
-	}
 }
 
 void ALimenGameplayCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
