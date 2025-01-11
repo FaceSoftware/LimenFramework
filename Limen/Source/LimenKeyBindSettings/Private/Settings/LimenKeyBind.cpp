@@ -54,6 +54,7 @@ ULimenKeyBind::ULimenKeyBind()
 	DisplayName = FText::FromString(TEXT("KeybindSetting"));
 	Description = FText::FromString(TEXT("This is a keybind setting."));
 	bCanEdit = false;
+	ActionKeyMappingPtr = nullptr;
 }
 
 void ULimenKeyBind::Serialize(FArchive& Ar)
@@ -63,19 +64,20 @@ void ULimenKeyBind::Serialize(FArchive& Ar)
 	CurrentKeyMapping.Serialize(Ar);
 }
 
-void ULimenKeyBind::InitializeSetting(const FEnhancedActionKeyMapping& InActionKeyMapping)
+void ULimenKeyBind::InitializeSetting(FEnhancedActionKeyMapping* InActionKeyMapping)
 {
-	check(InActionKeyMapping.IsPlayerMappable())
+	check(InActionKeyMapping->IsPlayerMappable())
 	
-	const auto* MappableKeySettings = InActionKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
+	const auto* MappableKeySettings = InActionKeyMapping->GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
 	
-	DevelopmentName = InActionKeyMapping.GetMappingName();
-	DisplayName = InActionKeyMapping.GetDisplayName();
-	Category = InActionKeyMapping.GetDisplayCategory();
+	DevelopmentName = InActionKeyMapping->GetMappingName();
+	DisplayName = InActionKeyMapping->GetDisplayName();
+	Category = InActionKeyMapping->GetDisplayCategory();
 	Description = MappableKeySettings != nullptr ? MappableKeySettings->Description : FText::FromString(TEXT(""));
 	bCanEdit = true;
-	
-	DefaultSelection = InActionKeyMapping;
+
+	ActionKeyMappingPtr = InActionKeyMapping;
+	DefaultSelection = *InActionKeyMapping;
 	
 	Super::InitializeSetting();
 }
@@ -122,9 +124,7 @@ void ULimenKeyBind::ApplyCurrentSetting(bool bUserRequest)
 {
 	Super::ApplyCurrentSetting(bUserRequest);
 	
-	ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
-	verify(KeyBindSubsystem->SetActionKeyMappingByAction(DefaultSelection.Action.Get(), CurrentKeyMapping));
-
+	*ActionKeyMappingPtr = CurrentKeyMapping;
 	OnSettingApplied.Broadcast(this);
 }
 
@@ -170,6 +170,7 @@ void ULimenKeyBind::SetDefaultValue()
 void ULimenKeyBind::DataLoaded()
 {
 	PreviousKeyMapping = CurrentKeyMapping;
+	OnSettingUpdated.Broadcast(this);
 	
 	Super::DataLoaded();
 }

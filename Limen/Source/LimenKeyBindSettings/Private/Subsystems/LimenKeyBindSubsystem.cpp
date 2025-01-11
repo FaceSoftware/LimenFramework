@@ -46,15 +46,16 @@ void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
 
 	for (const auto& MappingContext : MappingContexts)
 	{
-		for (auto& Mapping : MappingContext->GetMappings())
+		for (int i = 0; i < MappingContext->GetMappings().Num(); ++i)
 		{
-			if (!Mapping.IsPlayerMappable())
+			FEnhancedActionKeyMapping& MappingRef = MappingContext->GetMapping(i);
+			if (!MappingRef.IsPlayerMappable())
 			{
 				continue;
 			}
 			
 			ULimenKeyBind* KeyBindSetting = NewObject<ULimenKeyBind>(this);
-			KeyBindSetting->InitializeSetting(Mapping);
+			KeyBindSetting->InitializeSetting(&MappingRef);
 			KeyBindSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
 			AddItem(KeyBindSetting);
 		}

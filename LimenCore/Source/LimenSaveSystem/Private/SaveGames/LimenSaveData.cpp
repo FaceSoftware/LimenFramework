@@ -154,7 +154,7 @@ uint32 ULimenSaveData::GetActorSaveDataCount() const
 	return ActorSaveDataList.Num();
 }
 
-bool ULimenSaveData::GetObjectSaveData(const int Index, FObjectSaveData& OutSaveData) const
+bool ULimenSaveData::GetObjectSaveData(const int32 Index, FObjectSaveData& OutSaveData) const
 {
 	if (!ObjectSaveDataList.IsValidIndex(Index))
 	{

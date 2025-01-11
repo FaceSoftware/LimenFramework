@@ -665,7 +665,7 @@ void ALimenPlayerCharacter::SprintInput(const FInputActionInstance& Instance)
 	
 	if (Instance.GetValue().Get<bool>())
 	{
-		if (SprintHandlingType == EInputActionHandlingType::Tap)
+		if (SprintHandlingType == EInputActionHandlingType::Hold)
 		{
 			StartSprinting();
 		}

@@ -11,7 +11,7 @@ UENUM(BlueprintType)
 enum class EInputActionHandlingType : uint8
 {
 	NotApplicable,
-	Tap,
+	Hold,
 	Toggle,
 };
 

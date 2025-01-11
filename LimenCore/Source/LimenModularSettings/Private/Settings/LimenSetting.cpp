@@ -114,7 +114,7 @@ bool ULimenSetting::ShouldLoadData() const
 	{
 		return false;
 	}
-	
+
 	return bShouldLoadData;
 }
 

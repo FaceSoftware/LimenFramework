@@ -33,7 +33,7 @@ public:
 	ULimenKeyBind();
 
 	virtual void Serialize(FArchive& Ar) override;
-	void InitializeSetting(const FEnhancedActionKeyMapping& InActionKeyMapping);
+	void InitializeSetting(FEnhancedActionKeyMapping* InActionKeyMapping);
 	
 	/// Readable Interface
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
@@ -64,8 +64,8 @@ private:
 	UPROPERTY(SaveGame)
 	FSaveableEnhancedActionKeyMapping CurrentKeyMapping;
 	FEnhancedActionKeyMapping PreviousKeyMapping;
-	
 	TArray<FEnhancedActionKeyMapping> PossibleValues;
-
 	FEnhancedActionKeyMapping DefaultSelection;
+	
+	FEnhancedActionKeyMapping* ActionKeyMappingPtr;
 };

@@ -149,7 +149,7 @@ void ULimenStorageSubsystem::Load_Internal()
 	for (uint32 i = 0; i < NumberOfItems; ++i)
 	{
 		FObjectSaveData SaveData;
-		CurrentSaveData->GetObjectSaveData(i, SaveData);
+		verify(CurrentSaveData->GetObjectSaveData(i, SaveData));
 
 		// Search the items for the class
 		const TSoftClassPtr<>& ItemClassSoftPtr = SaveData.GetObjectClass();
@@ -158,16 +158,15 @@ void ULimenStorageSubsystem::Load_Internal()
 			continue;
 		}
 		
-		const UClass* ItemClass = ItemClassSoftPtr.LoadSynchronous();		
-		for (ULimenStorageItem* Item : StorageItems)
+		const UClass* ItemClass = ItemClassSoftPtr.LoadSynchronous();
+		ULimenStorageItem* *const Item = StorageItems.FindByPredicate([this, &ItemClass] (const ULimenStorageItem* Test)
 		{
-			check(IsValid(Item));
-			// Load into the specific item
-			if (Item->GetClass() == ItemClass && Item->ShouldLoadData())
-			{
-				SaveData.LoadData(Item);
-				break;
-			}
+			return Test->GetClass() == ItemClass;
+		});
+		
+		if (Item != nullptr && (*Item)->ShouldLoadData())
+		{
+			SaveData.LoadData(*Item);
 		}
 		/// If the items no longer exists don't do anything
 		/// This way there's backwards compatibility between updates
