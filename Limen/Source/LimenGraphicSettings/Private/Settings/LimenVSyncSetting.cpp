@@ -3,7 +3,9 @@
 
 #include "Settings/LimenVSyncSetting.h"
 
+#include "Engine/Engine.h"
 #include "GameFramework/GameUserSettings.h"
+
 
 ULimenVSyncSetting::ULimenVSyncSetting()
 {

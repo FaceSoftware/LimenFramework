@@ -22,4 +22,5 @@ protected:
 	virtual void SetDefaults() override;
 	
 private:
+	TConsoleSetting<float> Setting;
 };

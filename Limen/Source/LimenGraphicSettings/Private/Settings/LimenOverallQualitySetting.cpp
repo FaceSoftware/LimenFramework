@@ -3,7 +3,9 @@
 
 #include "Settings/LimenOverallQualitySetting.h"
 
+#include "Engine/Engine.h"
 #include "GameFramework/GameUserSettings.h"
+
 
 ULimenOverallQualitySetting::ULimenOverallQualitySetting()
 {
@@ -24,8 +26,7 @@ void ULimenOverallQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 void ULimenOverallQualitySetting::SetDefaults()
 {
 	PossibleSelections.Push(High);
-	PossibleSelections.Push(Ultra);
-	PossibleSelections.Push(Cinematic);
+	PossibleSelections.Push(Epic);
 	DefaultSelection = High;
 }
 
@@ -37,10 +38,7 @@ FString ULimenOverallQualitySetting::FormatReflectionSetting(const int32 Method)
 		return High;
 
 	case 3:
-		return Ultra;
-
-	case 4:
-		return Cinematic;
+		return Epic;
 		
 	default:
 		checkNoEntry();
@@ -55,7 +53,7 @@ int32 ULimenOverallQualitySetting::UnFormatReflectionSetting(const FString& Sele
 	{
 		return 2;
 	}
-	if (Selection.Compare(Ultra) == 0)
+	if (Selection.Compare(Epic) == 0)
 	{
 		return 3;
 	}

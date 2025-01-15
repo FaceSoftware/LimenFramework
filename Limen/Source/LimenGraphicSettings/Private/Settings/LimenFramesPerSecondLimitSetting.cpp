@@ -3,6 +3,7 @@
 
 #include "Settings/LimenFramesPerSecondLimitSetting.h"
 
+#include "Engine/Engine.h"
 #include "GameFramework/GameUserSettings.h"
 
 ULimenFramesPerSecondLimitSetting::ULimenFramesPerSecondLimitSetting()

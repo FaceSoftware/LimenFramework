@@ -21,15 +21,10 @@ bool ULimenRayTracingTwoSidedGeometrySetting::CanEdit() const
 
 void ULimenRayTracingTwoSidedGeometrySetting::ApplyCurrentSetting(const bool bUserRequest)
 {
-	const IConsoleManager* ConsoleManager = &IConsoleManager::Get();
-	IConsoleVariable* Variable = ConsoleManager->FindConsoleVariable(TEXT("r.RayTracing.Shadows.EnableTwoSidedGeometry"));
-
-	check(Variable != nullptr);
-
-	Variable->Set(GetCurrentValue(), EConsoleVariableFlags::ECVF_SetByHotfix);
+	Setting.ApplyCVars();
 }
 
 void ULimenRayTracingTwoSidedGeometrySetting::SetDefaults()
 {
-	bDefaultSettingState = false;
+	Setting.AddCVar("r.RayTracing.Shadows.EnableTwoSidedGeometry", false);
 }
