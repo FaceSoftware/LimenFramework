@@ -7,6 +7,8 @@
 #include "BlueprintAsyncActions/LimenRecurrentAction.h"
 
 
+const EConsoleVariableFlags ULimenSetting::ConsoleVariableUserSettingFlag = EConsoleVariableFlags::ECVF_SetByGameOverride;
+
 ULimenSetting::ULimenSetting()
 {
 	DevelopmentName = TEXT("DefaultSettingDevelopmentName");

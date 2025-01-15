@@ -19,6 +19,8 @@ public:
 	virtual bool CanEdit() const override;
 
 protected:
+	TConsoleSetting<bool> Setting;
+	
 	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 	virtual void SetDefaults() override;
 };

@@ -3,6 +3,7 @@
 
 #include "Settings/LimenGlobalIlluminationSetting.h"
 
+#include "Engine/GameInstance.h"
 #include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 
 

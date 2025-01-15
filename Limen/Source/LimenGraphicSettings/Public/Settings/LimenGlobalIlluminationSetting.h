@@ -7,6 +7,11 @@
 #include "LimenGlobalIlluminationSetting.generated.h"
 
 
+namespace EDynamicGlobalIlluminationMethod
+{
+	enum Type : int;
+}
+
 class APostProcessVolume;
 /**
  * 

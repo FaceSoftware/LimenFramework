@@ -6,6 +6,11 @@
 #include "Settings/LimenSelectionSetting.h"
 #include "LimenWindowModeSetting.generated.h"
 
+namespace EWindowMode
+{
+	enum Type : int;
+}
+
 /**
  * 
  */

@@ -15,6 +15,7 @@ ULimenCameraTiltComponent::ULimenCameraTiltComponent()
 	bAutoActivate = true;
 	bUsePawnControlRotation = false;
 
+	TargetFps = 60.f;
 	TiltFunction = ETiltFunction::EaseIn;
 	MaxCameraTilt = 20;
 	CameraTiltRecoverSpeed = 30;
@@ -64,6 +65,17 @@ void ULimenCameraTiltComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	SetRelativeRotation(NewRotation);
 }
 
+#if WITH_EDITORONLY_DATA
+void ULimenCameraTiltComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bStartWithTickEnabled = true;
+	PrimaryComponentTick.TickInterval = 1.f / TargetFps;
+}
+#endif
+
 void ULimenCameraTiltComponent::SetTiltEnabled(const bool bEnabled)
 {
 	bIsTiltEnabled = bEnabled;
@@ -112,5 +124,5 @@ void ULimenCameraTiltComponent::CalculateLinearTilt(const float DeltaTime)
 
 void ULimenCameraTiltComponent::CalculateEaseInTilt(const float DeltaTime)
 {
-	CurrentTilt = FMath::FInterpTo(CurrentTilt, OriginalRelativeRotation.Roll, DeltaTime, CameraTiltRecoverSpeed);
+	CurrentTilt = FMath::FInterpTo(CurrentTilt, 0.f, DeltaTime, CameraTiltRecoverSpeed);
 }

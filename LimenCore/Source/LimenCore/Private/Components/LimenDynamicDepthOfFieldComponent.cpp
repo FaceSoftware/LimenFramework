@@ -44,8 +44,7 @@ void ULimenDynamicDepthOfFieldComponent::BeginPlay()
 		Camera->OnComponentActivated.AddUniqueDynamic(this, &ThisClass::ActiveCameraChanged);
 		if (Camera->IsActive())
 		{
-			ActiveCamera = Camera;
-			CurrentCameraPostProcessSettings = &ActiveCamera->PostProcessSettings;
+			ActiveCameraChanged(Camera, false);
 		}
 	}
 }
@@ -73,6 +72,7 @@ void ULimenDynamicDepthOfFieldComponent::Activate(bool bReset)
 {
 	Super::Activate(bReset);
 
+	
 	if (CurrentCameraPostProcessSettings != nullptr)
 	{
 		CurrentCameraPostProcessSettings->bOverride_DepthOfFieldScale = true;
@@ -116,7 +116,11 @@ void ULimenDynamicDepthOfFieldComponent::ActiveCameraChanged(UActorComponent* Co
 {
 	ActiveCamera = CastChecked<UCameraComponent>(Component);
 	check(OwnerCameras.Contains(ActiveCamera))
+	
 	CurrentCameraPostProcessSettings = &ActiveCamera->PostProcessSettings;
+	CurrentCameraPostProcessSettings->bOverride_DepthOfFieldScale = true;
+	CurrentCameraPostProcessSettings->bOverride_DepthOfFieldFocalDistance = true;
+	ActiveCamera->MarkRenderStateDirty();		
 }
 
 bool ULimenDynamicDepthOfFieldComponent::IsAnyCameraViewTarget() const

@@ -17,9 +17,10 @@ ULimenScreenPercentageSetting::ULimenScreenPercentageSetting()
 void ULimenScreenPercentageSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
-
-	IConsoleVariable* CVarScreenPercentage = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ScreenPercentage"));
-	CVarScreenPercentage->Set(GetCurrentValue(), EConsoleVariableFlags::ECVF_SetByGameOverride);
+	
+	Setting.ResetCVars();
+	Setting.AddCVar("r.ScreenPercentage", GetCurrentValue());
+	Setting.ApplyCVars();
 }
 
 void ULimenScreenPercentageSetting::SetDefaults()
@@ -29,5 +30,5 @@ void ULimenScreenPercentageSetting::SetDefaults()
 	ValueRange.Reserve(2);
 	ValueRange.Push(50.f);
 	ValueRange.Push(100.f);
-	DefaultSettingValue = 100.f;
+	DefaultSettingValue = 90.f;
 }
