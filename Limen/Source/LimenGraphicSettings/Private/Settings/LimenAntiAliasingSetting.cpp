@@ -69,5 +69,5 @@ void ULimenAntiAliasingSetting::SetDefaults()
 	PossibleSelections.Push(TAA);
 	PossibleSelections.Push(TSR);
 
-	DefaultSelection = FXAA;
+	DefaultSelection = TAA;
 }
