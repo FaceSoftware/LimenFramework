@@ -7,6 +7,8 @@
 #include "BlueprintAsyncActions/LimenRecurrentAction.h"
 
 
+const EConsoleVariableFlags ULimenSetting::ConsoleVariableUserSettingFlag = EConsoleVariableFlags::ECVF_SetByGameOverride;
+
 ULimenSetting::ULimenSetting()
 {
 	DevelopmentName = TEXT("DefaultSettingDevelopmentName");
@@ -15,6 +17,7 @@ ULimenSetting::ULimenSetting()
 	Description = FText::FromString(TEXT("Override this in a child class of ULimenSetting"));
 	bUseRecurrentAction = false;
 	bHasInitialized = false;
+	bShouldLoadData = false;
 }
 
 const FText& ULimenSetting::GetDescription() const
@@ -47,6 +50,7 @@ void ULimenSetting::InitializeSetting()
 	SetDefaultValue();
 	ApplySetting();
 	bHasInitialized = true;
+	bShouldLoadData = true;
 	LIMEN_LOG(LogLimen, Log, this, "Initialized setting %s", *GetDevelopmentName().ToString());
 }
 
@@ -102,7 +106,18 @@ void ULimenSetting::ApplyCurrentSetting(const bool bUserRequest)
 
 void ULimenSetting::DataLoaded()
 {
+	bShouldLoadData = false;
 	ApplyCurrentSetting();
+}
+
+bool ULimenSetting::ShouldLoadData() const
+{
+	if (!Super::ShouldLoadData())
+	{
+		return false;
+	}
+
+	return bShouldLoadData;
 }
 
 void ULimenSetting::DestroyRecurrentActionObject()

@@ -3,7 +3,9 @@
 
 #include "Settings/LimenWindowModeSetting.h"
 
+#include "Engine/Engine.h"
 #include "GameFramework/GameUserSettings.h"
+
 
 ULimenWindowModeSetting::ULimenWindowModeSetting()
 {

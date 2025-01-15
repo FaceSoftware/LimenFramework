@@ -27,6 +27,15 @@ ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConsentModal(const FModa
 	return ModalWidget;
 }
 
+ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayTimedModal(const FModalParams& InParams) const
+{
+	const ULimenModalsDeveloperSettings* Settings = GetDefault<ULimenModalsDeveloperSettings>();
+	check(Settings != nullptr);
+	
+	ULimenGenericModalWidget* ModalWidget = DisplayModalInternal(Settings->TimedModalClass.LoadSynchronous(), InParams);
+	return ModalWidget;
+}
+
 ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayModalInternal(const TSubclassOf<ULimenGenericModalWidget>& ModalClass, const FModalParams& InParams) const
 {
 	ULimenGenericModalWidget* ModalWidgetInstance = CreateWidget<ULimenGenericModalWidget>(GetWorld(), ModalClass);

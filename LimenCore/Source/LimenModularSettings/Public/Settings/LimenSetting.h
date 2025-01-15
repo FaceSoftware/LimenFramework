@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "LimenStorageItem.h"
+#include "HAL/IConsoleManager.h"
 #include "LimenSetting.generated.h"
+
 
 class ULimenModularSettingsSubsystem;
 class ULimenRecurrentAction;
@@ -21,6 +23,8 @@ class LIMENMODULARSETTINGS_API ULimenSetting : public ULimenStorageItem
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingUpdated, const ULimenSetting*, UpdatedSetting);
 
 public:
+	static const EConsoleVariableFlags ConsoleVariableUserSettingFlag; 
+	
 	UPROPERTY(BlueprintAssignable)
 	FSettingUpdated OnSettingUpdated;
 	UPROPERTY(BlueprintAssignable)
@@ -85,6 +89,7 @@ protected:
 	virtual void ApplyCurrentSetting(bool bUserRequest = false);
 	
 	virtual void DataLoaded() override;
+	virtual bool ShouldLoadData() const override;
 	
 	UPROPERTY(EditAnywhere, Category="Limen")
 	FText Description;
@@ -99,6 +104,8 @@ private:
 	TObjectPtr<ULimenRecurrentAction> RecurrentActionObject;
 
 	bool bHasInitialized;
+
+	bool bShouldLoadData;
 
 	void DestroyRecurrentActionObject();
 };
@@ -188,4 +195,38 @@ public:
 	virtual SettingType GetCurrentValue() const = 0;
 
 	virtual SettingType GetPreviousValue() const = 0;
+};
+
+template<typename SettingValue>
+struct TConsoleSetting
+{
+	TConsoleSetting() = default;
+	explicit TConsoleSetting(const FString& InName) : Name(InName) {}
+	FString GetName() const { return Name; }
+	void SetName(const FString& InName) { Name = InName; }
+	void AddCVar(const FString& CVarName, const SettingValue CVarValue)
+	{
+		CVars.Add(CVarName, CVarValue);
+	}
+	void ApplyCVars()
+	{
+		if (CVars.IsEmpty()) return;
+		for (auto& Variable : CVars)
+		{
+			FString& VarName = Variable.Key;
+			SettingValue& VarValue = Variable.Value;
+
+			IConsoleVariable* Var = IConsoleManager::Get().FindConsoleVariable(*VarName);
+			check(Var != nullptr);
+			Var->Set(VarValue, ULimenSetting::ConsoleVariableUserSettingFlag);
+		}
+	}
+	void ResetCVars()
+	{
+		CVars.Empty();
+	}
+
+private:
+	FString Name;
+	TMap<FString, SettingValue> CVars;
 };

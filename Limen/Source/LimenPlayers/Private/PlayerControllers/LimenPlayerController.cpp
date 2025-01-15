@@ -4,12 +4,14 @@
 #include "PlayerControllers/LimenPlayerController.h"
 
 #include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
 #include "Attributes/LimenHealthAttribute.h"
 #include "Characters/LimenPlayerCharacter.h"
 #include "Components/LimenAbilityComponent.h"
 #include "Engine/GameInstance.h"
 #include "HUDs/LimenHUD.h"
+#include "Subsystems/LimenKeyBindSubsystem.h"
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
 #include "Widgets/LimenDeathScreen.h"
 #include "Widgets/LimenGameMenuWrapperWidget.h"
@@ -29,8 +31,20 @@ void ALimenPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
+	const ULocalPlayer* LocalPlayer = Cast<ULocalPlayer>(Player);
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	if (ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>(); KeyBindSubsystem != nullptr)
+	{
+		if (const UInputMappingContext* PlayerMappings = KeyBindSubsystem->GetPlayerInputMappingContext(this);
+			PlayerMappings != nullptr)
+		{
+			InputSystem->AddMappingContext(PlayerMappings, 1);
+		}
+		
+		KeyBindSubsystem->OnKeyBindUpdate.AddUObject(this, &ALimenPlayerController::InputBindUpdated);
+	}
+
 	auto* EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent.Get());
-	EnhancedInput->BindAction(GameMenuInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::GameMenuInput);
 	EnhancedInput->BindAction(PauseMenuInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::PauseInput);
 }
 
@@ -68,21 +82,10 @@ void ALimenPlayerController::HandleItemActionRequest(ULimenItemAction* ActionReq
 	GetLimenCharacter()->HandleItemActionRequests(ActionRequested);
 }
 
-void ALimenPlayerController::GameMenuInput(const FInputActionInstance& Instance)
-{	
-	if (Instance.GetValue().Get<bool>())
-	{
-		check(LimenHUD.IsValid())
-
-		if (LimenHUD->IsCharacterHudShowing())
-		{
-			LimenHUD->ToggleGameMenuWidget();
-		}
-		else // Is not seeing the hud, probably inside a menu
-		{
-			LimenHUD->HideActiveWidget();
-		}
-	}
+void ALimenPlayerController::InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping)
+{
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	InputSystem->RequestRebuildControlMappings();
 }
 
 void ALimenPlayerController::PauseInput(const FInputActionInstance& Instance)

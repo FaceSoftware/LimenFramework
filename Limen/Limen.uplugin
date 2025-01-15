@@ -87,6 +87,11 @@
 			"Name": "LimenGameSaves",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenKeyBindSettings",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	]
 }

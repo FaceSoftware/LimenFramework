@@ -3,7 +3,10 @@
 
 #include "SaveGames/LimenSaveData.h"
 
+#include "GameFramework/Actor.h"
 #include "Interfaces/LimenSaveObjectInterface.h"
+#include "Serialization/MemoryReader.h"
+#include "Serialization/MemoryWriter.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 
 
@@ -151,7 +154,7 @@ uint32 ULimenSaveData::GetActorSaveDataCount() const
 	return ActorSaveDataList.Num();
 }
 
-bool ULimenSaveData::GetObjectSaveData(const int Index, FObjectSaveData& OutSaveData) const
+bool ULimenSaveData::GetObjectSaveData(const int32 Index, FObjectSaveData& OutSaveData) const
 {
 	if (!ObjectSaveDataList.IsValidIndex(Index))
 	{

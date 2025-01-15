@@ -3,13 +3,13 @@
 
 #include "Settings/LimenAntiAliasingSetting.h"
 
+#include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 
 
 const FString ULimenAntiAliasingSetting::NONE		= TEXT("Disabled");
 const FString ULimenAntiAliasingSetting::FXAA		= TEXT("Fast Aproximate Anti-Aliasing (FXAA)");
 const FString ULimenAntiAliasingSetting::TAA		= TEXT("Temporal Anti-Aliasing (TAA)");
-const FString ULimenAntiAliasingSetting::MSAA		= TEXT("Multisample Anti-Aliasing (MSAA)");
 const FString ULimenAntiAliasingSetting::TSR		= TEXT("Temporal Super Resolution (TSR)");
 
 ULimenAntiAliasingSetting::ULimenAntiAliasingSetting()
@@ -24,83 +24,50 @@ void ULimenAntiAliasingSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
-	IConsoleVariable* AntiAliasingAConsoleVariable = IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod"));
-	check(AntiAliasingAConsoleVariable != nullptr);
-	AntiAliasingAConsoleVariable->Set(UnFormatAntiAliasingMode(GetCurrentValue()), EConsoleVariableFlags::ECVF_SetByGameOverride);
+	const FString CurrentSetting = GetCurrentValue();
+	TConsoleSetting<int32>* SettingDescription = SettingsDescription.FindByPredicate(
+	[this, &CurrentSetting] (const TConsoleSetting<int32>& Test)
+	{
+		return Test.GetName() == CurrentSetting;
+	});
+	check(SettingDescription != nullptr)
+	SettingDescription->ApplyCVars();
 }
 
 void ULimenAntiAliasingSetting::SetDefaults()
 {
 	Super::SetDefaults();
 
-	PossibleSelections.Reserve(5);
+	TConsoleSetting<int32> NONESetting(NONE);
+	NONESetting.AddCVar("r.AntiAliasingMethod", 0);
+	SettingsDescription.Push(NONESetting);
+	
+	TConsoleSetting<int32> FXAASetting(FXAA);
+	FXAASetting.AddCVar("r.AntiAliasingMethod", 1);
+	FXAASetting.AddCVar("r.FXAA.Quality", 5);
+	SettingsDescription.Push(FXAASetting);
+	
+	TConsoleSetting<int32> TAASetting(TAA);
+	TAASetting.AddCVar("r.AntiAliasingMethod", 2);
+	TAASetting.AddCVar("r.TemporalAA.Quality", 2);
+	SettingsDescription.Push(TAASetting);
+	
+	TConsoleSetting<int32> TSRSetting(TSR);
+	TSRSetting.AddCVar("r.AntiAliasingMethod", 4);
+	TSRSetting.AddCVar("r.TemporalAA.Quality", 2);
+	TSRSetting.AddCVar("r.TSR.History.R11G11B10", 1);
+	TSRSetting.AddCVar("r.TSR.History.ScreenPercentage", 100);
+	TSRSetting.AddCVar("r.TSR.History.UpdateQuality", 2);
+	TSRSetting.AddCVar("r.TSR.ShadingRejection.Flickering", 1);
+	TSRSetting.AddCVar("r.TSR.RejectionAntiAliasingQuality", 1);
+	TSRSetting.AddCVar("r.TSR.Resurrection", 1);
+	SettingsDescription.Push(TSRSetting);
+
+	PossibleSelections.Reserve(7);
 	PossibleSelections.Push(NONE);
 	PossibleSelections.Push(FXAA);
 	PossibleSelections.Push(TAA);
-	PossibleSelections.Push(MSAA);
 	PossibleSelections.Push(TSR);
 
-	DefaultSelection = NONE;
-	
-	// IConsoleVariable* FXAAQuality = IConsoleManager::Get().FindConsoleVariable(TEXT("r.FXAA.Quality"));
-	// check(FXAAQuality != nullptr);
-	// FXAAQuality->Set(4, EConsoleVariableFlags::ECVF_SetByGameOverride);
-	
-	// IConsoleVariable* MSAAQuality = IConsoleManager::Get().FindConsoleVariable(TEXT("r.MSAA.Quality"));
-	// check(MSAAQuality != nullptr);
-	// FXAAQuality->Set(4, EConsoleVariableFlags::ECVF_SetByGameOverride);
-}
-
-uint8 ULimenAntiAliasingSetting::UnFormatAntiAliasingMode(const FString& Mode) const
-{
-	if (Mode.Compare(NONE) == 0)
-	{
-		return 0;
-	}
-	if (Mode.Compare(FXAA) == 0)
-	{
-		return 1;
-	}
-	if (Mode.Compare(TAA) == 0)
-	{
-		return 2;
-	}
-	if (Mode.Compare(MSAA) == 0)
-	{
-		return 3;
-	}
-	if (Mode.Compare(TSR) == 0)
-	{
-		return 4;
-	}
-
-	checkNoEntry();
-	return {};
-}
-
-FString ULimenAntiAliasingSetting::FormatAntiAliasingMode(const uint8 Mode) const
-{
-	switch (Mode)
-	{
-	case 0:
-		return NONE;
-		
-	case 1:
-		return FXAA;
-
-	case 2:
-		return TAA;
-		
-	case 3:
-		return MSAA;
-		
-	case 4:
-		return TSR;
-		
-	default:
-		break;
-	}
-
-	checkNoEntry();
-	return {};
+	DefaultSelection = TAA;
 }

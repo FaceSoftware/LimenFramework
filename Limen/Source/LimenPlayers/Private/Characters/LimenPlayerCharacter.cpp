@@ -4,12 +4,15 @@
 #include "Characters/LimenPlayerCharacter.h"
 
 #include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+#include "Abilities/LimenVariableMovementAbility.h"
 #include "Actors/LimenTool.h"
 #include "Actors/LimenWeapon.h"
 #include "Items/LimenItemBase.h"
 #include "Archives/LimenArchive.h"
-#include "Attributes/LimenHealthAttribute.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/LimenAbilityComponent.h"
 #include "Components/LimenArchiveComponent.h"
 #include "Components/LimenCameraTiltComponent.h"
 #include "Components/LimenObjectiveComponent.h"
@@ -24,9 +27,14 @@
 #include "PlayerStates/LimenPlayerState.h"
 #include "Components/LimenCreditsComponent.h"
 #include "Components/LimenDynamicDepthOfFieldComponent.h"
-#include "Components/LimenCameraShakeComponent.h"
 #include "Components/Interactable/LimenInteractableAreaComponent.h"
+#include "Engine/GameInstance.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "HUDs/LimenHUD.h"
 #include "Interfaces/LimenUpgradable.h"
+#include "MappableKeySettings/LimenPlayerMappableKeySettings.h"
+#include "Subsystems/LimenKeyBindSubsystem.h"
 
 
 const FName ALimenPlayerCharacter::InventoryComponentName = TEXT("InventoryComponent");
@@ -73,21 +81,15 @@ void ALimenPlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	VariableMovementAbility = GetAbilityComponent()->GetAbility<ULimenVariableMovementAbility>();
+	LimenPlayerControllerPtr = Cast<ALimenPlayerController>(GetController());
+	LimenPlayerStatePtr = Cast<ALimenPlayerState>(GetPlayerState());
+
 	CharacterInventory->OnItemAdded.AddUniqueDynamic(this, &ThisClass::ItemAdded);
 	CharacterInventory->OnItemFailedToAdd.AddUniqueDynamic(this, &ThisClass::ItemCouldNotBeAdded);
 	CharacterInventory->OnItemUpdated.AddUniqueDynamic(this, &ThisClass::ItemUpdated);
 	CharacterObjectives->OnNewObjectiveAdded.AddUniqueDynamic(this, &ThisClass::ObjectivesUpdated);
 	
-	if (GetController() && GetController()->GetClass()->IsChildOf(APlayerController::StaticClass()))
-	{
-		LimenPlayerControllerPtr = Cast<ALimenPlayerController>(GetController());
-	}
-	
-	if (GetPlayerState() && GetPlayerState()->GetClass()->IsChildOf(ALimenPlayerState::StaticClass()))
-	{
-		LimenPlayerStatePtr = Cast<ALimenPlayerState>(GetPlayerState());
-	}
-
 	WeaponHold->OnItemChanged.AddUniqueDynamic(this, &ThisClass::WeaponChanged);
 	WeaponHold->OnItemChanged.AddUniqueDynamic(this, &ThisClass::OnWeaponChanged);
 	ToolHold->OnItemChanged.AddUniqueDynamic(this, &ThisClass::ToolChanged);
@@ -102,7 +104,33 @@ void ALimenPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetPlayerController()->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+	ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
+	if (InputSystem != nullptr && KeyBindSubsystem != nullptr)
+	{
+		if (const UInputMappingContext* PlayerMappings = KeyBindSubsystem->GetPawnInputMappingContext(this);
+			PlayerMappings != nullptr)
+		{
+			InputSystem->AddMappingContext(PlayerMappings, 1);
+			for (auto& Mapping : PlayerMappings->GetMappings())
+			{
+				InputBindUpdated(Mapping);
+			}
+			
+			KeyBindSubsystem->OnKeyBindUpdate.AddUObject(this, &ThisClass::InputBindUpdated);
+		}
+	}
+	
 	auto* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	EnhancedInput->BindAction(MoveForwardInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::MoveForwardInput);
+	EnhancedInput->BindAction(MoveLeftInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::MoveLeftInput);
+	EnhancedInput->BindAction(MoveBackwardsInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::MoveBackwardsInput);
+	EnhancedInput->BindAction(MoveRightInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::MoveRightInput);
+	EnhancedInput->BindAction(LookInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::LookInput);
+	EnhancedInput->BindAction(SprintInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::SprintInput);
+	EnhancedInput->BindAction(JumpInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::JumpInput);
+	EnhancedInput->BindAction(CrouchInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::CrouchInput);
+	EnhancedInput->BindAction(GameMenuInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ThisClass::GameMenuInput);
 	EnhancedInput->BindAction(InteractInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ALimenPlayerCharacter::InteractInput);
 	EnhancedInput->BindAction(FireInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ALimenPlayerCharacter::FireInput);
 	EnhancedInput->BindAction(ReloadInputAction.LoadSynchronous(), ETriggerEvent::Triggered, this, &ALimenPlayerCharacter::ReloadInput);
@@ -341,6 +369,94 @@ void ALimenPlayerCharacter::SetActorHiddenInGame(const bool bNewHidden)
 	}
 }
 
+const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetMoveForwardInputAction() const
+{
+	return MoveForwardInputAction;
+}
+
+const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetMoveLeftInputAction() const
+{
+	return MoveLeftInputAction;
+}
+
+const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetMoveBackwardsInputAction() const
+{
+	return MoveBackwardsInputAction;
+}
+
+const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetMoveRightInputAction() const
+{
+	return MoveRightInputAction;
+}
+
+const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetLookInputAction() const
+{
+	return LookInputAction;
+}
+
+const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetSprintInputAction() const
+{
+	return SprintInputAction;
+}
+
+const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetJumpInputAction() const
+{
+	return JumpInputAction;
+}
+
+const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetCrouchInputAction() const
+{
+	return CrouchInputAction;
+}
+
+void ALimenPlayerCharacter::InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping)
+{
+	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetPlayerController()->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
+
+	FModifyContextOptions ContextOptions;
+	ContextOptions.bForceImmediately = false;
+	ContextOptions.bNotifyUserSettings = false;
+	ContextOptions.bIgnoreAllPressedKeysUntilRelease = false;
+
+	InputSystem->RequestRebuildControlMappings(ContextOptions, EInputMappingRebuildType::RebuildWithFlush);
+
+	const auto* Settings = Cast<ULimenPlayerMappableKeySettings>(ActionKeyMapping.GetPlayerMappableKeySettings());
+	if (Settings == nullptr)
+	{
+		return;
+	}
+	
+	if (ActionKeyMapping.Action == SprintInputAction)
+	{
+		SprintHandlingType = Settings->InputHandlingType;
+	}
+	else if (ActionKeyMapping.Action == CrouchInputAction)
+	{
+		CrouchHandlingType = Settings->InputHandlingType;
+	}
+}
+
+void ALimenPlayerCharacter::GameMenuInput(const FInputActionInstance& Instance)
+{
+	ALimenHUD* Hud = GetPlayerController()->GetHUD<ALimenHUD>();
+	if (Hud == nullptr)
+	{
+		return;
+	}
+	
+	if (Instance.GetValue().Get<bool>())
+	{
+		if (Hud->IsCharacterHudShowing())
+		{
+			Hud->ToggleGameMenuWidget();
+		}
+		else // Is not seeing the hud, probably inside a menu
+		{
+			Hud->HideActiveWidget();
+		}
+	}
+}
+
 void ALimenPlayerCharacter::InteractInput(const FInputActionInstance& Instance)
 {
 	if (Instance.GetValue().Get<bool>())
@@ -507,6 +623,105 @@ void ALimenPlayerCharacter::CycleWeaponsInput(const FInputActionInstance& Instan
 	}
 }
 
+inline void ALimenPlayerCharacter::MoveForwardInput(const FInputActionInstance& Instance)
+{
+	OnMovementInput.Broadcast();
+	const auto Input = Instance.GetValue().Get<float>();
+	if (!FMath::IsNearlyZero(Input))
+	{
+		AddMovementInput(GetActorForwardVector(), Input);
+	}
+}
+
+inline void ALimenPlayerCharacter::MoveLeftInput(const FInputActionInstance& Instance)
+{
+	OnMovementInput.Broadcast();
+	const auto Input = Instance.GetValue().Get<float>();
+	if (!FMath::IsNearlyZero(Input))
+	{
+		AddMovementInput(GetActorRightVector(), -Input);
+	}
+}
+
+inline void ALimenPlayerCharacter::MoveBackwardsInput(const FInputActionInstance& Instance)
+{
+	OnMovementInput.Broadcast();
+	const auto Input = Instance.GetValue().Get<float>();
+	if (!FMath::IsNearlyZero(Input))
+	{
+		AddMovementInput(GetActorForwardVector(), -Input);
+	}
+}
+
+inline void ALimenPlayerCharacter::MoveRightInput(const FInputActionInstance& Instance)
+{
+	OnMovementInput.Broadcast();
+	const auto Input = Instance.GetValue().Get<float>();
+	if (!FMath::IsNearlyZero(Input))
+	{
+		AddMovementInput(GetActorRightVector(), Input);
+	}
+}
+
+void ALimenPlayerCharacter::LookInput(const FInputActionInstance& Instance)
+{
+	const auto Input = Instance.GetValue().Get<FVector2D>();
+	AddControllerYawInput((MouseParameters.bInvertAxisX ? -Input.X : Input.X) * MouseParameters.SensitivityX);
+	AddControllerPitchInput((MouseParameters.bInvertAxisY ? Input.Y : -Input.Y) * MouseParameters.SensitivityY);
+}
+
+void ALimenPlayerCharacter::SprintInput(const FInputActionInstance& Instance)
+{
+	bool bValue = Instance.GetValue().Get<bool>();
+
+	switch (SprintHandlingType)
+	{
+	case EInputActionHandlingType::Hold:
+		bValue ? StartSprinting() : StopSprinting();
+		break;
+		
+	case EInputActionHandlingType::Toggle:
+		if (bValue) VariableMovementAbility->IsActive() ? StopSprinting() : StartSprinting();
+		break;
+
+	default:
+		break;
+	}
+	
+	OnSprintInput.Broadcast();
+}
+
+void ALimenPlayerCharacter::JumpInput(const FInputActionInstance& Instance)
+{
+	if (Instance.GetValue().Get<bool>())
+	{
+		Jump();
+	}
+	else
+	{
+		StopJumping();
+	}
+}
+
+void ALimenPlayerCharacter::CrouchInput(const FInputActionInstance& Instance)
+{
+	bool bValue = Instance.GetValue().Get<bool>();
+
+	switch (CrouchHandlingType)
+	{
+	case EInputActionHandlingType::Hold:
+		bValue ? Crouch() : UnCrouch();
+		break;
+		
+	case EInputActionHandlingType::Toggle:
+		if (bValue) GetCharacterMovement()->bWantsToCrouch ? UnCrouch() : Crouch();
+		break;
+
+	default:
+		break;
+	}
+}
+
 void ALimenPlayerCharacter::OnInteract(AActor* InteractableActor, const TScriptInterface<ILimenInteractableComponent>& InteractableComponent)
 {
 	if (InteractableComponent.GetObject() == nullptr || InteractableActor == nullptr)
@@ -632,4 +847,44 @@ void ALimenPlayerCharacter::StopAimingDownSights()
 	bIsAimingDownSights = false;
 
 	OnStopAimingDownSights(GetCurrentWeapon());
+}
+
+void ALimenPlayerCharacter::StartSprinting()
+{
+	if (VariableMovementAbility == nullptr)
+	{
+		return;
+	}
+
+	if (VariableMovementAbility->CanActivateAbility())
+	{
+		VariableMovementAbility->ActivateAbility(GetController(), this);
+	}
+}
+
+void ALimenPlayerCharacter::StopSprinting()
+{
+	if (VariableMovementAbility == nullptr)
+	{
+		return;
+	}
+	
+	VariableMovementAbility->CancelAbility(GetController(), this);
+}
+
+void ALimenPlayerCharacter::ToggleSprint()
+{
+	if (VariableMovementAbility == nullptr)
+	{
+		return;
+	}
+	
+	if (VariableMovementAbility->IsActive())
+	{
+		StartSprinting();
+	}
+	else
+	{
+		StopSprinting();
+	}
 }

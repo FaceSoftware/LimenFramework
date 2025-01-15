@@ -38,32 +38,15 @@ class LIMENGAMEFRAMEWORK_API ALimenCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
-public:
-	FInputDelegate OnMovementInput;
-	FInputDelegate OnSprintInput;
-	
+public:	
 	explicit ALimenCharacterBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
-	virtual void BeginPlay() override;
 
 	virtual void EnableInput(APlayerController* InPlayerController) override;
 	virtual void DisableInput(APlayerController* InPlayerController) override;
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Limen|Notifications")
 	virtual bool QueueNotification(const FNotificationParams& InParams);
-
-	/**
-	 * @brief The player will start sprinting if it can sprint.
-	 */
-	void StartSprinting();
-	/**
-	 * @brief The player will stop sprinting.
-	 */
-	void StopSprinting();
-	/**
-	 * @brief Toggles between StartSprinting or StopSprinting.
-	 */
-	void ToggleSprint();
+	
 	/**
 	 * @brief Getter for the player controller associated with this character.
 	 * @return The player controller associated with this character.
@@ -78,25 +61,11 @@ public:
 
 	APlayerController* GetPlayerController() const;
 
-	const TSoftObjectPtr<UInputAction>& GetMoveInputAction() const;
-	const TSoftObjectPtr<UInputAction>& GetLookInputAction() const;
-	const TSoftObjectPtr<UInputAction>& GetSprintInputAction() const;
-
 	UFUNCTION(BlueprintCallable)
 	FVector GetLookTarget(const float MaxDistance) const;
 	
 	
-protected:
-	// FVector 2D -> X axis = Move Forward/backwards, Y axis = Move Right/Left
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
-	TSoftObjectPtr<UInputAction> MoveInputAction;
-	// FVector 2D -> X axis = Look Up/Down, Y axis = Rotate Right/Left
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
-	TSoftObjectPtr<UInputAction> LookInputAction;
-	// bool -> true = Start, false = Un-crouch
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Input Actions")
-	TSoftObjectPtr<UInputAction> SprintInputAction;
-		
+protected:		
 	UPROPERTY(EditAnywhere, Category="Limen|Input")
 	FMouseParameters MouseParameters;
 	
@@ -105,18 +74,12 @@ protected:
 	
 	UFUNCTION()
 	virtual void OnHealthAttributeEmpty(const float NewValue);
-	
-	virtual void MoveInput(const FInputActionInstance& Instance);
-	virtual void LookInput(const FInputActionInstance& Instance);
-	virtual void SprintInput(const FInputActionInstance& Instance);
 
 	virtual void PossessedBy(AController* NewController) override;
 
 	ALimenPlayerStateBase* GetLimenBasePlayerState() const;
 	
 private:
-	UPROPERTY()
-	TWeakObjectPtr<ULimenVariableMovementAbility> VariableMovementAbility;
 	UPROPERTY()
 	TWeakObjectPtr<ALimenPlayerControllerBase> LimenBasePlayerController;
 	UPROPERTY()

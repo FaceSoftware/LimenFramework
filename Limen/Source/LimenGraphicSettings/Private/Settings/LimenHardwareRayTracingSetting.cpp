@@ -32,43 +32,27 @@ void ULimenHardwareRayTracingSetting::ApplyCurrentSetting(const bool bUserReques
 {
 	Super::ApplyCurrentSetting();
 
-	const bool HardwareRaytracingEnabled = UnFormatHardwareRayTracingSetting(GetCurrentValue());
-
-	IConsoleVariable* LumenHardwareRayTracingVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Lumen.HardwareRayTracing"));
-	LumenHardwareRayTracingVar->Set(HardwareRaytracingEnabled, EConsoleVariableFlags::ECVF_SetByGameOverride);
-
-	IConsoleVariable* RayTracedShadowsVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.RayTracing.Shadows"));
-	RayTracedShadowsVar->Set(HardwareRaytracingEnabled, EConsoleVariableFlags::ECVF_SetByGameOverride);
+	SettingsDescription.FindByPredicate(
+	[this](const TConsoleSetting<bool>& Test)
+	{
+		return Test.GetName() == GetCurrentValue();
+	}
+	)->ApplyCVars();
 }
 
 void ULimenHardwareRayTracingSetting::SetDefaults()
 {
+	TConsoleSetting<bool> HRT(Hardware);
+	HRT.AddCVar("r.Lumen.HardwareRayTracing", true);
+	HRT.AddCVar("r.RayTracing.Shadows", true);
+	SettingsDescription.Push(HRT);
+	
+	TConsoleSetting<bool> SRT(Software);
+	SRT.AddCVar("r.Lumen.HardwareRayTracing", false);
+	SRT.AddCVar("r.RayTracing.Shadows", false);
+	SettingsDescription.Push(SRT);
+	
 	PossibleSelections.Push(Hardware);
 	PossibleSelections.Push(Software);
-	DefaultSelection = FormatHardwareRayTracingSetting(GRHIGlobals.RayTracing.Supported);
-}
-
-FString ULimenHardwareRayTracingSetting::FormatHardwareRayTracingSetting(const bool bEnabled)
-{
-	if (bEnabled)
-	{
-		return Hardware;
-	}
-	
-	return Software;
-}
-
-bool ULimenHardwareRayTracingSetting::UnFormatHardwareRayTracingSetting(const FString& Selection)
-{
-	if (Selection.Compare(Hardware) == 0)
-	{
-		return true;
-	}
-	if (Selection.Compare(Software) == 0)
-	{
-		return false;
-	}
-
-	checkNoEntry();
-	return false;
+	DefaultSelection = GRHIGlobals.RayTracing.Supported ? Hardware : Software;
 }

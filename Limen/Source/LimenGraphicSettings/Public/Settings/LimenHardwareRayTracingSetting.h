@@ -23,9 +23,7 @@ protected:
 	virtual void SetDefaults() override;
 
 private:
-	static FString FormatHardwareRayTracingSetting(const bool bEnabled);
-	static bool UnFormatHardwareRayTracingSetting(const FString& Selection);
-
+	TArray<TConsoleSetting<bool>> SettingsDescription;
 	static const FString Software;
 	static const FString Hardware;
 };

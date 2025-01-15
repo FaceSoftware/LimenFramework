@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequence.h"
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Components/ActorComponent.h"
 #include "UObject/StrongObjectPtr.h"
@@ -11,7 +12,6 @@
 
 class ULevelSequencePlayer;
 class ALevelSequenceActor;
-class ULevelSequence;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENCINEMATICS_API ULimenDynamicLevelSequenceComponent : public UActorComponent

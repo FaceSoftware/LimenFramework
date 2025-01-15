@@ -19,7 +19,6 @@ public:
 	static const FString NONE;
 	static const FString FXAA;
 	static const FString TAA;
-	static const FString MSAA;
 	static const FString TSR;
 	
 	ULimenAntiAliasingSetting();
@@ -29,6 +28,5 @@ protected:
 	virtual void SetDefaults() override;
 	
 private:
-	uint8 UnFormatAntiAliasingMode(const FString& Mode) const;
-	FString FormatAntiAliasingMode(const uint8 Mode) const;
+	TArray<TConsoleSetting<int32>> SettingsDescription;
 };

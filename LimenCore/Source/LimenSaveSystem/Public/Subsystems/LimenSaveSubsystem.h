@@ -60,3 +60,17 @@ private:
 	
 	
 };
+
+class FLimenSerialization
+{
+public:
+	static FName BoolToName(const bool bValue)
+	{
+		return bValue ? TEXT("1") : TEXT("0");
+	}
+	static bool NameToBool(const FName& bValue)
+	{
+		return bValue.ToString().ToBool();
+	}
+	
+};

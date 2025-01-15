@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CollisionQueryParams.h"
 #include "Components/ActorComponent.h"
 #include "LimenDynamicDepthOfFieldComponent.generated.h"
 
@@ -37,7 +38,7 @@ protected:
 	float GetLookAtDistance() const;
 
 private:
-	static constexpr float MaxFocalDistance = 64000.f;
+	static constexpr float MaxFocalDistance = 100000.f;
 	
 	TArray<UCameraComponent*> OwnerCameras;
 	TWeakObjectPtr<UCameraComponent> ActiveCamera;
