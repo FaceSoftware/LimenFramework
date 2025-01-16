@@ -54,7 +54,11 @@ void ULimenSubtitlesSubsystem::AddSubtitle(const UDataTable* InSubtitleData)
 void ULimenSubtitlesSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 {
 	Super::OnWorldBeginPlay(InWorld);
-	
-	SubtitleDisplayWidget = CreateWidget<ULimenSubtitleDisplay>(&InWorld, SubtitleDisplayWidgetClass.LoadSynchronous());
-	SubtitleDisplayWidget->ShowWidget();
+
+	if (!SubtitleDisplayWidgetClass.IsNull())
+	{
+		SubtitleDisplayWidget = CreateWidget<ULimenSubtitleDisplay>(&InWorld, SubtitleDisplayWidgetClass.LoadSynchronous());
+		check(SubtitleDisplayWidget != nullptr)
+		SubtitleDisplayWidget->ShowWidget();
+	}
 }
