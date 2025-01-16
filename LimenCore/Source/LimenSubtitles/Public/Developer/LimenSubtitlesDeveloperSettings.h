@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
 #include "Templates/SubclassOf.h"
+#include "UMG/LimenSubtitle.h"
+#include "UMG/LimenSubtitleDisplay.h"
 #include "LimenSubtitlesDeveloperSettings.generated.h"
 
 class ULimenSubtitleDisplay;
@@ -19,9 +21,9 @@ class LIMENSUBTITLES_API ULimenSubtitlesDeveloperSettings : public UDeveloperSet
 
 public:
 	UPROPERTY(EditAnywhere, Config)
-	TSubclassOf<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass;
+	TSubclassOf<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass = ULimenSubtitleDisplay::StaticClass();
 	UPROPERTY(EditAnywhere, Config)
-	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass;
+	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass = ULimenSubtitle::StaticClass();
 	
 	ULimenSubtitlesDeveloperSettings()
 	{
