@@ -16,7 +16,7 @@ class ULimenWidget;
 /**
  * 
  */
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Blueprintable)
 class LIMENGAMEFRAMEWORK_API ALimenBaseHUD : public AHUD
 {
 	GENERATED_BODY()

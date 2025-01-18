@@ -24,6 +24,11 @@
 			"Name": "GameplayCameras",
 			"Enabled": true,
 			"Optional": false
+		},
+		{
+			"Name": "EngineCameras",
+			"Enabled": true,
+			"Optional": false
 		}
 	],
 	"Modules": [
