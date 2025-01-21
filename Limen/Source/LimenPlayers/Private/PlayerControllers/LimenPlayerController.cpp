@@ -58,7 +58,7 @@ void ALimenPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 	
 	if (const ULimenLevelTransitionSubsystem* LevelTransitionSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>();
-		!LevelTransitionSubsystem->IsLoadingScreenActive())
+		LevelTransitionSubsystem != nullptr && !LevelTransitionSubsystem->IsLoadingScreenActive())
 	{
 		LoadingScreenVisibilityChanged(false);
 	}

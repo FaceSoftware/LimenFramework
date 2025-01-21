@@ -40,6 +40,17 @@ ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer&
 	CurrentInputMode = ELimenInputMode::Undefined;
 }
 
+void ALimenPlayerControllerBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (CreateHudReference())
+	{
+		LimenBaseHUD->UpdateWidgets(this, GetPawn());
+		BindWidgetDelegates();
+	}
+}
+
 void ALimenPlayerControllerBase::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -252,6 +263,10 @@ void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
 	}
 }
 
+void ALimenPlayerControllerBase::UnbindPawnDelegates(APawn* InPawn)
+{
+}
+
 void ALimenPlayerControllerBase::QueueNotification(const FNotificationParams& InParams)
 {
 	auto* HUDInstance = Cast<ALimenBaseHUD>(GetHUD());
@@ -284,4 +299,12 @@ bool ALimenPlayerControllerBase::CreateHudReference()
 
 	LimenBaseHUD = Cast<ALimenBaseHUD>(GetHUD());
 	return LimenBaseHUD.IsValid();
+}
+
+void ALimenPlayerControllerBase::BindWidgetDelegates()
+{
+}
+
+void ALimenPlayerControllerBase::UnbindWidgetDelegates()
+{
 }

@@ -39,7 +39,7 @@ enum class ELimenInputMode : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPauseRequestDelegate, ALimenPlayerControllerBase*, Player, const EPauseReason, PauseReason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPauseRequestDelegate, ALimenPlayerControllerBase*, Player);
 
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Blueprintable)
 class LIMENGAMEFRAMEWORK_API ALimenPlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()
@@ -54,6 +54,7 @@ public:
 	static ALimenPlayerControllerBase* GetLimenPlayerControllerBase(UObject* Caller, int32 PlayerIndex = 0);
 
 	explicit ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
+	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
@@ -87,11 +88,11 @@ protected:
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
 
 	virtual void BindPawnDelegates(APawn* NewPawn);
-	virtual void UnbindPawnDelegates(APawn* InPawn) PURE_VIRTUAL(ALimenBasePlayerController::UnbindPawnDelegates);
+	virtual void UnbindPawnDelegates(APawn* InPawn);
 	
 	virtual bool CreateHudReference();
-	virtual void BindWidgetDelegates() PURE_VIRTUAL(ALimenBasePlayerController::BindWidgetDelegates);
-	virtual void UnbindWidgetDelegates() PURE_VIRTUAL(ALimenBasePlayerController::UnbindWidgetDelegates);
+	virtual void BindWidgetDelegates();
+	virtual void UnbindWidgetDelegates();
 	
 	UFUNCTION()
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
