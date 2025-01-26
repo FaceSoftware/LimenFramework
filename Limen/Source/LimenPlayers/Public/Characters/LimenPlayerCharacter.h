@@ -33,7 +33,7 @@ class ULimenItemAction;
  * First Person Character - Line Trace Interaction method
  * Third Person Character - Proximity Interaction method
  */
-UCLASS(Abstract, NotBlueprintable, BlueprintType)
+UCLASS(Blueprintable, BlueprintType)
 class LIMENPLAYERS_API ALimenPlayerCharacter : public ALimenGameplayCharacter
 {
 	GENERATED_BODY()

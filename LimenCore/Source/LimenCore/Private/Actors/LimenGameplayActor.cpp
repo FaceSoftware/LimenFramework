@@ -3,6 +3,9 @@
 
 #include "Actors/LimenGameplayActor.h"
 
+#include "TimerManager.h"
+#include "Engine/World.h"
+
 
 ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -13,7 +16,8 @@ ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitial
 void ALimenGameplayActor:: BeginPlay()
 {
 	Super::BeginPlay();
-	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::Initialize);
+	
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::Initialize_Internal);
 }
 
 void ALimenGameplayActor::Initialize()
@@ -48,4 +52,10 @@ void ALimenGameplayActor::AddToGameplay()
 bool ALimenGameplayActor::IsRemovedFromGameplay() const
 {
 	return bIsRemovedFromGameplay;
+}
+
+void ALimenGameplayActor::Initialize_Internal()
+{
+	Initialize();
+	OnActorInitialized.Broadcast(this);
 }

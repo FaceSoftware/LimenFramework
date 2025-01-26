@@ -46,4 +46,5 @@ protected:
 private:
 	bool bIsRemovedFromGameplay;
 	
+	void Initialize_Internal();
 };

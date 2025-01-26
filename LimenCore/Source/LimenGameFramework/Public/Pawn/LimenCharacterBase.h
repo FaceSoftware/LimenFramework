@@ -33,7 +33,7 @@ DECLARE_MULTICAST_DELEGATE(FInputDelegate);
  * Base class for the LimenCharacter, only includes locomotion
  * and is able to queue notifications if the controller class is the LimenPlayerController.
  */
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Blueprintable)
 class LIMENGAMEFRAMEWORK_API ALimenCharacterBase : public ACharacter
 {
 	GENERATED_BODY()

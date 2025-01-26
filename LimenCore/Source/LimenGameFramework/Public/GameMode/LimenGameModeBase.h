@@ -10,7 +10,7 @@
 class ALimenGameplayManager;
 class ALimenGameStateBase;
 
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Blueprintable)
 class LIMENGAMEFRAMEWORK_API ALimenGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
@@ -25,10 +25,10 @@ public:
 	void ResetManagers();
 	
 protected:
-
-private:
 	UPROPERTY(EditDefaultsOnly, Category="Classes")
 	TArray<TSoftClassPtr<ALimenGameplayManager>> ManagersClassList;
+
+private:
 	UPROPERTY()
 	TArray<TObjectPtr<ALimenGameplayManager>> ManagersList;
 
