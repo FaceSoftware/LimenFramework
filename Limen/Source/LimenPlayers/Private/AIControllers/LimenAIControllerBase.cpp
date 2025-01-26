@@ -76,14 +76,9 @@ UBlackboardData* ALimenAIControllerBase::GetBlackboard() const
 
 void ALimenAIControllerBase::ResumeBrainLogic(const FString& Reason)
 {
-	if (bIsBrainLogicActive)
+	if (bIsBrainLogicActive || GetBrainComponent() == nullptr)
 	{
 		return;	
-	}
-	
-	if (!IsValid(GetBrainComponent()))
-	{
-		return;
 	}
 
 	GetBrainComponent()->ResumeLogic(Reason);
@@ -92,14 +87,9 @@ void ALimenAIControllerBase::ResumeBrainLogic(const FString& Reason)
 
 void ALimenAIControllerBase::PauseBrainLogic(const FString& Reason)
 {
-	if (!bIsBrainLogicActive)
+	if (!bIsBrainLogicActive || GetBrainComponent() == nullptr)
 	{
 		return;	
-	}
-	
-	if (!IsValid(GetBrainComponent()))
-	{
-		return;
 	}
 
 	GetBrainComponent()->PauseLogic(Reason);
