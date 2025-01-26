@@ -17,29 +17,18 @@ void ALimenMenuPlayerController::SetupInputComponent()
 	SetUIInput();
 }
 
-void ALimenMenuPlayerController::OnPossess(APawn* InPawn)
-{
-	Super::OnPossess(InPawn);
-	
-	if (CreateHudReference())
-	{
-		MenuHud->UpdateWidgets(this, GetPawn());
-
-		if (MenuHud->GetMainMenuWidget())
-		{
-			MenuHud->GetMainMenuWidget()->OnNewGameRequested.AddUObject(this, &ThisClass::RequestNewGame);
-			MenuHud->GetMainMenuWidget()->OnLoadGameRequested.AddUObject(this, &ThisClass::RequestLoadGame);
-			MenuHud->GetMainMenuWidget()->OnQuitRequested.AddUObject(this, &ThisClass::QuitGame);
-		}
-	}
-}
-
 void ALimenMenuPlayerController::UnbindPawnDelegates(APawn* InPawn)
 {
 }
 
 void ALimenMenuPlayerController::BindWidgetDelegates()
 {
+	if (MenuHud->GetMainMenuWidget())
+	{
+		MenuHud->GetMainMenuWidget()->OnNewGameRequested.AddUObject(this, &ThisClass::RequestNewGame);
+		MenuHud->GetMainMenuWidget()->OnLoadGameRequested.AddUObject(this, &ThisClass::RequestLoadGame);
+		MenuHud->GetMainMenuWidget()->OnQuitRequested.AddUObject(this, &ThisClass::QuitGame);
+	}
 }
 
 void ALimenMenuPlayerController::UnbindWidgetDelegates()

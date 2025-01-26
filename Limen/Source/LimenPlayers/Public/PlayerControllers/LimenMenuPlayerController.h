@@ -7,8 +7,10 @@
 #include "Widgets/LimenMainMenuWidget.h"
 #include "LimenMenuPlayerController.generated.h"
 
+
 class ALimenMenuHUD;
 class ULimenSaveData;
+
 /**
  * 
  */
@@ -23,8 +25,7 @@ public:
 	
 	ALimenMenuPlayerController();
 	virtual void SetupInputComponent() override;
-	virtual void OnPossess(APawn* InPawn) override;
-
+	
 protected:
 	virtual void UnbindPawnDelegates(APawn* InPawn) override;
 	

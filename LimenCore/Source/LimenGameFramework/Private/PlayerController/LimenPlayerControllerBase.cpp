@@ -3,8 +3,6 @@
 
 #include "PlayerController/LimenPlayerControllerBase.h"
 
-#include "EnhancedInputSubsystems.h"
-#include "InputMappingContext.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
@@ -44,7 +42,7 @@ void ALimenPlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (CreateHudReference())
+	if (CreateHudReference() && GetPawn() == nullptr)
 	{
 		LimenBaseHUD->UpdateWidgets(this, GetPawn());
 		BindWidgetDelegates();
