@@ -26,9 +26,7 @@ public:
 	ALimenMenuPlayerController();
 	virtual void SetupInputComponent() override;
 	
-protected:
-	virtual void UnbindPawnDelegates(APawn* InPawn) override;
-	
+protected:	
 	virtual void BindWidgetDelegates() override;
 	virtual void UnbindWidgetDelegates() override;
 	

@@ -6,6 +6,7 @@
 #include "HUDs/LimenMenuHud.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+
 ALimenMenuPlayerController::ALimenMenuPlayerController()
 {
 }
@@ -15,10 +16,6 @@ void ALimenMenuPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	SetUIInput();
-}
-
-void ALimenMenuPlayerController::UnbindPawnDelegates(APawn* InPawn)
-{
 }
 
 void ALimenMenuPlayerController::BindWidgetDelegates()
@@ -33,6 +30,12 @@ void ALimenMenuPlayerController::BindWidgetDelegates()
 
 void ALimenMenuPlayerController::UnbindWidgetDelegates()
 {
+	if (MenuHud->GetMainMenuWidget())
+	{
+		MenuHud->GetMainMenuWidget()->OnNewGameRequested.RemoveAll(this);
+		MenuHud->GetMainMenuWidget()->OnLoadGameRequested.RemoveAll(this);
+		MenuHud->GetMainMenuWidget()->OnQuitRequested.RemoveAll(this);
+	}
 }
 
 void ALimenMenuPlayerController::LoadingScreenVisibilityChanged(const bool bIsVisible)
