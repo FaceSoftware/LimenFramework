@@ -92,16 +92,16 @@ void ULimenWidget::HideWidgetWithCallback(FLimenBlueprintWidgetHidden OnWidgetHi
 	}
 
 	HideWidget();
-	CurrentBlueprintDelegate = &OnWidgetHidden;
+	CurrentBlueprintDelegate = OnWidgetHidden;
 }
 
-void ULimenWidget::HideWidget(const TSharedPtr<FLimenWidgetHidden>& OnWidgetHidden)
+void ULimenWidget::HideWidget(const FLimenWidgetHidden& OnWidgetHidden)
 {
 	if (!IsShowing() || !bUseHideAnimation)
 	{
-		if (OnWidgetHidden->IsBound())
+		if (OnWidgetHidden.IsBound())
 		{
-			OnWidgetHidden->Execute();
+			OnWidgetHidden.Execute();
 		}
 		
 		return;
@@ -255,17 +255,17 @@ void ULimenWidget::HiddeAnimationFinished_Internal(const bool bVisible)
 		return;
 	}
 	
-	if (CurrentBlueprintDelegate != nullptr && CurrentBlueprintDelegate->IsBound())
+	if (CurrentBlueprintDelegate.IsBound())
 	{
-		CurrentBlueprintDelegate->Execute();
+		CurrentBlueprintDelegate.Execute();
 	}
-	CurrentBlueprintDelegate = nullptr;
+	CurrentBlueprintDelegate.Unbind();
 	
-	if (CurrentDelegate.IsValid() && CurrentDelegate->IsBound())
+	if (CurrentDelegate.IsBound())
 	{
-		CurrentDelegate->Execute();
+		CurrentDelegate.Execute();
 	}
-	CurrentDelegate.Reset();
+	CurrentDelegate.Unbind();
 }
 
 void ULimenWidget::DestroyWidgetInternal(const bool bIsHideAnimation)
