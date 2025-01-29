@@ -41,6 +41,6 @@ bool ULimenReloadToolItemAction::CanPerformAction() const
 		return false;
 	}
 
-	ULimenInventoryComponent* InventoryComponent = Tool->GetOwningPawn()->GetComponentByClass<ULimenInventoryComponent>();
-	return InventoryComponent->PeekItemInstance<ALimenBattery>() != nullptr;
+	const ULimenInventoryComponent* InventoryComponent = Tool->GetOwningPawn()->GetComponentByClass<ULimenInventoryComponent>();
+	return InventoryComponent->GetItemQuantity(ALimenBattery::StaticClass()) > 0;
 }
