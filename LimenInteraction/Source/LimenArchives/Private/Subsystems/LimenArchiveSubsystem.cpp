@@ -33,11 +33,19 @@ void ULimenArchiveSubsystem::Load_Internal()
 	for (uint32 i = 0; i < NumberOfArchives; ++i)
 	{
 		FObjectSaveData SaveData;
-		verify(GetCurrentSaveData()->GetObjectSaveData(i, SaveData));
+		if (GetCurrentSaveData()->GetObjectSaveData(i, SaveData))
+		{
+			continue;
+		}
 		
 		// Create the archive
 		const TSoftClassPtr<UObject>& ArchiveClassSoftPtr = SaveData.GetObjectClass();
-		CurrentArchiveClass = ArchiveClassSoftPtr.LoadSynchronous();
+		TSubclassOf<ULimenArchive> CurrentArchiveClass = ArchiveClassSoftPtr.LoadSynchronous();
+		if (CurrentArchiveClass == nullptr)
+		{
+			continue;
+		}
+		
 		check(IsValid(CurrentArchiveClass));
 		ULimenArchive* Archive = NewObject<ULimenArchive>(this, CurrentArchiveClass);
 		check(IsValid(Archive));
