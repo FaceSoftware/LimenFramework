@@ -95,6 +95,7 @@ private:
 	FTimerHandle RechargeTimer;
 	bool bIsRecharging;
 	bool bIsActive;
+	bool bWasActiveBeforeRecharge;
 	
 	void RechargeFinished();
 

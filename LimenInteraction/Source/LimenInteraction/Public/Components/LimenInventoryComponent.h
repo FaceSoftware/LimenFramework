@@ -42,9 +42,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FInventoryUpdate OnInventoryRefreshed;
 	UPROPERTY(BlueprintAssignable)
-	FInventoryItemUpdate OnItemAdded;
-	UPROPERTY(BlueprintAssignable)
 	FInventoryItemUpdate OnItemFailedToAdd;
+	UPROPERTY(BlueprintAssignable)
+	FInventoryItemUpdate OnItemAdded;
 	UPROPERTY(BlueprintAssignable)
 	FInventoryItemUpdate OnItemRemoved;
 	UPROPERTY(BlueprintAssignable)
@@ -69,21 +69,8 @@ public:
 	T* GetItem()
 	{
 		static_assert(std::is_base_of_v<ALimenItemBase, T>);
-		
-		FItemRegistry* Registry = FindItemRegistry(T::StaticClass());
-		if (Registry == nullptr)
-		{
-			return nullptr;
-		}
-
-		ALimenItemBase* OutItem = Registry->ItemInstances.Pop(EAllowShrinking::Yes);
-		if (Registry->ItemInstances.Num() == 0)
-		{
-			OnItemRemoved.Broadcast(OutItem->GetClass());
-		}
-		OnInventoryUpdated.Broadcast(this);
-	
-		return Cast<T>(OutItem);
+		const TSubclassOf<ALimenItemBase> Class = T::StaticClass();
+		return Cast<T>(GetItem(Class));
 	}
 	/**
 	 * @brief Gets an item, removing it from the inventory.
@@ -94,21 +81,7 @@ public:
 	T* GetItem(const TSubclassOf<ALimenItemBase>& Class)
 	{
 		static_assert(std::is_base_of_v<ALimenItemBase, T>);
-		check(Class != nullptr);
-		FItemRegistry* Registry = FindItemRegistry(Class);
-		if (Registry == nullptr)
-		{
-			return nullptr;
-		}
-
-		ALimenItemBase* OutItem = Registry->ItemInstances.Pop(EAllowShrinking::Yes);
-		if (Registry->ItemInstances.Num() == 0)
-		{
-			OnItemRemoved.Broadcast(OutItem->GetClass());
-		}
-		OnInventoryUpdated.Broadcast(this);
-	
-		return Cast<T>(OutItem);
+		return Cast<T>(GetItem(Class));
 	}
 	/**
 	 * @brief Gets an item, removing it from the inventory.
@@ -118,7 +91,13 @@ public:
 	 */
 	TArray<ALimenItemBase*> GetItem(const TSubclassOf<ALimenItemBase>& Class, const int32 Count);
 	/**
-	 * @brief Gets all of the inventory items, without removing them.
+	 * @brief Gets an item, removing it from the inventory.
+	 * @param Class The class of the item.
+	 * @return The item instance.
+	 */
+	ALimenItemBase* GetItem(const TSubclassOf<ALimenItemBase>& Class);
+	/**
+	 * @brief Gets all the inventory items, without removing them.
 	 * @return A map containing the inventory item classes with their respective quantity.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
