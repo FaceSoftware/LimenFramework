@@ -24,6 +24,11 @@
 			"Name": "GameplayCameras",
 			"Enabled": true,
 			"Optional": false
+		},
+		{
+			"Name": "AutomationUtils",
+			"Enabled": true,
+			"Optional": false
 		}
 	],
 	"Modules": [
@@ -84,6 +89,11 @@
 		},
 		{
 			"Name": "LimenHints",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenThreadPool",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		},

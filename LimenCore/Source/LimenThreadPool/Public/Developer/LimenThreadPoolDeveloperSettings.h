@@ -30,11 +30,13 @@ public:
 	ULimenThreadPoolDeveloperSettings();
 	
 	UPROPERTY(EditAnywhere, Config)
+	bool bUseSubsystem;
+	UPROPERTY(EditAnywhere, Config)
 	bool bAutoDetermineThreadCount;
 	UPROPERTY(EditAnywhere, Config, meta=(EditCondition="!bAutoDetermineThreadCount", ClampMin="0"))
 	int32 NumThreadsToUse;
 	UPROPERTY(EditAnywhere, Config, meta=(ClampMin="0"))
-	float MemoryPerThreadInBytes;
+	int32 MemoryPerThreadInBytes;
 	UPROPERTY(EditAnywhere, Config, meta=(ClampMin="0"))
 	EBP_ThreadPriority ThreadsPriority;
 
@@ -43,6 +45,8 @@ public:
 	virtual FName GetContainerName() const override;
 	virtual FName GetCategoryName() const override;
 	virtual FName GetSectionName() const override;
+#if WITH_EDITOR
 	virtual FText GetSectionText() const override;
 	virtual FText GetSectionDescription() const override;
+#endif
 };

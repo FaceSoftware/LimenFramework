@@ -3,15 +3,16 @@
 
 #include "Subsystems/LimenThreadPoolSubsystem.h"
 
+#include "Async/Async.h"
 #include "Developer/LimenThreadPoolDeveloperSettings.h"
+#include "HAL/Event.h"
+#include "HAL/RunnableThread.h"
 #include "LimenCore/Public/LogMacros/LimenLogMacros.h"
 
 
-ULimenThreadPoolSubsystem::FPoolWorker::FPoolWorker()
+ULimenThreadPoolSubsystem::FPoolWorker::FPoolWorker() : QueueCondition(FSharedEventRef(EEventMode::ManualReset))
 {
 	bShouldStop = false;
-	QueueCondition = MakeShareable(FPlatformProcess::GetSynchEventFromPool(true));
-	check(QueueCondition.IsValid());
 }
 
 ULimenThreadPoolSubsystem::FPoolWorker::~FPoolWorker()
@@ -45,20 +46,16 @@ uint32 ULimenThreadPoolSubsystem::FPoolWorker::Run()
 		}
 
 		TFunction<void()> CurrentJob = nullptr;
-		
+		if (QueuedJobs.Dequeue(CurrentJob))
 		{
-			// Lock the critical section before accessing the queue
-			FScopeLock Lock(&QueueSection);
-			// Dequeue and execute the job
-			CurrentJob = QueuedJobs.Pop(EAllowShrinking::Yes);
+			QueuedJobsCount.store(QueuedJobsCount.load() - 1);
+			check(CurrentJob != nullptr);
+			CurrentJob();
 		}
 		
-		check(CurrentJob != nullptr);
-		CurrentJob(); // Execute the job
 		AsyncTask(ENamedThreads::GameThread, [this]
 		{
-			FScopeLock Lock(&QueueSection);
-			UE_LOG(LogLimen, Log, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run Thread %s completed job. In queue: %d"), *ThreadName, QueuedJobs.Num());
+			UE_LOG(LogLimen, Log, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run: Thread %s completed job. In queue: %d"), *ThreadName, QueuedJobsCount.load());
 		});
 	}
 
@@ -68,26 +65,24 @@ uint32 ULimenThreadPoolSubsystem::FPoolWorker::Run()
 void ULimenThreadPoolSubsystem::FPoolWorker::Stop()
 {
 	bShouldStop = true;
-	QueuedJobs.Empty();
 	QueueCondition->Trigger();
 }
 
 void ULimenThreadPoolSubsystem::FPoolWorker::QueueJob(const TFunction<void()>& Function)
 {
 	check(Function);
-	FScopeLock Lock(&QueueSection);
 	Function.CheckCallable();
-	QueuedJobs.Push(Function);
+	QueuedJobs.Enqueue(Function);
 	QueueCondition->Trigger();
+	QueuedJobsCount.store(QueuedJobsCount.load() + 1);
 }
 
-int32 ULimenThreadPoolSubsystem::FPoolWorker::GetQueuedJobsCount()
+int32 ULimenThreadPoolSubsystem::FPoolWorker::GetQueuedJobsCount() const
 {
-	FScopeLock Lock(&QueueSection);
-	return QueuedJobs.Num();
+	return QueuedJobsCount.load();
 }
 
-void ULimenThreadPoolSubsystem::FPoolWorker::DiscardWaitEvent()
+void ULimenThreadPoolSubsystem::FPoolWorker::DiscardWaitEvent() const
 {
 	QueueCondition->Trigger();
 }
@@ -103,8 +98,13 @@ bool ULimenThreadPoolSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	{
 		return false;
 	}
-
+	
 	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
+	if (!Settings->bUseSubsystem)
+	{
+		return false;
+	}
+
 	return Settings->GetThreadCount() > 0;
 }
 

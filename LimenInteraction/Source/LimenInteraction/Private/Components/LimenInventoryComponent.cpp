@@ -111,13 +111,32 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALim
 		
 		if (Registry->ItemInstances.IsEmpty())
 		{
-			OnItemRemoved.Broadcast(TempItem->GetClass());
-			return OutItems;
+			break;
 		}
+	}
+
+	if (Registry->ItemInstances.IsEmpty())
+	{
+		OnItemRemoved.Broadcast(Registry->ItemClass.LoadSynchronous());
+	}
+	else
+	{
+		OnItemUpdated.Broadcast(Registry->ItemClass.LoadSynchronous());
 	}
 	
 	OnInventoryUpdated.Broadcast(this);
 	return OutItems;
+}
+
+ALimenItemBase* ULimenInventoryComponent::GetItem(const TSubclassOf<ALimenItemBase>& Class)
+{
+	TArray<ALimenItemBase*> Instances = GetItem(Class, 1);
+	if (!Instances.IsValidIndex(0))
+	{
+		return nullptr;
+	}
+
+	return Instances[0];
 }
 
 TMap<TSubclassOf<ALimenItemBase>, int32> ULimenInventoryComponent::PeekInventory() const
