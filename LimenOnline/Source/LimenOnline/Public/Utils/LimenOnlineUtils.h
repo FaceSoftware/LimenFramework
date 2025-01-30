@@ -10,6 +10,6 @@
 class LIMENONLINE_API FLimenOnlineUtils
 {
 public:
-	static [[nodiscard]] FString Encrypt(const TArray<uint8>& Data, const FString& Key);
-	static [[nodiscard]] TArray<uint8> Decrypt(const FString& Data, const FString& Key);
+	[[nodiscard]] static FString Encrypt(const TArray<uint8>& Data, const FString& Key);
+	[[nodiscard]] static TArray<uint8> Decrypt(const FString& Data, const FString& Key);
 };

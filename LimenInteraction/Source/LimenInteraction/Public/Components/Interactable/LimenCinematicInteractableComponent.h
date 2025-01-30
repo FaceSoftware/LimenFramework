@@ -33,7 +33,7 @@ public:
 	virtual void OnComponentCreated() override;
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-#endif WITH_EDITOR
+#endif
 
 	UFUNCTION(BlueprintCallable)
 	void AddItem(ALimenGameplayActor* Item);

@@ -44,7 +44,7 @@ void ULimenVariableMovementAbility::Tick(float DeltaTime)
 		}
 	}
 
-	if (bIsSprinting && Stamina != nullptr && Stamina->IsEmpty() || !bWantsToSprint && bIsSprinting)
+	if ((bIsSprinting && Stamina != nullptr && Stamina->IsEmpty()) || (!bWantsToSprint && bIsSprinting))
 	{
 		SetWalkMode();
 	}

@@ -3,8 +3,10 @@
 
 #include "Components/Interaction/LimenLineTraceInteractionComponent.h"
 
+#include "DrawDebugHelpers.h"
 #include "Items/LimenItemBase.h"
 #include "Components/Interactable/LimenInteractableAreaComponent.h"
+#include "Engine/World.h"
 
 
 FCollisionResponseParams ULimenLineTraceInteractionComponent::CollisionResponseParams = FCollisionResponseParams(ECR_Overlap);
@@ -119,6 +121,6 @@ void ULimenLineTraceInteractionComponent::UpdateInteraction(const float DeltaTim
 						16.f, 4, FColor::Blue, false, DeltaTime, 0.f, 0.f);
 	}
 	
-#endif WITH_EDITORONLY_DATA
+#endif
 	
 }
