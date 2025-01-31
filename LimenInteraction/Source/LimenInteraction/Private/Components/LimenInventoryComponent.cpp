@@ -275,7 +275,7 @@ int32 ULimenInventoryComponent::GetItemQuantity(const TSubclassOf<ALimenItemBase
 
 bool ULimenInventoryComponent::HasCapacity() const
 {
-	return bUseStaticSize && InventoryLoad < InventorySize || !bUseStaticSize;
+	return (bUseStaticSize && InventoryLoad < InventorySize) || !bUseStaticSize;
 }
 
 void ULimenInventoryComponent::AddItemToRegistry(ALimenItemBase* NewItem)

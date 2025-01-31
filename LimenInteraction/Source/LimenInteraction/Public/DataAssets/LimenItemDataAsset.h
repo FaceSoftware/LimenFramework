@@ -18,9 +18,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftObjectPtr<UTexture2D> ItemImage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FText DisplayName = FText::FromString(L"Display Name");
+	FText DisplayName = FText::FromString(TEXT("Display Name"));
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FText Description = FText::FromString(L"Description");
+	FText Description = FText::FromString(TEXT("Description"));
 	/**
 	 * @brief The name of the action that this item can perform (egg. Note - 'Read', Flashlight - 'Hold')
 	 */

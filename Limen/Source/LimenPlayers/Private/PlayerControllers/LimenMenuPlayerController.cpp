@@ -3,7 +3,7 @@
 
 #include "PlayerControllers/LimenMenuPlayerController.h"
 
-#include "HUDs/LimenMenuHud.h"
+#include "HUDs/LimenMenuHUD.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 
