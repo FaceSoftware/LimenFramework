@@ -25,11 +25,6 @@ FText ALimenItemBase::GetDescription(const TSubclassOf<ALimenItemBase>& ItemClas
 	return ItemClass->GetDefaultObject<ALimenItemBase>()->GetDescription();
 }
 
-UStaticMesh* ALimenItemBase::GetItemMesh_Implementation() const
-{
-	return nullptr;
-}
-
 ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	bHasBeenLoaded = false;
@@ -58,6 +53,11 @@ void ALimenItemBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	ItemActions.Empty();
 	
 	Super::EndPlay(EndPlayReason);
+}
+
+UStaticMesh* ALimenItemBase::GetItemMesh_Implementation() const
+{
+	return nullptr;
 }
 
 UTexture2D* ALimenItemBase::GetItemImage() const

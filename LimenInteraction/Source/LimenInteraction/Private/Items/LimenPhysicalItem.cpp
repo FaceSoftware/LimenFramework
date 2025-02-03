@@ -4,6 +4,8 @@
 #include "Items/LimenPhysicalItem.h"
 
 #include "Components/LimenUpgradeManager.h"
+#include "GameFramework/Controller.h"
+#include "GameFramework/Pawn.h"
 
 
 ALimenPhysicalItem::ALimenPhysicalItem()
@@ -31,9 +33,21 @@ const FText& ALimenPhysicalItem::GetDescription_Implementation() const
 	return Description;
 }
 
-UTexture2D* ALimenPhysicalItem::GetImage_Implementation() const
+UTexture2D* ALimenPhysicalItem::GetItemImage_Implementation() const
 {
 	return ItemImage.LoadSynchronous();
+}
+
+void ALimenPhysicalItem::Upgrade_Implementation(int32 NewLevel, ULimenUpgradeDataAsset* Upgrade)
+{
+}
+
+void ALimenPhysicalItem::SetOwner(AActor* NewOwner)
+{
+	Super::SetOwner(NewOwner);
+	
+	OwningController = Cast<AController>(NewOwner);
+	OwningPawn = Cast<APawn>(NewOwner);
 }
 
 void ALimenPhysicalItem::Interact(AController* InController, APawn* InPawn)
@@ -42,9 +56,6 @@ void ALimenPhysicalItem::Interact(AController* InController, APawn* InPawn)
 
 	check(InController != nullptr);
 	check(InPawn != nullptr);
-	
-	OwningController = InController;
-	OwningPawn = InPawn;
-	
+
 	SetOwner(OwningPawn.Get());
 }

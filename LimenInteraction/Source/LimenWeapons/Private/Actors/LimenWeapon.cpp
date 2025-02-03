@@ -9,6 +9,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/LimenCameraTiltComponent.h"
 #include "Components/LimenInventoryComponent.h"
+#include "GameFramework/Pawn.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Hearing.h"
 
@@ -56,8 +57,6 @@ void ALimenWeapon::BeginPlay()
 
 void ALimenWeapon::Drop()
 {
-	OwningController = nullptr;
-	OwningPawn = nullptr;
 	SetOwner(nullptr);
 	CurrentWeaponState = EWeaponState::None;
 	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
@@ -162,19 +161,9 @@ double ALimenWeapon::GetBaseDamage() const
 	return BaseDamage;
 }
 
-AController* ALimenWeapon::GetOwningController() const
-{
-	return OwningController.Get();
-}
-
-APawn* ALimenWeapon::GetOwningPawn() const
-{
-	return OwningPawn.Get();
-}
-
 bool ALimenWeapon::HasGameRelevantOwner() const
 {
-	return GetOwningPawn() && GetOwningController();
+	return GetOwningPawn() != nullptr && GetOwningController() != nullptr;
 }
 
 const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const
