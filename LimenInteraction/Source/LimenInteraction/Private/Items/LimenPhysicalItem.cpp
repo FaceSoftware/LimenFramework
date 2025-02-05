@@ -41,21 +41,3 @@ UTexture2D* ALimenPhysicalItem::GetItemImage_Implementation() const
 void ALimenPhysicalItem::Upgrade_Implementation(int32 NewLevel, ULimenUpgradeDataAsset* Upgrade)
 {
 }
-
-void ALimenPhysicalItem::SetOwner(AActor* NewOwner)
-{
-	Super::SetOwner(NewOwner);
-	
-	OwningController = Cast<AController>(NewOwner);
-	OwningPawn = Cast<APawn>(NewOwner);
-}
-
-void ALimenPhysicalItem::Interact(AController* InController, APawn* InPawn)
-{
-	Super::Interact(InController, InPawn);
-
-	check(InController != nullptr);
-	check(InPawn != nullptr);
-
-	SetOwner(OwningPawn.Get());
-}

@@ -15,6 +15,7 @@ public:
 	ALimenLineTraceWeapon();
 
 protected:
+	virtual void Interact(AController* InController, APawn* InPawn) override;
 	
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Debug")
@@ -22,6 +23,8 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Weapon Stats")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
+
+	TWeakObjectPtr<APawn> CachedOwnerPawn;
 	
 	virtual void FireMethod() override;
 };

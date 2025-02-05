@@ -163,7 +163,8 @@ double ALimenWeapon::GetBaseDamage() const
 
 bool ALimenWeapon::HasGameRelevantOwner() const
 {
-	return GetOwningPawn() != nullptr && GetOwningController() != nullptr;
+	const APawn* OwnerPawn = GetOwner<APawn>();
+	return OwnerPawn != nullptr && OwnerPawn->GetController() != nullptr;
 }
 
 const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const

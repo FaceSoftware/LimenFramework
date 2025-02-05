@@ -4,6 +4,7 @@
 #include "Items/LimenItemBase.h"
 
 #include "Components/LimenInventoryComponent.h"
+#include "GameFramework/Pawn.h"
 #include "ItemActions/LimenItemAction.h"
 
 
@@ -110,6 +111,8 @@ TArray<ULimenItemAction*> ALimenItemBase::GetItemActions() const
 void ALimenItemBase::Interact(AController* InController, APawn* InPawn)
 {
 	Super::Interact(InController, InPawn);
+
+	SetOwner(InPawn);
 	RemoveFromGameplay();
 }
 

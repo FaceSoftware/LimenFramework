@@ -32,34 +32,11 @@ public:
 
 #pragma endregion 
 
-	template<typename T = APawn>
-	T* GetOwningPawn() const
-	{
-		static_assert(TIsDerivedFrom<T, APawn>::Value);
-		return Cast<T>(OwningPawn.Get());
-	}
-	template<typename T = AController>
-	T* GetOwningController() const
-	{
-		static_assert(TIsDerivedFrom<T, AController>::Value);
-		return Cast<T>(OwningPawn.Get());
-	}
-
-	virtual void SetOwner(AActor* NewOwner) override;
-
 protected:
 	UPROPERTY(EditAnywhere, Category="Limen|Upgrades")
 	TObjectPtr<ULimenUpgradeManager> Upgrades;
 
-	virtual void Interact(AController* InController, APawn* InPawn) override;
-
-private:
-	UPROPERTY()
-	TWeakObjectPtr<AController> OwningController;
-	UPROPERTY()
-	TWeakObjectPtr<APawn> OwningPawn;
-	
+private:	
 	uint32 CurrentUpgrade;
-
 	bool bIsHolstered;
 };
