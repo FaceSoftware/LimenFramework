@@ -51,7 +51,7 @@ ULimenGameMenuWrapperWidget* ALimenHUD::GetGameMenuWidget() const
 
 void ALimenHUD::ShowCharacterHudWidget()
 {
-	if (CharacterHudWidget)
+	if (CharacterHudWidget && !bForceHUDState)
 	{
 		ShowWidget_Internal(CharacterHudWidget.Get());
 	}
@@ -59,10 +59,15 @@ void ALimenHUD::ShowCharacterHudWidget()
 
 void ALimenHUD::HideCharacterHudWidget()
 {
-	if (CharacterHudWidget)
+	if (CharacterHudWidget && !bForceHUDState)
 	{
 		HideWidget_Internal(CharacterHudWidget.Get());
 	}
+}
+
+void ALimenHUD::ForceHUDState(const bool bForce)
+{
+	bForceHUDState = bForce;
 }
 
 void ALimenHUD::ToggleCharacterHudWidget()
