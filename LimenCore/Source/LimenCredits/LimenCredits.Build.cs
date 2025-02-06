@@ -1,16 +1,16 @@
 ﻿using UnrealBuildTool;
 
-public class LimenAudioSettings : ModuleRules
+public class LimenCredits : ModuleRules
 {
-    public LimenAudioSettings(ReadOnlyTargetRules Target) : base(Target)
+    public LimenCredits(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core", 
-                "LimenModularSettings",
+                "Core",
+                "DeveloperSettings"
             }
         );
 
@@ -20,14 +20,7 @@ public class LimenAudioSettings : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore",
-                "DeveloperSettings",
-                
-                "FMODStudio",
-                
-                "LimenCore",
-                "LimenSaveSystem",
-                "LimenStorage",
+                "SlateCore"
             }
         );
     }

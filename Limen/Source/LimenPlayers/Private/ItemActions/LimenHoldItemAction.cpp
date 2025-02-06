@@ -27,7 +27,7 @@ void ULimenHoldItemAction::ActivateAction()
 {
 	Super::ActivateAction();
 
-	ALimenPlayerCharacter* OwnerCharacter = PhysicalItem->GetOwningPawn<ALimenPlayerCharacter>();
+	ALimenPlayerCharacter* OwnerCharacter = PhysicalItem->GetOwner<ALimenPlayerCharacter>();
 	if (OwnerCharacter == nullptr)
 	{
 		return;

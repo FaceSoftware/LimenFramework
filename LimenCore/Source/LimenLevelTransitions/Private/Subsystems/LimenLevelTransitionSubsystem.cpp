@@ -342,25 +342,19 @@ void ULimenLevelTransitionSubsystem::LoadingScreenAnimationFinished(const bool b
 
 void ULimenLevelTransitionSubsystem::EnableAudio()
 {
-	FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
-	if (!AudioDevice.IsValid())
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController(); PC != nullptr)
 	{
-		return;
+		PC->ClearAudioListenerOverride();
 	}
-
-	// AudioDevice->SetTransientPrimaryVolume(static_cast<float>(TransientMasterVolumeCachedValue));
 }
 
 void ULimenLevelTransitionSubsystem::DisableAudio()
 {
-	FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
-	if (!AudioDevice.IsValid())
+	const FVector& SilentLocation = GetDefault<ULimenLoadingScreenSettings>()->SilentLocation;
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController(); PC != nullptr)
 	{
-		return;
+		PC->SetAudioListenerOverride(nullptr, SilentLocation, FRotator::ZeroRotator);
 	}
-
-	// TransientMasterVolumeCachedValue = AudioDevice->GetTransientPrimaryVolume();
-	// AudioDevice->SetTransientPrimaryVolume(0);
 }
 
 AInitializerProxyActor* AInitializerProxyActor::CreateInitializerProxyActor(UObject* WorldContextObject)

@@ -25,6 +25,8 @@ void ULimenDisplayMonitorSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
+#if !WITH_EDITOR
+
 	FDisplayMetrics DisplayMetrics;
 	FSlateApplication::Get().GetDisplayMetrics(DisplayMetrics);
 
@@ -46,6 +48,9 @@ void ULimenDisplayMonitorSetting::ApplyCurrentSetting(const bool bUserRequest)
 		FVector2D Position(Monitor.WorkArea.Left, Monitor.WorkArea.Top);
 		GameWindow->MoveWindowTo(Position);
 	}
+
+	
+#endif
 }
 
 void ULimenDisplayMonitorSetting::SetDefaults()

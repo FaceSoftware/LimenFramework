@@ -18,10 +18,10 @@ public:
 	ALimenTrigger();
 	virtual void BeginPlay() override;
 
-protected:
 	UFUNCTION(BlueprintCallable, Category="Limen|Triggers")
 	UBoxComponent* GetCollisionComponent() const { return CollisionComponent.Get(); }
 
+protected:
 	UFUNCTION()
 	virtual void ComponentBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	                                   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,

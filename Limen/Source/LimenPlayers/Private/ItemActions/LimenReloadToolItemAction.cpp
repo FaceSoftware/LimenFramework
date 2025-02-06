@@ -27,7 +27,7 @@ void ULimenReloadToolItemAction::ActivateAction()
 {
 	Super::ActivateAction();
 	
-	ULimenInventoryComponent* InventoryComponent = Tool->GetOwningPawn()->GetComponentByClass<ULimenInventoryComponent>();
+	ULimenInventoryComponent* InventoryComponent = Tool->GetOwner()->GetComponentByClass<ULimenInventoryComponent>();
 	ALimenBattery* Battery = InventoryComponent->GetItem<ALimenBattery>();
 	check(Battery != nullptr);
 	Tool->Recharge(Battery);
@@ -41,6 +41,6 @@ bool ULimenReloadToolItemAction::CanPerformAction() const
 		return false;
 	}
 
-	const ULimenInventoryComponent* InventoryComponent = Tool->GetOwningPawn()->GetComponentByClass<ULimenInventoryComponent>();
+	const ULimenInventoryComponent* InventoryComponent = Tool->GetOwner()->GetComponentByClass<ULimenInventoryComponent>();
 	return InventoryComponent->GetItemQuantity(ALimenBattery::StaticClass()) > 0;
 }

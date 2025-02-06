@@ -28,16 +28,14 @@ public:
 	static FText GetDisplayName(const TSubclassOf<ALimenItemBase>& ItemClass);
 	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure)
 	static FText GetDescription(const TSubclassOf<ALimenItemBase>& ItemClass);
-	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Limen|Items", BlueprintPure)
-	UStaticMesh* GetItemMesh() const;
-	virtual UStaticMesh* GetItemMesh_Implementation() const;
-	
-public:
 	explicit ALimenItemBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Limen|Items", BlueprintPure)
+	UStaticMesh* GetItemMesh() const;
+	virtual UStaticMesh* GetItemMesh_Implementation() const;
+	
 	UTexture2D* GetItemImage() const;
 	const FText& GetDisplayName() const;
 	const FText& GetDescription() const;
@@ -53,7 +51,6 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Item Actions")
 	TArray<TSubclassOf<ULimenItemAction>> ItemActionsClass;
-	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
 	FText DisplayName;
@@ -66,5 +63,6 @@ protected:
 	virtual void InteractionStopped(AController* InController, APawn* InPawn) override final;
 	
 private:
+	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
 	bool bHasBeenLoaded;
 };

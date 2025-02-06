@@ -23,6 +23,8 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
 	TSoftObjectPtr<USoundClass> SoundClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
+	FName FMODParameterName;
 
 	virtual void SetDefaults() override;
 };
