@@ -152,11 +152,9 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 			TotalPrecompiles = ShadersLeft;
 		}
 			
-		GEngine->AddOnScreenDebugMessage(FName(TEXT("ShaderPrecompilation")).ToUnstableInt(), 1.f, FColor::Cyan, FString::Printf(TEXT("Compiling %u shaders"), ShadersLeft));
-
 		const float TempPercentageDone = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
 		CurrentPrecompileDonePercentage = TempPercentageDone < CurrentPrecompileDonePercentage ? CurrentPrecompileDonePercentage : TempPercentageDone;
-		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage);
+		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage, FShaderPipelineCache::NumPrecompilesRemaining());
 #endif
 	}
 	
@@ -206,16 +204,15 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 	FShaderPipelineCache::SetBatchMode(FShaderPipelineCache::BatchMode::Precompile);
 	
 	TotalPrecompiles = FShaderPipelineCache::NumPrecompilesRemaining();
-	ULimenCoreStatics::LimenLog(this, FString::Printf(TEXT("Compiling %u shaders"), TotalPrecompiles));
-
+	
 	if (TotalPrecompiles == 0)
 	{
-		OnShaderCompilationUpdated.Broadcast(1.f);
+		OnShaderCompilationUpdated.Broadcast(1.f, FShaderPipelineCache::NumPrecompilesRemaining());
 		CurrentPrecompileDonePercentage = 1.f;
 	}
 	else
 	{
-		OnShaderCompilationUpdated.Broadcast(0.f);
+		OnShaderCompilationUpdated.Broadcast(0.f, FShaderPipelineCache::NumPrecompilesRemaining());
 		CurrentPrecompileDonePercentage = 0.f;
 		FShaderPipelineCache::ResumeBatching();
 	}
@@ -240,7 +237,7 @@ void ULimenLevelTransitionSubsystem::HideLoadingScreen()
 	CurrentLoadingScreenSettings = nullptr;
 
 	OnLoadingScreenHidden.Broadcast();
-	OnShaderCompilationUpdated.Broadcast(1.f);
+	OnShaderCompilationUpdated.Broadcast(1.f, FShaderPipelineCache::NumPrecompilesRemaining());
 }
 
 bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
