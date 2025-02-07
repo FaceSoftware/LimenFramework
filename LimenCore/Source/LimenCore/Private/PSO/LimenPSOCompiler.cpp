@@ -22,30 +22,31 @@ FLimenPSOCompiler::~FLimenPSOCompiler()
 
 void FLimenPSOCompiler::StartBatching(const EContext InContext)
 {
-	FShaderPipelineCache::PauseBatching();
 	FShaderPipelineCache::BatchMode	BatchMode(FShaderPipelineCache::BatchMode::Fast);
 
 	switch (InContext)
 	{
 	case EContext::LoadingScreen:
 		{
-			BatchMode = FShaderPipelineCache::BatchMode::Precompile;
+			BatchMode = FShaderPipelineCache::BatchMode::Fast;
 		}
 		break;
 
 	case EContext::UI:
 		{
-			BatchMode = FShaderPipelineCache::BatchMode::Fast;
+			BatchMode = FShaderPipelineCache::BatchMode::Background;
 		}
 		break;
 
 	case EContext::InGame:
 		{
-			BatchMode = FShaderPipelineCache::BatchMode::Background;
+			FShaderPipelineCache::PauseBatching();
 		}
-		break;
+		return;
 	}
 
+	
+	FShaderPipelineCache::PauseBatching();
 	FShaderPipelineCache::SetBatchMode(BatchMode);
 	FShaderPipelineCache::ResumeBatching();
 }
