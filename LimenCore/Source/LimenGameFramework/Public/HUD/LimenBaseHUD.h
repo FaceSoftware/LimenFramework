@@ -72,9 +72,6 @@ protected:
 	void ShowWidget_Internal(ULimenWidget* Widget);
 	void HideWidget_Internal(ULimenWidget* Widget);
 
-	UFUNCTION()
-	virtual void OnLoadingScreenVisibilityChanged(const bool bIsVisible) {}
-
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<ULimenNotificationComponent> NotificationComponent;

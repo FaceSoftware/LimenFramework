@@ -101,7 +101,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ULimenItemSmithWrapperWidget> ItemSmithWrapperWidget;
 
-	virtual void OnLoadingScreenVisibilityChanged(const bool bIsVisible) override;
 	UFUNCTION()
 	virtual void OnCharacterHudVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
