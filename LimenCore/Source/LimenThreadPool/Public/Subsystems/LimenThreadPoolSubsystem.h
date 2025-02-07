@@ -3,8 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/SpscQueue.h"
+#include "HAL/Event.h"
+#include "HAL/Runnable.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "LimenThreadPoolSubsystem.generated.h"
+
+
+class FEventRef;
 
 /**
  * 
@@ -16,7 +22,7 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 
 	friend class FThreadPoolSpec;
 	
-	class FPoolWorker : public FRunnable
+	class FPoolWorker final : public FRunnable
 	{		
 	public:
 		FString ThreadName;
@@ -30,14 +36,14 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 
 		void QueueJob(const TFunction<void()>& Function);
 
-		int32 GetQueuedJobsCount();
-		void DiscardWaitEvent();
+		int32 GetQueuedJobsCount() const;
+		void DiscardWaitEvent() const;
 		
 	private:
 		bool bShouldStop;
-		FCriticalSection QueueSection;
-		TSharedPtr<FEvent> QueueCondition;
-		TArray<TFunction<void()>> QueuedJobs;
+		FSharedEventRef QueueCondition;
+		TSpscQueue<TFunction<void()>> QueuedJobs;
+		std::atomic_int32_t QueuedJobsCount;
 	};
 
 public:

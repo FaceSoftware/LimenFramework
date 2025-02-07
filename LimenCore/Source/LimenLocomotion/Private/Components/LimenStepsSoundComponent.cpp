@@ -16,7 +16,7 @@ ULimenStepsSoundComponent::ULimenStepsSoundComponent() : Super()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bRunOnAnyThread = false;
-	PrimaryComponentTick.TickInterval =  1 / 32;
+	PrimaryComponentTick.TickInterval = 1 / 32;
 	bDisableParameterUpdatesWhilePlaying = true;
 
 	bPlayIn3dSpace = true;
@@ -26,6 +26,7 @@ ULimenStepsSoundComponent::ULimenStepsSoundComponent() : Super()
 	MinimumSilentSpeed = 400;
 	PreviousVelocity = 0;
 	bCanPlayMultipleInstances = true;
+	CachedAudioDelayAndVolumeLevel = FVector2D();
 }
 
 void ULimenStepsSoundComponent::BeginPlay()
@@ -36,11 +37,12 @@ void ULimenStepsSoundComponent::BeginPlay()
 	QueryParams.bReturnPhysicalMaterial = true;
 
 	OwnerMovement = GetOwner()->GetComponentByClass<UPawnMovementComponent>();
-	check(OwnerMovement)
 
-	UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
-	AIPerceptionSystem = AISystem->GetPerceptionSystem();
-	check(AIPerceptionSystem != nullptr);
+	UAISystem* AISystem = Cast<UAISystem>(GetWorld()->GetAISystem());
+	if (AISystem != nullptr)
+	{
+		AIPerceptionSystem = AISystem->GetPerceptionSystem();
+	}
 }
 
 void ULimenStepsSoundComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -171,13 +173,16 @@ USoundBase* ULimenStepsSoundComponent::GetStepSoundToPlay(const UPhysicalMateria
 
 void ULimenStepsSoundComponent::RegisterAudioEventForAI() const
 {
+	if (AIPerceptionSystem != nullptr)
+	{
+		return;
+	}
+	
 	float Distance = 1000;
 	if (CurrentAudioData != nullptr && CurrentAudioData->Attenuation != nullptr)
 	{
 		Distance = CurrentAudioData->Attenuation->Attenuation.FalloffDistance;
 	}
-	
-	check(AIPerceptionSystem != nullptr);
 	const FAINoiseEvent Event(GetOwner(), GetComponentLocation(), 1, Distance);
 	AIPerceptionSystem->OnEvent(Event);
 }

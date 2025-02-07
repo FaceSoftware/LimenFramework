@@ -38,6 +38,8 @@ public:
 	virtual void ShowCharacterHudWidget();
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
 	virtual void HideCharacterHudWidget();
+	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
+	void ForceHUDState(const bool bForce);
 	void ToggleCharacterHudWidget();
 	bool IsCharacterHudShowing() const;
 	ULimenHudWidget* GetHudWidget() const;
@@ -99,7 +101,6 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ULimenItemSmithWrapperWidget> ItemSmithWrapperWidget;
 
-	virtual void OnLoadingScreenVisibilityChanged(const bool bIsVisible) override;
 	UFUNCTION()
 	virtual void OnCharacterHudVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
@@ -126,4 +127,5 @@ private:
 	TArray<ULimenWidget*> WidgetsList;
 
 	uint8 bPostProcessEnabled : 1;
+	uint8 bForceHUDState : 1;
 };

@@ -49,7 +49,7 @@ void ULimenHardwareRayTracingSetting::SetDefaults()
 	
 	TConsoleSetting<bool> SRT(Software);
 	SRT.AddCVar("r.Lumen.HardwareRayTracing", false);
-	SRT.AddCVar("r.RayTracing.Shadows", false);
+	SRT.AddCVar("r.RayTracing.Shadows", true);
 	SettingsDescription.Push(SRT);
 	
 	PossibleSelections.Push(Hardware);

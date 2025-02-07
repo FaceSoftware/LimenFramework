@@ -11,15 +11,23 @@
 #include "GameFramework/Pawn.h"
 #include "Interfaces/LimenDamageable.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "LogMacros/LimenInteractionLogMacros.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Damage.h"
+
 
 ALimenLineTraceWeapon::ALimenLineTraceWeapon() : Super()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bDebugMode = false;
+	TraceChannel = ECollisionChannel::ECC_Visibility;
+}
+
+void ALimenLineTraceWeapon::Interact(AController* InController, APawn* InPawn)
+{
+	Super::Interact(InController, InPawn);
+	
+	CachedOwnerPawn = GetOwner<APawn>();
 }
 
 void ALimenLineTraceWeapon::FireMethod()
@@ -30,7 +38,10 @@ void ALimenLineTraceWeapon::FireMethod()
 	
 	FVector Start;
 	FRotator Rotation;
-	GetOwningController()->GetPlayerViewPoint(Start, Rotation);
+
+	check(CachedOwnerPawn != nullptr) // If a weapon is being fired it should always have an owner
+	CachedOwnerPawn->GetController()->GetPlayerViewPoint(Start, Rotation);
+
 	const FVector End = Start + Rotation.Vector() * WeaponRange;
 
 	FCollisionQueryParams Params;
@@ -50,7 +61,7 @@ void ALimenLineTraceWeapon::FireMethod()
 		// C++ Interface
 		if (auto* Damageable = Cast<ILimenDamageable>(OutHits[i].GetActor()))
 		{
-			Damageable->ApplyPointDamage(GetOwningController(), GetOwningPawn(), CurrentDamageWithFalloff, OutHits[i].BoneName);
+			Damageable->ApplyPointDamage(CachedOwnerPawn->GetController(), CachedOwnerPawn.Get(), CurrentDamageWithFalloff, OutHits[i].BoneName);
 			
 			DamageCount++;
 			

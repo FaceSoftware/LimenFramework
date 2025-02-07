@@ -23,6 +23,8 @@ public class LimenAudioSettings : ModuleRules
                 "SlateCore",
                 "DeveloperSettings",
                 
+                "FMODStudio",
+                
                 "LimenCore",
                 "LimenSaveSystem",
                 "LimenStorage",

@@ -10,12 +10,16 @@
 class ALimenGameplayManager;
 class ALimenGameStateBase;
 
-UCLASS(Abstract, NotBlueprintable)
+DECLARE_MULTICAST_DELEGATE_OneParam(FPauseDelegate, const bool /* bIsPaused */);
+
+UCLASS(Blueprintable)
 class LIMENGAMEFRAMEWORK_API ALimenGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
+	FPauseDelegate OnPauseStateChanged;
+	
 	ALimenGameModeBase();
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
@@ -25,10 +29,13 @@ public:
 	void ResetManagers();
 	
 protected:
-
-private:
 	UPROPERTY(EditDefaultsOnly, Category="Classes")
 	TArray<TSoftClassPtr<ALimenGameplayManager>> ManagersClassList;
+
+	virtual bool SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate = FCanUnpause()) override;
+	virtual bool ClearPause() override;
+	
+private:
 	UPROPERTY()
 	TArray<TObjectPtr<ALimenGameplayManager>> ManagersList;
 

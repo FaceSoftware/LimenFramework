@@ -104,7 +104,7 @@ void UDEPRECATED_LimenMovementComponent::SetMovementMode(EMovementMode NewMoveme
 
 void UDEPRECATED_LimenMovementComponent::UpdateMovementMode()
 {
-	if (!CanSprint() && IsSprinting() || !bWantsToSprint && IsSprinting())
+	if ((!CanSprint() && IsSprinting()) || (!bWantsToSprint && IsSprinting()))
 	{
 		if (IsCrouching())
 		{

@@ -111,13 +111,37 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALim
 		
 		if (Registry->ItemInstances.IsEmpty())
 		{
-			OnItemRemoved.Broadcast(TempItem->GetClass());
-			return OutItems;
+			break;
 		}
+	}
+
+	if (Registry->ItemInstances.IsEmpty())
+	{
+		ItemRegistries.RemoveAll([this, &Registry] (const FItemRegistry& Test)
+		{
+			return Test.ItemClass == Registry->ItemClass;
+		});
+		
+		OnItemRemoved.Broadcast(Registry->ItemClass.LoadSynchronous());
+	}
+	else
+	{
+		OnItemUpdated.Broadcast(Registry->ItemClass.LoadSynchronous());
 	}
 	
 	OnInventoryUpdated.Broadcast(this);
 	return OutItems;
+}
+
+ALimenItemBase* ULimenInventoryComponent::GetItem(const TSubclassOf<ALimenItemBase>& Class)
+{
+	TArray<ALimenItemBase*> Instances = GetItem(Class, 1);
+	if (!Instances.IsValidIndex(0))
+	{
+		return nullptr;
+	}
+
+	return Instances[0];
 }
 
 TMap<TSubclassOf<ALimenItemBase>, int32> ULimenInventoryComponent::PeekInventory() const
@@ -137,7 +161,8 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::PeekInventoryInstances(const T
 	TArray<ALimenItemBase*> Out;
 	for (const FItemRegistry& Registry : ItemRegistries)
 	{
-		if (Registry.ItemClass.LoadSynchronous()->IsChildOf(Class))
+		const UClass* ClassPtr = Registry.ItemClass.LoadSynchronous();
+		if (ClassPtr == Class || ClassPtr->IsChildOf(Class))
 		{
 			for (ALimenItemBase* Item : Registry.ItemInstances)
 			{
@@ -153,7 +178,8 @@ ALimenItemBase* ULimenInventoryComponent::PeekInventoryInstance(const TSubclassO
 {
 	for (const FItemRegistry& Registry : ItemRegistries)
 	{
-		if (Registry.ItemClass.LoadSynchronous()->IsChildOf(Class) || Class == Registry.ItemClass.LoadSynchronous())
+		const UClass* ClassPtr = Registry.ItemClass.LoadSynchronous();
+		if (ClassPtr == Class || ClassPtr->IsChildOf(Class))
 		{
 			return Registry.ItemInstances.IsEmpty() ? nullptr : Registry.ItemInstances[0];
 		}
@@ -197,7 +223,8 @@ TMap<TSubclassOf<ALimenItemBase>, int32> ULimenInventoryComponent::PeekItems(con
 
 	for (const FItemRegistry& Registry : ItemRegistries)
 	{
-		if (Registry.ItemClass.LoadSynchronous() == ItemClass)
+		UClass* Class = Registry.ItemClass.LoadSynchronous();
+		if (Class == ItemClass || Class->IsChildOf(ItemClass))
 		{
 			Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Num());
 		}
@@ -233,20 +260,22 @@ int32 ULimenInventoryComponent::GetItemQuantity(const TSubclassOf<ALimenItemBase
 		return 0;
 	}
 
+	int32 ItemQuantity = 0;
 	for (const FItemRegistry& Registry : ItemRegistries)
 	{
-		if (Registry.ItemClass.LoadSynchronous() == ItemClass)
+		const UClass* Class = Registry.ItemClass.LoadSynchronous();
+		if (Class == ItemClass || Class->IsChildOf(ItemClass))
 		{
-			return Registry.ItemInstances.Num();
+			ItemQuantity += Registry.ItemInstances.Num();
 		}
 	}
-
-	return 0;
+	
+	return ItemQuantity;
 }
 
 bool ULimenInventoryComponent::HasCapacity() const
 {
-	return bUseStaticSize && InventoryLoad < InventorySize || !bUseStaticSize;
+	return (bUseStaticSize && InventoryLoad < InventorySize) || !bUseStaticSize;
 }
 
 void ULimenInventoryComponent::AddItemToRegistry(ALimenItemBase* NewItem)
@@ -303,8 +332,8 @@ FItemRegistry* ULimenInventoryComponent::FindItemRegistry(const TSubclassOf<ALim
 	check(ItemClass != nullptr);
 	for (FItemRegistry& Entry : ItemRegistries)
 	{
-		if (ItemClass == Entry.ItemClass.LoadSynchronous() ||
-			Entry.ItemClass.LoadSynchronous()->IsChildOf(ItemClass.Get()))
+		const UClass* ClassPtr = Entry.ItemClass.LoadSynchronous();
+		if (ClassPtr == ItemClass || ClassPtr->IsChildOf(ItemClass))
 		{
 			return &Entry;
 		}

@@ -3,8 +3,6 @@
 
 #include "PlayerController/LimenPlayerControllerBase.h"
 
-#include "EnhancedInputSubsystems.h"
-#include "InputMappingContext.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
@@ -38,6 +36,17 @@ ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer&
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
 	CurrentInputMode = ELimenInputMode::Undefined;
+}
+
+void ALimenPlayerControllerBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (CreateHudReference() && GetPawn() == nullptr)
+	{
+		LimenBaseHUD->UpdateWidgets(this, GetPawn());
+		BindWidgetDelegates();
+	}
 }
 
 void ALimenPlayerControllerBase::SetupInputComponent()
@@ -252,6 +261,10 @@ void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
 	}
 }
 
+void ALimenPlayerControllerBase::UnbindPawnDelegates(APawn* InPawn)
+{
+}
+
 void ALimenPlayerControllerBase::QueueNotification(const FNotificationParams& InParams)
 {
 	auto* HUDInstance = Cast<ALimenBaseHUD>(GetHUD());
@@ -284,4 +297,12 @@ bool ALimenPlayerControllerBase::CreateHudReference()
 
 	LimenBaseHUD = Cast<ALimenBaseHUD>(GetHUD());
 	return LimenBaseHUD.IsValid();
+}
+
+void ALimenPlayerControllerBase::BindWidgetDelegates()
+{
+}
+
+void ALimenPlayerControllerBase::UnbindWidgetDelegates()
+{
 }

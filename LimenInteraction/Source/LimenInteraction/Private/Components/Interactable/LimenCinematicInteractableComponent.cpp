@@ -70,7 +70,7 @@ void ULimenCinematicInteractableComponent::PostEditChangeProperty(FPropertyChang
 		ItemSocket->SetRelativeTransform(ItemSocketTransform);
 	}
 }
-#endif WITH_EDITOR
+#endif
 
 void ULimenCinematicInteractableComponent::AddItem(ALimenGameplayActor* Item)
 {

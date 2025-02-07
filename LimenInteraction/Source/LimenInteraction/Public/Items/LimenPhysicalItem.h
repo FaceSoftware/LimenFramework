@@ -22,32 +22,21 @@ class LIMENINTERACTION_API ALimenPhysicalItem : public ALimenItemBase, public IL
 public:
 	ALimenPhysicalItem();
 
-	/// ILimenUpgradable
+#pragma region ILimenUpgradable
+	
 	virtual ULimenUpgradeManager* GetUpgradeManager_Implementation() const override;
 	virtual const FText& GetDisplayName_Implementation() const override;
 	virtual const FText& GetDescription_Implementation() const override;
-	virtual UTexture2D* GetImage_Implementation() const override;
-	virtual void Upgrade_Implementation(int32 NewLevel, ULimenUpgradeDataAsset* Upgrade) override {}
-	///
+	virtual UTexture2D* GetItemImage_Implementation() const override;
+	virtual void Upgrade_Implementation(int32 NewLevel, ULimenUpgradeDataAsset* Upgrade) override;
 
-	template<typename T = APawn>
-	T* GetOwningPawn() const
-	{
-		return Cast<T>(OwningPawn);
-	}
-	
+#pragma endregion 
+
 protected:
 	UPROPERTY(EditAnywhere, Category="Limen|Upgrades")
 	TObjectPtr<ULimenUpgradeManager> Upgrades;
-	
-	UPROPERTY()
-	TObjectPtr<AController> OwningController;
-	UPROPERTY()
-	TObjectPtr<APawn> OwningPawn;
-	
+
+private:	
 	uint32 CurrentUpgrade;
-
 	bool bIsHolstered;
-
-	virtual void Interact(AController* InController, APawn* InPawn) override;
 };

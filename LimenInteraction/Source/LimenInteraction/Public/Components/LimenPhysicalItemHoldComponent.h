@@ -21,12 +21,17 @@ public:
 	
 	virtual void BeginPlay() override;
 	
+	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	void Hold(ALimenPhysicalItem* InPhysicalItem);
+	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	void StopHolding();
+	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	void Drop();
+	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	bool IsHoldingSomething() const;
-	
-	ALimenPhysicalItem* GetPhysicalItem() const { return PhysicalItem.Get(); }
+
+	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
+	ALimenPhysicalItem* GetPhysicalItem() const;
 
 private:
 	bool bIsHoldingSomething;

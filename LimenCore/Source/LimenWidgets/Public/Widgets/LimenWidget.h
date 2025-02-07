@@ -58,7 +58,7 @@ public:
 	void HideWidget();
 	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
 	void HideWidgetWithCallback(FLimenBlueprintWidgetHidden OnWidgetHidden);
-	void HideWidget(const TSharedPtr<FLimenWidgetHidden>& OnWidgetHidden);
+	void HideWidget(const FLimenWidgetHidden& OnWidgetHidden);
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
 	void UpdateWidget();
 	
@@ -123,8 +123,8 @@ private:
 	void ShowAllChildren();
 	void HideAllChildren();
 
-	FLimenBlueprintWidgetHidden* CurrentBlueprintDelegate;
-	TSharedPtr<FLimenWidgetHidden> CurrentDelegate;
+	FLimenBlueprintWidgetHidden CurrentBlueprintDelegate;
+	FLimenWidgetHidden CurrentDelegate;
 	UFUNCTION()
 	void HiddeAnimationFinished_Internal(const bool bVisible);
 

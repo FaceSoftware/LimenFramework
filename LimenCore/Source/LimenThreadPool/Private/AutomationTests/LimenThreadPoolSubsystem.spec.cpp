@@ -22,7 +22,7 @@ void FThreadPoolSpec::Define()
 		BeforeEach([this]
 		{
 			CompletedJobs = 0;
-			NumberOfJobs = FWindowsPlatformMisc::NumberOfCores() * 5;
+			NumberOfJobs = FGenericPlatformMisc::NumberOfCores() * 5;
 			ThreadPoolSubsystem = NewObject<ULimenThreadPoolSubsystem>(GetTransientOuterForRename(ULimenThreadPoolSubsystem::StaticClass()));
 			ThreadPoolSubsystem->CreateThreads();
 		});

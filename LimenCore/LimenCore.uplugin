@@ -24,6 +24,11 @@
 			"Name": "GameplayCameras",
 			"Enabled": true,
 			"Optional": false
+		},
+		{
+			"Name": "AutomationUtils",
+			"Enabled": true,
+			"Optional": false
 		}
 	],
 	"Modules": [
@@ -88,6 +93,11 @@
 			"LoadingPhase": "Default"
 		},
 		{
+			"Name": "LimenThreadPool",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
 			"Name": "LimenModals",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
@@ -119,6 +129,11 @@
 		},
 		{
 			"Name": "LimenGameFramework",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenCredits",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
