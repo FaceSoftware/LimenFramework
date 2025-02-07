@@ -93,8 +93,16 @@ void ALimenPlayerController::PauseInput(const FInputActionInstance& Instance)
 	if (Instance.GetValue().Get<bool>())
 	{
 		verify(CreateHudReference())
+
+		if (LimenHUD->IsCharacterHudShowing())
+		{
+			LimenHUD->TogglePauseMenuWidget();
+		}
+		else // Is not seeing the hud, probably inside a menu
+		{
+			LimenHUD->HideActiveWidget();
+		}
 		
-		LimenHUD->TogglePauseMenuWidget();
 	}
 }
 
