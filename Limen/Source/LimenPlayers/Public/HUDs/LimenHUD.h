@@ -25,6 +25,7 @@ class LIMENPLAYERS_API ALimenHUD : public ALimenBaseHUD
 
 public:
 	ALimenHUD();
+	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
 	virtual void ShowGameMenuWidget();
@@ -75,7 +76,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsPostProcessEnabled() const;
 	
-protected:	
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	bool bShowHudWidgetAfterLoadingScreen;
+	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")
 	TSoftClassPtr<ULimenGameMenuWrapperWidget> GameMenuWidgetClass;
 	UPROPERTY(BlueprintReadOnly)
@@ -102,15 +106,17 @@ protected:
 	TObjectPtr<ULimenItemSmithWrapperWidget> ItemSmithWrapperWidget;
 
 	UFUNCTION()
-	virtual void OnCharacterHudVisibilityChanged(const bool bIsVisible);
+	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
-	virtual void OnGameMenuVisibilityChanged(const bool bIsVisible);
+	virtual void CharacterHudVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
-	virtual void OnPauseMenuVisibilityChanged(const bool bIsVisible);
+	virtual void GameMenuVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
-	virtual void OnDeathScreenVisibilityChanged(const bool bIsVisible);
+	virtual void PauseMenuVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
-	virtual void OnUpgradeShopVisibilityChanged(const bool bIsVisible);
+	virtual void DeathScreenVisibilityChanged(const bool bIsVisible);
+	UFUNCTION()
+	virtual void UpgradeShopVisibilityChanged(const bool bIsVisible);
 	
 	virtual void DestroyWidgets() override;
 	virtual void InitializeWidgets() override;

@@ -35,7 +35,7 @@ void ULimenSubtitlesSubsystem::Deinitialize()
 
 void ULimenSubtitlesSubsystem::AddSubtitle(const UDataTable* InSubtitleData)
 {
-	if (!InSubtitleData->RowStruct->IsChildOf(FLimenSubtitleCue::StaticStruct()))
+	if (InSubtitleData == nullptr || !InSubtitleData->RowStruct->IsChildOf(FLimenSubtitleCue::StaticStruct()))
 	{
 		LIMEN_LOG(LogLimen, Error, this, "Invalid subtitle struct.");
 		return;
