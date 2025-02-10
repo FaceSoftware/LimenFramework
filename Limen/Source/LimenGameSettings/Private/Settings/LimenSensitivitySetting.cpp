@@ -3,7 +3,7 @@
 
 #include "Settings/LimenSensitivitySetting.h"
 
-#include "..\..\..\LimenPlayers\Public\Characters\LimenPlayerCharacter.h"
+#include "Characters/LimenPlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -14,6 +14,7 @@ ULimenSensitivitySetting::ULimenSensitivitySetting()
 	DisplayName = FText::FromString(TEXT("Mouse Sensitivity"));
 	Description = FText::FromString(TEXT("Multiplier for the mouse movement."));
 	bUseRecurrentAction = true;
+	MinValuePerChange = .1f;
 }
 
 void ULimenSensitivitySetting::SetDefaults()

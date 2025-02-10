@@ -15,6 +15,7 @@ ULimenChromaticAberrationSetting::ULimenChromaticAberrationSetting()
 	Category = FText::FromString(TEXT("Post Process FX"));
 	DisplayName = FText::FromString(TEXT("Chromatic Aberration"));
 	Description = FText::FromString(TEXT("Distortion effect."));
+	MinValuePerChange = .1f;
 }
 
 void ULimenChromaticAberrationSetting::ApplyCurrentSetting(bool bUserRequest)

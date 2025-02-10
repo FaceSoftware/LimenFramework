@@ -17,6 +17,9 @@ class LIMENMODULARSETTINGS_API ULimenValueSetting : public ULimenSetting, public
 public:
 	ULimenValueSetting();
 
+	UFUNCTION(BlueprintCallable)
+	float GetMinValuePerChange() const;
+
 	/// Readable Interface
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	virtual const TArray<float>& GetSettingValues() const override final;
@@ -46,6 +49,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float DefaultSettingValue;
 
+	UPROPERTY(EditAnywhere)
+	float MinValuePerChange;
 	
 private:	
 	float CurrentSettingValue;
