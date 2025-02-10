@@ -7,9 +7,15 @@
 
 
 ULimenValueSetting::ULimenValueSetting(): DefaultSettingValue(0),
+										  MinValuePerChange(1.f),
 										  CurrentSettingValue(0),
 										  PreviousSettingValue(0)
 {
+}
+
+float ULimenValueSetting::GetMinValuePerChange() const
+{
+	return MinValuePerChange;
 }
 
 const TArray<float>& ULimenValueSetting::GetSettingValues() const

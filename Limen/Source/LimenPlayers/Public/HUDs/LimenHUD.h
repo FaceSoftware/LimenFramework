@@ -77,7 +77,7 @@ public:
 	bool IsPostProcessEnabled() const;
 	
 protected:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Transient)
 	bool bShowHudWidgetAfterLoadingScreen;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")

@@ -3,8 +3,6 @@
 
 #include "Settings/LimenScreenPercentageSetting.h"
 
-#include "HAL/IConsoleManager.h"
-
 
 ULimenScreenPercentageSetting::ULimenScreenPercentageSetting()
 {
@@ -12,6 +10,7 @@ ULimenScreenPercentageSetting::ULimenScreenPercentageSetting()
 	Category = FText::FromString(TEXT("Display"));
 	DisplayName = FText::FromString(TEXT("Screen Percentage"));
 	Description = FText::FromString(TEXT(""));
+	MinValuePerChange = 5.f;
 }
 
 void ULimenScreenPercentageSetting::ApplyCurrentSetting(const bool bUserRequest)
