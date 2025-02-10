@@ -12,6 +12,7 @@
 ULimenDynamicLevelSequenceComponent::ULimenDynamicLevelSequenceComponent()
 {
 	bIsPlaying = false;
+	bAutoActivate = true;
 }
 
 void ULimenDynamicLevelSequenceComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -23,6 +24,11 @@ void ULimenDynamicLevelSequenceComponent::EndPlay(const EEndPlayReason::Type End
 
 void ULimenDynamicLevelSequenceComponent::Activate(bool bReset)
 {
+	if (!GetWorld()->IsGameWorld())
+	{
+		return;
+	}
+	
 	const bool bShouldActivate = ShouldActivate();
 	Super::Activate(bReset);
 	
@@ -68,6 +74,7 @@ void ULimenDynamicLevelSequenceComponent::PlaySequence()
 	GetWorld()->GetTimerManager().SetTimerForNextTick([this]
 	{
 		GetSequencePlayer()->Play();
+		bIsPlaying = SequenceActor->GetSequencePlayer()->IsPlaying();
 	});
 }
 
@@ -84,7 +91,6 @@ void ULimenDynamicLevelSequenceComponent::StopSequence()
 	}
 	
 	SequenceActor->GetSequencePlayer()->Stop();
-	
 	bIsPlaying = SequenceActor->GetSequencePlayer()->IsPlaying();
 }
 

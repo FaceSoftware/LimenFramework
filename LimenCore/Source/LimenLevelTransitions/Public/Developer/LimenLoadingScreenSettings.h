@@ -19,6 +19,9 @@ class LIMENLEVELTRANSITIONS_API ULimenLoadingScreenSettings : public UDeveloperS
 public:	
 	UPROPERTY(EditAnywhere, Config)
 	TMap<TSoftObjectPtr<UWorld>, TSoftObjectPtr<ULimenLoadingScreenParameters>> LoadingScreens;
+	
+	UPROPERTY(EditAnywhere, Config)
+	FVector SilentLocation;
 
 	UPROPERTY(EditAnywhere, Config)
 	TArray<FText> Hints;
@@ -27,6 +30,7 @@ public:
 	{
 		CategoryName = TEXT("Game");
 		SectionName = TEXT("Limen - Loading Screens");
+		SilentLocation = FVector(1000000.0);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Level Transitions|Hints", meta=(ExpandBoolAsExecs="ReturnValue"))

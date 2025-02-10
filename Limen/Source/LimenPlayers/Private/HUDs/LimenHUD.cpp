@@ -3,6 +3,7 @@
 
 #include "HUDs/LimenHUD.h"
 
+#include "PSO/LimenPSOCompiler.h"
 #include "Widgets/LimenDeathScreen.h"
 #include "Widgets/LimenGameMenuWrapperWidget.h"
 #include "Widgets/LimenHudWidget.h"
@@ -10,9 +11,10 @@
 #include "Widgets/LimenPauseMenuWidget.h"
 
 
-ALimenHUD::ALimenHUD()
+ALimenHUD::ALimenHUD() : Super()
 {
 	bPostProcessEnabled = true;
+	bForceHUDState = 0;
 }
 
 void ALimenHUD::ShowGameMenuWidget()
@@ -51,7 +53,7 @@ ULimenGameMenuWrapperWidget* ALimenHUD::GetGameMenuWidget() const
 
 void ALimenHUD::ShowCharacterHudWidget()
 {
-	if (CharacterHudWidget)
+	if (CharacterHudWidget && !bForceHUDState)
 	{
 		ShowWidget_Internal(CharacterHudWidget.Get());
 	}
@@ -59,10 +61,15 @@ void ALimenHUD::ShowCharacterHudWidget()
 
 void ALimenHUD::HideCharacterHudWidget()
 {
-	if (CharacterHudWidget)
+	if (CharacterHudWidget && !bForceHUDState)
 	{
 		HideWidget_Internal(CharacterHudWidget.Get());
 	}
+}
+
+void ALimenHUD::ForceHUDState(const bool bForce)
+{
+	bForceHUDState = bForce;
 }
 
 void ALimenHUD::ToggleCharacterHudWidget()
@@ -329,23 +336,15 @@ bool ALimenHUD::CanSwitchWidgetsVisibility() const
 	return !IsAnyAnimationInProgress();
 }
 
-void ALimenHUD::OnLoadingScreenVisibilityChanged(const bool bIsVisible)
+void ALimenHUD::OnCharacterHudVisibilityChanged(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{
-		HideCharacterHudWidget();
-		HideGameMenuWidget();
-		HidePauseMenuWidget();
+		FLimenPSOCompiler::Get()->StartBatching(FLimenPSOCompiler::EContext::InGame);
 	}
 	else
 	{
-		ShowCharacterHudWidget();
 	}
-}
-
-void ALimenHUD::OnCharacterHudVisibilityChanged(const bool bIsVisible)
-{
-	
 }
 
 void ALimenHUD::OnGameMenuVisibilityChanged(const bool bIsVisible)
@@ -354,6 +353,7 @@ void ALimenHUD::OnGameMenuVisibilityChanged(const bool bIsVisible)
 	{
 		HideCharacterHudWidget();
 		HidePauseMenuWidget();
+		FLimenPSOCompiler::Get()->StartBatching(FLimenPSOCompiler::EContext::UI);
 	}
 	else
 	{
@@ -367,6 +367,7 @@ void ALimenHUD::OnPauseMenuVisibilityChanged(const bool bIsVisible)
 	{
 		HideCharacterHudWidget();
 		HideGameMenuWidget();
+		FLimenPSOCompiler::Get()->StartBatching(FLimenPSOCompiler::EContext::UI);
 	}
 	else
 	{
@@ -378,6 +379,7 @@ void ALimenHUD::OnDeathScreenVisibilityChanged(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{
+		FLimenPSOCompiler::Get()->StartBatching(FLimenPSOCompiler::EContext::UI);
 		HideCharacterHudWidget();
 	}
 }
@@ -388,6 +390,7 @@ void ALimenHUD::OnUpgradeShopVisibilityChanged(const bool bIsVisible)
 	{
 		HideCharacterHudWidget();
 		HidePauseMenuWidget();
+		FLimenPSOCompiler::Get()->StartBatching(FLimenPSOCompiler::EContext::UI);
 	}
 	else
 	{

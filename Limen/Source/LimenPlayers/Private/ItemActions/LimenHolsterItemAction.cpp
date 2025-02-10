@@ -27,7 +27,7 @@ void ULimenHolsterItemAction::ActivateAction()
 {
 	Super::ActivateAction();
 
-	ALimenPlayerCharacter* OwnerCharacter = PhysicalItem->GetOwningPawn<ALimenPlayerCharacter>();
+	ALimenPlayerCharacter* OwnerCharacter = PhysicalItem->GetOwner<ALimenPlayerCharacter>();
 	if (OwnerCharacter == nullptr)
 	{
 		return;
@@ -43,7 +43,7 @@ bool ULimenHolsterItemAction::CanPerformAction() const
 		return false;
 	}
 
-	const ALimenPlayerCharacter* OwnerCharacter = PhysicalItem->GetOwningPawn<ALimenPlayerCharacter>();
+	const ALimenPlayerCharacter* OwnerCharacter = PhysicalItem->GetOwner<ALimenPlayerCharacter>();
 	check(OwnerCharacter != nullptr);
 	if (PhysicalItem->GetClass()->IsChildOf<ALimenTool>())
 	{

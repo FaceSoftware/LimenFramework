@@ -118,11 +118,6 @@ bool ULimenAsyncActionKeyRebind::IsTickable() const
 	return bShouldTick;
 }
 
-bool ULimenAsyncActionKeyRebind::IsAllowedToTick() const
-{
-	return FTickableGameObject::IsAllowedToTick();
-}
-
 TStatId ULimenAsyncActionKeyRebind::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(ULimenAsyncActionKeyRebind, STATGROUP_Tickables);

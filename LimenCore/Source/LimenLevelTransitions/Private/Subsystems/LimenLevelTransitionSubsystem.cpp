@@ -152,11 +152,9 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 			TotalPrecompiles = ShadersLeft;
 		}
 			
-		GEngine->AddOnScreenDebugMessage(FName(TEXT("ShaderPrecompilation")).ToUnstableInt(), 1.f, FColor::Cyan, FString::Printf(TEXT("Compiling %u shaders"), ShadersLeft));
-
 		const float TempPercentageDone = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
 		CurrentPrecompileDonePercentage = TempPercentageDone < CurrentPrecompileDonePercentage ? CurrentPrecompileDonePercentage : TempPercentageDone;
-		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage);
+		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage, FShaderPipelineCache::NumPrecompilesRemaining());
 #endif
 	}
 	
@@ -206,16 +204,15 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 	FShaderPipelineCache::SetBatchMode(FShaderPipelineCache::BatchMode::Precompile);
 	
 	TotalPrecompiles = FShaderPipelineCache::NumPrecompilesRemaining();
-	ULimenCoreStatics::LimenLog(this, FString::Printf(TEXT("Compiling %u shaders"), TotalPrecompiles));
-
+	
 	if (TotalPrecompiles == 0)
 	{
-		OnShaderCompilationUpdated.Broadcast(1.f);
+		OnShaderCompilationUpdated.Broadcast(1.f, FShaderPipelineCache::NumPrecompilesRemaining());
 		CurrentPrecompileDonePercentage = 1.f;
 	}
 	else
 	{
-		OnShaderCompilationUpdated.Broadcast(0.f);
+		OnShaderCompilationUpdated.Broadcast(0.f, FShaderPipelineCache::NumPrecompilesRemaining());
 		CurrentPrecompileDonePercentage = 0.f;
 		FShaderPipelineCache::ResumeBatching();
 	}
@@ -240,7 +237,7 @@ void ULimenLevelTransitionSubsystem::HideLoadingScreen()
 	CurrentLoadingScreenSettings = nullptr;
 
 	OnLoadingScreenHidden.Broadcast();
-	OnShaderCompilationUpdated.Broadcast(1.f);
+	OnShaderCompilationUpdated.Broadcast(1.f, FShaderPipelineCache::NumPrecompilesRemaining());
 }
 
 bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
@@ -342,25 +339,19 @@ void ULimenLevelTransitionSubsystem::LoadingScreenAnimationFinished(const bool b
 
 void ULimenLevelTransitionSubsystem::EnableAudio()
 {
-	FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
-	if (!AudioDevice.IsValid())
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController(); PC != nullptr)
 	{
-		return;
+		PC->ClearAudioListenerOverride();
 	}
-
-	// AudioDevice->SetTransientPrimaryVolume(static_cast<float>(TransientMasterVolumeCachedValue));
 }
 
 void ULimenLevelTransitionSubsystem::DisableAudio()
 {
-	FAudioDeviceHandle AudioDevice = GEngine->GetMainAudioDevice();
-	if (!AudioDevice.IsValid())
+	const FVector& SilentLocation = GetDefault<ULimenLoadingScreenSettings>()->SilentLocation;
+	if (APlayerController* PC = GetWorld()->GetFirstPlayerController(); PC != nullptr)
 	{
-		return;
+		PC->SetAudioListenerOverride(nullptr, SilentLocation, FRotator::ZeroRotator);
 	}
-
-	// TransientMasterVolumeCachedValue = AudioDevice->GetTransientPrimaryVolume();
-	// AudioDevice->SetTransientPrimaryVolume(0);
 }
 
 AInitializerProxyActor* AInitializerProxyActor::CreateInitializerProxyActor(UObject* WorldContextObject)

@@ -5,20 +5,21 @@
 
 #include "Actors/LimenGameplayManager.h"
 #include "Attributes/LimenHealthAttribute.h"
-#include "Interfaces/LimenStartTileInterface.h"
+#include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 #include "LimenAbilitySystem/Public/Components/LimenAbilityComponent.h"
 #include "LogMacros/LimenLogMacros.h"
-#include "MapBuilders/LimenProceduralTileMapBuilder.h"
 #include "Subsystems/LimenGameSaveSubsystem.h"
-#include "Tiles/LimenMapTile.h"
 
 class ALimenProceduralTileMapBuilder;
+
 
 void ULimenCheatManager::ForceCrash()
 {
 	// Let's definitely crash
 	LIMEN_LOG(LogLimen, Warning, this, "Force crash requested!");
-	*static_cast<int*>(nullptr) = 0;
 	check(false);
 }
 

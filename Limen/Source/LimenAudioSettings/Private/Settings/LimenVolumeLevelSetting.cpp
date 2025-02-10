@@ -3,6 +3,7 @@
 
 #include "Settings/LimenVolumeLevelSetting.h"
 
+#include "FMODBlueprintStatics.h"
 #include "Sound/SoundClass.h"
 
 
@@ -19,6 +20,7 @@ void ULimenVolumeLevelSetting::ApplyCurrentSetting(const bool bUserRequest)
 
 	check(!SoundClass.IsNull())
 	SoundClass.LoadSynchronous()->Properties.Volume = GetCurrentValue();
+	UFMODBlueprintStatics::SetGlobalParameterByName(FMODParameterName, GetCurrentValue());
 }
 
 void ULimenVolumeLevelSetting::SetDefaults()

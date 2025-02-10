@@ -85,11 +85,6 @@ bool ULimenResolutionSetting::IsTickable() const
 	return bShouldTick;
 }
 
-bool ULimenResolutionSetting::IsAllowedToTick() const
-{
-	return FTickableGameObject::IsAllowedToTick();
-}
-
 TStatId ULimenResolutionSetting::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(ULimenResolutionSetting, STATGROUP_Tickables);

@@ -16,7 +16,7 @@ class ULimenWidget;
 /**
  * 
  */
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Blueprintable)
 class LIMENGAMEFRAMEWORK_API ALimenBaseHUD : public AHUD
 {
 	GENERATED_BODY()
@@ -71,9 +71,6 @@ protected:
 
 	void ShowWidget_Internal(ULimenWidget* Widget);
 	void HideWidget_Internal(ULimenWidget* Widget);
-
-	UFUNCTION()
-	virtual void OnLoadingScreenVisibilityChanged(const bool bIsVisible) {}
 
 private:
 	UPROPERTY(EditDefaultsOnly)

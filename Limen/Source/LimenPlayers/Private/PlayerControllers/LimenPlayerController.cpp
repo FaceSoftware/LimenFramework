@@ -58,7 +58,7 @@ void ALimenPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 	
 	if (const ULimenLevelTransitionSubsystem* LevelTransitionSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>();
-		!LevelTransitionSubsystem->IsLoadingScreenActive())
+		LevelTransitionSubsystem != nullptr && !LevelTransitionSubsystem->IsLoadingScreenActive())
 	{
 		LoadingScreenVisibilityChanged(false);
 	}
@@ -93,8 +93,16 @@ void ALimenPlayerController::PauseInput(const FInputActionInstance& Instance)
 	if (Instance.GetValue().Get<bool>())
 	{
 		verify(CreateHudReference())
+
+		if (LimenHUD->IsCharacterHudShowing())
+		{
+			LimenHUD->TogglePauseMenuWidget();
+		}
+		else // Is not seeing the hud, probably inside a menu
+		{
+			LimenHUD->HideActiveWidget();
+		}
 		
-		LimenHUD->TogglePauseMenuWidget();
 	}
 }
 

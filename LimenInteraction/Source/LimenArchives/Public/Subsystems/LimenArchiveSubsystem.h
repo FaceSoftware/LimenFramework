@@ -5,9 +5,12 @@
 #include "CoreMinimal.h"
 #include "LimenStorageSubsystem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Templates/SubclassOf.h"
 #include "LimenArchiveSubsystem.generated.h"
 
+
 class ULimenArchive;
+
 /**
  * 
  */
@@ -25,8 +28,6 @@ public:
 
 protected:
 
-private:
-	TSubclassOf<ULimenArchive> CurrentArchiveClass;
-	
+private:	
 	virtual void Load_Internal() override;
 };

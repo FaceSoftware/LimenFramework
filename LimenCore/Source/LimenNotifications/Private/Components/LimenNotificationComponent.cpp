@@ -3,8 +3,10 @@
 
 #include "Components/LimenNotificationComponent.h"
 
+#include "TimerManager.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "CppClasses/LimenNotification.h"
+#include "Engine/World.h"
 #include "GameFramework/HUD.h"
 
 
@@ -80,14 +82,14 @@ bool ULimenNotificationComponent::IsNotificationDuplicate(const TSharedRef<const
 {
 	const TSharedPtr<const FLimenNotification> TestPtr = Test.ToSharedPtr();
 	
-	for (const auto Notification : PendingNotifications)
+	for (const auto& Notification : PendingNotifications)
 	{
 		if (Test.Get() == Notification.ToSharedPtr().Get())
 		{
 			return true;
 		}
 	}
-	for (const TTuple<TSharedRef<const FLimenNotification>, FTimerHandle> Notification : ActiveNotifications)
+	for (const TTuple<TSharedRef<const FLimenNotification>, FTimerHandle>& Notification : ActiveNotifications)
 	{
 		if (Test.Get() == Notification.Key.ToSharedPtr().Get())
 		{

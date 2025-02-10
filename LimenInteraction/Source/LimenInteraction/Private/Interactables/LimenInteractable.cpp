@@ -3,6 +3,9 @@
 
 #include "Interactables/LimenInteractable.h"
 
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
+
 
 ALimenInteractable::ALimenInteractable(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {

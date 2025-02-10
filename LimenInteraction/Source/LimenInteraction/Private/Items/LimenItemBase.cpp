@@ -4,6 +4,7 @@
 #include "Items/LimenItemBase.h"
 
 #include "Components/LimenInventoryComponent.h"
+#include "GameFramework/Pawn.h"
 #include "ItemActions/LimenItemAction.h"
 
 
@@ -23,11 +24,6 @@ FText ALimenItemBase::GetDescription(const TSubclassOf<ALimenItemBase>& ItemClas
 {
 	check(ItemClass != nullptr);
 	return ItemClass->GetDefaultObject<ALimenItemBase>()->GetDescription();
-}
-
-UStaticMesh* ALimenItemBase::GetItemMesh_Implementation() const
-{
-	return nullptr;
 }
 
 ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -58,6 +54,11 @@ void ALimenItemBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	ItemActions.Empty();
 	
 	Super::EndPlay(EndPlayReason);
+}
+
+UStaticMesh* ALimenItemBase::GetItemMesh_Implementation() const
+{
+	return nullptr;
 }
 
 UTexture2D* ALimenItemBase::GetItemImage() const
@@ -110,6 +111,8 @@ TArray<ULimenItemAction*> ALimenItemBase::GetItemActions() const
 void ALimenItemBase::Interact(AController* InController, APawn* InPawn)
 {
 	Super::Interact(InController, InPawn);
+
+	SetOwner(InPawn);
 	RemoveFromGameplay();
 }
 

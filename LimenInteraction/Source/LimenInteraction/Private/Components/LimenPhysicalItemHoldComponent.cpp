@@ -58,3 +58,8 @@ bool ULimenPhysicalItemHoldComponent::IsHoldingSomething() const
 {
 	return bIsHoldingSomething;
 }
+
+ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
+{
+	return PhysicalItem.Get();
+}
