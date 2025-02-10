@@ -51,7 +51,6 @@ public:
 	virtual void Tick(const float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override;
 	virtual bool IsTickable() const override;
-	virtual bool IsAllowedToTick() const override;
 	virtual TStatId GetStatId() const override;
 
 #pragma endregion
