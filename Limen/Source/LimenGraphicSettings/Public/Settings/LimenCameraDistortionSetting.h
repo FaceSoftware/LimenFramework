@@ -18,6 +18,11 @@ class LIMENGRAPHICSETTINGS_API ULimenCameraDistortionSetting : public ULimenSele
 public:
 	inline static const FString Enabled = TEXT("Enabled");
 	inline static const FString Disabled = TEXT("Disabled");
+
+	UFUNCTION(BlueprintCallable, meta=(WorldContext=WorldContext))
+	static void SetCameraDistortionState(UObject* WorldContext, const bool bEnable);
+	UFUNCTION(BlueprintCallable, BlueprintPure, meta=(WorldContext=WorldContext))
+	static bool GetCameraDistortionState(UObject* WorldContext);
 	
 	ULimenCameraDistortionSetting();
 
