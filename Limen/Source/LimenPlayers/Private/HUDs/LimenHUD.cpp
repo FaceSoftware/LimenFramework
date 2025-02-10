@@ -3,7 +3,9 @@
 
 #include "HUDs/LimenHUD.h"
 
+#include "Engine/GameInstance.h"
 #include "PSO/LimenPSOCompiler.h"
+#include "Subsystems/LimenLevelTransitionSubsystem.h"
 #include "Widgets/LimenDeathScreen.h"
 #include "Widgets/LimenGameMenuWrapperWidget.h"
 #include "Widgets/LimenHudWidget.h"
@@ -15,6 +17,16 @@ ALimenHUD::ALimenHUD() : Super()
 {
 	bPostProcessEnabled = true;
 	bForceHUDState = 0;
+	bShowHudWidgetAfterLoadingScreen = false;
+}
+
+void ALimenHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>();
+	LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::LoadingScreenVisibilityChanged);
+	LoadingScreenVisibilityChanged(LevelTransitionHandler->IsLoadingScreenActive());
 }
 
 void ALimenHUD::ShowGameMenuWidget()
@@ -244,7 +256,7 @@ void ALimenHUD::InitializeWidgets()
 			GameMenuWidget.Get(), GetOwningPlayerController(), GameMenuWidgetClass.LoadSynchronous(), true);
 
 		GameMenuWidget->BindPlayerController(GetOwningPlayerController());
-		GameMenuWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::OnGameMenuVisibilityChanged);
+		GameMenuWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::GameMenuVisibilityChanged);
 	}
 
 	if (!CharacterHudWidgetClass.IsNull())
@@ -253,7 +265,7 @@ void ALimenHUD::InitializeWidgets()
 			CharacterHudWidget.Get(), GetOwningPlayerController(), CharacterHudWidgetClass.LoadSynchronous(), true);
 		
 		CharacterHudWidget->BindPawn(GetOwningPlayerController()->GetPawn());
-		CharacterHudWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::OnCharacterHudVisibilityChanged);
+		CharacterHudWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::CharacterHudVisibilityChanged);
 	}
 
 	if (!PauseMenuWidgetClass.IsNull())
@@ -262,7 +274,7 @@ void ALimenHUD::InitializeWidgets()
 			PauseMenuWidget.Get(), GetOwningPlayerController(), PauseMenuWidgetClass.LoadSynchronous(), true);
 
 		PauseMenuWidget->BindPlayerController(GetOwningPlayerController());
-		PauseMenuWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::OnPauseMenuVisibilityChanged);
+		PauseMenuWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::PauseMenuVisibilityChanged);
 	}
 
 	if (!DeathScreenWidgetClass.IsNull())
@@ -270,7 +282,7 @@ void ALimenHUD::InitializeWidgets()
 		DeathScreenWidget = ULimenWidget::IsWidgetValid<ULimenDeathScreen>(
 			DeathScreenWidget.Get(), GetOwningPlayerController(), DeathScreenWidgetClass.LoadSynchronous(), true);
 
-		DeathScreenWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::OnDeathScreenVisibilityChanged);
+		DeathScreenWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::DeathScreenVisibilityChanged);
 	}
 
 	if (!ItemSmithWrapperWidgetClass.IsNull())
@@ -279,7 +291,7 @@ void ALimenHUD::InitializeWidgets()
 			ItemSmithWrapperWidget.Get(), GetOwningPlayerController(), ItemSmithWrapperWidgetClass.LoadSynchronous(), true);
 
 		ItemSmithWrapperWidget->BindPlayerController(GetOwningPlayerController());
-		ItemSmithWrapperWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::OnUpgradeShopVisibilityChanged);
+		ItemSmithWrapperWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::UpgradeShopVisibilityChanged);
 	}
 }
 
@@ -336,7 +348,22 @@ bool ALimenHUD::CanSwitchWidgetsVisibility() const
 	return !IsAnyAnimationInProgress();
 }
 
-void ALimenHUD::OnCharacterHudVisibilityChanged(const bool bIsVisible)
+void ALimenHUD::LoadingScreenVisibilityChanged(const bool bIsVisible)
+{
+	if (bIsVisible)
+	{
+		HideCharacterHudWidget();
+	}
+	else
+	{
+		if (bShowHudWidgetAfterLoadingScreen)
+		{
+			ShowCharacterHudWidget();
+		}
+	}
+}
+
+void ALimenHUD::CharacterHudVisibilityChanged(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{
@@ -347,7 +374,7 @@ void ALimenHUD::OnCharacterHudVisibilityChanged(const bool bIsVisible)
 	}
 }
 
-void ALimenHUD::OnGameMenuVisibilityChanged(const bool bIsVisible)
+void ALimenHUD::GameMenuVisibilityChanged(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{
@@ -361,7 +388,7 @@ void ALimenHUD::OnGameMenuVisibilityChanged(const bool bIsVisible)
 	}
 }
 
-void ALimenHUD::OnPauseMenuVisibilityChanged(const bool bIsVisible)
+void ALimenHUD::PauseMenuVisibilityChanged(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{
@@ -375,7 +402,7 @@ void ALimenHUD::OnPauseMenuVisibilityChanged(const bool bIsVisible)
 	}
 }
 
-void ALimenHUD::OnDeathScreenVisibilityChanged(const bool bIsVisible)
+void ALimenHUD::DeathScreenVisibilityChanged(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{
@@ -384,7 +411,7 @@ void ALimenHUD::OnDeathScreenVisibilityChanged(const bool bIsVisible)
 	}
 }
 
-void ALimenHUD::OnUpgradeShopVisibilityChanged(const bool bIsVisible)
+void ALimenHUD::UpgradeShopVisibilityChanged(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{

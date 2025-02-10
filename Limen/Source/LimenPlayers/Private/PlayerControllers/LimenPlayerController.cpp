@@ -233,25 +233,8 @@ void ALimenPlayerController::UnbindWidgetDelegates()
 void ALimenPlayerController::LoadingScreenVisibilityChanged(const bool bIsVisible)
 {
 	Super::LoadingScreenVisibilityChanged(bIsVisible);
-	
-	if (bIsVisible)
-	{
-		if (CreateHudReference())
-		{
-			LimenHUD->HideCharacterHudWidget();
-		}
-		
-		SetUIOnlyInput();
-	}
-	else
-	{
-		if (CreateHudReference())
-		{
-			LimenHUD->ShowCharacterHudWidget();
-		}
-		
-		SetGameInput();
-	}
+
+	SetGameInput();
 }
 
 void ALimenPlayerController::GameMenuVisibilityChanged(const bool bIsVisible)

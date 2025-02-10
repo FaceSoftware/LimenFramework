@@ -63,7 +63,6 @@ protected:
 	virtual void BindWidgetDelegates() override;
 	virtual void UnbindWidgetDelegates() override;
 
-	
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible) override;
 	UFUNCTION()
 	virtual void GameMenuVisibilityChanged(const bool bIsVisible);

@@ -4,11 +4,28 @@
 #include "Settings/LimenCameraDistortionSetting.h"
 
 #include "Camera/CameraComponent.h"
+#include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 
+
+void ULimenCameraDistortionSetting::SetCameraDistortionState(UObject* WorldContext, const bool bEnable)
+{
+	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::Assert);
+	const ULimenGraphicalSettingsSubsystem* Subsystem = World->GetGameInstance()->GetSubsystem<ULimenGraphicalSettingsSubsystem>();
+	ULimenCameraDistortionSetting* Setting = Subsystem->GetItem<ULimenCameraDistortionSetting>();
+	Setting->SetNewValue(bEnable ? Enabled : Disabled);
+}
+
+bool ULimenCameraDistortionSetting::GetCameraDistortionState(UObject* WorldContext)
+{
+	const UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::Assert);
+	const ULimenGraphicalSettingsSubsystem* Subsystem = World->GetGameInstance()->GetSubsystem<ULimenGraphicalSettingsSubsystem>();
+	const ULimenCameraDistortionSetting* Setting = Subsystem->GetItem<ULimenCameraDistortionSetting>();
+	return Setting->GetCurrentValue() == Enabled;
+}
 
 ULimenCameraDistortionSetting::ULimenCameraDistortionSetting()
 {
