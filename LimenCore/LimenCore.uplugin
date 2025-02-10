@@ -26,6 +26,11 @@
 			"Optional": false
 		},
 		{
+			"Name": "EngineCameras",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
 			"Name": "AutomationUtils",
 			"Enabled": true,
 			"Optional": false
