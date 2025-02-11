@@ -21,6 +21,7 @@ ULimenCameraTiltComponent::ULimenCameraTiltComponent()
 	CameraTiltRecoverSpeed = 30;
 	bTiltTowardsMovement = false;
 	bEnableTilt = true;
+	OriginalRelativeRotation = FRotator::ZeroRotator;
 	CurrentTilt = 0;
 	bIsTiltEnabled = true;
 
@@ -91,7 +92,8 @@ void ULimenCameraTiltComponent::SetTiltEnabled(const bool bEnabled)
 
 void ULimenCameraTiltComponent::NotifyYawInput(const float InputValue)
 {
-	bTiltTowardsMovement ? CurrentTilt += InputValue : CurrentTilt -= InputValue;
+	CurrentTilt = FMath::FInterpTo(CurrentTilt, bTiltTowardsMovement ? InputValue : -InputValue, GetWorld()->GetDeltaSeconds(), CameraTiltRecoverSpeed);
+	
 }
 
 void ULimenCameraTiltComponent::CalculateCurrentTilt(const float DeltaTime)
