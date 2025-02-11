@@ -5,10 +5,17 @@
 
 #include "Developer/LimenGameSavesDeveloperSettings.h"
 #include "Developer/LimenLevelsDeveloperSettings.h"
+#include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "SaveData/LimenGameSaveData.h"
 #include "SavesHandlers/LimenSavesHandler.h"
+#include "Subsystems/LimenLevelManagerSubsystem.h"
+#include "Subsystems/LimenModalsSubsystem.h"
 #include "Subsystems/LimenSaveSubsystem.h"
+#include "Subsystems/SubsystemCollection.h"
+#include "UMG/LimenGenericModalWidget.h"
 
 
 const FString ULimenGameSaveSubsystem::GameSaveDataFolder = TEXT("GameSaves");
@@ -71,7 +78,22 @@ void ULimenGameSaveSubsystem::SaveCurrentGame(UWorld* InWorld)
 	CurrentGameSaveData = NewObject<ULimenGameSaveData>();
 	CurrentGameSaveData->GameLevelIndex = ULimenLevelsDeveloperSettings::GetGameLevelIndex(GetWorld());
 
-	InitializeHandlersForSaving();
+	if (!InitializeHandlersForSaving())
+	{
+		const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<
+			ULimenModalsSubsystem>();
+		check(ModalsSubsystem != nullptr);
+
+		ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(
+			FModalParams(
+				TEXT("Save Error"),
+				TEXT(
+					"Something went wrong saving game data. The game will resume play but data won't be saved until a next save point is reached.")));
+		check(Modal != nullptr)
+
+		Modal->OnModalResponseReceived.AddDynamic(this, &ThisClass::FailedToSaveDataModalDismissed);
+	}
+	
 	SaveToCurrentSaveData();
 }
 
@@ -93,7 +115,17 @@ void ULimenGameSaveSubsystem::LoadCurrentGame(UWorld* InWorld)
 		SaveCurrentGame(World.Get());
 		return;
 	}
-	InitializeHandlersForLoading();
+	
+	if (!InitializeHandlersForLoading())
+	{
+		const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+		check(ModalsSubsystem != nullptr);
+
+		ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(FModalParams(TEXT("Save Data Corrupted"), TEXT("Something went wrong loading the save data.")));
+		check(Modal != nullptr)
+
+		Modal->OnModalResponseReceived.AddDynamic(this, &ThisClass::FailedToLoadDataModalDismissed);
+	}
 }
 
 void ULimenGameSaveSubsystem::ScheduleGameLoadOnMapChange()
@@ -149,7 +181,7 @@ void ULimenGameSaveSubsystem::LoadToCurrentSaveData()
 	CurrentGameSaveData = SaveSubsystem->LoadData<ULimenGameSaveData>(GameSaveDataFolder / SaveDataName);
 }
 
-void ULimenGameSaveSubsystem::InitializeHandlersForSaving()
+bool ULimenGameSaveSubsystem::InitializeHandlersForSaving()
 {
 	CurrentGameSaveData->StoredSaveHandlers.Empty(0);
 	const ULimenGameSavesDeveloperSettings* Settings = GetDefault<ULimenGameSavesDeveloperSettings>();
@@ -161,14 +193,23 @@ void ULimenGameSaveSubsystem::InitializeHandlersForSaving()
 		}
 		
 		ULimenSavesHandler* Handler = NewObject<ULimenSavesHandler>(this, HandlerClass.LoadSynchronous());
-		Handler->SaveDataFrom(GetWorld());
+		if (Handler->SaveDataFrom(GetWorld()))
+		{
+			CurrentGameSaveData->StoredSaveHandlers.Push(FObjectSaveData(Handler));
+		}
+		else
+		{
+			Handler->ConditionalBeginDestroy();
+			return false;
+		}
 
-		CurrentGameSaveData->StoredSaveHandlers.Push(FObjectSaveData(Handler));
 		Handler->ConditionalBeginDestroy();
 	}
+
+	return true;
 }
 
-void ULimenGameSaveSubsystem::InitializeHandlersForLoading()
+bool ULimenGameSaveSubsystem::InitializeHandlersForLoading()
 {
 	for (FObjectSaveData& HandlerData : CurrentGameSaveData->StoredSaveHandlers)
 	{
@@ -177,9 +218,16 @@ void ULimenGameSaveSubsystem::InitializeHandlersForLoading()
 		ULimenSavesHandler* Handler = NewObject<ULimenSavesHandler>(this, HandlerData.GetObjectClass().LoadSynchronous());
 		HandlerData.LoadData(Handler); // Load the saved data to the handler
 		
-		Handler->LoadDataTo(GetWorld()); // Load the handler data to the world
+		if (!Handler->LoadDataTo(GetWorld())) // Load the handler data to the world
+		{
+			Handler->ConditionalBeginDestroy();
+			return false;
+		}
+
 		Handler->ConditionalBeginDestroy();
 	}
+
+	return true;
 }
 
 void ULimenGameSaveSubsystem::OnWorldActorsInitialized(const FActorsInitializedParams& InitializationParams)
@@ -200,4 +248,19 @@ void ULimenGameSaveSubsystem::OnWorldActorsInitialized(const FActorsInitializedP
 		}
 		bShouldLoadGameOnMapChange = false;
 	}
+}
+
+void ULimenGameSaveSubsystem::FailedToLoadDataModalDismissed(ULimenGenericModalWidget* ModalWidget, bool bAccepted)
+{
+	ModalWidget->OnModalResponseReceived.RemoveDynamic(this, &ThisClass::FailedToLoadDataModalDismissed);
+
+	ULimenLevelManagerSubsystem* LevelManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenLevelManagerSubsystem>();
+	check(LevelManager != nullptr);
+
+	LevelManager->OpenMainMenu();
+}
+
+void ULimenGameSaveSubsystem::FailedToSaveDataModalDismissed(ULimenGenericModalWidget* ModalWidget, bool bAccepted)
+{
+	ModalWidget->OnModalResponseReceived.RemoveDynamic(this, &ThisClass::FailedToSaveDataModalDismissed);
 }

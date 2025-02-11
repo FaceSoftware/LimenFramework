@@ -29,7 +29,8 @@ public class LimenGameSaves : ModuleRules
                 "LimenTools",
                 "LimenWeapons", 
                 "LimenHints", 
-                "LimenLevels",
+                "LimenLevels", 
+                "LimenModals",
             }
         );
     }

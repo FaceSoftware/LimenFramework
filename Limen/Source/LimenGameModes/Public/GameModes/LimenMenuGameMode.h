@@ -26,5 +26,7 @@ protected:
 	
 
 private:
+	UFUNCTION()
+	void DataCorruptedModalResponse(ULimenGenericModalWidget* ModalWidget, bool bAccepted);
 	
 };

@@ -18,8 +18,10 @@ public:
 	static TSoftObjectPtr<UWorld> GetInitializationLevel();
 	static TSoftObjectPtr<UWorld> GetMainMenuLevel();
 	static TSoftObjectPtr<UWorld> GetGameEndLevel();
-	static TSoftObjectPtr<UWorld> GetGameLevel(const uint8 Index);
-	static uint8 GetGameLevelIndex(const UWorld* Level);
+	static TSoftObjectPtr<UWorld> GetGameLevel(const int32 Index);
+	static int32 GetGameLevelIndex(const FSoftObjectPath& Level);
+	static int32 GetGameLevelIndex(UWorld* Level);
+	static bool IsGameLevelIndexValid(const int32 Index);
 	static bool ShouldUseSubsystem();
 
 public:	

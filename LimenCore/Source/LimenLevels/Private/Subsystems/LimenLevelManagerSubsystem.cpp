@@ -90,7 +90,7 @@ void ULimenLevelManagerSubsystem::OpenGameEndLevel()
 	OpenLocalLevel(ULimenLevelsDeveloperSettings::GetGameEndLevel());
 }
 
-void ULimenLevelManagerSubsystem::OpenGameLevel(const uint8 Index)
+void ULimenLevelManagerSubsystem::OpenGameLevel(const int32 Index)
 {
 	OpenLocalLevel(ULimenLevelsDeveloperSettings::GetGameLevel(Index));
 }
@@ -98,4 +98,11 @@ void ULimenLevelManagerSubsystem::OpenGameLevel(const uint8 Index)
 void ULimenLevelManagerSubsystem::ResetCurrentLevel()
 {
 	OpenLocalLevel(GetWorld());
+}
+
+bool ULimenLevelManagerSubsystem::IsGameLevelIndexValid(const int32 Index) const
+{
+	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();
+	check(Settings != nullptr);
+	return Settings->IsGameLevelIndexValid(Index);
 }
