@@ -8,6 +8,7 @@
 #include "GameFramework/Actor.h"
 #include "Interface/LimenAsyncInitializer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Widgets/LimenWidget.h"
 #include "LimenLevelTransitionSubsystem.generated.h"
 
 
@@ -23,16 +24,12 @@ class LIMENLEVELTRANSITIONS_API ULimenLevelTransitionSubsystem : public UGameIns
 {
 	GENERATED_BODY()
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLoadingScreenEvent, const bool, bIsShowing);
-	DECLARE_MULTICAST_DELEGATE(FLoadingScreenDelegate);
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShaderCompilingProgress, const float, CompletedPercentage, const int32, ShadersLeft);
 
 public:
-	UPROPERTY(BlueprintAssignable)	
-	FLoadingScreenEvent OnLoadingScreenVisibilityChanged;
-	FLoadingScreenDelegate OnLoadingScreenVisible;
-	FLoadingScreenDelegate OnLoadingScreenHidden;
-	UPROPERTY(BlueprintAssignable)	
+	UPROPERTY(BlueprintAssignable)
+	FLimenWidgetVisibilityChanged OnLoadingScreenVisibilityChanged; 
+	UPROPERTY(BlueprintAssignable)
 	FShaderCompilingProgress OnShaderCompilationUpdated;
 
 	ULimenLevelTransitionSubsystem();
@@ -97,11 +94,13 @@ private:
 	uint32 TotalPrecompiles;
 	float CurrentPrecompileDonePercentage;
 
-	UFUNCTION()
-	void LoadingScreenAnimationFinished(const bool bIsVisibleAnimation);
-
 	void EnableAudio();
 	void DisableAudio();
+
+	UFUNCTION()
+	void LoadingScreenVisibilityChanged(const bool bIsVisible);
+	UFUNCTION()
+	void LoadingScreenAnimationFinished(const bool bIsVisible);
 };
 
 /**

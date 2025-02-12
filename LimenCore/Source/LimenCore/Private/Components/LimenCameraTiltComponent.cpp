@@ -5,8 +5,6 @@
 
 #include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Engine/World.h"
-#include "GameFramework/Controller.h"
-#include "GameFramework/PlayerController.h"
 
 ULimenCameraTiltComponent::ULimenCameraTiltComponent()
 {
@@ -15,15 +13,15 @@ ULimenCameraTiltComponent::ULimenCameraTiltComponent()
 	bAutoActivate = true;
 	bUsePawnControlRotation = false;
 
-	TargetFps = 60.f;
 	TiltFunction = ETiltFunction::EaseIn;
 	MaxCameraTilt = 20;
 	CameraTiltRecoverSpeed = 30;
-	bTiltTowardsMovement = false;
+	bInvertTilt = false;
 	bEnableTilt = true;
 	OriginalRelativeRotation = FRotator::ZeroRotator;
 	CurrentTilt = 0;
-	bIsTiltEnabled = true;
+	bInvertTilt = true;
+	bIsTiltEnabled = false;
 
 	bOriginalUsePawnControlRotation = false;
 }
@@ -39,6 +37,8 @@ void ULimenCameraTiltComponent::BeginPlay()
 	
 	PlayerController = GetWorld()->GetFirstPlayerController();
 	OriginalRelativeRotation = GetRelativeRotation();
+
+	SetTiltFunctionPtr();
 }
 
 void ULimenCameraTiltComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -58,24 +58,14 @@ void ULimenCameraTiltComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 		return;
 	}
 	
+	TiltFunctionPtr.CheckCallable();
 #endif
-	
-	CalculateCurrentTilt(DeltaTime);
+
+	TiltFunctionPtr(0.f);
 	FRotator NewRotation = GetRelativeRotation();
 	NewRotation.Roll = CurrentTilt;
 	SetRelativeRotation(NewRotation);
 }
-
-#if WITH_EDITORONLY_DATA
-void ULimenCameraTiltComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-	
-	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.bStartWithTickEnabled = true;
-	PrimaryComponentTick.TickInterval = 1.f / TargetFps;
-}
-#endif
 
 void ULimenCameraTiltComponent::SetTiltEnabled(const bool bEnabled)
 {
@@ -92,39 +82,28 @@ void ULimenCameraTiltComponent::SetTiltEnabled(const bool bEnabled)
 
 void ULimenCameraTiltComponent::NotifyYawInput(const float InputValue)
 {
-	CurrentTilt = FMath::FInterpTo(CurrentTilt, bTiltTowardsMovement ? InputValue : -InputValue, GetWorld()->GetDeltaSeconds(), CameraTiltRecoverSpeed);
-	
+	TiltFunctionPtr(bInvertTilt ? -InputValue : InputValue);
 }
 
-void ULimenCameraTiltComponent::CalculateCurrentTilt(const float DeltaTime)
+void ULimenCameraTiltComponent::SetTiltFunctionPtr()
 {
 	switch (TiltFunction)
 	{
 	case ETiltFunction::Linear:
-		CalculateLinearTilt(DeltaTime);
+		TiltFunctionPtr = [this] (float Target) { CalculateLinearTilt(Target); };
 		break;
-		
 	case ETiltFunction::EaseIn:
-		CalculateEaseInTilt(DeltaTime);
+		TiltFunctionPtr = [this](float Target) { CalculateEaseInTilt(Target); };
 		break;
 	}
 }
 
-void ULimenCameraTiltComponent::CalculateLinearTilt(const float DeltaTime)
+void ULimenCameraTiltComponent::CalculateLinearTilt(const float Target)
 {
-	const float Decrement = CameraTiltRecoverSpeed * DeltaTime;
-    
-	if (CurrentTilt > 0.f)
-	{
-		CurrentTilt = FMath::Max(CurrentTilt - Decrement, 0.f);
-	}
-	else if (CurrentTilt < 0.f)
-	{
-		CurrentTilt = FMath::Min(CurrentTilt + Decrement, 0.f);
-	}
+	CurrentTilt = FMath::FInterpConstantTo(CurrentTilt, Target, GetWorld()->GetDeltaSeconds(), CameraTiltRecoverSpeed);
 }
 
-void ULimenCameraTiltComponent::CalculateEaseInTilt(const float DeltaTime)
+void ULimenCameraTiltComponent::CalculateEaseInTilt(const float Target)
 {
-	CurrentTilt = FMath::FInterpTo(CurrentTilt, 0.f, DeltaTime, CameraTiltRecoverSpeed);
+	CurrentTilt = FMath::FInterpTo(CurrentTilt, Target, GetWorld()->GetDeltaSeconds(), CameraTiltRecoverSpeed);
 }

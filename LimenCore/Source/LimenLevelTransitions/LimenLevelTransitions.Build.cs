@@ -13,7 +13,8 @@ public class LimenLevelTransitions : ModuleRules
                 "Engine",
                 "DeveloperSettings",
                 
-                "LimenCore",
+                "LimenCore", 
+                "LimenWidgets",
             }
         );
 

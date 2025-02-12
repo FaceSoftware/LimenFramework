@@ -67,6 +67,8 @@ void ULimenWidget::HideWidget()
 	{
 		return;
 	}
+
+	OnLimenVisibilityChanged.Broadcast(false);
 	
 	if (bUseHideAnimation)
 	{
@@ -163,7 +165,6 @@ void ULimenWidget::NotifyAnimationFinished(const bool bIsVisibleAnimation)
 		HideAllChildren();
 		HideWidgetMethod();
 		OnWidgetHidden();
-		OnLimenVisibilityChanged.Broadcast(false);
 	}
 
 	OnLimenAnimationFinished.Broadcast(bIsVisibleAnimation);
