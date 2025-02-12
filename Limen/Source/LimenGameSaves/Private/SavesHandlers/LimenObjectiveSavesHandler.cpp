@@ -4,11 +4,13 @@
 #include "SavesHandlers/LimenObjectiveSavesHandler.h"
 
 #include "Components/LimenObjectiveComponent.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 #include "Managers/LimenObjective.h"
 #include "SaveGames/LimenSaveData.h"
 
 
-void ULimenObjectiveSavesHandler::SaveDataFrom(UWorld* World)
+bool ULimenObjectiveSavesHandler::SaveDataFrom(UWorld* World)
 {
 	const ULimenObjectiveComponent* PlayerObjectivesComponent = World->GetFirstPlayerController()->GetPawn()->GetComponentByClass<ULimenObjectiveComponent>();
 	const TArray<ALimenObjective*>& Objectives = PlayerObjectivesComponent->GetObjectives();
@@ -16,9 +18,11 @@ void ULimenObjectiveSavesHandler::SaveDataFrom(UWorld* World)
 	{
 		ObjectivesSaveData.Push(FActorSaveData(Objective));
 	}
+
+	return true;
 }
 
-void ULimenObjectiveSavesHandler::LoadDataTo(UWorld* World)
+bool ULimenObjectiveSavesHandler::LoadDataTo(UWorld* World)
 {
 	ULimenObjectiveComponent* PlayerObjectivesComponent = World->GetFirstPlayerController()->GetPawn()->GetComponentByClass<ULimenObjectiveComponent>();
 
@@ -36,4 +40,6 @@ void ULimenObjectiveSavesHandler::LoadDataTo(UWorld* World)
 	}
 
 	PlayerObjectivesComponent->LoadObjectives(SavedPlayerObjectives);
+	
+	return true;
 }

@@ -3,6 +3,8 @@
 
 #include "Developer/LimenLevelsDeveloperSettings.h"
 
+#include "Engine/World.h"
+
 
 TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetInitializationLevel()
 {
@@ -25,7 +27,7 @@ TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetGameEndLevel()
 	return Settings->GameEndLevel;
 }
 
-TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetGameLevel(const uint8 Index)
+TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetGameLevel(const int32 Index)
 {
 	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();
 	check(Settings != nullptr);
@@ -34,21 +36,34 @@ TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetGameLevel(const uint8 I
 	return Settings->GameLevels[Index];
 }
 
-uint8 ULimenLevelsDeveloperSettings::GetGameLevelIndex(const UWorld* Level)
+int32 ULimenLevelsDeveloperSettings::GetGameLevelIndex(const FSoftObjectPath& Level)
 {
-	check(Level != nullptr);
-	
+	check(Level.IsValid())
+
 	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();
 	check(Settings != nullptr);
 	for (int32 i = 0; i < Settings->GameLevels.Num(); i++)
 	{
-		if (Settings->GameLevels[i].ToSoftObjectPath() == FSoftObjectPath(Level))
+		if (Settings->GameLevels[i].ToSoftObjectPath() == Level)
 		{
 			return static_cast<uint8>(i);
 		}
 	}
-	
+
 	return INDEX_NONE;
+}
+
+int32 ULimenLevelsDeveloperSettings::GetGameLevelIndex(UWorld* Level)
+{
+	check(Level != nullptr);
+	return GetGameLevelIndex(FSoftObjectPath(Level));
+}
+
+bool ULimenLevelsDeveloperSettings::IsGameLevelIndexValid(const int32 Index)
+{
+	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();
+	check(Settings != nullptr);
+	return Settings->GameLevels.IsValidIndex(Index);
 }
 
 bool ULimenLevelsDeveloperSettings::ShouldUseSubsystem()

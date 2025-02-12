@@ -35,9 +35,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void OpenGameEndLevel();
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
-	void OpenGameLevel(const uint8 Index = 0);
+	void OpenGameLevel(const int32 Index = 0);
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void ResetCurrentLevel();
+
+	bool IsGameLevelIndexValid(const int32 Index) const;
 
 private:
 };

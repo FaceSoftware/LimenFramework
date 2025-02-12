@@ -17,7 +17,6 @@ ALimenHUD::ALimenHUD() : Super()
 {
 	bPostProcessEnabled = true;
 	bForceHUDState = 0;
-	bShowHudWidgetAfterLoadingScreen = false;
 }
 
 void ALimenHUD::BeginPlay()
@@ -356,10 +355,6 @@ void ALimenHUD::LoadingScreenVisibilityChanged(const bool bIsVisible)
 	}
 	else
 	{
-		if (bShowHudWidgetAfterLoadingScreen)
-		{
-			ShowCharacterHudWidget();
-		}
 	}
 }
 

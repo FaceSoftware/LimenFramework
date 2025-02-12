@@ -7,10 +7,12 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "LimenGameSaveSubsystem.generated.h"
 
+
+class ULimenGenericModalWidget;
+struct FActorsInitializedParams;
 class ULimenSaveSubsystem;
 class ULimenGameSaveData;
 struct FActorSaveData;
-
 
 DECLARE_MULTICAST_DELEGATE(FGameSaveDelegate);
 
@@ -82,9 +84,13 @@ private:
 	void SaveToCurrentSaveData();
 	void LoadToCurrentSaveData();
 
-	void InitializeHandlersForSaving();
-	void InitializeHandlersForLoading();
+	bool InitializeHandlersForSaving();
+	bool InitializeHandlersForLoading();
 
-	
 	void OnWorldActorsInitialized(const FActorsInitializedParams& InitializationParams);
+
+	UFUNCTION()
+	void FailedToLoadDataModalDismissed(ULimenGenericModalWidget* ModalWidget, bool bAccepted);
+	UFUNCTION()
+	void FailedToSaveDataModalDismissed(ULimenGenericModalWidget* ModalWidget, bool bAccepted);
 };

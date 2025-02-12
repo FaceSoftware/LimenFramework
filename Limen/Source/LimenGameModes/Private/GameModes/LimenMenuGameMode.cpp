@@ -8,6 +8,7 @@
 #include "SaveData/LimenGameSaveData.h"
 #include "Subsystems/LimenGameSaveSubsystem.h"
 #include "Subsystems/LimenLevelManagerSubsystem.h"
+#include "Subsystems/LimenModalsSubsystem.h"
 
 
 ALimenMenuGameMode::ALimenMenuGameMode()
@@ -42,12 +43,35 @@ void ALimenMenuGameMode::StartLoadingGame(APlayerController* Player, const ULime
 	const ULimenGameSaveData* GameSaveData = Cast<ULimenGameSaveData>(SaveGame);
 	check(GameSaveData != nullptr);
 
-	ULimenLevelManagerSubsystem* LevelManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenLevelManagerSubsystem>();
+	ULimenLevelManagerSubsystem* LevelManager = GetWorld()->GetGameInstance()->GetSubsystem<
+		ULimenLevelManagerSubsystem>();
 	check(LevelManager != nullptr);
 
 	ULimenGameSaveSubsystem* GameSaveSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenGameSaveSubsystem>();
 	check(GameSaveSubsystem != nullptr);
 
-	GameSaveSubsystem->ScheduleGameLoadOnMapChange();
-	LevelManager->OpenGameLevel(GameSaveData->GameLevelIndex);
+	if (LevelManager->IsGameLevelIndexValid(GameSaveData->GameLevelIndex))
+	{
+		GameSaveSubsystem->ScheduleGameLoadOnMapChange();
+		LevelManager->OpenGameLevel(GameSaveData->GameLevelIndex);
+		return;
+	}
+
+	const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+	check(ModalsSubsystem != nullptr);
+
+	ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(FModalParams(TEXT("Save Data Corrupted"), TEXT("Something went wrong loading the save data.")));
+	check(Modal != nullptr)
+	Modal->OnModalResponseReceived.AddDynamic(this, &ThisClass::DataCorruptedModalResponse);
+}
+
+void ALimenMenuGameMode::DataCorruptedModalResponse(ULimenGenericModalWidget* ModalWidget, bool bAccepted)
+{
+	ModalWidget->OnModalResponseReceived.RemoveDynamic(this, &ThisClass::DataCorruptedModalResponse);
+
+	ULimenLevelManagerSubsystem* LevelManager = GetWorld()->GetGameInstance()->GetSubsystem<
+	ULimenLevelManagerSubsystem>();
+	check(LevelManager != nullptr);
+
+	LevelManager->OpenMainMenu();
 }

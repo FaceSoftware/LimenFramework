@@ -3,14 +3,17 @@
 
 #include "SavesHandlers/LimenItemSavesHandler.h"
 
-#include "..\..\..\LimenPlayers\Public\Characters\LimenPlayerCharacter.h"
+#include "Characters/LimenPlayerCharacter.h"
 #include "Components/LimenInventoryComponent.h"
 #include "Actors/LimenTool.h"
 #include "Actors/LimenWeapon.h"
 #include "Components/LimenPhysicalItemHoldComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
 #include "SaveGames/LimenSaveData.h"
 
-void ULimenItemSavesHandler::SaveDataFrom(UWorld* World)
+
+bool ULimenItemSavesHandler::SaveDataFrom(UWorld* World)
 {
 	const ULimenInventoryComponent* PlayerInventory = World->GetFirstPlayerController()->GetPawn()->GetComponentByClass<ULimenInventoryComponent>();
 	const TArray<ALimenItemBase*> Items = PlayerInventory->SaveInventory();
@@ -27,9 +30,11 @@ void ULimenItemSavesHandler::SaveDataFrom(UWorld* World)
 		const ALimenPhysicalItem* Weapon = Character->GetWeaponHoldComponent()->GetPhysicalItem();
 		HoldingWeaponClass = Weapon == nullptr ? nullptr : Weapon->GetClass();
 	}
+
+	return true;
 }
 
-void ULimenItemSavesHandler::LoadDataTo(UWorld* World)
+bool ULimenItemSavesHandler::LoadDataTo(UWorld* World)
 {
 	ULimenInventoryComponent* PlayerInventory = World->GetFirstPlayerController()->GetPawn()->GetComponentByClass<ULimenInventoryComponent>();
 
@@ -63,4 +68,6 @@ void ULimenItemSavesHandler::LoadDataTo(UWorld* World)
 		ALimenWeapon* Weapon = PlayerInventory->PeekItemInstance<ALimenWeapon>(HoldingWeaponClass.LoadSynchronous());
 		Character->HoldWeapon(Weapon);
 	}
+
+	return true;
 }
