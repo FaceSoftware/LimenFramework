@@ -6,7 +6,7 @@
 #include "GameplayManagers/LimenSaveableHintsManager.h"
 
 
-void ULimenHintSavesHandler::LoadDataTo(UWorld* World)
+bool ULimenHintSavesHandler::LoadDataTo(UWorld* World)
 {
 	Super::LoadDataTo(World);
 
@@ -14,9 +14,11 @@ void ULimenHintSavesHandler::LoadDataTo(UWorld* World)
 	{
 		HintsManager.LoadData(*It);
 	}
+
+	return true;
 }
 
-void ULimenHintSavesHandler::SaveDataFrom(UWorld* World)
+bool ULimenHintSavesHandler::SaveDataFrom(UWorld* World)
 {
 	Super::SaveDataFrom(World);
 
@@ -24,4 +26,6 @@ void ULimenHintSavesHandler::SaveDataFrom(UWorld* World)
 	{
 		HintsManager = FActorSaveData(*It);
 	}
+
+	return true;
 }

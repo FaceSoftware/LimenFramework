@@ -17,8 +17,8 @@ class LIMENGAMESAVES_API ULimenObjectiveSavesHandler : public ULimenSavesHandler
 	GENERATED_BODY()
 	
 public:	
-	virtual void SaveDataFrom(UWorld* World) override;
-	virtual void LoadDataTo(UWorld* World) override;
+	virtual bool SaveDataFrom(UWorld* World) override;
+	virtual bool LoadDataTo(UWorld* World) override;
 
 private:
 	UPROPERTY(SaveGame)

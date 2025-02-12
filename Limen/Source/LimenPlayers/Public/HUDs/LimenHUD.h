@@ -76,10 +76,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsPostProcessEnabled() const;
 	
-protected:
-	UPROPERTY(EditDefaultsOnly, Transient)
-	bool bShowHudWidgetAfterLoadingScreen;
-	
+protected:	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")
 	TSoftClassPtr<ULimenGameMenuWrapperWidget> GameMenuWidgetClass;
 	UPROPERTY(BlueprintReadOnly)

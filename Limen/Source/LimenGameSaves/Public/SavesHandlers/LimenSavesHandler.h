@@ -22,7 +22,7 @@ public:
 	virtual void DataLoaded() override final;
 	// ILimenSaveObjectInterface - End
 	
-	virtual void SaveDataFrom(UWorld* World) {};
-	virtual void LoadDataTo(UWorld* World) {};
+	virtual bool SaveDataFrom(UWorld* World) { return true; }
+	virtual bool LoadDataTo(UWorld* World) { return true; }
 
 };
