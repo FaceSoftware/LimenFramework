@@ -6,6 +6,7 @@
 #include "Engine/GameInstance.h"
 #include "PSO/LimenPSOCompiler.h"
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
+#include "UMG/LimenLoadingScreenWidget.h"
 #include "Widgets/LimenDeathScreen.h"
 #include "Widgets/LimenGameMenuWrapperWidget.h"
 #include "Widgets/LimenHudWidget.h"

@@ -12,6 +12,7 @@
 #include "HUD/LimenBaseHUD.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
+#include "UMG/LimenLoadingScreenWidget.h"
 
 
 ALimenPlayerControllerBase* ALimenPlayerControllerBase::GetLimenPlayerControllerBase(UObject* Caller, int32 PlayerIndex)

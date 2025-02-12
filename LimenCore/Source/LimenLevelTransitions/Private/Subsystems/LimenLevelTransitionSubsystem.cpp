@@ -186,8 +186,9 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 	if (LoadingScreenWidget == nullptr)
 	{
 		UUserWidget* Instance = UUserWidget::CreateWidgetInstance(*GetGameInstance(), CurrentLoadingScreenSettings->GetLoadingScreenWidgetClass(), NAME_None);
-		LoadingScreenWidget = Cast<ULimenLoadingScreenWidget>(Instance);
-		check(IsValid(LoadingScreenWidget.Get()));
+		LoadingScreenWidget = CastChecked<ULimenLoadingScreenWidget>(Instance);
+
+		LoadingScreenWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::LoadingScreenVisibilityChanged);
 		LoadingScreenWidget->OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::LoadingScreenAnimationFinished);
 	}
 	
@@ -217,8 +218,6 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 		FShaderPipelineCache::ResumeBatching();
 	}
 #endif
-	
-	OnLoadingScreenVisible.Broadcast();
 }
 
 void ULimenLevelTransitionSubsystem::HideLoadingScreen()
@@ -235,8 +234,6 @@ void ULimenLevelTransitionSubsystem::HideLoadingScreen()
 	EnableAudio();
 
 	CurrentLoadingScreenSettings = nullptr;
-
-	OnLoadingScreenHidden.Broadcast();
 	OnShaderCompilationUpdated.Broadcast(1.f, FShaderPipelineCache::NumPrecompilesRemaining());
 }
 
@@ -332,11 +329,6 @@ void ULimenLevelTransitionSubsystem::ChangePerformanceSettings(const bool bEnabl
 	}
 }
 
-void ULimenLevelTransitionSubsystem::LoadingScreenAnimationFinished(const bool bIsVisibleAnimation)
-{
-	OnLoadingScreenVisibilityChanged.Broadcast(bIsVisibleAnimation);
-}
-
 void ULimenLevelTransitionSubsystem::EnableAudio()
 {
 	if (APlayerController* PC = GetWorld()->GetFirstPlayerController(); PC != nullptr)
@@ -351,6 +343,22 @@ void ULimenLevelTransitionSubsystem::DisableAudio()
 	if (APlayerController* PC = GetWorld()->GetFirstPlayerController(); PC != nullptr)
 	{
 		PC->SetAudioListenerOverride(nullptr, SilentLocation, FRotator::ZeroRotator);
+	}
+}
+
+void ULimenLevelTransitionSubsystem::LoadingScreenVisibilityChanged(const bool bIsVisible)
+{
+	if (!bIsVisible)
+	{
+		OnLoadingScreenVisibilityChanged.Broadcast(false);
+	}
+}
+
+void ULimenLevelTransitionSubsystem::LoadingScreenAnimationFinished(const bool bIsVisible)
+{
+	if (bIsVisible)
+	{
+		OnLoadingScreenVisibilityChanged.Broadcast(true);
 	}
 }
 
