@@ -6,7 +6,6 @@
 #include "Engine/GameInstance.h"
 #include "PSO/LimenPSOCompiler.h"
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
-#include "UMG/LimenLoadingScreenWidget.h"
 #include "Widgets/LimenDeathScreen.h"
 #include "Widgets/LimenGameMenuWrapperWidget.h"
 #include "Widgets/LimenHudWidget.h"
@@ -200,29 +199,6 @@ ULimenItemSmithWrapperWidget* ALimenHUD::GetItemSmithWidget() const
 void ALimenHUD::QueueNotification(const FNotificationParams& InParams)
 {
 	Super::QueueNotification(InParams);
-}
-
-void ALimenHUD::SetPostProcessEnabled(const bool bEnable)
-{
-	if (bPostProcessEnabled == bEnable)
-	{
-		return;
-	}
-
-	bPostProcessEnabled = !bPostProcessEnabled;
-	if (bPostProcessEnabled)
-	{
-		OnPostProcessEnabled();
-	}
-	else
-	{
-		OnPostProcessDisabled();
-	}
-}
-
-bool ALimenHUD::IsPostProcessEnabled() const
-{
-	return bPostProcessEnabled;
 }
 
 void ALimenHUD::DestroyWidgets()

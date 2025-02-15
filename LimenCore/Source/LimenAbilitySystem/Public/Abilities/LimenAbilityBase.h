@@ -4,13 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Tickable.h"
-#include "Components/LimenAbilityComponent.h"
-#include "LimenStorage/Public/LimenStorageItem.h"
+#include "LimenStorageItem.h"
 #include "LimenAbilityBase.generated.h"
 
 
 class ULimenAbilityComponent;
-class ULimenAttributeBase;
+class AController;
 /**
  * 
  */
@@ -34,7 +33,8 @@ public:
 	 */
 	virtual void ForceDeactivateAbility();
 
-	/// FTickableGameObject Interface Start
+#pragma region FTickableGameObject Interface Start
+
 	virtual void Tick(float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override final;
 	virtual bool IsTickable() const override final;
@@ -43,7 +43,8 @@ public:
 	virtual bool IsTickableWhenPaused() const override final;
 	virtual bool IsTickableInEditor() const override final;
 	virtual UWorld* GetTickableGameObjectWorld() const override final;
-	/// FTickableGameObject Interface End
+
+#pragma endregion FTickableGameObject Interface Start
 	
 protected:	
 	ULimenAbilityComponent* GetOwnerAbilityComponent() const;	

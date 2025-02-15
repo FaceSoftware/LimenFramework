@@ -17,18 +17,3 @@ void ULimenGameMenuWrapperWidget::ReturnToGame()
 	
 	LimenHUD->HideGameMenuWidget();
 }
-
-void ULimenGameMenuWrapperWidget::OnWidgetHidden_Implementation()
-{
-	Super::OnWidgetHidden_Implementation();
-
-	if (InventoryMenuWidget)
-	{
-		InventoryMenuWidget->HideWidget();
-	}
-
-	if (ObjectivesMenuWidget)
-	{
-		ObjectivesMenuWidget->HideWidget();
-	}
-}

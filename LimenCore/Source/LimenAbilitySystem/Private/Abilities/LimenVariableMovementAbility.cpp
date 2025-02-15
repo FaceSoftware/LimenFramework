@@ -5,6 +5,7 @@
 
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Attributes/LimenStaminaAttribute.h"
+#include "Components/LimenAbilityComponent.h"
 
 
 ULimenVariableMovementAbility::ULimenVariableMovementAbility()
@@ -54,13 +55,6 @@ void ULimenVariableMovementAbility::Tick(float DeltaTime)
 	}
 }
 
-void ULimenVariableMovementAbility::CancelAbility(AController* Controller, APawn* Pawn)
-{
-	Super::CancelAbility(Controller, Pawn);
-
-	bWantsToSprint = false;
-}
-
 bool ULimenVariableMovementAbility::CanActivateAbility() const
 {
 	if (!Super::CanActivateAbility())
@@ -99,4 +93,11 @@ void ULimenVariableMovementAbility::SetWalkMode()
 	bIsSprinting = false;
 	CharacterMovementComponent->MaxWalkSpeed = WalkSpeed;
 	CharacterMovementComponent->MaxWalkSpeedCrouched = CrouchWalkSpeed;
+}
+
+void ULimenVariableMovementAbility::AbilityCancelled(AController* Controller, APawn* Pawn)
+{
+	Super::AbilityCancelled(Controller, Pawn);
+	
+	bWantsToSprint = false;
 }

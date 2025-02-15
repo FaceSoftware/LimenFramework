@@ -4,8 +4,11 @@
 #include "Characters/LimenAICharacter.h"
 
 #include "AIControllers/LimenAIControllerBase.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/Interaction/LimenProximityInteractionComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
 
 
 ALimenAICharacter::ALimenAICharacter(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -79,7 +82,7 @@ void ALimenAICharacter::UnFreeze()
 
 	GetCharacterMovement()->SetMovementMode(MovementModeBeforeFreeze);
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (!IsValid(AnimInstance))
+	if (AnimInstance == nullptr)
 	{
 		return;
 	}
@@ -132,12 +135,12 @@ bool ALimenAICharacter::IsBeingSeenByPlayer(const APlayerController* InPlayerCon
 
 void ALimenAICharacter::ResumeBrainLogic(const FString& Reason)
 {
-	LimenAIController->PauseBrainLogic(Reason);
+	LimenAIController->ResumeBrainLogic(Reason);
 }
 
 void ALimenAICharacter::PauseBrainLogic(const FString& Reason)
 {
-	LimenAIController->ResumeBrainLogic(Reason);
+	LimenAIController->PauseBrainLogic(Reason);
 }
 
 void ALimenAICharacter::Interact()

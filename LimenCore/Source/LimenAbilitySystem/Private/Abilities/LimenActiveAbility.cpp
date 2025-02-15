@@ -10,15 +10,17 @@
 ULimenActiveAbility::ULimenActiveAbility() : Super()
 {
 	AbilityCooldown = 0;
-	bIsCooldownOver = true;
+	bIsCooldownOver = false;
 	bIsActive = false;
 	AbilityActivationDelay = 0;
+	bIsOneShot = false;
 }
 
 void ULimenActiveAbility::Initialize(AActor* InOwner)
 {
 	Super::Initialize(InOwner);
-	
+
+	bIsCooldownOver = true;
 	PawnMesh = InOwner->GetComponentByClass<USkeletalMeshComponent>();
 }
 
@@ -44,6 +46,8 @@ void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
 void ULimenActiveAbility::CancelAbility(AController* Controller, APawn* Pawn)
 {
 	bIsActive = false;
+	AbilityCancelled(Controller, Pawn);
+
 	if (FMath::IsNearlyZero(AbilityCooldown) || AbilityCooldown < 0.f)
 	{
 		SetCooldownOver();
@@ -91,15 +95,14 @@ void ULimenActiveAbility::AbilityActivated(AController* Controller, APawn* Pawn)
 {
 }
 
+void ULimenActiveAbility::AbilityCancelled(AController* Controller, APawn* Pawn)
+{
+}
+
 void ULimenActiveAbility::AbilityActivated_Wrapper(AController* Controller, APawn* Pawn)
 {
 	AbilityActivated(Controller, Pawn);
 	BP_OnAbilityActivated(Controller, Pawn);
-
-	if (!FMath::IsNearlyZero(AbilityCooldown))
-	{
-		bIsActive = false;
-		bIsCooldownOver = false;
-		GetWorld()->GetTimerManager().SetTimer(AbilityCooldownTimer, this, &ThisClass::SetCooldownOver, AbilityCooldown, false);
-	}
+	bIsCooldownOver = false;
+	bIsActive = !bIsOneShot;
 }

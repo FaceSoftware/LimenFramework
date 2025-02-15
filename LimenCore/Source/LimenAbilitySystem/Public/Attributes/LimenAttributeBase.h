@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Tickable.h"
 #include "LimenStorage/Public/LimenStorageItem.h"
 #include "LimenAttributeBase.generated.h"
 
@@ -49,12 +50,13 @@ public:
 	 */
 	virtual void Initialize(AActor* InOwner);
 	/**
-	 * @brief Used for initialization outside of the player's attribute system.
+	 * @brief Used for initialization outside the player's attribute system.
 	 */
 	virtual void Initialize();
 	virtual bool IsInitialized() const;
 	
-	/// FTickableGameObject Interface Start
+#pragma region FTickableGameObject
+	
 	virtual void Tick(float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override;
 	virtual bool IsTickable() const override;
@@ -63,7 +65,8 @@ public:
 	virtual bool IsTickableWhenPaused() const override;
 	virtual bool IsTickableInEditor() const override;
 	virtual UWorld* GetTickableGameObjectWorld() const override;
-	/// FTickableGameObject Interface End 
+
+#pragma endregion 
 
 	/**
 	 * @brief Sets the attribute recharge rate.
@@ -222,7 +225,7 @@ private:
 	UPROPERTY()
 	TObjectPtr<AActor> Owner;
 	UPROPERTY()
-	TObjectPtr<ULimenAbilityComponent> AbilityComponent;
+	TObjectPtr<ULimenAbilityComponent> OwnerAbilityComponent;
 	bool bIsInitialized;
 	bool bIsFrozen;
 };

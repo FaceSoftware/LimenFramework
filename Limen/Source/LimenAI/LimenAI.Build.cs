@@ -27,7 +27,8 @@ public class LimenAI : ModuleRules
                 "LimenPlayers",
                 "LimenDoors",
                 "LimenInteraction",
-                "Limen", 
+                "Limen",
+                "LimenAbilitySystem", 
             }
         );
     }

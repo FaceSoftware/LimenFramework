@@ -4,6 +4,7 @@
 #include "Abilities/LimenAbilityBase.h"
 
 #include "Components/LimenAbilityComponent.h"
+#include "GameFramework/Actor.h"
 
 
 ULimenAbilityBase::ULimenAbilityBase() : Super()

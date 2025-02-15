@@ -7,6 +7,7 @@
 #include "LimenHUD.generated.h"
 
 
+class ALimenItemBase;
 class ULimenHintWidget;
 class ULimenItemSmithWrapperWidget;
 class ULimenDeathScreen;
@@ -70,11 +71,6 @@ public:
 	ULimenItemSmithWrapperWidget* GetItemSmithWidget() const;
 
 	virtual void QueueNotification(const FNotificationParams& InParams) override;
-	
-	UFUNCTION(BlueprintCallable)
-	void SetPostProcessEnabled(const bool bEnable);
-	UFUNCTION(BlueprintCallable)
-	bool IsPostProcessEnabled() const;
 	
 protected:	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")

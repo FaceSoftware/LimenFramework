@@ -3,13 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Abilities/LimenAbilityBase.h"
+#include "Attributes/LimenAttributeBase.h"
 #include "Components/ActorComponent.h"
 #include "UObject/StrongObjectPtr.h"
 #include "LimenAbilityComponent.generated.h"
 
-
-class ULimenAttributeBase;
-class ULimenAbilityBase;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENABILITYSYSTEM_API ULimenAbilityComponent : public UActorComponent
@@ -42,10 +41,9 @@ public:
 		
 		for (TStrongObjectPtr<ULimenAbilityBase>& Ability : Abilities)
 		{
-			AbilityClass* Temp = Cast<AbilityClass>(Ability.Get());
-			if (Temp != nullptr)
+			if (Ability->IsA<AbilityClass>())
 			{
-				return Temp;
+				return CastChecked<AbilityClass>(Ability.Get());
 			}
 		}
 
@@ -53,16 +51,15 @@ public:
 	}
 
 	template <typename AttributeClass>
-	AttributeClass* GetAttribute()
+	AttributeClass* GetAttribute() const
 	{
 		static_assert(std::is_base_of_v<ULimenAttributeBase, AttributeClass>);
 		
-		for (TStrongObjectPtr<ULimenAttributeBase>& Attribute : Attributes)
+		for (const TStrongObjectPtr<ULimenAttributeBase>& Attribute : Attributes)
 		{
-			AttributeClass* Temp = Cast<AttributeClass>(Attribute.Get());
-			if (Temp != nullptr)
+			if (Attribute->IsA<AttributeClass>())
 			{
-				return Temp;
+				return CastChecked<AttributeClass>(Attribute.Get());
 			}
 		}
 		
