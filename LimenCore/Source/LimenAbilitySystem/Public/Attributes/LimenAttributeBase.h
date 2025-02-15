@@ -49,6 +49,7 @@ public:
 	 * @param InOwner The pawn that owns this attribute
 	 */
 	virtual void Initialize(AActor* InOwner);
+	virtual void Deinitialize(AActor* InOwner);
 	/**
 	 * @brief Used for initialization outside the player's attribute system.
 	 */

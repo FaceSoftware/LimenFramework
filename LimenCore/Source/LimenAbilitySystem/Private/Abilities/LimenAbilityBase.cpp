@@ -28,6 +28,10 @@ bool ULimenAbilityBase::IsInitialized() const
 	return bIsInitialized;
 }
 
+void ULimenAbilityBase::Deinitialize(AActor* InOwner)
+{
+}
+
 void ULimenAbilityBase::ForceDeactivateAbility()
 {
 	bShouldForcefullyDeactivate = true;

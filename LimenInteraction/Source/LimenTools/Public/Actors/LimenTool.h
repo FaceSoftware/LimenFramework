@@ -11,7 +11,6 @@ class ULimenAbilityComponent;
 class ULimenBatteryAttribute;
 class FThreadedFunction;
 class ALimenBattery;
-class ULimenAttributeComponent;
 struct FBatteryData;
 
 

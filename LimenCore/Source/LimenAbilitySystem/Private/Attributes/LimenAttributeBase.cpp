@@ -26,6 +26,10 @@ void ULimenAttributeBase::Initialize(AActor* InOwner)
 	bIsInitialized = true;
 }
 
+void ULimenAttributeBase::Deinitialize(AActor* InOwner)
+{
+}
+
 void ULimenAttributeBase::Initialize()
 {
 	CurrentValue = InitialValue;

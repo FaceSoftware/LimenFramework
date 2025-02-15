@@ -27,6 +27,7 @@ public:
 	 */
 	virtual void Initialize(AActor* InOwner);
 	bool IsInitialized() const;
+	virtual void Deinitialize(AActor* InOwner);
 	/**
 	 * @brief Forces the deactivation of the ability, useful if the player has died and the abilities should not persist.
 	 * Should be overriden. Default implementation disables the Tick() function.
