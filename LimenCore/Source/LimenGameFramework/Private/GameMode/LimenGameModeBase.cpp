@@ -51,28 +51,6 @@ void ALimenGameModeBase::ResetManagers()
 	}
 }
 
-bool ALimenGameModeBase::SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate)
-{
-	const bool bResult = Super::SetPause(PC, CanUnpauseDelegate);
-	if (IsPaused())
-	{
-		OnPauseStateChanged.Broadcast(true);
-	}
-	return bResult;
-}
-
-bool ALimenGameModeBase::ClearPause()
-{
-	const bool bResult = Super::ClearPause();
-
-	if (!IsPaused())
-	{
-		OnPauseStateChanged.Broadcast(false);
-	}
-	
-	return bResult;
-}
-
 void ALimenGameModeBase::SpawnManagers()
 {
 	for (auto& ManagerSoftClassPtr : ManagersClassList)
