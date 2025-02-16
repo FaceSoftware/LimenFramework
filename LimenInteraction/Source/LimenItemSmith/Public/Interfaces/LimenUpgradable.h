@@ -48,8 +48,8 @@ public:
 	virtual const FText& GetDescription_Implementation() const = 0;
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Limen|Upgradables")
-	UTexture2D* GetItemImage() const;
-	virtual UTexture2D* GetItemImage_Implementation() const = 0;
+	UTexture* GetItemImage() const;
+	virtual UTexture* GetItemImage_Implementation() const = 0;
 
 	// Implementation of upgrades. No validation should be done here, this should ignore any restrictions -> Use the upgrade manager for that.
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Limen|Upgradables")

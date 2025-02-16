@@ -5,7 +5,6 @@
 
 #include "Components/LimenUpgradeManager.h"
 #include "GameFramework/Controller.h"
-#include "GameFramework/Pawn.h"
 
 
 ALimenPhysicalItem::ALimenPhysicalItem()
@@ -33,9 +32,9 @@ const FText& ALimenPhysicalItem::GetDescription_Implementation() const
 	return Description;
 }
 
-UTexture2D* ALimenPhysicalItem::GetItemImage_Implementation() const
+UTexture* ALimenPhysicalItem::GetItemImage_Implementation() const
 {
-	return ItemImage.LoadSynchronous();
+	return ItemImage.Get();
 }
 
 void ALimenPhysicalItem::Upgrade_Implementation(int32 NewLevel, ULimenUpgradeDataAsset* Upgrade)

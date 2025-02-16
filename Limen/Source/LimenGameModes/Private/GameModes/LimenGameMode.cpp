@@ -48,6 +48,28 @@ void ALimenGameMode::OnPostLogin(AController* NewPlayer)
 	}
 }
 
+bool ALimenGameMode::SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate)
+{
+	if (!Super::SetPause(PC, CanUnpauseDelegate))
+	{
+		return false;
+	}
+
+	OnWorldPauseStateChanged.Broadcast(true);
+	return true;
+}
+
+bool ALimenGameMode::ClearPause()
+{
+	if (!Super::ClearPause())
+	{
+		return false;
+	}
+
+	OnWorldPauseStateChanged.Broadcast(false);
+	return true;
+}
+
 void ALimenGameMode::HandlePauseRequest(ALimenPlayerControllerBase* Player, const EPauseReason PauseReason)
 {
 	check(Player)
@@ -62,8 +84,7 @@ void ALimenGameMode::HandlePauseRequest(ALimenPlayerControllerBase* Player, cons
 		if (bPauseMenuPausesGame)
 		{
 			PauseRequestCounter++;
-			const bool bWasPaused = SetPause(Player);
-			OnWorldPauseStateChanged.Broadcast(bWasPaused);
+			SetPause(Player);
 		}
 		break;
 		
@@ -71,8 +92,7 @@ void ALimenGameMode::HandlePauseRequest(ALimenPlayerControllerBase* Player, cons
 		if (bGameMenuPausesGame)
 		{
 			PauseRequestCounter++;
-			const bool bWasPaused = SetPause(Player);
-			OnWorldPauseStateChanged.Broadcast(bWasPaused);
+			SetPause(Player);
 		}
 		break;
 		
@@ -80,8 +100,7 @@ void ALimenGameMode::HandlePauseRequest(ALimenPlayerControllerBase* Player, cons
 		if (bNotificationsPauseGame)
 		{
 			PauseRequestCounter++;
-			const bool bWasPaused = SetPause(Player);
-			OnWorldPauseStateChanged.Broadcast(bWasPaused);
+			SetPause(Player);
 		}
 		break;
 		
@@ -96,7 +115,6 @@ void ALimenGameMode::HandleUnpauseRequest(ALimenPlayerControllerBase* Player)
 	PauseRequestCounter--;
 	if (PauseRequestCounter == 0)
 	{
-		const bool bWasUnPaused = Player->SetPause(false);
-		OnWorldPauseStateChanged.Broadcast(!bWasUnPaused);
+		Player->SetPause(false);
 	}
 }

@@ -3,12 +3,15 @@
 
 #include "Items/LimenItemBase.h"
 
-#include "Components/LimenInventoryComponent.h"
+#include "TextureResource.h"
+#include "Components/SceneCaptureComponent2D.h"
+#include "Engine/Texture2D.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/Pawn.h"
 #include "ItemActions/LimenItemAction.h"
 
 
-UTexture2D* ALimenItemBase::GetItemImage(const TSubclassOf<ALimenItemBase>& ItemClass)
+UTexture* ALimenItemBase::GetItemImage(const TSubclassOf<ALimenItemBase>& ItemClass)
 {
 	check(ItemClass != nullptr);
 	return ItemClass->GetDefaultObject<ALimenItemBase>()->GetItemImage();
@@ -30,6 +33,42 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 {
 	bHasBeenLoaded = false;
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+
+	ItemImageSceneCapture = CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(TEXT("ItemImageSceneCapture"));
+	bUseSceneCaptureForImage = ItemImageSceneCapture != nullptr;
+	if (bUseSceneCaptureForImage)
+	{
+		ItemImageSceneCapture->SetupAttachment(GetRootComponent());
+		ItemImageSceneCapture->bCaptureEveryFrame = false;
+		ItemImageSceneCapture->bCaptureOnMovement = false;
+		ItemImageSceneCapture->CaptureSource = ESceneCaptureSource::SCS_BaseColor;
+		ItemImageSceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+	}
+}
+
+void ALimenItemBase::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	if (bUseSceneCaptureForImage)
+	{
+		if (!ItemImageSceneCapture->ShowOnlyActors.Contains(TObjectPtr<AActor>(this)))
+		{
+			ItemImageSceneCapture->ShowOnlyActors.Push(TObjectPtr<AActor>(this));
+		}
+
+		if (ItemImageRenderTarget == nullptr)
+		{
+			ItemImageRenderTarget = NewObject<UTextureRenderTarget2D>(this);
+			ItemImageRenderTarget->InitCustomFormat(2048, 2048, EPixelFormat::PF_FloatRGBA, false);
+		}
+		ItemImageSceneCapture->TextureTarget = ItemImageRenderTarget.Get();
+
+		ItemImage = ItemImageSceneCapture->TextureTarget.Get();
+
+		ItemImageSceneCapture->CaptureScene();
+		GetClass()->GetDefaultObject<ALimenItemBase>()->ItemImage = ItemImage;
+	}
 }
 
 void ALimenItemBase::BeginPlay()
@@ -38,7 +77,7 @@ void ALimenItemBase::BeginPlay()
 	
 	for (const TSubclassOf<ULimenItemAction>& ActionClass : ItemActionsClass)
 	{
-		if (!ensureAlwaysMsgf(ActionClass != nullptr, TEXT("Item contains an invalid item action. Please remove it to prevent unnecessary overhead!!")))
+		if (!ensureAlwaysMsgf(ActionClass != nullptr, TEXT("This item contains an invalid item action. Please remove it to prevent unnecessary overhead!!")))
 		{
 			continue;
 		}
@@ -61,9 +100,9 @@ UStaticMesh* ALimenItemBase::GetItemMesh_Implementation() const
 	return nullptr;
 }
 
-UTexture2D* ALimenItemBase::GetItemImage() const
+UTexture* ALimenItemBase::GetItemImage() const
 {
-	return ItemImage.LoadSynchronous();
+	return ItemImage.Get();
 }
 
 const FText& ALimenItemBase::GetDisplayName() const
