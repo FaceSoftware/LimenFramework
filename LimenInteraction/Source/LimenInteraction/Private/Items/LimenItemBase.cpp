@@ -5,6 +5,7 @@
 
 #include "TextureResource.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Engine/Engine.h"
 #include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/Pawn.h"
@@ -43,7 +44,11 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 		ItemImageSceneCapture->bCaptureOnMovement = false;
 		ItemImageSceneCapture->CaptureSource = ESceneCaptureSource::SCS_BaseColor;
 		ItemImageSceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+		
 	}
+
+	ItemImageRenderTarget2D = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("ItemImageRenderTarget2D"));
+	ItemImageRenderTarget2D->InitCustomFormat(1024, 1024, EPixelFormat::PF_FloatRGBA, false);
 }
 
 void ALimenItemBase::OnConstruction(const FTransform& Transform)
@@ -57,15 +62,8 @@ void ALimenItemBase::OnConstruction(const FTransform& Transform)
 			ItemImageSceneCapture->ShowOnlyActors.Push(TObjectPtr<AActor>(this));
 		}
 
-		if (ItemImageRenderTarget == nullptr)
-		{
-			ItemImageRenderTarget = NewObject<UTextureRenderTarget2D>(this);
-			ItemImageRenderTarget->InitCustomFormat(2048, 2048, EPixelFormat::PF_FloatRGBA, false);
-		}
-		ItemImageSceneCapture->TextureTarget = ItemImageRenderTarget.Get();
-
-		ItemImage = ItemImageSceneCapture->TextureTarget.Get();
-
+		ItemImage = ItemImageRenderTarget2D;
+		ItemImageSceneCapture->TextureTarget = ItemImageRenderTarget2D;
 		ItemImageSceneCapture->CaptureScene();
 		GetClass()->GetDefaultObject<ALimenItemBase>()->ItemImage = ItemImage;
 	}
@@ -90,8 +88,11 @@ void ALimenItemBase::BeginPlay()
 
 void ALimenItemBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (bUseSceneCaptureForImage)
+	{
+		GetClass()->GetDefaultObject<ALimenItemBase>()->ItemImage = nullptr;
+	}
 	ItemActions.Empty();
-	
 	Super::EndPlay(EndPlayReason);
 }
 

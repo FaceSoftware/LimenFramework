@@ -77,5 +77,5 @@ private:
 	bool bHasBeenLoaded;
 
 	UPROPERTY()
-	TObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget;
+	TObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
 };
