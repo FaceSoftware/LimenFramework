@@ -25,12 +25,14 @@ class LIMENINTERACTION_API ALimenItemBase : public ALimenInteractable, public IL
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure)
-	static UTexture* GetItemImage(const TSubclassOf<ALimenItemBase>& ItemClass);
-	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure)
-	static FText GetDisplayName(const TSubclassOf<ALimenItemBase>& ItemClass);
-	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure)
-	static FText GetDescription(const TSubclassOf<ALimenItemBase>& ItemClass);
+	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure, meta=(WorldContext=WorldContextObject))
+	static UTexture* GetItemImage(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass);
+	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure, meta=(WorldContext=WorldContextObject))
+	static FText GetDisplayName(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass);
+	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure, meta=(WorldContext=WorldContextObject))
+	static FText GetDescription(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass);
+	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure, meta=(WorldContext=WorldContextObject))
+	static FColor GetRenderTargetBackgroundColor(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass);
 
 	explicit ALimenItemBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void OnConstruction(const FTransform& Transform) override;
@@ -44,6 +46,7 @@ public:
 	UTexture* GetItemImage() const;
 	const FText& GetDisplayName() const;
 	const FText& GetDescription() const;
+	const FColor& GetRenderTargetBackgroundColor() const;
 
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
@@ -65,6 +68,8 @@ protected:
 	TObjectPtr<UTexture> ItemImage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(EditCondition = "ItemImageSceneCapture != nullptr"))
 	bool bUseSceneCaptureForImage;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(EditCondition = "bUseSceneCaptureForImage"))
+	FColor RenderTargetBackgroundColor;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
 	TObjectPtr<USceneCaptureComponent2D> ItemImageSceneCapture;
