@@ -46,6 +46,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	void ResetSettingToDefault(const TSubclassOf<ULimenSetting>& Class);
 
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings", meta=(DeterminesOutputType=Class))
+	ULimenSetting* GetSetting(const TSubclassOf<ULimenSetting> Class) const;
+
 	template<typename SettingType>
 	bool EditSetting(const TSubclassOf<ULimenSetting>& Class, const SettingType& NewValue);
 

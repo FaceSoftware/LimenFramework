@@ -102,7 +102,6 @@ void ALimenPlayerController::PauseInput(const FInputActionInstance& Instance)
 		{
 			LimenHUD->HideActiveWidget();
 		}
-		
 	}
 }
 

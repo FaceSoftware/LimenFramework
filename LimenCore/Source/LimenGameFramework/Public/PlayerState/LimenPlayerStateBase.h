@@ -7,7 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "LimenPlayerStateBase.generated.h"
 
-class ALimenBaseCharacter;
+
 class ALimenTool;
 class ALimenWeapon;
 

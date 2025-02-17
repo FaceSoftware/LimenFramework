@@ -24,13 +24,14 @@ public class LimenGraphicSettings : ModuleRules
                 "Slate",
                 "SlateCore",
                 "RHI",
+                "ApplicationCore",
                 
                 "LimenCore",
                 "LimenSaveSystem",
                 "LimenStorage", 
                 "LimenModals",
                 "LimenWidgets",
-                "ApplicationCore",
+                "LimenPlayers",
             }
         );
     }

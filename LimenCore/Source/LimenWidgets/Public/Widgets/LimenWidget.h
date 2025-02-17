@@ -126,7 +126,9 @@ private:
 	FLimenBlueprintWidgetHidden CurrentBlueprintDelegate;
 	FLimenWidgetHidden CurrentDelegate;
 	UFUNCTION()
-	void HiddeAnimationFinished_Internal(const bool bVisible);
+	void WidgetAnimationEnd_Internal(const bool bVisible);
+	UFUNCTION()
+	void WidgetVisibilityChanged_Internal(const bool bVisible);
 
 	UFUNCTION()
 	void DestroyWidgetInternal(const bool bIsHideAnimation = true);

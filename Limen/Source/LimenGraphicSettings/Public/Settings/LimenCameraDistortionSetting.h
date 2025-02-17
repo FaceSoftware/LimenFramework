@@ -33,4 +33,5 @@ protected:
 	virtual void GlobalPostProcessFound(APostProcessVolume* PostProcess);
 	
 private:
+	void ApplySettingInternal();
 };

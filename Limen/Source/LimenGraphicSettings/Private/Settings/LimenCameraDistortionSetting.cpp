@@ -3,7 +3,9 @@
 
 #include "Settings/LimenCameraDistortionSetting.h"
 
+#include "TimerManager.h"
 #include "Camera/CameraComponent.h"
+#include "Characters/LimenPlayerCharacter.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -38,16 +40,8 @@ ULimenCameraDistortionSetting::ULimenCameraDistortionSetting()
 void ULimenCameraDistortionSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
-	
-	auto* GraphicalSettings = GetWorld()->GetGameInstance()->GetSubsystem<ULimenGraphicalSettingsSubsystem>();
-	if (auto* GlobalPostProcess = GraphicalSettings->GetGlobalPostProcess(); GlobalPostProcess != nullptr)
-	{
-		GlobalPostProcessFound(GlobalPostProcess);
-	}
-	else
-	{
-		GraphicalSettings->OnGlobalPostProcessFound.AddUObject(this, &ThisClass::GlobalPostProcessFound);
-	}
+
+	ApplySettingInternal();
 }
 
 void ULimenCameraDistortionSetting::SetDefaults()
@@ -66,4 +60,29 @@ void ULimenCameraDistortionSetting::GlobalPostProcessFound(APostProcessVolume* P
 	{
 		Blendable.Weight = GetCurrentValue() == Enabled ? 1 : 0;
 	}
+}
+
+void ULimenCameraDistortionSetting::ApplySettingInternal()
+{
+	if (GetWorld() != nullptr)
+	{
+		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController(); PlayerController != nullptr)
+		{
+			if (const ALimenPlayerCharacter* PlayerPawn = PlayerController->GetPawn<ALimenPlayerCharacter>(); PlayerPawn != nullptr)
+			{
+				if (UCameraComponent* PlayerCamera = PlayerPawn->GetPlayerCamera(); PlayerCamera != nullptr)
+				{
+					TArray<FWeightedBlendable>& Blendables = PlayerCamera->PostProcessSettings.WeightedBlendables.Array;
+					if (!Blendables.IsEmpty())
+					{
+						Blendables[0].Weight = GetCurrentValue() == Enabled ? 1.f : 0.f;
+					}
+
+					return;
+				}
+			}
+		}
+	}
+
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::ApplySettingInternal);
 }

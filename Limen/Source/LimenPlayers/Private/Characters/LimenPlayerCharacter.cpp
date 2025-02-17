@@ -281,7 +281,7 @@ void ALimenPlayerCharacter::HandleItemActionRequests(ULimenItemAction* ActionReq
 	ActionRequested->ActivateAction();
 }
 
-ULimenCameraTiltComponent* ALimenPlayerCharacter::GetPlayerCamera() const
+UCameraComponent* ALimenPlayerCharacter::GetPlayerCamera() const
 {
 	return PlayerCamera.Get();
 }
