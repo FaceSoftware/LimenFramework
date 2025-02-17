@@ -104,7 +104,7 @@ void ALimenItemBase::BeginPlay()
 
 	if (bUseSceneCaptureForImage)
 	{
-		ItemImageRenderTarget2D = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>(this));
+		ItemImageRenderTarget2D = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>());
 		ItemImageRenderTarget2D->InitCustomFormat(1024, 1024, EPixelFormat::PF_FloatRGBA, true);
 		ItemImageRenderTarget2D->ClearColor = RenderTargetBackgroundColor;
 
@@ -116,15 +116,15 @@ void ALimenItemBase::BeginPlay()
 		ItemImage = ItemImageRenderTarget2D.Get();
 		ItemImageSceneCapture->TextureTarget = ItemImageRenderTarget2D.Get();
 	}
-	else
-	{
-		ItemImageRenderTarget2D->ConditionalBeginDestroy();
-		ItemImageRenderTarget2D.Reset();
-	}
 }
 
 void ALimenItemBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	if (ItemImageRenderTarget2D.IsValid())
+	{
+		ItemImageRenderTarget2D.Reset();
+	}
+
 	ItemActions.Empty();
 	Super::EndPlay(EndPlayReason);
 }
