@@ -18,12 +18,9 @@ FLimenTickCheck::FLimenTickCheck(UWorld* InWorld, const int32 InMaxTicks)
 
 FLimenTickCheck::~FLimenTickCheck()
 {
-	if (World != nullptr)
+	if (IsValid(World))
 	{
-		if (TimerHandle.IsValid())
-		{
-			World->GetTimerManager().ClearTimer(TimerHandle);
-		}
+		World->GetTimerManager().ClearTimer(TimerHandle);
 	}
 }
 
