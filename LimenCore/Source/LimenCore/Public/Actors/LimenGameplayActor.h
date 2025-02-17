@@ -32,12 +32,12 @@ public:
 	 * @brief Disables this actor's collision and visibility
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay Actor")
-	void RemoveFromGameplay();
+	virtual void RemoveFromGameplay();
 	/**
 	 * @brief Disables this actor's collision and visibility
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay Actor")
-	void AddToGameplay();
+	virtual void AddToGameplay();
 	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay Actor")
 	bool IsRemovedFromGameplay() const;
 

@@ -17,6 +17,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction|Notes", BlueprintPure)
 	static FText GetNoteText(const TSubclassOf<ALimenNote>& Class);
 
+	explicit ALimenNote(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
 public:
 	const FText& GetNoteText() const;
 	

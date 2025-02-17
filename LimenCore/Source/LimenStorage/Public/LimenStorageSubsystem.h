@@ -61,11 +61,12 @@ public:
 		
 		TArray<ItemType*> Out;
 		Out.Reserve(StorageItems.Num());
-		for (auto* Item : StorageItems)
+		for (ULimenStorageItem* const& Item : StorageItems)
 		{
-			ItemType* Temp = Cast<ItemType>(Item);
-			check(Temp != nullptr);
-			Out.Push(Temp);
+			if (Item->IsA<ItemType>())
+			{
+				Out.Push(CastChecked<ItemType>(Item));
+			}
 		}
 		return Out;
 	}
@@ -77,10 +78,9 @@ public:
 		
 		for (ULimenStorageItem* Item : StorageItems)
 		{
-			ItemType* Test = Cast<ItemType>(Item);
-			if (Test != nullptr)
+			if (Item->IsA<ItemType>())
 			{
-				return Test;
+				return CastChecked<ItemType>(Item);
 			}
 		}
 
@@ -95,9 +95,9 @@ public:
 		
 		for (ULimenStorageItem* Item : StorageItems)
 		{
-			if (Item->GetClass() == Class)
+			if (Item->IsA(Class))
 			{
-				return Cast<ItemType>(Item);
+				return CastChecked<ItemType>(Item);
 			}
 		}
 
@@ -109,7 +109,7 @@ public:
 		check(Class != nullptr);
 		for (ULimenStorageItem* Item : StorageItems)
 		{
-			if (Item->GetClass() == Class)
+			if (Item->IsA(Class))
 			{
 				return Item;
 			}

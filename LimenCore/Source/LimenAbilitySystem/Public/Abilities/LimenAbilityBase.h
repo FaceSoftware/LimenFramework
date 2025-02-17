@@ -4,13 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Tickable.h"
-#include "Components/LimenAbilityComponent.h"
-#include "LimenStorage/Public/LimenStorageItem.h"
+#include "LimenStorageItem.h"
 #include "LimenAbilityBase.generated.h"
 
 
 class ULimenAbilityComponent;
-class ULimenAttributeBase;
+class AController;
 /**
  * 
  */
@@ -28,13 +27,15 @@ public:
 	 */
 	virtual void Initialize(AActor* InOwner);
 	bool IsInitialized() const;
+	virtual void Deinitialize(AActor* InOwner);
 	/**
 	 * @brief Forces the deactivation of the ability, useful if the player has died and the abilities should not persist.
 	 * Should be overriden. Default implementation disables the Tick() function.
 	 */
 	virtual void ForceDeactivateAbility();
 
-	/// FTickableGameObject Interface Start
+#pragma region FTickableGameObject Interface Start
+
 	virtual void Tick(float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override final;
 	virtual bool IsTickable() const override final;
@@ -43,7 +44,8 @@ public:
 	virtual bool IsTickableWhenPaused() const override final;
 	virtual bool IsTickableInEditor() const override final;
 	virtual UWorld* GetTickableGameObjectWorld() const override final;
-	/// FTickableGameObject Interface End
+
+#pragma endregion FTickableGameObject Interface Start
 	
 protected:	
 	ULimenAbilityComponent* GetOwnerAbilityComponent() const;	

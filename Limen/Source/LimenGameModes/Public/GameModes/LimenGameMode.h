@@ -24,6 +24,8 @@ public:
 	ALimenGameMode();
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void OnPostLogin(AController* NewPlayer) override;
+	virtual bool SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate = FCanUnpause()) override;
+	virtual bool ClearPause() override;
 	
 protected:
 	/**
@@ -35,19 +37,19 @@ protected:
 	virtual void HandlePauseRequest(ALimenPlayerControllerBase* Player, const EPauseReason PauseReason);
 	/**
 	 * @brief Handles an incoming unpause requests from a specific player.
-	 * @param Player The player that requested the unpause.
+	 * @param Player The player that requested to unpause.
 	 */
 	UFUNCTION()
 	virtual void HandleUnpauseRequest(ALimenPlayerControllerBase* Player);
 
 	/**
-	 * @brief Set whether or not the in game menu should pause the game.
+	 * @brief Set whether the in game menu should pause the game.
 	 */
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Rules")
 	bool bGameMenuPausesGame;
 
 	/**
-	 * @brief Set whether or not the pause menu should pause the game (useful for multiplayer games).
+	 * @brief Set whether the pause menu should pause the game (useful for multiplayer games).
 	 */
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Rules")
 	bool bPauseMenuPausesGame;

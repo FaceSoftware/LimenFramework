@@ -27,7 +27,7 @@ public:
 	virtual ULimenUpgradeManager* GetUpgradeManager_Implementation() const override;
 	virtual const FText& GetDisplayName_Implementation() const override;
 	virtual const FText& GetDescription_Implementation() const override;
-	virtual UTexture2D* GetItemImage_Implementation() const override;
+	virtual UTexture* GetItemImage_Implementation() const override;
 	virtual void Upgrade_Implementation(int32 NewLevel, ULimenUpgradeDataAsset* Upgrade) override;
 
 #pragma endregion 

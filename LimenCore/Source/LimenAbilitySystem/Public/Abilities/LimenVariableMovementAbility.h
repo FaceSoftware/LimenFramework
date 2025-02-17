@@ -23,7 +23,6 @@ public:
 	virtual void Initialize(AActor* InOwner) override;
 	virtual void Tick(float DeltaTime) override;
 	
-	virtual void CancelAbility(AController* Controller, APawn* Pawn) override;
 	virtual bool CanActivateAbility() const override;
 
 protected:
@@ -31,6 +30,7 @@ protected:
 	bool bIsSprinting;
 
 	virtual void AbilityActivated(AController* Controller, APawn* Pawn) override;
+	virtual void AbilityCancelled(AController* Controller, APawn* Pawn) override;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Limen")

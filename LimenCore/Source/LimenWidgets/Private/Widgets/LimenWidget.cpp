@@ -20,7 +20,8 @@ void ULimenWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	TakeWidget()->SetCanTick(true);
-	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::HiddeAnimationFinished_Internal);
+	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::WidgetAnimationEnd_Internal);
+	OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::WidgetVisibilityChanged_Internal);
 }
 
 void ULimenWidget::ShowWidget()
@@ -41,7 +42,7 @@ void ULimenWidget::ShowWidget()
 	}
 	
 	SetVisibility(DefaultVisibleState);
-	ShowAllChildren();
+	// ShowAllChildren();
 	OnWidgetVisible();
 	OnLimenVisibilityChanged.Broadcast(true);
 	
@@ -162,7 +163,7 @@ void ULimenWidget::NotifyAnimationFinished(const bool bIsVisibleAnimation)
 	}
 	else
 	{
-		HideAllChildren();
+		// HideAllChildren();
 		HideWidgetMethod();
 		OnWidgetHidden();
 	}
@@ -249,24 +250,29 @@ void ULimenWidget::HideAllChildren()
 	}
 }
 
-void ULimenWidget::HiddeAnimationFinished_Internal(const bool bVisible)
+void ULimenWidget::WidgetAnimationEnd_Internal(const bool bVisible)
 {
-	if (IsShowing())
+	if (bVisible)
 	{
-		return;
+	}
+	else
+	{
+		if (CurrentBlueprintDelegate.IsBound())
+		{
+			CurrentBlueprintDelegate.Execute();
+			CurrentBlueprintDelegate.Unbind();
+		}
+		if (CurrentDelegate.IsBound())
+		{
+			CurrentDelegate.Execute();
+			CurrentDelegate.Unbind();
+		}
 	}
 	
-	if (CurrentBlueprintDelegate.IsBound())
-	{
-		CurrentBlueprintDelegate.Execute();
-	}
-	CurrentBlueprintDelegate.Unbind();
-	
-	if (CurrentDelegate.IsBound())
-	{
-		CurrentDelegate.Execute();
-	}
-	CurrentDelegate.Unbind();
+}
+
+void ULimenWidget::WidgetVisibilityChanged_Internal(const bool bVisible)
+{
 }
 
 void ULimenWidget::DestroyWidgetInternal(const bool bIsHideAnimation)

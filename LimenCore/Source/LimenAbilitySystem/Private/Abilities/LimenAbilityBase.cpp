@@ -4,6 +4,7 @@
 #include "Abilities/LimenAbilityBase.h"
 
 #include "Components/LimenAbilityComponent.h"
+#include "GameFramework/Actor.h"
 
 
 ULimenAbilityBase::ULimenAbilityBase() : Super()
@@ -25,6 +26,10 @@ void ULimenAbilityBase::Initialize(AActor* InOwner)
 bool ULimenAbilityBase::IsInitialized() const
 {
 	return bIsInitialized;
+}
+
+void ULimenAbilityBase::Deinitialize(AActor* InOwner)
+{
 }
 
 void ULimenAbilityBase::ForceDeactivateAbility()

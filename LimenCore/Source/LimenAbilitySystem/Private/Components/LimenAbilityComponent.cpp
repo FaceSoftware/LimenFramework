@@ -19,12 +19,14 @@ void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	for (TStrongObjectPtr<ULimenAbilityBase>& Ability : Abilities)
 	{
+		Ability->Deinitialize(GetOwner());
 		Ability.Reset();
 	}
 	Abilities.Empty();
 
 	for (TStrongObjectPtr<ULimenAttributeBase>& Attribute : Attributes)
 	{
+		Attribute->Deinitialize(GetOwner());
 		Attribute.Reset();
 	}
 	Attributes.Empty();

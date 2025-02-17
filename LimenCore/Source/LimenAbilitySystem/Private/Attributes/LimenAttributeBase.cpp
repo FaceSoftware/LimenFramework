@@ -4,6 +4,7 @@
 #include "Attributes/LimenAttributeBase.h"
 
 #include "Components/LimenAbilityComponent.h"
+#include "GameFramework/Actor.h"
 
 
 ULimenAttributeBase::ULimenAttributeBase() : Super()
@@ -20,9 +21,13 @@ void ULimenAttributeBase::Initialize(AActor* InOwner)
 {
 	check(InOwner != nullptr);
 	Owner = InOwner;
-	AbilityComponent = Owner->GetComponentByClass<ULimenAbilityComponent>();
+	OwnerAbilityComponent = Owner->GetComponentByClass<ULimenAbilityComponent>();
 	SetCurrentValueAs(InitialValue);
 	bIsInitialized = true;
+}
+
+void ULimenAttributeBase::Deinitialize(AActor* InOwner)
+{
 }
 
 void ULimenAttributeBase::Initialize()
@@ -276,7 +281,7 @@ void ULimenAttributeBase::SetCurrentValueAs(const float Value)
 
 ULimenAbilityComponent* ULimenAttributeBase::GetOwnerAbilityComponent() const
 {
-	return AbilityComponent.Get();
+	return OwnerAbilityComponent.Get();
 }
 
 AActor* ULimenAttributeBase::GetOwner() const

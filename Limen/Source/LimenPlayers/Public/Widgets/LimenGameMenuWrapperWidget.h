@@ -28,12 +28,5 @@ public:
 	FItemActionUIRequest OnItemActionRequest;
 	
 protected:
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<ULimenObjectiveInventory> ObjectivesMenuWidget;
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<ULimenInventoryWidget> InventoryMenuWidget;
-
 	virtual void ReturnToGame() override;
-	
-	virtual void OnWidgetHidden_Implementation() override;
 };

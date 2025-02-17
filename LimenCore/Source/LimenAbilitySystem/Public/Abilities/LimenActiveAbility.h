@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "LimenAbilityBase.h"
+#include "Engine/TimerHandle.h"
 #include "LimenActiveAbility.generated.h"
 
+class AController;
 /**
  * 
  */
@@ -25,19 +27,18 @@ public:
 	 * @brief Called to activate an ability (e.g. jumping).
 	 * @param Controller The controller that is controlling the pawn who activated this ability
 	 * @param Pawn The pawn who activate this ability.
-	 * @return True if the ability was activated and false if not.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
-	virtual void ActivateAbility(AController* Controller, APawn* Pawn);
+	void ActivateAbility(AController* Controller, APawn* Pawn);
 	/**
 	 * @brief Called to cancel an ability (e.g. jumping).
 	 * @param Controller The controller that is controlling the pawn who canceled this ability
 	 * @param Pawn The pawn who canceled this ability.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
-	virtual void CancelAbility(AController* Controller, APawn* Pawn);
+	void CancelAbility(AController* Controller, APawn* Pawn);
 	/**
-	 * @brief Sets the rules whether or not the ability can be activated.
+	 * @brief Sets the rules whether the ability can be activated.
 	 * @return True if it can be activated, false if not.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
@@ -60,10 +61,13 @@ protected:
 	float AbilityCooldown;
 	UPROPERTY(EditDefaultsOnly, Category="Limen", meta=(ClampMin="0"))
 	float AbilityActivationDelay;
+	UPROPERTY(EditDefaultsOnly, Category="Limen")
+	bool bIsOneShot;
 
 	void SetCooldownOver();
 
 	virtual void AbilityActivated(AController* Controller, APawn* Pawn);
+	virtual void AbilityCancelled(AController* Controller, APawn* Pawn);
 
 private:	
 	FTimerHandle AbilityCooldownTimer;

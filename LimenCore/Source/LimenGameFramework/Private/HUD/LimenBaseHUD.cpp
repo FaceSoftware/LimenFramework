@@ -107,10 +107,9 @@ void ALimenBaseHUD::HideWidget_Internal(ULimenWidget* Widget)
 		return;
 	}
 
+	ActiveWidget = nullptr;
 	if (Widget->IsShowing())
 	{
 		Widget->HideWidget();
 	}
-	
-	ActiveWidget = nullptr;
 }

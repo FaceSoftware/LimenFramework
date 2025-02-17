@@ -7,6 +7,7 @@
 #include "LimenPlayerCharacter.generated.h"
 
 
+class UCameraComponent;
 enum class EInputActionHandlingType : uint8;
 struct FEnhancedActionKeyMapping;
 class ULimenCameraShakeComponent;
@@ -109,7 +110,13 @@ public:
 	virtual void HandleItemActionRequests(ULimenItemAction* ActionRequested);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen")
-	ULimenCameraTiltComponent* GetPlayerCamera() const;
+	UCameraComponent* GetPlayerCamera() const;
+	template<typename T>
+	T* GetPlayerCamera() const
+	{
+		static_assert(TIsDerivedFrom<T, UCameraComponent>::IsDerived);
+		return Cast<T>(GetPlayerCamera());
+	}
 	UFUNCTION(BlueprintCallable, Category="Limen")
 	ULimenInventoryComponent* GetInventoryComponent() const;
 	UFUNCTION(BlueprintCallable, Category="Limen")

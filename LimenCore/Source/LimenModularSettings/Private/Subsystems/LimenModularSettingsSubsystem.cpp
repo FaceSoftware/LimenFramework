@@ -78,6 +78,11 @@ void ULimenModularSettingsSubsystem::ResetSettingToDefault(const TSubclassOf<ULi
 	Setting->ApplySetting();
 }
 
+ULimenSetting* ULimenModularSettingsSubsystem::GetSetting(const TSubclassOf<ULimenSetting> Class) const
+{
+	return GetItem<ULimenSetting>(Class);
+}
+
 bool ULimenModularSettingsSubsystem::ShouldSaveData() const
 {
 	return true;

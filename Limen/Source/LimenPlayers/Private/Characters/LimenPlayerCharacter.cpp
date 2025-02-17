@@ -281,7 +281,7 @@ void ALimenPlayerCharacter::HandleItemActionRequests(ULimenItemAction* ActionReq
 	ActionRequested->ActivateAction();
 }
 
-ULimenCameraTiltComponent* ALimenPlayerCharacter::GetPlayerCamera() const
+UCameraComponent* ALimenPlayerCharacter::GetPlayerCamera() const
 {
 	return PlayerCamera.Get();
 }
@@ -743,7 +743,7 @@ void ALimenPlayerCharacter::OnInteract(AActor* InteractableActor, const TScriptI
 
 void ALimenPlayerCharacter::ItemAdded(TSubclassOf<ALimenItemBase> NewItem)
 {
-	check(NewItem)
+	check(NewItem != nullptr)
 	LIMEN_LOG(LogLimenPlayer, Log, this, "Recieved new item notification")
 
 	if (const ULimenArchiveComponent* ArchiveComponent = NewItem->GetDefaultObject<ALimenItemBase>()->GetComponentByClass<ULimenArchiveComponent>();
@@ -767,7 +767,7 @@ void ALimenPlayerCharacter::ItemAdded(TSubclassOf<ALimenItemBase> NewItem)
 
 void ALimenPlayerCharacter::ItemCouldNotBeAdded(TSubclassOf<ALimenItemBase> NewItem)
 {
-	check(NewItem)
+	check(NewItem != nullptr)
 	LIMEN_LOG(LogLimenPlayer, Warning, this, "Recieved 'item could not be added' notification")
 	
 	FNotificationParams Params;
@@ -778,21 +778,19 @@ void ALimenPlayerCharacter::ItemCouldNotBeAdded(TSubclassOf<ALimenItemBase> NewI
 
 void ALimenPlayerCharacter::ItemUpdated(TSubclassOf<ALimenItemBase> NewItem)
 {
-	/*
-	check(NewItem)
+	check(NewItem != nullptr)
 	LIMEN_LOG(LogLimen, Warning, this, "Received 'item updated' notification")
-	
+
 	FNotificationParams Params;
 	Params.NotificationTitle = FText::FromString(TEXT("New item"));
-	Params.NotificationMessage = FText::FromString(FString::Printf(TEXT("Picked up %s"), *NewItem->GetDisplayName().ToString()));
+	Params.NotificationMessage = FText::FromString(FString::Printf(TEXT("Picked up %s"), *NewItem->GetDefaultObject<ALimenItemBase>()->GetDisplayName().ToString()));
 	QueueNotification(Params);
-	*/
 }
 
 void ALimenPlayerCharacter::ObjectivesUpdated(ALimenObjective* UpdatedObjective)
 {
-	check(UpdatedObjective)
-	LIMEN_LOG(LogLimen, Log, this, "Recieved 'objective updated' notification")
+	check(UpdatedObjective != nullptr)
+	LIMEN_LOG(LogLimen, Log, this, "Received 'objective updated' notification")
 		
 	FNotificationParams Params;
 	Params.NotificationTitle = FText::FromString(TEXT("Objective update"));
