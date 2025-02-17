@@ -3,13 +3,19 @@
 
 #include "Settings/LimenHintsSetting.h"
 
+#include "TimerManager.h"
+#include "BlueprintAsyncActions/LimenTickCheck.h"
+#include "GameMode/LimenGameModeBase.h"
 #include "GameplayManagers/LimenHintsManager.h"
 #include "HUDs/LimenHUD.h"
 #include "Kismet/GameplayStatics.h"
 #include "LimenNotifications/Public/Components/LimenNotificationComponent.h"
 
+
 ULimenHintsSetting::ULimenHintsSetting()
 {
+	Retries = 0;
+	
 	DevelopmentName = TEXT("setting_tutorialmsg");
 	Category = FText::FromString(TEXT("General"));
 	DisplayName = FText::FromString(TEXT("Tutorial Messages"));
@@ -20,17 +26,17 @@ void ULimenHintsSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
-	if (const auto* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-		PlayerController == nullptr)
+	HintsManagerSpawn = FLimenTickCheck(GetWorld());
+	HintsManagerSpawn.AddLambda([this]
 	{
-		return;
-	}
+		if (HintsManager = ALimenGameplayManager::GetGameplayManager<ALimenHintsManager>(this); HintsManager.IsValid())
+		{
+			UnFormatHintsSetting(GetCurrentValue()) ? HintsManager->EnableHints() : HintsManager->DisableHints();
+			return true;
+		}
 
-	if (ALimenHintsManager* HintsManager = Cast<ALimenHintsManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ALimenHintsManager::StaticClass()));
-		HintsManager != nullptr)
-	{
-		UnFormatHintsSetting(GetCurrentValue()) ? HintsManager->EnableHints() : HintsManager->DisableHints();
-	}
+		return false;
+	});
 }
 
 void ULimenHintsSetting::SetDefaults()

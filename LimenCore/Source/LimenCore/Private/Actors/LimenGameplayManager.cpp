@@ -5,13 +5,14 @@
 
 #include "EngineUtils.h"
 #include "BlueprintLibraries/LimenCoreStatics.h"
+#include "Engine/Engine.h"
 #include "GameFramework/GameModeBase.h"
 
 
 ALimenGameplayManager* ALimenGameplayManager::GetGameplayManager(UObject* WorldContextObject,
                                                                  const TSubclassOf<ALimenGameplayManager> ManagerClass)
 {
-	check(GEngine)
+	check(GEngine != nullptr)
 	const auto* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
 	for (const TActorIterator It(World, ManagerClass); It;)
 	{
