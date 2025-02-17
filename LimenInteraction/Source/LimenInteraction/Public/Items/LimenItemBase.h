@@ -35,7 +35,6 @@ public:
 	static FColor GetRenderTargetBackgroundColor(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass);
 
 	explicit ALimenItemBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -81,6 +80,5 @@ private:
 	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
 	bool bHasBeenLoaded;
 
-	UPROPERTY()
-	TObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
+	TStrongObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
 };

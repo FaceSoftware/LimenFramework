@@ -83,27 +83,6 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 		ItemImageSceneCapture->bCaptureOnMovement = false;
 		ItemImageSceneCapture->CaptureSource = ESceneCaptureSource::SCS_BaseColor;
 		ItemImageSceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
-		
-	}
-
-	ItemImageRenderTarget2D = CreateDefaultSubobject<UTextureRenderTarget2D>(TEXT("ItemImageRenderTarget2D"));
-	ItemImageRenderTarget2D->InitCustomFormat(1024, 1024, EPixelFormat::PF_FloatRGBA, true);
-	ItemImageRenderTarget2D->ClearColor = RenderTargetBackgroundColor;
-}
-
-void ALimenItemBase::OnConstruction(const FTransform& Transform)
-{
-	Super::OnConstruction(Transform);
-
-	if (bUseSceneCaptureForImage)
-	{
-		if (!ItemImageSceneCapture->ShowOnlyActors.Contains(TObjectPtr<AActor>(this)))
-		{
-			ItemImageSceneCapture->ShowOnlyActors.Push(TObjectPtr<AActor>(this));
-		}
-
-		ItemImage = ItemImageRenderTarget2D;
-		ItemImageSceneCapture->TextureTarget = ItemImageRenderTarget2D;
 	}
 }
 
@@ -125,10 +104,22 @@ void ALimenItemBase::BeginPlay()
 
 	if (bUseSceneCaptureForImage)
 	{
-		GetWorld()->GetTimerManager().SetTimerForNextTick([this]
+		ItemImageRenderTarget2D = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>(this));
+		ItemImageRenderTarget2D->InitCustomFormat(1024, 1024, EPixelFormat::PF_FloatRGBA, true);
+		ItemImageRenderTarget2D->ClearColor = RenderTargetBackgroundColor;
+
+		if (!ItemImageSceneCapture->ShowOnlyActors.Contains(TObjectPtr<AActor>(this)))
 		{
-			 ItemImageSceneCapture->CaptureScene();
-		});
+			ItemImageSceneCapture->ShowOnlyActors.Push(TObjectPtr<AActor>(this));
+		}
+
+		ItemImage = ItemImageRenderTarget2D.Get();
+		ItemImageSceneCapture->TextureTarget = ItemImageRenderTarget2D.Get();
+	}
+	else
+	{
+		ItemImageRenderTarget2D->ConditionalBeginDestroy();
+		ItemImageRenderTarget2D.Reset();
 	}
 }
 
