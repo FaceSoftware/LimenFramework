@@ -76,9 +76,9 @@ void ULimenGameSaveSubsystem::SaveCurrentGame(UWorld* InWorld)
 	}
 
 	CurrentGameSaveData = NewObject<ULimenGameSaveData>();
-	CurrentGameSaveData->GameLevelIndex = ULimenLevelsDeveloperSettings::GetGameLevelIndex(GetWorld());
+	CurrentGameSaveData->GameLevelIndex = ULimenLevelsDeveloperSettings::GetGameLevelIndex(World.Get());
 
-	if (!InitializeHandlersForSaving())
+	if (!InitializeHandlersForSaving() || CurrentGameSaveData->GameLevelIndex == INDEX_NONE)
 	{
 		const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<
 			ULimenModalsSubsystem>();

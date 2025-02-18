@@ -48,7 +48,7 @@ void FLimenTickCheck::InternalCallback(const TFunction<bool()> InFunctor)
 
 	if (++CurrentTicks >= MaxTicks)
 	{
-		checkNoEntry()
+		// checkNoEntry()
 	}
 	else
 	{
