@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "TimerManager.h"
 #include "Engine/World.h"
 
 /**
@@ -23,6 +22,8 @@ private:
 	int32 MaxTicks;
 	int32 CurrentTicks;
 	FTimerHandle TimerHandle;
+
+	TFunction<bool()> Callback;
 	
-	void InternalCallback(const TFunction<bool()> InFunctor);
+	void InternalCallback();
 };

@@ -48,7 +48,7 @@ public:
 	const FText& GetDescription() const;
 	const FColor& GetRenderTargetBackgroundColor() const;
 
-	UFUNCTION(BlueprintCallable, CallInEditor)
+	UFUNCTION(BlueprintCallable)
 	void CaptureItemImage();
 
 	virtual bool ShouldSaveData() const override;

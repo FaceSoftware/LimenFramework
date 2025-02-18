@@ -3,6 +3,8 @@
 
 #include "BlueprintAsyncActions/LimenTickCheck.h"
 
+#include "TimerManager.h"
+
 
 FLimenTickCheck::FLimenTickCheck()
 {
@@ -28,21 +30,21 @@ void FLimenTickCheck::AddLambda(const TFunction<bool()>& InFunc)
 	{
 		return;
 	}
-	
-	InternalCallback(InFunc);
+
+	Callback = InFunc;
+	InternalCallback();
 }
 
-void FLimenTickCheck::InternalCallback(const TFunction<bool()> InFunctor)
+void FLimenTickCheck::InternalCallback()
 {
-	if (World == nullptr)
+	if (!IsValid(World) || !World->IsGameWorld() || !Callback)
 	{
 		return;
 	}
-
-	check(InFunctor != nullptr)
 	
-	if (InFunctor())
+	if (Callback())
 	{
+		Callback.Reset();
 		return;
 	}
 
@@ -52,9 +54,7 @@ void FLimenTickCheck::InternalCallback(const TFunction<bool()> InFunctor)
 	}
 	else
 	{
-		TimerHandle = World->GetTimerManager().SetTimerForNextTick([this, InFunctor]
-		{
-			InternalCallback(InFunctor);
-		});
+		const FTimerDelegate Delegate = FTimerDelegate::CreateRaw(this, &FLimenTickCheck::InternalCallback);
+		TimerHandle = World->GetTimerManager().SetTimerForNextTick(Delegate);
 	}
 }
