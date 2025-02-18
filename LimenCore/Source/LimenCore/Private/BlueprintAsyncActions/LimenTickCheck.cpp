@@ -18,10 +18,6 @@ FLimenTickCheck::FLimenTickCheck(UWorld* InWorld, const int32 InMaxTicks)
 
 FLimenTickCheck::~FLimenTickCheck()
 {
-	if (IsValid(World))
-	{
-		World->GetTimerManager().ClearTimer(TimerHandle);
-	}
 }
 
 void FLimenTickCheck::AddLambda(const TFunction<bool()>& InFunc)
@@ -47,10 +43,6 @@ void FLimenTickCheck::InternalCallback(const TFunction<bool()> InFunctor)
 	
 	if (InFunctor())
 	{
-		if (World != nullptr)
-		{
-			World->GetTimerManager().ClearTimer(TimerHandle);
-		}
 		return;
 	}
 
