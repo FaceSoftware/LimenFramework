@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/SpotLightComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -25,7 +26,9 @@ UTexture* ALimenItemBase::GetItemImage(UObject* WorldContextObject, const TSubcl
 		return nullptr;
 	}
 
-	return CastChecked<ALimenItemBase>(Actor)->GetItemImage();
+	ALimenItemBase* Item = CastChecked<ALimenItemBase>(Actor);
+	Item->CaptureItemImage();
+	return Item->GetItemImage();
 }
 
 FText ALimenItemBase::GetDisplayName(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
@@ -136,10 +139,6 @@ UStaticMesh* ALimenItemBase::GetItemMesh_Implementation() const
 
 UTexture* ALimenItemBase::GetItemImage() const
 {
-	if (bUseSceneCaptureForImage && ItemImageSceneCapture != nullptr)
-	{
-		ItemImageSceneCapture->CaptureScene();
-	}
 	return ItemImage.Get();
 }
 
@@ -188,6 +187,17 @@ TArray<ULimenItemAction*> ALimenItemBase::GetItemActions() const
 const FColor& ALimenItemBase::GetRenderTargetBackgroundColor() const
 {
 	return RenderTargetBackgroundColor;
+}
+
+void ALimenItemBase::CaptureItemImage()
+{
+	if (bUseSceneCaptureForImage)
+	{
+		const bool bShouldHide = IsHidden();
+		SetActorHiddenInGame(false);
+		ItemImageSceneCapture->CaptureScene();
+		SetActorHiddenInGame(bShouldHide);
+	}
 }
 
 void ALimenItemBase::Interact(AController* InController, APawn* InPawn)
