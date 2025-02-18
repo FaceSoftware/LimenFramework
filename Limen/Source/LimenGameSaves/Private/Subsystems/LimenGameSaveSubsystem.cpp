@@ -80,8 +80,7 @@ void ULimenGameSaveSubsystem::SaveCurrentGame(UWorld* InWorld)
 
 	if (!InitializeHandlersForSaving() || CurrentGameSaveData->GameLevelIndex == INDEX_NONE)
 	{
-		const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<
-			ULimenModalsSubsystem>();
+		const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
 		check(ModalsSubsystem != nullptr);
 
 		ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(

@@ -22,6 +22,16 @@ ULimenNotificationComponent::ULimenNotificationComponent(const FObjectInitialize
 	ActiveNotifications.Reserve(MaxConsecutiveNotifications);
 }
 
+void ULimenNotificationComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	for (auto& Notification : ActiveNotifications)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(Notification.Value);
+	}
+	
+	Super::EndPlay(EndPlayReason);
+}
+
 void ULimenNotificationComponent::QueueNotification(const TSharedRef<const FLimenNotification>& InNotification)
 {
 	TryAssignPlayerController();
@@ -61,21 +71,24 @@ void ULimenNotificationComponent::DisplayNextNotification()
 		return;
 	}
 	
-	const TSharedRef<const FLimenNotification>& Notification = PendingNotifications.Pop(EAllowShrinking::Yes);
+	const TSharedRef<const FLimenNotification> Notification = PendingNotifications.Pop(EAllowShrinking::Yes);
 	ActiveNotifications.Add(Notification, FTimerHandle());	
 
-	const float DisplayTime = Notification->UseCustomDisplayTime() ?
-		Notification->GetDisplayTime() : DefaultNotificationDisplayTime;
+	const float DisplayTime = Notification->UseCustomDisplayTime()
+		? Notification->GetDisplayTime()
+		: DefaultNotificationDisplayTime;
 
-	GetWorld()->GetTimerManager().SetTimer(ActiveNotifications[Notification], [this, Notification]
-	{
-		ActiveNotifications.Remove(Notification);
-		ActiveNotifications.CompactStable();
-		DisplayNextNotification();
-	}
-	, DisplayTime, false);
+	const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::NotificationDisplayTimeReached, Notification);
+	GetWorld()->GetTimerManager().SetTimer(ActiveNotifications[Notification], Delegate, DisplayTime, false);
 	
 	OnNewNotification.Broadcast(Notification->GetParameters());
+}
+
+void ULimenNotificationComponent::NotificationDisplayTimeReached(const TSharedRef<const FLimenNotification> Notification)
+{
+	ActiveNotifications.Remove(Notification);
+	ActiveNotifications.CompactStable();
+	DisplayNextNotification();
 }
 
 bool ULimenNotificationComponent::IsNotificationDuplicate(const TSharedRef<const FLimenNotification>& Test)
