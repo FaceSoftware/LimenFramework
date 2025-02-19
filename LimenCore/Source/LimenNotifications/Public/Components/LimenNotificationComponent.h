@@ -23,6 +23,7 @@ public:
 	FNewNotificationDelegate OnNewNotification;
 
 	explicit ULimenNotificationComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	void QueueNotification(const TSharedRef<const FLimenNotification>& InNotification);
 
@@ -45,6 +46,7 @@ private:
 	TObjectPtr<APlayerController> BoundPlayerController;
 
 	void DisplayNextNotification();
+	void NotificationDisplayTimeReached(const TSharedRef<const FLimenNotification> Notification);
 	
 	bool IsNotificationDuplicate(const TSharedRef<const FLimenNotification>& Test);
 };

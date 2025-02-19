@@ -3,7 +3,9 @@
 
 #include "Developer/LimenLevelsDeveloperSettings.h"
 
+#include "Engine/Level.h"
 #include "Engine/World.h"
+#include "UObject/Package.h"
 
 
 TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetInitializationLevel()
@@ -39,23 +41,22 @@ TSoftObjectPtr<UWorld> ULimenLevelsDeveloperSettings::GetGameLevel(const int32 I
 int32 ULimenLevelsDeveloperSettings::GetGameLevelIndex(const FSoftObjectPath& Level)
 {
 	check(Level.IsValid())
-
+	
 	const ULimenLevelsDeveloperSettings* Settings = GetDefault<ULimenLevelsDeveloperSettings>();
 	check(Settings != nullptr);
 	for (int32 i = 0; i < Settings->GameLevels.Num(); i++)
 	{
-		if (Settings->GameLevels[i].ToSoftObjectPath() == Level)
+		if (Settings->GameLevels[i].GetAssetName() == Level.GetAssetName())
 		{
-			return static_cast<uint8>(i);
+			return i;
 		}
 	}
 
 	return INDEX_NONE;
 }
 
-int32 ULimenLevelsDeveloperSettings::GetGameLevelIndex(UWorld* Level)
+int32 ULimenLevelsDeveloperSettings::GetGameLevelIndex(const UWorld* Level)
 {
-	check(Level != nullptr);
 	return GetGameLevelIndex(FSoftObjectPath(Level));
 }
 

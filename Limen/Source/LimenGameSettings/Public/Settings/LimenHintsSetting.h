@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BlueprintAsyncActions/LimenTickCheck.h"
 #include "Settings/LimenSelectionSetting.h"
 #include "LimenHintsSetting.generated.h"
 
+class ALimenHintsManager;
 /**
  * 
  */
@@ -22,9 +24,15 @@ protected:
 	virtual void SetDefaults() override;
 
 private:
+	inline static const FString Enabled = TEXT("Enabled");
+	inline static const FString Disabled = TEXT("Disabled");
+	static constexpr int32 MaxRetries = 100;
+	
 	static FString FormatHintsSetting(const bool bEnabled);
 	static bool UnFormatHintsSetting(const FString& Selection);
 
-	inline static const FString Enabled = TEXT("Enabled");
-	inline static const FString Disabled = TEXT("Disabled");
+	TWeakObjectPtr<ALimenHintsManager> HintsManager;
+	int32 Retries;
+	
+	FLimenTickCheck HintsManagerSpawn;
 };

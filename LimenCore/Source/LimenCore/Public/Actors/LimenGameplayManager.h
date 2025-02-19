@@ -39,20 +39,6 @@ public:
 		static_assert(std::is_base_of_v<ALimenGameplayManager, ManagerClass>);
 		return Cast<ManagerClass>(GetGameplayManager(WorldContextObject, ManagerClass::StaticClass()));
 	}
-
-	template <typename ManagerClass>
-	static ManagerClass* GetGameplayManager(UWorld* World)
-	{
-		for (TActorIterator<ALimenGameplayManager> It(World); It; ++It)
-		{
-			if (auto* Manager = Cast<ManagerClass>(*It); Manager != nullptr)
-			{
-				return Manager;
-			}
-		}
-
-		return nullptr;
-	}
 	
 public:
 	FObjectInitializeDelegate OnObjectInitialized;

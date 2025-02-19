@@ -20,7 +20,7 @@ public:
 	static TSoftObjectPtr<UWorld> GetGameEndLevel();
 	static TSoftObjectPtr<UWorld> GetGameLevel(const int32 Index);
 	static int32 GetGameLevelIndex(const FSoftObjectPath& Level);
-	static int32 GetGameLevelIndex(UWorld* Level);
+	static int32 GetGameLevelIndex(const UWorld* Level);
 	static bool IsGameLevelIndexValid(const int32 Index);
 	static bool ShouldUseSubsystem();
 

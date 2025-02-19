@@ -9,6 +9,7 @@
 #include "LimenItemBase.generated.h"
 
 
+class USpotLightComponent;
 class UTextureRenderTarget2D;
 class UTexture;
 class USceneCaptureComponent2D;
@@ -35,7 +36,6 @@ public:
 	static FColor GetRenderTargetBackgroundColor(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass);
 
 	explicit ALimenItemBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -47,6 +47,9 @@ public:
 	const FText& GetDisplayName() const;
 	const FText& GetDescription() const;
 	const FColor& GetRenderTargetBackgroundColor() const;
+
+	UFUNCTION(BlueprintCallable)
+	void CaptureItemImage();
 
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
@@ -73,7 +76,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
 	TObjectPtr<USceneCaptureComponent2D> ItemImageSceneCapture;
-	
+
 	virtual void Interact(AController* InController, APawn* InPawn) override;
 	virtual void InteractionStopped(AController* InController, APawn* InPawn) override final;
 	
@@ -81,6 +84,5 @@ private:
 	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
 	bool bHasBeenLoaded;
 
-	UPROPERTY()
-	TObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
+	TStrongObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
 };

@@ -9,7 +9,7 @@ public class LimenCore : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "RenderCore", 
+				"Core", "RenderCore", "Engine", 
 			}
 		);
 
