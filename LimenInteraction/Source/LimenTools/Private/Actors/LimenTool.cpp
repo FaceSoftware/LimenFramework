@@ -35,7 +35,8 @@ void ALimenTool::BeginPlay()
 	BatteryAttribute = AbilityComponent->GetAttribute<ULimenBatteryAttribute>();
 	check(BatteryAttribute != nullptr);
 	BatteryAttribute->SetRechargeRate(DrainPerSecond > 0 ? -DrainPerSecond : DrainPerSecond);
-	BatteryAttribute->OnAttributeEmpty.AddUniqueDynamic(this, &ThisClass::ALimenTool::BatteryEmpty);
+	BatteryAttribute->OnAttributeEmpty.AddUniqueDynamic(this, &ThisClass::BatteryEmpty);
+	BatteryAttribute->OnAttributeChanged.AddUniqueDynamic(this, &ThisClass::CurrentBatteryCapacityChanged);
 
 	if (bStartActive)
 	{
@@ -112,8 +113,11 @@ void ALimenTool::DataLoaded()
 	FActorSpawnParameters SpawnParameters;
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+	const bool bIsFrozen = BatteryAttribute->IsFrozen();
+	BatteryAttribute->FreezeAttribute(false);
 	BatteryAttribute->SetCurrentValueAs(CurrentBatteryPercentage);
-	BatteryAttribute->OnAttributeChanged.AddUniqueDynamic(this, &ThisClass::CurrentBatteryCapacityChanged);
+	BatteryAttribute->FreezeAttribute(bIsFrozen);
+	
 	OnBatteryChanged.Broadcast(BatteryAttribute->GetCurrentValue());
 }
 
