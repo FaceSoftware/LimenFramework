@@ -55,7 +55,8 @@ bool ALimenGameMode::SetPause(APlayerController* PC, FCanUnpause CanUnpauseDeleg
 		return false;
 	}
 
-	OnWorldPauseStateChanged.Broadcast(true);
+	OnWorldPauseStateChanged.Broadcast(true, CurrentPauseReason);
+	CurrentPauseReason = EPauseReason::Undefined;
 	return true;
 }
 
@@ -66,7 +67,7 @@ bool ALimenGameMode::ClearPause()
 		return false;
 	}
 
-	OnWorldPauseStateChanged.Broadcast(false);
+	OnWorldPauseStateChanged.Broadcast(false, EPauseReason::Undefined);
 	return true;
 }
 
@@ -74,8 +75,9 @@ void ALimenGameMode::HandlePauseRequest(ALimenPlayerControllerBase* Player, cons
 {
 	check(Player)
 	LIMEN_LOG(LogLimen, Log, this, "Pause request recieved")
-	
-	switch (PauseReason)
+
+	CurrentPauseReason = PauseReason;
+	switch (CurrentPauseReason)
 	{
 	case EPauseReason::Undefined:
 		return;

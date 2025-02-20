@@ -26,6 +26,7 @@ enum class EPauseReason : uint8
 	PauseMenu,
 	GameMenu,
 	Notification,
+	Other,
 };
 
 enum class ELimenInputMode : uint8
