@@ -15,7 +15,7 @@ class LIMENGAMEMODES_API ALimenGameMode : public ALimenGameModeBase
 {
 	GENERATED_BODY()
 	
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWorldPause, const bool, bIsPaused);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWorldPause, const bool, bIsPaused, EPauseReason, PauseReason);
 	
 public:
 	UPROPERTY(BlueprintAssignable)
@@ -62,4 +62,5 @@ protected:
 
 private:
 	uint8 PauseRequestCounter;
+	EPauseReason CurrentPauseReason;
 };
