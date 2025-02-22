@@ -17,7 +17,6 @@
 #include "Widgets/LimenGameMenuWrapperWidget.h"
 #include "Widgets/LimenHudWidget.h"
 #include "Widgets/LimenItemSmithWrapperWidget.h"
-#include "UMG/LimenLoadingScreenWidget.h"
 #include "Widgets/LimenPauseMenuWidget.h"
 
 
@@ -183,21 +182,19 @@ void ALimenPlayerController::BindWidgetDelegates()
 	if (LimenHUD->GetPauseMenuWidget())
 	{
 		LimenHUD->GetPauseMenuWidget()->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::PauseMenuVisibilityChanged);
+		LimenHUD->GetPauseMenuWidget()->OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::PauseMenuAnimationFinished);
 	}
 
 	if (LimenHUD->GetHudWidget())
 	{
 		LimenHUD->GetHudWidget()->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::HUDVisibilityChanged);
+		LimenHUD->GetHudWidget()->OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::HUDAnimationFinished);
 	}
 
 	if (LimenHUD->GetDeathScreenWidget())
 	{
 		LimenHUD->GetDeathScreenWidget()->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::DeathScreenVisibilityChanged);
-	}
-
-	if (LimenHUD->GetItemSmithWidget())
-	{
-		LimenHUD->GetItemSmithWidget()->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::MainMenuVisibilityChanged);
+		LimenHUD->GetDeathScreenWidget()->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::DeathScreenAnimationFinished);
 	}
 }
 
@@ -206,26 +203,31 @@ void ALimenPlayerController::UnbindWidgetDelegates()
 	if (LimenHUD->GetGameMenuWidget())
 	{
 		LimenHUD->GetGameMenuWidget()->OnLimenVisibilityChanged.RemoveAll(this);
+		LimenHUD->GetGameMenuWidget()->OnLimenAnimationFinished.RemoveAll(this);
 	}
 
 	if (LimenHUD->GetPauseMenuWidget())
 	{
 		LimenHUD->GetPauseMenuWidget()->OnLimenVisibilityChanged.RemoveAll(this);
+		LimenHUD->GetPauseMenuWidget()->OnLimenAnimationFinished.RemoveAll(this);
 	}
 
 	if (LimenHUD->GetHudWidget())
 	{
 		LimenHUD->GetHudWidget()->OnLimenVisibilityChanged.RemoveAll(this);
+		LimenHUD->GetHudWidget()->OnLimenAnimationFinished.RemoveAll(this);
 	}
 
 	if (LimenHUD->GetDeathScreenWidget())
 	{
 		LimenHUD->GetDeathScreenWidget()->OnLimenVisibilityChanged.RemoveAll(this);
+		LimenHUD->GetDeathScreenWidget()->OnLimenAnimationFinished.RemoveAll(this);
 	}
 
 	if (LimenHUD->GetItemSmithWidget())
 	{
 		LimenHUD->GetItemSmithWidget()->OnLimenVisibilityChanged.RemoveAll(this);
+		LimenHUD->GetItemSmithWidget()->OnLimenAnimationFinished.RemoveAll(this);
 	}
 }
 
@@ -249,6 +251,11 @@ void ALimenPlayerController::GameMenuVisibilityChanged(const bool bIsVisible)
 	}
 }
 
+void ALimenPlayerController::GameMenuAnimationFinished(const bool bIsVisible)
+{
+	
+}
+
 void ALimenPlayerController::PauseMenuVisibilityChanged(const bool bIsVisible)
 {	
 	if (bIsVisible)
@@ -262,7 +269,15 @@ void ALimenPlayerController::PauseMenuVisibilityChanged(const bool bIsVisible)
 	}
 }
 
+void ALimenPlayerController::PauseMenuAnimationFinished(const bool bIsVisible)
+{
+}
+
 void ALimenPlayerController::HUDVisibilityChanged(const bool bIsVisible)
+{
+}
+
+void ALimenPlayerController::HUDAnimationFinished(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{
@@ -286,15 +301,6 @@ void ALimenPlayerController::DeathScreenVisibilityChanged(const bool bIsVisible)
 	}
 }
 
-void ALimenPlayerController::MainMenuVisibilityChanged(const bool bIsVisible)
+void ALimenPlayerController::DeathScreenAnimationFinished(const bool bIsVisible)
 {
-	if (bIsVisible)
-	{
-		SetUIInput();
-		RequestPause(EPauseReason::GameMenu);
-	}
-	else
-	{
-		RequestUnPause();
-	}
 }
