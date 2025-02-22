@@ -73,8 +73,11 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
 	void QueueNotification(const FNotificationParams& InParams);
 
+	UFUNCTION(BlueprintCallable)
 	void SetGameInput();
+	UFUNCTION(BlueprintCallable)
 	void SetUIInput();
+	UFUNCTION(BlueprintCallable)
 	void SetUIOnlyInput(const bool bShowMouse = true);
 	void SetInputMode(const FInputModeDataBase& InData) override;
 	void SetInputMode(const ELimenInputMode InInputMode);

@@ -18,9 +18,13 @@ struct FBrightnessSettingValues
 
 	UPROPERTY(BlueprintReadWrite, SaveGame)
 	float HighToneValue = 1.f;
+	UPROPERTY(BlueprintReadOnly)
+	FVector2D HighToneLimits = FVector2D(0.5f, 2.f);
 
 	UPROPERTY(BlueprintReadWrite, SaveGame)
 	float LowToneValue = 1.f;
+	UPROPERTY(BlueprintReadOnly)
+	FVector2D LowToneLimits = FVector2D(0.f, 1.5f);
 };
 
 /**
