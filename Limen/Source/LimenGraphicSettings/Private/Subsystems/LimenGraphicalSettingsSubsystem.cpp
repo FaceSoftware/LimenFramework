@@ -4,7 +4,6 @@
 #include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 
 #include "EngineUtils.h"
-#include "BlueprintAsyncActions/LimenRecurrentAction.h"
 #include "Developer/LimenGraphicalSettingsDeveloperSettings.h"
 #include "Engine/PostProcessVolume.h"
 #include "LogMacros/LimenLogMacros.h"
@@ -24,8 +23,6 @@ bool ULimenGraphicalSettingsSubsystem::ShouldCreateSubsystem(UObject* Outer) con
 		return false;
 	}
 
-	// We cannot set the SubsystemSettings variable here because this function is constant
-	// Just use a temp, it's ugly but no one will notice...
 	const auto* DeveloperSettings = GetDefault<ULimenGraphicalSettingsDeveloperSettings>();
 	return DeveloperSettings->bUseSubsystem;
 }
@@ -37,7 +34,7 @@ void ULimenGraphicalSettingsSubsystem::LoadDefaultSettingsList()
 	SubsystemSettings = GetDefault<ULimenGraphicalSettingsDeveloperSettings>();
 	for (const TSoftClassPtr<ULimenSetting>& SettingClass : SubsystemSettings->SettingsList)
 	{
-		if (SettingClass.IsNull())
+		if (!ensureAlways(!SettingClass.IsNull()))
 		{
 			// Don't crash the editor if the class is not set
 			continue;
@@ -52,23 +49,12 @@ void ULimenGraphicalSettingsSubsystem::LoadDefaultSettingsList()
 	
 	for (ULimenSetting* Setting : GetItems<ULimenSetting>())
 	{
-		Setting->InitializeSetting();
+		Setting->InitializeSetting(this);
 	}
 }
 
-APostProcessVolume* ULimenGraphicalSettingsSubsystem::GetGlobalPostProcess()
+APostProcessVolume* ULimenGraphicalSettingsSubsystem::GetGlobalPostProcess() const
 {
-	if (GlobalPostProcess != nullptr)
-	{
-		return GlobalPostProcess.Get();
-	}
-
-	if (auto* PostProcess = FindGlobalPostProcessVolume(GetWorld(), SubsystemSettings->GlobalPostProcessTag);
-		PostProcess != nullptr)
-	{
-		GlobalPostProcess = PostProcess;
-	}
-
 	return GlobalPostProcess.Get();
 }
 
@@ -76,20 +62,19 @@ void ULimenGraphicalSettingsSubsystem::PostWorldInitialization(UWorld* World,
 	const UWorld::InitializationValues InitValues)
 {
 	Super::PostWorldInitialization(World, InitValues);
-
-	FRecurrentActionStopCondition StopCondition;
-	StopCondition.BindDynamic(this, &ThisClass::StopRecurrentAction);
-	FRecurrentActionDelegate Action;
-	Action.BindDynamic(this, &ThisClass::FindGlobalPostProcessVolumeWrapper);
 	
-	FindGlobalPostProcessAction = ULimenRecurrentAction::StartRecurrentAction(World, Action, 0, .5f, StopCondition);
-	FindGlobalPostProcessAction->OnSuccess.AddUniqueDynamic(this, &ThisClass::GlobalPostProcessFound);
-	FindGlobalPostProcessAction->Activate();
-}
+	FindGlobalPostProcess = MakeUnique<FLimenTickCheck>(GetWorld());
+	FindGlobalPostProcess->AddLambda([this]
+	{
+		APostProcessVolume* TempGlobalPostProcess = FindGlobalPostProcessVolume(GetWorld(), SubsystemSettings->GlobalPostProcessTag);
+		if (TempGlobalPostProcess == nullptr)
+		{
+			return false;
+		}
 
-bool ULimenGraphicalSettingsSubsystem::StopRecurrentAction()
-{
-	return IsValid(GlobalPostProcess.Get());
+		GlobalPostProcess = TempGlobalPostProcess;
+		return true;
+	});
 }
 
 APostProcessVolume* ULimenGraphicalSettingsSubsystem::FindGlobalPostProcessVolume(const UWorld* World, const FName Tag)
@@ -103,19 +88,4 @@ APostProcessVolume* ULimenGraphicalSettingsSubsystem::FindGlobalPostProcessVolum
 	}
 
 	return nullptr;
-}
-
-void ULimenGraphicalSettingsSubsystem::FindGlobalPostProcessVolumeWrapper()
-{
-	GlobalPostProcess = FindGlobalPostProcessVolume(GetWorld(), SubsystemSettings->GlobalPostProcessTag);
-}
-
-void ULimenGraphicalSettingsSubsystem::GlobalPostProcessFound()
-{
-	if (FindGlobalPostProcessAction)
-	{
-		FindGlobalPostProcessAction->ConditionalBeginDestroy();
-		FindGlobalPostProcessAction = nullptr;
-		OnGlobalPostProcessFound.Broadcast(GlobalPostProcess.Get());
-	}
 }

@@ -38,12 +38,15 @@ void ULimenSetting::SetDefaultValue()
 	OnSettingUpdated.Broadcast(this);
 }
 
-void ULimenSetting::InitializeSetting()
+void ULimenSetting::InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSubsystem)
 {
 	if (bHasInitialized)
 	{
 		return;
 	}
+
+	check(InOwnerSubsystem != nullptr)
+	OwnerSubsystem = InOwnerSubsystem;
 	
 	SetDefaults();
 	BP_SetDefaults();

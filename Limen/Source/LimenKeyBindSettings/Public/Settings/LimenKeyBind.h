@@ -34,7 +34,7 @@ public:
 	ULimenKeyBind();
 
 	virtual void Serialize(FArchive& Ar) override;
-	void InitializeSetting(FEnhancedActionKeyMapping* InActionKeyMapping);
+	void InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSubsystem, FEnhancedActionKeyMapping* InActionKeyMapping);
 	
 	/// Readable Interface
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")

@@ -40,7 +40,7 @@ void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
 		
 		ULimenSetting* NewSetting = NewObject<ULimenSetting>(this, SettingClass.LoadSynchronous());
 		
-		NewSetting->InitializeSetting();
+		NewSetting->InitializeSetting(this);
 		AddItem(NewSetting);
 	}
 
@@ -55,7 +55,7 @@ void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
 			}
 			
 			ULimenKeyBind* KeyBindSetting = NewObject<ULimenKeyBind>(this);
-			KeyBindSetting->InitializeSetting(&MappingRef);
+			KeyBindSetting->InitializeSetting(this, &MappingRef);
 			KeyBindSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
 			AddItem(KeyBindSetting);
 		}

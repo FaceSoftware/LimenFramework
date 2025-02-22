@@ -64,7 +64,7 @@ void ULimenKeyBind::Serialize(FArchive& Ar)
 	CurrentKeyMapping.Serialize(Ar);
 }
 
-void ULimenKeyBind::InitializeSetting(FEnhancedActionKeyMapping* InActionKeyMapping)
+void ULimenKeyBind::InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSubsystem, FEnhancedActionKeyMapping* InActionKeyMapping)
 {
 	check(InActionKeyMapping->IsPlayerMappable())
 	
@@ -79,7 +79,7 @@ void ULimenKeyBind::InitializeSetting(FEnhancedActionKeyMapping* InActionKeyMapp
 	ActionKeyMappingPtr = InActionKeyMapping;
 	DefaultSelection = *InActionKeyMapping;
 	
-	Super::InitializeSetting();
+	Super::InitializeSetting(InOwnerSubsystem);
 }
 
 const TArray<FEnhancedActionKeyMapping>& ULimenKeyBind::GetSettingValues() const

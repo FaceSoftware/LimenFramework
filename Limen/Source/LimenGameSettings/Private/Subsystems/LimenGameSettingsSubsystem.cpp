@@ -31,7 +31,7 @@ void ULimenGameSettingsSubsystem::LoadDefaultSettingsList()
 		
 		ULimenSetting* NewSetting = NewObject<ULimenSetting>(this, SettingClass.LoadSynchronous());
 		check(NewSetting != nullptr);
-		NewSetting->InitializeSetting();
+		NewSetting->InitializeSetting(this);
 		AddItem(NewSetting);
 	}
 }
