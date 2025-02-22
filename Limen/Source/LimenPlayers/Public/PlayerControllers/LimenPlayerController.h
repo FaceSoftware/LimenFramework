@@ -64,16 +64,26 @@ protected:
 	virtual void UnbindWidgetDelegates() override;
 
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible) override;
+
 	UFUNCTION()
 	virtual void GameMenuVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
+	virtual void GameMenuAnimationFinished(const bool bIsVisible);
+
+	UFUNCTION()
 	virtual void PauseMenuVisibilityChanged(const bool bIsVisible);
+	UFUNCTION()
+	virtual void PauseMenuAnimationFinished(const bool bIsVisible);
+
 	UFUNCTION()
 	virtual void HUDVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
+	virtual void HUDAnimationFinished(const bool bIsVisible);
+
+	UFUNCTION()
 	virtual void DeathScreenVisibilityChanged(const bool bIsVisible);
 	UFUNCTION()
-	virtual void MainMenuVisibilityChanged(const bool bIsVisible);
+	virtual void DeathScreenAnimationFinished(const bool bIsVisible);
 
 private:
 	UPROPERTY()
