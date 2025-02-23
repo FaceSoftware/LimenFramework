@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "LimenStorageItem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Templates/SubclassOf.h"
 #include "LimenStorageSubsystem.generated.h"
 
 class ULimenStorageSaveData;
@@ -49,10 +50,12 @@ public:
 		return CategorySettings;
 	}
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
 	void Save();
-	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
 	void Load();
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
+	bool HasSavedData() const;
 
 	template<typename ItemType>
 	TArray<ItemType*> GetItems() const
@@ -90,7 +93,7 @@ public:
 	template<typename ItemType>
 	ItemType* GetItem(const TSubclassOf<ULimenStorageItem>& Class) const
 	{
-		check(Class != nullptr);
+		check(Class.Get() != nullptr);
 		static_assert(std::is_base_of_v<ULimenStorageItem, ItemType>);
 		
 		for (ULimenStorageItem* Item : StorageItems)
@@ -106,7 +109,7 @@ public:
 	
 	ULimenStorageItem* GetItem(const TSubclassOf<ULimenStorageItem>& Class) const
 	{
-		check(Class != nullptr);
+		check(Class.Get() != nullptr);
 		for (ULimenStorageItem* Item : StorageItems)
 		{
 			if (Item->IsA(Class))
@@ -127,14 +130,14 @@ protected:
 	ULimenStorageSaveData* GenerateNewSaveData();
 	
 	const TArray<ULimenStorageItem*>& GetStorageItems() const;
-
-	
 	
 private:
 	UPROPERTY()
 	TArray<ULimenStorageItem*> StorageItems;
 	UPROPERTY()
 	TObjectPtr<ULimenStorageSaveData> CurrentSaveData;
+
+	bool bHasSavedData;
 
 	virtual void Save_Internal();
 	virtual void Load_Internal();

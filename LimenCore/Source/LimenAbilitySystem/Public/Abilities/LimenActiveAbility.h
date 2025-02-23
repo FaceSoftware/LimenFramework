@@ -81,4 +81,5 @@ private:
 	FTimerHandle AbilityTimerHandle;
 
 	void AbilityActivated_Wrapper(AController* Controller, APawn* Pawn);
+	void StartCooldownTimer();
 };

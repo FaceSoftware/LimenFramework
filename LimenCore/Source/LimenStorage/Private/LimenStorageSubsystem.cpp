@@ -16,7 +16,8 @@ void ULimenStorageSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	
 	auto* SaveSystem = GetGameInstance()->GetSubsystem<ULimenSaveSubsystem>();
 	CurrentSaveData = Cast<ULimenStorageSaveData>(SaveSystem->LoadData(SaveDataName));
-	if (CurrentSaveData == nullptr)
+	bHasSavedData = CurrentSaveData != nullptr;
+	if (!bHasSavedData)
 	{
 		// No previous save, create an initial save
 		Save_Internal();
@@ -99,6 +100,11 @@ void ULimenStorageSubsystem::Save()
 void ULimenStorageSubsystem::Load()
 {
 	Load_Internal();
+}
+
+bool ULimenStorageSubsystem::HasSavedData() const
+{
+	return bHasSavedData;
 }
 
 void ULimenStorageSubsystem::AddItem(ULimenStorageItem* NewItem)

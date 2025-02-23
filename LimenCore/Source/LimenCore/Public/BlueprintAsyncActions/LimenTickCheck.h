@@ -10,7 +10,7 @@
  */
 class LIMENCORE_API FLimenTickCheck
 {
-public:
+public:	
 	FLimenTickCheck();
 	explicit FLimenTickCheck(UWorld* InWorld, const int32 InMaxTicks = 100);
 	~FLimenTickCheck();

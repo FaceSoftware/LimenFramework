@@ -57,7 +57,7 @@ public:
 	
 	template<typename SettingType>
 	bool ReapplySetting(const TSubclassOf<ULimenSetting>& Class);
-
+	
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
 	virtual void DataLoaded() override;

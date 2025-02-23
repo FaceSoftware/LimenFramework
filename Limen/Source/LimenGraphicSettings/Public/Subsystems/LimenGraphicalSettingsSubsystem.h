@@ -3,10 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BlueprintAsyncActions/LimenTickCheck.h"
 #include "Engine/PostProcessVolume.h"
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 #include "LimenGraphicalSettingsSubsystem.generated.h"
 
+class FLimenTickCheck;
 class ULimenRecurrentAction;
 class ULimenGraphicalSettingsDeveloperSettings;
 
@@ -28,7 +30,7 @@ public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 	virtual void LoadDefaultSettingsList() override;
 	
-	APostProcessVolume* GetGlobalPostProcess();
+	APostProcessVolume* GetGlobalPostProcess() const;
 
 protected:
 	virtual void PostWorldInitialization(UWorld* World, const UWorld::InitializationValues InitValues) override;
@@ -37,17 +39,9 @@ private:
 	UPROPERTY()
 	TObjectPtr<const ULimenGraphicalSettingsDeveloperSettings> SubsystemSettings;
 	UPROPERTY()
-	TObjectPtr<ULimenRecurrentAction> FindGlobalPostProcessAction;
-	UPROPERTY()
 	TObjectPtr<APostProcessVolume> GlobalPostProcess;
-	FTimerHandle FindGlobalPostProcessHandle;
 
-	UFUNCTION()
-	bool StopRecurrentAction();
-	
-	static APostProcessVolume* FindGlobalPostProcessVolume(const UWorld* World, const FName Tag);
-	UFUNCTION()
-	void FindGlobalPostProcessVolumeWrapper();
-	UFUNCTION()
-	void GlobalPostProcessFound();
+	TUniquePtr<FLimenTickCheck> FindGlobalPostProcess;
+
+	static APostProcessVolume* FindGlobalPostProcessVolume(const UWorld* World, FName Tag);
 };

@@ -48,13 +48,7 @@ void ULimenActiveAbility::CancelAbility(AController* Controller, APawn* Pawn)
 	bIsActive = false;
 	AbilityCancelled(Controller, Pawn);
 
-	if (FMath::IsNearlyZero(AbilityCooldown) || AbilityCooldown < 0.f)
-	{
-		SetCooldownOver();
-		return;
-	}
-	
-	GetWorld()->GetTimerManager().SetTimer(AbilityCooldownTimer, this, &ThisClass::SetCooldownOver, AbilityCooldown, false);
+	StartCooldownTimer();
 }
 
 bool ULimenActiveAbility::CanActivateAbility() const
@@ -104,5 +98,21 @@ void ULimenActiveAbility::AbilityActivated_Wrapper(AController* Controller, APaw
 	AbilityActivated(Controller, Pawn);
 	BP_OnAbilityActivated(Controller, Pawn);
 	bIsCooldownOver = false;
+
 	bIsActive = !bIsOneShot;
+	if (bIsOneShot)
+	{
+		StartCooldownTimer();
+	}
+}
+
+void ULimenActiveAbility::StartCooldownTimer()
+{
+	if (FMath::IsNearlyZero(AbilityCooldown) || AbilityCooldown < 0.f)
+	{
+		SetCooldownOver();
+		return;
+	}
+	
+	GetWorld()->GetTimerManager().SetTimer(AbilityCooldownTimer, this, &ThisClass::SetCooldownOver, AbilityCooldown, false);
 }

@@ -41,7 +41,7 @@ public:
 	
 	virtual void SetDefaultValue();
 
-	void InitializeSetting();
+	void InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSubsystem);
 
 	/**
 	 * @brief Function executed when the subsystem has initialized all settings.

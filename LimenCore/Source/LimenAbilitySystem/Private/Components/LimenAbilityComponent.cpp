@@ -104,7 +104,7 @@ ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAb
 	for (const TStrongObjectPtr<ULimenAbilityBase>& Ability : Abilities)
 	{
 		check(Ability.IsValid())
-		if (Ability->GetClass() == AbilityClass)
+		if (Ability->IsA(AbilityClass))
 		{
 			return Ability.Get();
 		}
