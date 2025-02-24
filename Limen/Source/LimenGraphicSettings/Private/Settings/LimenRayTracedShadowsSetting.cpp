@@ -1,28 +1,27 @@
-﻿// Copyright Face Software. All Rights Reserved.
+﻿// Copyright © 2024 FaceSoftware. All rights reserved.
 
 
-#include "Settings/LimenHardwareRayTracingSetting.h"
+#include "Settings/LimenRayTracedShadowsSetting.h"
 
 #include "RHIGlobals.h"
-#include "HAL/IConsoleManager.h"
 #include "Settings/LimenRayTracingSetting.h"
 #include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 
 
-const FString ULimenHardwareRayTracingSetting::Software = TEXT("Software");
-const FString ULimenHardwareRayTracingSetting::Hardware = TEXT("Hardware");
+const FString ULimenRayTracedShadowsSetting::Enabled	= TEXT("Enabled");
+const FString ULimenRayTracedShadowsSetting::Disabled	= TEXT("Disabled");
 
-ULimenHardwareRayTracingSetting::ULimenHardwareRayTracingSetting()
+ULimenRayTracedShadowsSetting::ULimenRayTracedShadowsSetting()
 {
-	DevelopmentName = TEXT("setting_lumenhrt");
+	DevelopmentName = TEXT("setting_rtshadows");
 	Category = FText::FromString(TEXT("Ray-tracing"));
-	DisplayName = FText::FromString(TEXT("Raytracing Method"));
-	Description = FText::FromString(TEXT("Whether hardware or software raytracing should be used for global illumination."));
+	DisplayName = FText::FromString(TEXT("Raytraced Shadows"));
+	Description = FText::FromString(TEXT("Enable or disable ray-traced shadows."));
 
 	bCanEditOverride = false;
 }
 
-bool ULimenHardwareRayTracingSetting::CanEdit() const
+bool ULimenRayTracedShadowsSetting::CanEdit() const
 {
 	if (!Super::CanEdit())
 	{
@@ -39,7 +38,7 @@ bool ULimenHardwareRayTracingSetting::CanEdit() const
 	return RTVar->GetBool();
 }
 
-void ULimenHardwareRayTracingSetting::ApplyCurrentSetting(const bool bUserRequest)
+void ULimenRayTracedShadowsSetting::ApplyCurrentSetting(bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
@@ -51,7 +50,7 @@ void ULimenHardwareRayTracingSetting::ApplyCurrentSetting(const bool bUserReques
 	)->ApplyCVars();
 }
 
-void ULimenHardwareRayTracingSetting::SetDefaults()
+void ULimenRayTracedShadowsSetting::SetDefaults()
 {
 	ULimenSelectionSetting::SetDefaults();
 
@@ -62,31 +61,31 @@ void ULimenHardwareRayTracingSetting::SetDefaults()
 	}
 
 	{
-		TConsoleSetting<bool> HRT(Hardware);
-		HRT.AddCVar(TEXT("r.Lumen.HardwareRayTracing"), true);
-		SettingsDescription.Push(HRT);
+		TConsoleSetting<bool> EnabledSetting(Enabled);
+		EnabledSetting.AddCVar(TEXT("r.RayTracing.Shadows"), true);
+		SettingsDescription.Push(EnabledSetting);
 	}
 	{
-		TConsoleSetting<bool> SRT(Software);
-		SRT.AddCVar(TEXT("r.Lumen.HardwareRayTracing"), false);
-		SettingsDescription.Push(SRT);
+		TConsoleSetting<bool> DisabledSetting(Disabled);
+		DisabledSetting.AddCVar(TEXT("r.RayTracing.Shadows"), false);
+		SettingsDescription.Push(DisabledSetting);
 	}
 	
-	PossibleSelections.Push(Hardware);
-	PossibleSelections.Push(Software);
-	DefaultSelection = GRHIGlobals.RayTracing.Supported ? Hardware : Software;
+	PossibleSelections.Push(Enabled);
+	PossibleSelections.Push(Disabled);
+	DefaultSelection = Disabled;
 }
 
-void ULimenHardwareRayTracingSetting::RayTracingSettingApplied(const ULimenSetting* Setting)
+void ULimenRayTracedShadowsSetting::RayTracingSettingApplied(const ULimenSetting* Setting)
 {
 	const ULimenRayTracingSetting* RTSetting = CastChecked<ULimenRayTracingSetting>(Setting);
 	if (RTSetting->GetCurrentValue() == ULimenRayTracingSetting::Disabled)
 	{
 		bCanEditOverride = true;
-		SetNewValue(Software);
+		SetNewValue(Disabled);
 		ApplyCurrentSetting(false);
 		bCanEditOverride = false;
 	}
-
+	
 	OnSettingEditableStateChanged.Broadcast(Setting);
 }

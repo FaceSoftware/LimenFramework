@@ -1,24 +1,24 @@
-﻿// Copyright Face Software. All Rights Reserved.
+﻿// Copyright © 2024 FaceSoftware. All rights reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Settings/LimenSelectionSetting.h"
-#include "LimenHardwareRayTracingSetting.generated.h"
+#include "LimenRayTracedShadowsSetting.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class LIMENGRAPHICSETTINGS_API ULimenHardwareRayTracingSetting : public ULimenSelectionSetting
+class LIMENGRAPHICSETTINGS_API ULimenRayTracedShadowsSetting : public ULimenSelectionSetting
 {
 	GENERATED_BODY()
 
 public:
-	static const FString Software;
-	static const FString Hardware;
+	static const FString Enabled;
+	static const FString Disabled;
 
-	ULimenHardwareRayTracingSetting();
+	ULimenRayTracedShadowsSetting();
 	virtual bool CanEdit() const override;
 
 protected:
@@ -27,7 +27,7 @@ protected:
 
 private:
 	TArray<TConsoleSetting<bool>> SettingsDescription;
-
+	
 	bool bCanEditOverride;
 
 	UFUNCTION()

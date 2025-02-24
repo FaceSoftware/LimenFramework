@@ -16,7 +16,7 @@ ULimenRayTracingTwoSidedGeometrySetting::ULimenRayTracingTwoSidedGeometrySetting
 
 bool ULimenRayTracingTwoSidedGeometrySetting::CanEdit() const
 {
-	return true;
+	return false;
 }
 
 void ULimenRayTracingTwoSidedGeometrySetting::ApplyCurrentSetting(const bool bUserRequest)
