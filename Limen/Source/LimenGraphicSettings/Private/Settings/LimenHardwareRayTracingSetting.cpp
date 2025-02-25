@@ -64,13 +64,13 @@ void ULimenHardwareRayTracingSetting::SetDefaults()
 	{
 		TConsoleSetting<bool> HRT(Hardware);
 		HRT.AddCVar(TEXT("r.Lumen.HardwareRayTracing"), true);
-		HRT.AddCVar(TEXT("r.MegaLights"), true);
+		HRT.AddCVar(TEXT("r.MegaLights.Allow"), true);
 		SettingsDescription.Push(HRT);
 	}
 	{
 		TConsoleSetting<bool> SRT(Software);
 		SRT.AddCVar(TEXT("r.Lumen.HardwareRayTracing"), false);
-		SRT.AddCVar(TEXT("r.MegaLights"), false);
+		SRT.AddCVar(TEXT("r.MegaLights.Allow"), false);
 		SettingsDescription.Push(SRT);
 	}
 	
