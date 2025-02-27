@@ -69,3 +69,8 @@ void ALimenHintsManager::DisableHints()
 	
 	bHintsEnabled = false;
 }
+
+bool ALimenHintsManager::AreHintsEnabled() const
+{
+	return bHintsEnabled;
+}

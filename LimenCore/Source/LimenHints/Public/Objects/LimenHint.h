@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Templates/SubclassOf.h"
 #include "UObject/Object.h"
 #include "LimenHint.generated.h"
 
@@ -31,6 +32,8 @@ public:
 	void Disable();
 
 	bool HasEverBeenVisible() const;
+
+	ULimenHintWidget* GetHintWidget() const;
 	
 protected:
 	virtual void SetHintText(FText& OutTitle, FText& OutBody);
