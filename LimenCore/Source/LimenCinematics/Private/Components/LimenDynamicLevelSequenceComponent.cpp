@@ -71,11 +71,7 @@ void ULimenDynamicLevelSequenceComponent::PlaySequence()
 		return;
 	}
 	
-	GetWorld()->GetTimerManager().SetTimerForNextTick([this]
-	{
-		GetSequencePlayer()->Play();
-		bIsPlaying = SequenceActor->GetSequencePlayer()->IsPlaying();
-	});
+	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::PlaySequenceInternal);
 }
 
 void ULimenDynamicLevelSequenceComponent::StopSequence()
@@ -159,4 +155,10 @@ void ULimenDynamicLevelSequenceComponent::UnSetupComponent()
 		verify(SequenceActor->Destroy());
 		SequenceActor.Reset();
 	}
+}
+
+void ULimenDynamicLevelSequenceComponent::PlaySequenceInternal()
+{
+	GetSequencePlayer()->Play();
+	bIsPlaying = SequenceActor->GetSequencePlayer()->IsPlaying();
 }

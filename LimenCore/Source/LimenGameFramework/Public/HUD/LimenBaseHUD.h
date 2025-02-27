@@ -27,6 +27,10 @@ public:
 	
 	ALimenBaseHUD();
 	virtual void ShowHUD() override;
+
+	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
+	void ForceHUDState(const bool bForce);
+	bool GetForcedHudState() const;
 	
 	void ShowActiveWidget();
 	void HideActiveWidget();
@@ -67,7 +71,7 @@ protected:
 	void OnPostProcessDisabled();
 
 	UFUNCTION(BlueprintCallable)
-	virtual bool CanSwitchWidgetsVisibility() const { return true; }
+	virtual bool CanSwitchWidgetsVisibility() const;
 
 	void ShowWidget_Internal(ULimenWidget* Widget);
 	void HideWidget_Internal(ULimenWidget* Widget);
@@ -77,6 +81,7 @@ private:
 	TObjectPtr<ULimenNotificationComponent> NotificationComponent;
 	
 	uint8 bAreWidgetsInitialized : 1;
+	uint8 bForceHideHud : 1;
 	
 #if WITH_EDITORONLY_DATA
 

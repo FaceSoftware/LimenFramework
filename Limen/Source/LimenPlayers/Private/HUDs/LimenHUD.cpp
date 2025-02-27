@@ -16,7 +16,6 @@
 ALimenHUD::ALimenHUD() : Super()
 {
 	bPostProcessEnabled = true;
-	bForceHUDState = 0;
 }
 
 void ALimenHUD::BeginPlay()
@@ -64,7 +63,7 @@ ULimenGameMenuWrapperWidget* ALimenHUD::GetGameMenuWidget() const
 
 void ALimenHUD::ShowCharacterHudWidget()
 {
-	if (CharacterHudWidget && !bForceHUDState)
+	if (CharacterHudWidget)
 	{
 		ShowWidget_Internal(CharacterHudWidget.Get());
 	}
@@ -72,15 +71,10 @@ void ALimenHUD::ShowCharacterHudWidget()
 
 void ALimenHUD::HideCharacterHudWidget()
 {
-	if (CharacterHudWidget && !bForceHUDState)
+	if (CharacterHudWidget)
 	{
 		HideWidget_Internal(CharacterHudWidget.Get());
 	}
-}
-
-void ALimenHUD::ForceHUDState(const bool bForce)
-{
-	bForceHUDState = bForce;
 }
 
 void ALimenHUD::ToggleCharacterHudWidget()

@@ -40,8 +40,6 @@ public:
 	virtual void ShowCharacterHudWidget();
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
 	virtual void HideCharacterHudWidget();
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
-	void ForceHUDState(const bool bForce);
 	void ToggleCharacterHudWidget();
 	bool IsCharacterHudShowing() const;
 	ULimenHudWidget* GetHudWidget() const;
@@ -126,5 +124,4 @@ private:
 	TArray<ULimenWidget*> WidgetsList;
 
 	uint8 bPostProcessEnabled : 1;
-	uint8 bForceHUDState : 1;
 };

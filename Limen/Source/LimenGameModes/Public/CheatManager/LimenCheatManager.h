@@ -35,4 +35,6 @@ public:
 	UFUNCTION(Exec)
 	void TakeDamage(const float Damage);
 
+	UFUNCTION(Exec)
+	void ForceHideHud(const bool bHide);
 };

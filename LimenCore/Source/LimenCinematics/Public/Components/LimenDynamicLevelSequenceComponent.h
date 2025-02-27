@@ -61,4 +61,6 @@ private:
 
 	void SetupComponent();
 	void UnSetupComponent();
+
+	void PlaySequenceInternal();
 };
