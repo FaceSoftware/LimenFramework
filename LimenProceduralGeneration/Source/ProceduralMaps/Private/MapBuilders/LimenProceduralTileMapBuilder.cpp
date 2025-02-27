@@ -3,6 +3,7 @@
 
 #include "MapBuilders/LimenProceduralTileMapBuilder.h"
 
+#include "TimerManager.h"
 #include "Interfaces/LimenEndTileInterface.h"
 #include "Interfaces/LimenStartTileInterface.h"
 #include "Maps/LimenProceduralTileMap.h"
