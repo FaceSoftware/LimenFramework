@@ -159,6 +159,11 @@ void ULimenDynamicLevelSequenceComponent::UnSetupComponent()
 
 void ULimenDynamicLevelSequenceComponent::PlaySequenceInternal()
 {
+	if (GetSequencePlayer() == nullptr)
+	{
+		return;
+	}
+
 	GetSequencePlayer()->Play();
 	bIsPlaying = SequenceActor->GetSequencePlayer()->IsPlaying();
 }
