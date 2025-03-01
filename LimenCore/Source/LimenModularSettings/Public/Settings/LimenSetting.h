@@ -197,18 +197,39 @@ public:
 	virtual SettingType GetPreviousValue() const = 0;
 };
 
+struct FConsoleSetting
+{
+	FConsoleSetting() = default;
+	FConsoleSetting(const FConsoleSetting& Other) = default;
+	FConsoleSetting(FConsoleSetting&& Other) = default;
+	virtual ~FConsoleSetting() = default;
+
+	virtual FString GetName() const = 0;
+    virtual void SetName(const FString& InName) = 0;
+
+	virtual void ApplyCVars() = 0;
+	virtual void ResetCVars() = 0;
+};
+
+typedef FConsoleSetting* FConsoleSettingPtr;
+
 template<typename SettingValue>
-struct TConsoleSetting
+struct TConsoleSetting final : FConsoleSetting
 {
 	TConsoleSetting() = default;
-	explicit TConsoleSetting(const FString& InName) : Name(InName) {}
-	FString GetName() const { return Name; }
-	void SetName(const FString& InName) { Name = InName; }
+	explicit TConsoleSetting(const FString& InName) : FConsoleSetting(), Name(InName)
+	{
+	}
+
+	virtual FString GetName() const override { return Name; }
+	virtual void SetName(const FString& InName) override { Name = InName; }
+
 	void AddCVar(const FString& CVarName, const SettingValue CVarValue)
 	{
 		CVars.Add(CVarName, CVarValue);
 	}
-	void ApplyCVars()
+
+	virtual void ApplyCVars() override
 	{
 		if (CVars.IsEmpty()) return;
 		for (auto& Variable : CVars)
@@ -221,7 +242,8 @@ struct TConsoleSetting
 			Var->Set(VarValue, ULimenSetting::ConsoleVariableUserSettingFlag);
 		}
 	}
-	void ResetCVars()
+
+	virtual void ResetCVars() override
 	{
 		CVars.Empty();
 	}

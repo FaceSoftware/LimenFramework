@@ -144,10 +144,8 @@ const UProceduralMapParameters* ALimenProceduralMapBuilder::GetMapGenerationPara
 }
 
 ULimenProceduralMap* ALimenProceduralMapBuilder::GetMap(const FGuid& MapId) const
-{
-	ULimenProceduralMap* const* Map = nullptr;
-	
-	Map = LoadedMaps.Find(MapId);
+{	
+	ULimenProceduralMap* const* Map = LoadedMaps.Find(MapId);
 	if (Map != nullptr)
 	{
 		return *Map;

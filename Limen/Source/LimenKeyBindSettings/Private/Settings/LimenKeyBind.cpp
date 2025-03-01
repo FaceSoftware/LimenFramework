@@ -9,7 +9,6 @@
 #include "Engine/World.h"
 #include "MappableKeySettings/LimenPlayerMappableKeySettings.h"
 #include "Subsystems/LimenKeyBindSubsystem.h"
-#include "Subsystems/LimenSaveSubsystem.h"
 
 
 FSaveableEnhancedActionKeyMapping::FSaveableEnhancedActionKeyMapping(const FEnhancedActionKeyMapping& InKeyMapping)
@@ -23,25 +22,12 @@ bool FSaveableEnhancedActionKeyMapping::Serialize(FArchive& Ar)
 	{
 		FName TempValue = Key.GetFName();
 		Ar << TempValue;
-
-		TempValue = FLimenSerialization::BoolToName(bShouldBeIgnored);
-		Ar << TempValue;
-		
-		uint8 ByteValue = static_cast<uint8>(SettingBehavior);
-		Ar << ByteValue;
 	}
 	else if (Ar.IsLoading())
 	{
 		FName TempName;
 		Ar << TempName;
 		Key = FKey(TempName);
-		
-		Ar << TempName;
-		bShouldBeIgnored = FLimenSerialization::NameToBool(TempName);
-		
-		uint8 ByteValue;
-		Ar << ByteValue;
-		SettingBehavior = static_cast<EPlayerMappableKeySettingBehaviors>(ByteValue);
 	}
 	
 	return true;
@@ -55,6 +41,7 @@ ULimenKeyBind::ULimenKeyBind()
 	Description = FText::FromString(TEXT("This is a keybind setting."));
 	bCanEdit = false;
 	ActionKeyMappingPtr = nullptr;
+	SavedInputHandlingType = EInputActionHandlingType::NotApplicable;
 }
 
 void ULimenKeyBind::Serialize(FArchive& Ar)
@@ -75,6 +62,10 @@ void ULimenKeyBind::InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSub
 	Category = InActionKeyMapping->GetDisplayCategory();
 	Description = MappableKeySettings != nullptr ? MappableKeySettings->Description : FText::FromString(TEXT(""));
 	bCanEdit = true;
+	if (MappableKeySettings->bCanOverrideActionHandlingType)
+	{
+		SavedInputHandlingType = MappableKeySettings->InputHandlingType;
+	}
 
 	ActionKeyMappingPtr = InActionKeyMapping;
 	DefaultSelection = *InActionKeyMapping;
@@ -116,6 +107,13 @@ bool ULimenKeyBind::SetNewValue(const FEnhancedActionKeyMapping& NewSelection)
 
 	PreviousKeyMapping = CurrentKeyMapping;
 	CurrentKeyMapping = FSaveableEnhancedActionKeyMapping(NewSelection);
+	
+	ULimenPlayerMappableKeySettings* Settings = CurrentKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
+	if (Settings != nullptr && Settings->bCanOverrideActionHandlingType)
+	{
+		SavedInputHandlingType = Settings->InputHandlingType;
+	}
+	
 	OnSettingUpdated.Broadcast(this);
 	return true;
 }
@@ -132,42 +130,39 @@ void ULimenKeyBind::SetDefaults()
 {
 	Super::SetDefaults();
 
-	if (DefaultSelection.Action == nullptr)
+	if (DefaultSelection.Action != nullptr)
 	{
-		return;
-	}
-	
-	for (auto& InputMappingContextSoftPtr : GetDefault<ULimenKeyBindDeveloperSettings>()->GetAllInputMappingContexts())
-	{
-		if (InputMappingContextSoftPtr.IsNull())
+		bool bFound = false;
+		for (auto& InputMappingContextSoftPtr : GetDefault<ULimenKeyBindDeveloperSettings>()->GetAllInputMappingContexts())
 		{
-			continue;
-		}
-
-		for (const TStrongObjectPtr MappingContextPtr(InputMappingContextSoftPtr.LoadSynchronous()); auto& Mapping : MappingContextPtr->GetMappings())
-		{
-			if (Mapping.Action != DefaultSelection.Action)
+			if (InputMappingContextSoftPtr.IsNull())
 			{
 				continue;
 			}
 
-			DefaultSelection = Mapping;
-			return;
-		}
-	}
+			for (const TStrongObjectPtr MappingContextPtr(InputMappingContextSoftPtr.LoadSynchronous()); auto& Mapping : MappingContextPtr->GetMappings())
+			{
+				if (Mapping.Action != DefaultSelection.Action)
+				{
+					continue;
+				}
 
-	ensureAlwaysMsgf(false, TEXT("Unbound input action!"));
+				bFound = true;
+				DefaultSelection = Mapping;
+				break;
+			}
+
+			if (bFound) break;
+		}
+		
+		ensureAlwaysMsgf(bFound, TEXT("Unbound input action!"));
+	}
 }
 
 void ULimenKeyBind::SetDefaultValue()
 {
 	PreviousKeyMapping = CurrentKeyMapping;
 	CurrentKeyMapping = FSaveableEnhancedActionKeyMapping(DefaultSelection);
-	ULimenPlayerMappableKeySettings* Settings = CurrentKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
-	if (Settings != nullptr)
-	{
-		SetInputActionHandlingType(Settings->InputHandlingType);
-	}
 	
 	Super::SetDefaultValue();
 }
@@ -176,16 +171,23 @@ void ULimenKeyBind::DataLoaded()
 {
 	PreviousKeyMapping = CurrentKeyMapping;
 	
+	ULimenPlayerMappableKeySettings* Settings = CurrentKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
+	if (Settings != nullptr && Settings->bCanOverrideActionHandlingType)
+	{
+		Settings->InputHandlingType = SavedInputHandlingType;
+	}
+	
 	Super::DataLoaded();
 }
 
 void ULimenKeyBind::SetInputActionHandlingType(const EInputActionHandlingType NewType)
 {
 	ULimenPlayerMappableKeySettings* Settings = CurrentKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
-	if (Settings == nullptr || Settings->InputHandlingType == NewType)
+	if (Settings == nullptr || Settings->InputHandlingType == NewType || !Settings->bCanOverrideActionHandlingType)
 	{
 		return;
 	}
-	
+
 	Settings->InputHandlingType = NewType;
+	SavedInputHandlingType = Settings->InputHandlingType;
 }

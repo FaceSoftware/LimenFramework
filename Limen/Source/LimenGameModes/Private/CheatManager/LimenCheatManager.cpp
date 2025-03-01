@@ -9,6 +9,8 @@
 #include "Engine/GameInstance.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
+#include "HUD/LimenBaseHUD.h"
+#include "HUDs/LimenHUD.h"
 #include "LimenAbilitySystem/Public/Components/LimenAbilityComponent.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Subsystems/LimenGameSaveSubsystem.h"
@@ -121,4 +123,21 @@ void ULimenCheatManager::TakeDamage(const float Damage)
 
 	const float AbsoluteDamage = FMath::Abs(Damage);
 	HealthAttribute->ModifyValueBy(-AbsoluteDamage);
+}
+
+void ULimenCheatManager::ForceHideHud(const bool bHide)
+{
+	if (ALimenHUD* HUD = GetPlayerController()->GetHUD<ALimenHUD>(); HUD != nullptr)
+	{
+		if (bHide)
+		{
+			HUD->HideActiveWidget();
+			HUD->ForceHUDState(true);
+		}
+		else
+		{
+			HUD->ForceHUDState(false);
+			HUD->ShowCharacterHudWidget();
+		}  
+	}
 }

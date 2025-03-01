@@ -59,6 +59,11 @@ bool ULimenHint::HasEverBeenVisible() const
 	return bHasTriedToShowHint;
 }
 
+ULimenHintWidget* ULimenHint::GetHintWidget() const
+{
+	return HintWidgetInstance.Get();
+}
+
 void ULimenHint::SetHintText(FText& OutTitle, FText& OutBody)
 {
 }

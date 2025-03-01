@@ -15,6 +15,7 @@ ALimenBaseHUD::ALimenBaseHUD() : Super()
 	NotificationComponent = CreateDefaultSubobject<ULimenNotificationComponent>(TEXT("NotificationComponent"));
 	bAreWidgetsInitialized = false;
 	SetTickableWhenPaused(true);
+	bForceHideHud = 0;
 
 #if WITH_EDITORONLY_DATA
 
@@ -29,6 +30,16 @@ void ALimenBaseHUD::ShowHUD()
 	Super::ShowHUD();
 
 	bShowHUD ? ShowActiveWidget() : HideActiveWidget();
+}
+
+void ALimenBaseHUD::ForceHUDState(const bool bForce)
+{
+	bForceHideHud = bForce;
+}
+
+bool ALimenBaseHUD::GetForcedHudState() const
+{
+	return bForceHideHud;
 }
 
 void ALimenBaseHUD::ShowActiveWidget()
@@ -83,6 +94,11 @@ void ALimenBaseHUD::UpdateWidgets(APlayerController* PlayerController, APawn* Pa
 	HudInitialized(PlayerController); // C++ call (priority)
 	BP_HudInitialized(PlayerController); // Blueprint events call
 	OnHudInitialized.Broadcast(this);
+}
+
+bool ALimenBaseHUD::CanSwitchWidgetsVisibility() const
+{
+	return !bForceHideHud;
 }
 
 void ALimenBaseHUD::ShowWidget_Internal(ULimenWidget* Widget)

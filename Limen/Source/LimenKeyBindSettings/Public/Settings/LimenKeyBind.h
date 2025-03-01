@@ -68,6 +68,10 @@ private:
 	UPROPERTY(SaveGame)
 	FSaveableEnhancedActionKeyMapping CurrentKeyMapping;
 	FEnhancedActionKeyMapping PreviousKeyMapping;
+
+	UPROPERTY(SaveGame)
+	EInputActionHandlingType SavedInputHandlingType;
+
 	TArray<FEnhancedActionKeyMapping> PossibleValues;
 	FEnhancedActionKeyMapping DefaultSelection;
 	

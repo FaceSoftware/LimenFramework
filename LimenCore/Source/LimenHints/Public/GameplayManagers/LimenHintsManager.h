@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenCore/Public/Actors/LimenGameplayManager.h"
+#include "Actors/LimenGameplayManager.h"
 #include "LimenHintsManager.generated.h"
 
 
@@ -22,6 +22,7 @@ public:
 	void InitializeHints();
 	void EnableHints();
 	void DisableHints();
+	bool AreHintsEnabled() const;
 
 	template<typename HintClass>
 	HintClass* GetHint() const
