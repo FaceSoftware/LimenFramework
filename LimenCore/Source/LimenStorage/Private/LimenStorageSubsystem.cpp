@@ -107,9 +107,23 @@ bool ULimenStorageSubsystem::HasSavedData() const
 	return bHasSavedData;
 }
 
+ULimenStorageItem* ULimenStorageSubsystem::GetItem(const TSubclassOf<ULimenStorageItem>& Class) const
+{
+	check(Class.Get() != nullptr);
+	for (const TStrongObjectPtr<ULimenStorageItem>& Item : StorageItems)
+	{
+		if (Item->IsA(Class))
+		{
+			return Item.Get();
+		}
+	}
+
+	return nullptr;
+}
+
 void ULimenStorageSubsystem::AddItem(ULimenStorageItem* NewItem)
 {
-	StorageItems.Push(NewItem);
+	StorageItems.Push(TStrongObjectPtr(NewItem));
 }
 
 ULimenStorageSaveData* ULimenStorageSubsystem::GetCurrentSaveData() const
@@ -129,7 +143,7 @@ ULimenStorageSaveData* ULimenStorageSubsystem::GenerateNewSaveData()
 	return CurrentSaveData.Get();
 }
 
-const TArray<ULimenStorageItem*>& ULimenStorageSubsystem::GetStorageItems() const
+const TArray<TStrongObjectPtr<ULimenStorageItem>>& ULimenStorageSubsystem::GetStorageItems() const
 {
 	return StorageItems;
 }
@@ -137,11 +151,11 @@ const TArray<ULimenStorageItem*>& ULimenStorageSubsystem::GetStorageItems() cons
 void ULimenStorageSubsystem::Save_Internal()
 {
 	GenerateNewSaveData();
-	for (ULimenStorageItem* Item : StorageItems)
+	for (const TStrongObjectPtr<ULimenStorageItem>& Item : StorageItems)
 	{
 		if (Item->ShouldSaveData())
 		{
-			CurrentSaveData->AddObjectSaveData(Item);
+			CurrentSaveData->AddObjectSaveData(Item.Get());
 		}
 	}
 
@@ -165,14 +179,14 @@ void ULimenStorageSubsystem::Load_Internal()
 		}
 		
 		const UClass* ItemClass = ItemClassSoftPtr.LoadSynchronous();
-		ULimenStorageItem* *const Item = StorageItems.FindByPredicate([this, &ItemClass] (const ULimenStorageItem* Test)
+		const TStrongObjectPtr<ULimenStorageItem>* Item = StorageItems.FindByPredicate([this, &ItemClass] (const TStrongObjectPtr<ULimenStorageItem>& Test)
 		{
 			return Test->GetClass() == ItemClass && Test->ShouldLoadData();
 		});
 		
 		if (Item != nullptr)
 		{
-			SaveData.LoadData(*Item);
+			SaveData.LoadData(Item->Get());
 		}
 		/// If the items no longer exists don't do anything
 		/// This way there's backwards compatibility between updates

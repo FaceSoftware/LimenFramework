@@ -6,7 +6,8 @@
 #include "Interactables/LimenInteractable.h"
 #include "LimenArchiveItem.generated.h"
 
-class ULimenArchiveComponent;
+
+class ULimenArchive;
 
 UCLASS()
 class LIMENARCHIVES_API ALimenArchiveItem : public ALimenInteractable
@@ -17,11 +18,19 @@ public:
 	explicit ALimenArchiveItem(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
 
+	
+	UFUNCTION(BlueprintCallable, Category="Limen|Archives", meta=(ExpandBoolAsExecs="ReturnValue"))
+	bool HasAlreadyBeenArchived() const;
+
+	TStrongObjectPtr<ULimenArchive> GetArchive() const;
+
 protected:
 	virtual void Interact(AController* InController, APawn* InPawn) override;
 
+	UPROPERTY(EditAnywhere)
+	TSoftClassPtr<ULimenArchive> BoundArchiveClass;
+
 private:
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
-	TObjectPtr<ULimenArchiveComponent> ArchiveComponent;
+	mutable TStrongObjectPtr<ULimenArchive> ArchivePtr;
 	
 };
