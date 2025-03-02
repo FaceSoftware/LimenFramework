@@ -23,10 +23,10 @@ public:
 	bool HasAlreadyBeenArchived() const;
 
 protected:
-	virtual void Interact(AController* InController, APawn* InPawn) override;
-
 	UPROPERTY(EditAnywhere)
 	TSoftClassPtr<ULimenArchive> BoundArchiveClass;
+
+	virtual void Interact(AController* InController, APawn* InPawn) override;
 
 private:
 	TWeakObjectPtr<ULimenArchive> ArchivePtr;
