@@ -58,6 +58,11 @@ bool ULimenSaveSubsystem::SaveDataAsync(ULimenSaveData* SaveData, const FString&
 
 ULimenSaveData* ULimenSaveSubsystem::LoadData(const FString& DataName)
 {
+	if (!UGameplayStatics::DoesSaveGameExist(DataName, 0))
+	{
+		return nullptr;
+	}
+
 	USaveGame* LoadedData = UGameplayStatics::LoadGameFromSlot(DataName, 0);
 	return LoadedData == nullptr ? nullptr : Cast<ULimenSaveData>(LoadedData);
 }

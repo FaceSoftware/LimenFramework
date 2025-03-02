@@ -104,8 +104,7 @@ protected:
 	
 private:
 	TArray<TStrongObjectPtr<ULimenStorageItem>> StorageItems;
-	UPROPERTY()
-	TObjectPtr<ULimenStorageSaveData> CurrentSaveData;
+	TStrongObjectPtr<ULimenStorageSaveData> CurrentSaveData;
 
 	bool bHasSavedData;
 

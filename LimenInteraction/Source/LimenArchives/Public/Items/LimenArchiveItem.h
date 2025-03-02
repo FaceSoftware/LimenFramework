@@ -22,8 +22,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives", meta=(ExpandBoolAsExecs="ReturnValue"))
 	bool HasAlreadyBeenArchived() const;
 
-	TStrongObjectPtr<ULimenArchive> GetArchive() const;
-
 protected:
 	virtual void Interact(AController* InController, APawn* InPawn) override;
 
@@ -31,6 +29,6 @@ protected:
 	TSoftClassPtr<ULimenArchive> BoundArchiveClass;
 
 private:
-	mutable TStrongObjectPtr<ULimenArchive> ArchivePtr;
+	TWeakObjectPtr<ULimenArchive> ArchivePtr;
 	
 };

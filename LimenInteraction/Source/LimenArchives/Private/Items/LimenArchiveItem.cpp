@@ -30,36 +30,24 @@ bool ALimenArchiveItem::HasAlreadyBeenArchived() const
 	return ArchivesManager->GetItem(ArchiveClass) != nullptr; 
 }
 
-TStrongObjectPtr<ULimenArchive> ALimenArchiveItem::GetArchive() const
-{
-	if (BoundArchiveClass.IsNull())
-	{
-		return TStrongObjectPtr<ULimenArchive>(nullptr);
-	}
-	
-	if (!ArchivePtr.IsValid())
-	{
-		ULimenArchive* TempPtr = NewObject<ULimenArchive>(nullptr, BoundArchiveClass.LoadSynchronous());
-		ArchivePtr = TStrongObjectPtr(TempPtr);
-	}
-
-	return ArchivePtr;
-}
-
-
 void ALimenArchiveItem::Interact(AController* InController, APawn* InPawn)
 {
 	Super::Interact(InController, InPawn);
 
-	const TStrongObjectPtr<ULimenArchive> Archive = GetArchive();
-	if (!Archive.IsValid())
+	if (BoundArchiveClass.IsNull())
 	{
 		return;
 	}
 
 	ULimenArchiveSubsystem* ArchivesManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenArchiveSubsystem>();
 	check(ArchivesManager != nullptr)
-	ArchivesManager->AddArchive(Archive.Get());
+	
+	if (!ArchivePtr.IsValid())
+	{
+		ArchivePtr = NewObject<ULimenArchive>(ArchivesManager, BoundArchiveClass.LoadSynchronous());
+	}
+
+	ArchivesManager->AddArchive(ArchivePtr.Get());
 	RemoveFromGameplay();
 	InteractionStopped(InController, InPawn);
 }

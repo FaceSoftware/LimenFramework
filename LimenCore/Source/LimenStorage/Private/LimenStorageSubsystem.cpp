@@ -15,8 +15,9 @@ void ULimenStorageSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Collection.InitializeDependency(ULimenSaveSubsystem::StaticClass());
 	
 	auto* SaveSystem = GetGameInstance()->GetSubsystem<ULimenSaveSubsystem>();
-	CurrentSaveData = Cast<ULimenStorageSaveData>(SaveSystem->LoadData(SaveDataName));
-	bHasSavedData = CurrentSaveData != nullptr;
+	auto* TempSaveData = Cast<ULimenStorageSaveData>(SaveSystem->LoadData(SaveDataName));
+	CurrentSaveData = TStrongObjectPtr(TempSaveData);
+	bHasSavedData = CurrentSaveData.IsValid();
 	if (!bHasSavedData)
 	{
 		// No previous save, create an initial save
@@ -133,13 +134,13 @@ ULimenStorageSaveData* ULimenStorageSubsystem::GetCurrentSaveData() const
 
 ULimenStorageSaveData* ULimenStorageSubsystem::GenerateNewSaveData()
 {
-	if (CurrentSaveData)
+	if (CurrentSaveData.IsValid())
 	{
-		CurrentSaveData->ConditionalBeginDestroy();
-		CurrentSaveData = nullptr;
+		CurrentSaveData.Reset();
 	}
 
-	CurrentSaveData = NewObject<ULimenStorageSaveData>(this);
+	auto* TempSaveData = NewObject<ULimenStorageSaveData>(this);
+	CurrentSaveData = TStrongObjectPtr(TempSaveData);
 	return CurrentSaveData.Get();
 }
 
@@ -169,7 +170,10 @@ void ULimenStorageSubsystem::Load_Internal()
 	for (uint32 i = 0; i < NumberOfItems; ++i)
 	{
 		FObjectSaveData SaveData;
-		verify(CurrentSaveData->GetObjectSaveData(i, SaveData));
+		if (!CurrentSaveData->GetObjectSaveData(i, SaveData))
+		{
+			continue;
+		}
 
 		// Search the items for the class
 		const TSoftClassPtr<>& ItemClassSoftPtr = SaveData.GetObjectClass();
