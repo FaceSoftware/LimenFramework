@@ -23,6 +23,7 @@ public class LimenGameFramework : ModuleRules
                 "Slate",
                 "SlateCore",
                 "EnhancedInput", 
+                "UMG",
                 
                 "LimenNotifications",
                 "LimenWidgets",

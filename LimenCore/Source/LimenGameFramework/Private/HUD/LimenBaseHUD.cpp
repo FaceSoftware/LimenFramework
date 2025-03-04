@@ -96,29 +96,33 @@ void ALimenBaseHUD::UpdateWidgets(APlayerController* PlayerController, APawn* Pa
 	OnHudInitialized.Broadcast(this);
 }
 
-bool ALimenBaseHUD::CanSwitchWidgetsVisibility() const
+bool ALimenBaseHUD::CanSwitchWidgetVisibility(UWidget* InWidget) const
 {
 	return !bForceHideHud;
 }
 
 void ALimenBaseHUD::ShowWidget_Internal(ULimenWidget* Widget)
 {
-	check(IsValid(Widget))
+	check(Widget != nullptr)
 	
-	if (!CanSwitchWidgetsVisibility())
+	if (!CanSwitchWidgetVisibility(Widget))
 	{
 		return;
 	}
-	
-	Widget->ShowWidget();	
+
+	if (!Widget->IsShowing())
+	{
+		Widget->ShowWidget();	
+	}
+
 	ActiveWidget = Widget;
 }
 
 void ALimenBaseHUD::HideWidget_Internal(ULimenWidget* Widget)
 {
-	check(IsValid(Widget))
+	check(Widget != nullptr)
 	
-	if (!CanSwitchWidgetsVisibility())
+	if (!CanSwitchWidgetVisibility(Widget))
 	{
 		return;
 	}

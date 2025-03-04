@@ -117,7 +117,7 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	bool IsAnyAnimationInProgress() const;
 
-	virtual bool CanSwitchWidgetsVisibility() const override;
+	virtual bool CanSwitchWidgetVisibility(UWidget* InWidget) const override;
 	
 private:		
 	UPROPERTY()
