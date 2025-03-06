@@ -3,37 +3,51 @@
 
 #include "Items/LimenArchiveItem.h"
 
-#include "Components/LimenArchiveComponent.h"
+#include "Archives/LimenArchive.h"
+#include "Engine/GameInstance.h"
+#include "Engine/World.h"
 #include "Subsystems/LimenArchiveSubsystem.h"
 
 
 ALimenArchiveItem::ALimenArchiveItem(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	ArchiveComponent = CreateDefaultSubobject<ULimenArchiveComponent>(TEXT("ArchiveComponent"));
 }
 
 void ALimenArchiveItem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (ArchiveComponent->HasAlreadyBeenArchived())
+	if (HasAlreadyBeenArchived())
 	{
 		RemoveFromGameplay();
 	}
+}
+
+bool ALimenArchiveItem::HasAlreadyBeenArchived() const
+{
+	const ULimenArchiveSubsystem* ArchivesManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenArchiveSubsystem>();
+	const TSubclassOf<ULimenStorageItem> ArchiveClass = BoundArchiveClass.LoadSynchronous();
+	return ArchivesManager->GetItem(ArchiveClass) != nullptr; 
 }
 
 void ALimenArchiveItem::Interact(AController* InController, APawn* InPawn)
 {
 	Super::Interact(InController, InPawn);
 
-	ULimenArchive* Archive = ArchiveComponent->GetArchive();
-	if (Archive == nullptr)
+	if (BoundArchiveClass.IsNull())
 	{
 		return;
 	}
 
 	ULimenArchiveSubsystem* ArchivesManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenArchiveSubsystem>();
-	check(Archive != nullptr);
-	ArchivesManager->AddArchive(Archive);
+	check(ArchivesManager != nullptr)
+	
+	if (!ArchivePtr.IsValid())
+	{
+		ArchivePtr = NewObject<ULimenArchive>(ArchivesManager, BoundArchiveClass.LoadSynchronous());
+	}
+
+	ArchivesManager->AddArchive(ArchivePtr.Get());
 	RemoveFromGameplay();
+	InteractionStopped(InController, InPawn);
 }

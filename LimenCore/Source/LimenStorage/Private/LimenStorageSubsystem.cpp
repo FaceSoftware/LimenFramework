@@ -15,8 +15,9 @@ void ULimenStorageSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Collection.InitializeDependency(ULimenSaveSubsystem::StaticClass());
 	
 	auto* SaveSystem = GetGameInstance()->GetSubsystem<ULimenSaveSubsystem>();
-	CurrentSaveData = Cast<ULimenStorageSaveData>(SaveSystem->LoadData(SaveDataName));
-	bHasSavedData = CurrentSaveData != nullptr;
+	auto* TempSaveData = Cast<ULimenStorageSaveData>(SaveSystem->LoadData(SaveDataName));
+	CurrentSaveData = TStrongObjectPtr(TempSaveData);
+	bHasSavedData = CurrentSaveData.IsValid();
 	if (!bHasSavedData)
 	{
 		// No previous save, create an initial save
@@ -107,9 +108,23 @@ bool ULimenStorageSubsystem::HasSavedData() const
 	return bHasSavedData;
 }
 
+ULimenStorageItem* ULimenStorageSubsystem::GetItem(const TSubclassOf<ULimenStorageItem>& Class) const
+{
+	check(Class.Get() != nullptr);
+	for (const TStrongObjectPtr<ULimenStorageItem>& Item : StorageItems)
+	{
+		if (Item->IsA(Class))
+		{
+			return Item.Get();
+		}
+	}
+
+	return nullptr;
+}
+
 void ULimenStorageSubsystem::AddItem(ULimenStorageItem* NewItem)
 {
-	StorageItems.Push(NewItem);
+	StorageItems.Push(TStrongObjectPtr(NewItem));
 }
 
 ULimenStorageSaveData* ULimenStorageSubsystem::GetCurrentSaveData() const
@@ -119,17 +134,17 @@ ULimenStorageSaveData* ULimenStorageSubsystem::GetCurrentSaveData() const
 
 ULimenStorageSaveData* ULimenStorageSubsystem::GenerateNewSaveData()
 {
-	if (CurrentSaveData)
+	if (CurrentSaveData.IsValid())
 	{
-		CurrentSaveData->ConditionalBeginDestroy();
-		CurrentSaveData = nullptr;
+		CurrentSaveData.Reset();
 	}
 
-	CurrentSaveData = NewObject<ULimenStorageSaveData>(this);
+	auto* TempSaveData = NewObject<ULimenStorageSaveData>(this);
+	CurrentSaveData = TStrongObjectPtr(TempSaveData);
 	return CurrentSaveData.Get();
 }
 
-const TArray<ULimenStorageItem*>& ULimenStorageSubsystem::GetStorageItems() const
+const TArray<TStrongObjectPtr<ULimenStorageItem>>& ULimenStorageSubsystem::GetStorageItems() const
 {
 	return StorageItems;
 }
@@ -137,11 +152,11 @@ const TArray<ULimenStorageItem*>& ULimenStorageSubsystem::GetStorageItems() cons
 void ULimenStorageSubsystem::Save_Internal()
 {
 	GenerateNewSaveData();
-	for (ULimenStorageItem* Item : StorageItems)
+	for (const TStrongObjectPtr<ULimenStorageItem>& Item : StorageItems)
 	{
 		if (Item->ShouldSaveData())
 		{
-			CurrentSaveData->AddObjectSaveData(Item);
+			CurrentSaveData->AddObjectSaveData(Item.Get());
 		}
 	}
 
@@ -155,7 +170,10 @@ void ULimenStorageSubsystem::Load_Internal()
 	for (uint32 i = 0; i < NumberOfItems; ++i)
 	{
 		FObjectSaveData SaveData;
-		verify(CurrentSaveData->GetObjectSaveData(i, SaveData));
+		if (!CurrentSaveData->GetObjectSaveData(i, SaveData))
+		{
+			continue;
+		}
 
 		// Search the items for the class
 		const TSoftClassPtr<>& ItemClassSoftPtr = SaveData.GetObjectClass();
@@ -165,14 +183,14 @@ void ULimenStorageSubsystem::Load_Internal()
 		}
 		
 		const UClass* ItemClass = ItemClassSoftPtr.LoadSynchronous();
-		ULimenStorageItem* *const Item = StorageItems.FindByPredicate([this, &ItemClass] (const ULimenStorageItem* Test)
+		const TStrongObjectPtr<ULimenStorageItem>* Item = StorageItems.FindByPredicate([this, &ItemClass] (const TStrongObjectPtr<ULimenStorageItem>& Test)
 		{
 			return Test->GetClass() == ItemClass && Test->ShouldLoadData();
 		});
 		
 		if (Item != nullptr)
 		{
-			SaveData.LoadData(*Item);
+			SaveData.LoadData(Item->Get());
 		}
 		/// If the items no longer exists don't do anything
 		/// This way there's backwards compatibility between updates

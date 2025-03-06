@@ -20,8 +20,8 @@ class LIMENARCHIVES_API ULimenArchiveSubsystem : public ULimenStorageSubsystem
 	GENERATED_BODY()
 
 public:
+	ULimenArchiveSubsystem();
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
 	void AddArchive(ULimenArchive* NewArchive);

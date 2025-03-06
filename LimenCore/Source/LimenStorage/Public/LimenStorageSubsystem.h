@@ -8,9 +8,11 @@
 #include "Templates/SubclassOf.h"
 #include "LimenStorageSubsystem.generated.h"
 
+
 class ULimenStorageSaveData;
 class ULimenSettingsSaveData;
 class ULimenStorageItem;
+
 /**
  * 
  */
@@ -64,11 +66,11 @@ public:
 		
 		TArray<ItemType*> Out;
 		Out.Reserve(StorageItems.Num());
-		for (ULimenStorageItem* const& Item : StorageItems)
+		for (const TStrongObjectPtr<ULimenStorageItem>& Item : StorageItems)
 		{
 			if (Item->IsA<ItemType>())
 			{
-				Out.Push(CastChecked<ItemType>(Item));
+				Out.Push(CastChecked<ItemType>(Item.Get()));
 			}
 		}
 		return Out;
@@ -78,48 +80,17 @@ public:
 	ItemType* GetItem() const
 	{
 		static_assert(std::is_base_of_v<ULimenStorageItem, ItemType>);
-		
-		for (ULimenStorageItem* Item : StorageItems)
-		{
-			if (Item->IsA<ItemType>())
-			{
-				return CastChecked<ItemType>(Item);
-			}
-		}
-
-		return nullptr;
+		return GetItem<ItemType>(ItemType::StaticClass());
 	}
 
 	template<typename ItemType>
 	ItemType* GetItem(const TSubclassOf<ULimenStorageItem>& Class) const
 	{
-		check(Class.Get() != nullptr);
 		static_assert(std::is_base_of_v<ULimenStorageItem, ItemType>);
-		
-		for (ULimenStorageItem* Item : StorageItems)
-		{
-			if (Item->IsA(Class))
-			{
-				return CastChecked<ItemType>(Item);
-			}
-		}
-
-		return nullptr;
+		return Cast<ItemType>(GetItem(Class));
 	}
 	
-	ULimenStorageItem* GetItem(const TSubclassOf<ULimenStorageItem>& Class) const
-	{
-		check(Class.Get() != nullptr);
-		for (ULimenStorageItem* Item : StorageItems)
-		{
-			if (Item->IsA(Class))
-			{
-				return Item;
-			}
-		}
-
-		return nullptr;
-	}
+	ULimenStorageItem* GetItem(const TSubclassOf<ULimenStorageItem>& Class) const;
 
 protected:
 	FString SaveDataName;
@@ -129,13 +100,11 @@ protected:
 	ULimenStorageSaveData* GetCurrentSaveData() const;
 	ULimenStorageSaveData* GenerateNewSaveData();
 	
-	const TArray<ULimenStorageItem*>& GetStorageItems() const;
+	const TArray<TStrongObjectPtr<ULimenStorageItem>>& GetStorageItems() const;
 	
 private:
-	UPROPERTY()
-	TArray<ULimenStorageItem*> StorageItems;
-	UPROPERTY()
-	TObjectPtr<ULimenStorageSaveData> CurrentSaveData;
+	TArray<TStrongObjectPtr<ULimenStorageItem>> StorageItems;
+	TStrongObjectPtr<ULimenStorageSaveData> CurrentSaveData;
 
 	bool bHasSavedData;
 

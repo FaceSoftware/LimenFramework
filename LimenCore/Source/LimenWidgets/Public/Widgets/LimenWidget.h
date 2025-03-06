@@ -59,8 +59,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
 	void HideWidgetWithCallback(FLimenBlueprintWidgetHidden OnWidgetHidden);
 	void HideWidget(const FLimenWidgetHidden& OnWidgetHidden);
-	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent)
-	void UpdateWidget();
 	
 	void ToggleWidgetVisibility();
 	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
