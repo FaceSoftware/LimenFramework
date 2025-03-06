@@ -7,15 +7,19 @@
 #include "Archives/LimenArchive.h"
 
 
-bool ULimenArchiveSubsystem::ShouldCreateSubsystem(UObject* Outer) const
-{
-	return true;
-}
-
-void ULimenArchiveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+ULimenArchiveSubsystem::ULimenArchiveSubsystem()
 {
 	SaveDataName = TEXT("ArchivesData");
-	Super::Initialize(Collection);
+}
+
+bool ULimenArchiveSubsystem::ShouldCreateSubsystem(UObject* Outer) const
+{
+	if (!Super::ShouldCreateSubsystem(Outer))
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void ULimenArchiveSubsystem::AddArchive(ULimenArchive* NewArchive)
@@ -33,22 +37,21 @@ void ULimenArchiveSubsystem::Load_Internal()
 	for (uint32 i = 0; i < NumberOfArchives; ++i)
 	{
 		FObjectSaveData SaveData;
-		if (GetCurrentSaveData()->GetObjectSaveData(i, SaveData))
+		if (!GetCurrentSaveData()->GetObjectSaveData(i, SaveData))
 		{
 			continue;
 		}
 		
 		// Create the archive
 		const TSoftClassPtr<UObject>& ArchiveClassSoftPtr = SaveData.GetObjectClass();
-		TSubclassOf<ULimenArchive> CurrentArchiveClass = ArchiveClassSoftPtr.LoadSynchronous();
-		if (CurrentArchiveClass == nullptr)
+		if (ArchiveClassSoftPtr.IsNull())
 		{
 			continue;
 		}
 		
-		check(IsValid(CurrentArchiveClass));
-		ULimenArchive* Archive = NewObject<ULimenArchive>(this, CurrentArchiveClass);
-		check(IsValid(Archive));
+		ULimenArchive* Archive = NewObject<ULimenArchive>(this, ArchiveClassSoftPtr.Get());
+		check(Archive != nullptr)
+
 		// Load data into the specific archive
 		SaveData.LoadData(Archive);
 

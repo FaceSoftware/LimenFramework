@@ -10,10 +10,8 @@
 #include "Actors/LimenTool.h"
 #include "Actors/LimenWeapon.h"
 #include "Items/LimenItemBase.h"
-#include "Archives/LimenArchive.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/LimenAbilityComponent.h"
-#include "Components/LimenArchiveComponent.h"
 #include "Components/LimenCameraTiltComponent.h"
 #include "Components/LimenObjectiveComponent.h"
 #include "Components/LimenPhysicalItemHoldComponent.h"
@@ -744,31 +742,18 @@ void ALimenPlayerCharacter::OnInteract(AActor* InteractableActor, const TScriptI
 void ALimenPlayerCharacter::ItemAdded(TSubclassOf<ALimenItemBase> NewItem)
 {
 	check(NewItem != nullptr)
-	LIMEN_LOG(LogLimenPlayer, Log, this, "Recieved new item notification")
-
-	if (const ULimenArchiveComponent* ArchiveComponent = NewItem->GetDefaultObject<ALimenItemBase>()->GetComponentByClass<ULimenArchiveComponent>();
-		ArchiveComponent != nullptr)
-	{
-		// Is an archive
-		FNotificationParams Params;
-		Params.NotificationTitle = FText::FromString(TEXT("New archive found!"));
-		Params.NotificationMessage = FText::FromString(FString::Printf(TEXT("Picked up %s"), *ArchiveComponent->GetArchive()->GetDisplayName().ToString()));
-		QueueNotification(Params);
-	}
-	else
-	{
-		// Is not an archive
-		FNotificationParams Params;
-		Params.NotificationTitle = FText::FromString(TEXT("New item"));
-		Params.NotificationMessage = FText::FromString(FString::Printf(TEXT("Picked up %s"), *NewItem->GetDefaultObject<ALimenItemBase>()->GetDisplayName().ToString()));
-		QueueNotification(Params);
-	}
+	LIMEN_LOG(LogLimenPlayer, Log, this, "Received new item notification")
+	
+	FNotificationParams Params;
+	Params.NotificationTitle = FText::FromString(TEXT("New item"));
+	Params.NotificationMessage = FText::FromString(FString::Printf(TEXT("Picked up %s"), *NewItem->GetDefaultObject<ALimenItemBase>()->GetDisplayName().ToString()));
+	QueueNotification(Params);
 }
 
 void ALimenPlayerCharacter::ItemCouldNotBeAdded(TSubclassOf<ALimenItemBase> NewItem)
 {
 	check(NewItem != nullptr)
-	LIMEN_LOG(LogLimenPlayer, Warning, this, "Recieved 'item could not be added' notification")
+	LIMEN_LOG(LogLimenPlayer, Warning, this, "Received 'item could not be added' notification")
 	
 	FNotificationParams Params;
 	Params.NotificationTitle = FText::FromString(FString::Printf(TEXT("Failed to pickup item")));
