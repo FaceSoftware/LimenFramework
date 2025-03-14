@@ -6,6 +6,7 @@
 #include "LimenStorageItem.h"
 #include "LimenArchive.generated.h"
 
+class UTexture;
 class ULimenArchiveComponent;
 class ULimenArchiveDisplayWidget;
 /**
@@ -28,8 +29,14 @@ public:
 	bool HasBeenRead() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
 	void SetHasBeenRead();
+	
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
 	const TArray<FText>& GetParagraphs() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
+	const FText& GetFullText() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
+	UTexture* GetImage() const;
+
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
 	TSubclassOf<ULimenArchiveDisplayWidget> GetDisplayWidgetClass() const;
 
@@ -42,5 +49,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	TArray<FText> Paragraphs;
 	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<UTexture> ImageTexture;
+	UPROPERTY(EditAnywhere)
 	TSoftClassPtr<ULimenArchiveDisplayWidget> DisplayWidgetClass;
+
+	mutable TOptional<FText> FullArchiveText;
 };
