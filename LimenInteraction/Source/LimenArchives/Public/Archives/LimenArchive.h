@@ -41,17 +41,16 @@ public:
 	TSubclassOf<ULimenArchiveDisplayWidget> GetDisplayWidgetClass() const;
 
 protected:
-
-private:
-	UPROPERTY(SaveGame)
-	bool bHasBeenRead;
-	
 	UPROPERTY(EditAnywhere)
 	TArray<FText> Paragraphs;
 	UPROPERTY(EditAnywhere)
 	TSoftObjectPtr<UTexture> ImageTexture;
 	UPROPERTY(EditAnywhere)
 	TSoftClassPtr<ULimenArchiveDisplayWidget> DisplayWidgetClass;
+
+private:
+	UPROPERTY(SaveGame)
+	bool bHasBeenRead;
 
 	mutable TOptional<FText> FullArchiveText;
 };
