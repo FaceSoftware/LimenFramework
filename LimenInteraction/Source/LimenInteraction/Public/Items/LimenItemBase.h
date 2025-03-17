@@ -60,6 +60,9 @@ public:
 	TArray<ULimenItemAction*> GetItemActions() const;
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, Category="Limen")
+	float InteractAnimationTime;
+	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Item Actions")
 	TArray<TSubclassOf<ULimenItemAction>> ItemActionsClass;
 	
@@ -79,10 +82,15 @@ protected:
 
 	virtual void Interact(AController* InController, APawn* InPawn) override;
 	virtual void InteractionStopped(AController* InController, APawn* InPawn) override final;
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic)
+	void InteractAnimation(const float AnimationTime);
 	
 private:
 	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
 	bool bHasBeenLoaded;
 
 	TStrongObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
+
+	FTimerHandle InteractAnimationTimerHandle;
 };

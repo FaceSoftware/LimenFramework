@@ -43,13 +43,14 @@ void ULimenArchiveSubsystem::Load_Internal()
 		}
 		
 		// Create the archive
-		const TSoftClassPtr<UObject>& ArchiveClassSoftPtr = SaveData.GetObjectClass();
-		if (ArchiveClassSoftPtr.IsNull())
+		const FSoftClassPath& ArchiveClassPath = SaveData.GetObjectClass();
+		const UClass* ArchiveClass = ArchiveClassPath.TryLoadClass<ULimenArchive>();
+		if (ArchiveClass == nullptr)
 		{
 			continue;
 		}
 		
-		ULimenArchive* Archive = NewObject<ULimenArchive>(this, ArchiveClassSoftPtr.Get());
+		ULimenArchive* Archive = NewObject<ULimenArchive>(this, ArchiveClass);
 		check(Archive != nullptr)
 
 		// Load data into the specific archive

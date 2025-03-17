@@ -176,13 +176,13 @@ void ULimenStorageSubsystem::Load_Internal()
 		}
 
 		// Search the items for the class
-		const TSoftClassPtr<>& ItemClassSoftPtr = SaveData.GetObjectClass();
-		if (ItemClassSoftPtr.IsNull())
+		const FSoftClassPath& ArchiveClassPath = SaveData.GetObjectClass();
+		const UClass* ItemClass = ArchiveClassPath.TryLoadClass<ULimenStorageItem>();
+		if (ItemClass == nullptr)
 		{
 			continue;
 		}
-		
-		const UClass* ItemClass = ItemClassSoftPtr.LoadSynchronous();
+
 		const TStrongObjectPtr<ULimenStorageItem>* Item = StorageItems.FindByPredicate([this, &ItemClass] (const TStrongObjectPtr<ULimenStorageItem>& Test)
 		{
 			return Test->GetClass() == ItemClass && Test->ShouldLoadData();
@@ -192,7 +192,7 @@ void ULimenStorageSubsystem::Load_Internal()
 		{
 			SaveData.LoadData(Item->Get());
 		}
-		/// If the items no longer exists don't do anything
+		/// If the item no longer exists don't do anything
 		/// This way there's backwards compatibility between updates
 	}
 }

@@ -24,10 +24,16 @@ public:
 protected:
 	UPROPERTY(EditAnywhere)
 	TSoftClassPtr<ULimenArchive> BoundArchiveClass;
+	UPROPERTY(EditDefaultsOnly)
+	float InteractAnimationTime;
 
 	virtual void Interact(AController* InController, APawn* InPawn) override;
 
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic)
+	void InteractAnimation(const float AnimationTime);
+
 private:
 	TWeakObjectPtr<ULimenArchive> ArchivePtr;
+	FTimerHandle InteractAnimationTimerHandle;
 	
 };
