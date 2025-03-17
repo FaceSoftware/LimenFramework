@@ -66,6 +66,16 @@ TArray<FText> ULimenStorageSubsystem::GetCategoriesInAlphabeticalOrder() const
 	return Categories;
 }
 
+int32 ULimenStorageSubsystem::GetItemCount() const
+{
+	return StorageItems.Num();
+}
+
+bool ULimenStorageSubsystem::IsStorageEmpty() const
+{
+	return StorageItems.IsEmpty();
+}
+
 ULimenStorageItem* ULimenStorageSubsystem::GetItemWithDisplayName(TSubclassOf<ULimenStorageItem> ItemClass,
 																  const FText& InDisplayName) const
 {

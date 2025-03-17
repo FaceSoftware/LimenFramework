@@ -29,6 +29,7 @@ void ULimenArchiveSubsystem::AddArchive(ULimenArchive* NewArchive)
 	Save();
 	
 	NewArchive->OnArchiveRead.AddUniqueDynamic(this, &ThisClass::Save);
+	OnArchiveAdded.Broadcast(NewArchive);
 }
 
 void ULimenArchiveSubsystem::Load_Internal()

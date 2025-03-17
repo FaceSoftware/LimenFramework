@@ -28,6 +28,11 @@ void ALimenArchiveItem::BeginPlay()
 
 bool ALimenArchiveItem::HasAlreadyBeenArchived() const
 {
+	if (BoundArchiveClass.IsNull())
+	{
+		return false;
+	}
+
 	const ULimenArchiveSubsystem* ArchivesManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenArchiveSubsystem>();
 	const TSubclassOf<ULimenStorageItem> ArchiveClass = BoundArchiveClass.LoadSynchronous();
 	return ArchivesManager->GetItem(ArchiveClass) != nullptr; 
