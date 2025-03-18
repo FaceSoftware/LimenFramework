@@ -27,6 +27,27 @@ const TArray<FText>& ULimenArchive::GetParagraphs() const
 	return Paragraphs;
 }
 
+const FText& ULimenArchive::GetFullText() const
+{
+	if (!FullArchiveText.IsSet())
+	{
+		FString Result = TEXT("");
+		for (const FText& Paragraph : Paragraphs)
+		{
+			Result += Paragraph.ToString() + "\n\n";
+		}
+
+		FullArchiveText = FText::FromString(Result);
+	}
+
+	return FullArchiveText.GetValue();
+}
+
+UTexture* ULimenArchive::GetImage() const
+{
+	return ImageTexture.LoadSynchronous();
+}
+
 TSubclassOf<ULimenArchiveDisplayWidget> ULimenArchive::GetDisplayWidgetClass() const
 {
 	return DisplayWidgetClass.LoadSynchronous();

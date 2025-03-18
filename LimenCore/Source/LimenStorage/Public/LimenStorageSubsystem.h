@@ -25,15 +25,19 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
 	TArray<FText> GetCategories() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
 	TArray<FText> GetCategoriesInAlphabeticalOrder() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
+	int32 GetItemCount() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
+	bool IsStorageEmpty() const;
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings", meta=(DeterminesOutputType="ItemClass"))
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem", meta=(DeterminesOutputType="ItemClass"))
 	ULimenStorageItem* GetItemWithDisplayName(TSubclassOf<ULimenStorageItem> ItemClass, const FText& InDisplayName) const;
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings", meta=(DeterminesOutputType="ItemClass"))
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem", meta=(DeterminesOutputType="ItemClass"))
 	TArray<ULimenStorageItem*> GetAllItemsOfCategory(TSubclassOf<ULimenStorageItem> ItemClass, const FText& InCategory) const;
 
 	template<typename ItemType = ULimenStorageItem>

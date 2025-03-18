@@ -7,7 +7,7 @@
 #include "TimerManager.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
-#include "Components/SpotLightComponent.h"
+#include "Components/Interactable/LimenInteractableAreaComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -205,7 +205,21 @@ void ALimenItemBase::Interact(AController* InController, APawn* InPawn)
 	Super::Interact(InController, InPawn);
 
 	SetOwner(InPawn);
-	RemoveFromGameplay();
+
+	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
+	{
+		InteractableComponent->Deactivate();
+	}
+
+	if (FMath::IsNearlyZero(InteractAnimationTime))
+	{
+		RemoveFromGameplay();
+	}
+	else
+	{
+		InteractAnimation(InteractAnimationTime);
+		GetWorld()->GetTimerManager().SetTimer(InteractAnimationTimerHandle, this, &ThisClass::RemoveFromGameplay, InteractAnimationTime, false);
+	}
 }
 
 void ALimenItemBase::InteractionStopped(AController* InController, APawn* InPawn)

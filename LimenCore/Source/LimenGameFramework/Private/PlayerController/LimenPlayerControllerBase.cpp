@@ -254,6 +254,16 @@ bool ALimenPlayerControllerBase::CanSeeActor(const AActor* OtherActor) const
 	return true;
 }
 
+const FMouseParameters& ALimenPlayerControllerBase::GetMouseParameters() const
+{
+	return MouseParameters;
+}
+
+void ALimenPlayerControllerBase::SetMouseParameters(const FMouseParameters& InNewParams)
+{
+	MouseParameters = InNewParams;
+}
+
 void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
 {
 	if (NewPawn == GetPawn())

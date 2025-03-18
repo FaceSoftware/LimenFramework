@@ -83,16 +83,6 @@ ALimenPlayerControllerBase* ALimenCharacterBase::GetLimenBasePlayerController() 
 	return LimenBasePlayerController.Get();
 }
 
-const FMouseParameters& ALimenCharacterBase::GetMouseParameters() const
-{
-	return MouseParameters;
-}
-
-void ALimenCharacterBase::SetMouseParameters(const FMouseParameters& InNewParams)
-{
-	MouseParameters = InNewParams;
-}
-
 ULimenAbilityComponent* ALimenCharacterBase::GetAbilityComponent() const
 {
 	return AbilityComponent.Get();

@@ -3,8 +3,9 @@
 
 #include "Settings/LimenSensitivitySetting.h"
 
-#include "Characters/LimenPlayerCharacter.h"
-#include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
+#include "Engine/World.h"
+#include "PlayerController/LimenPlayerControllerBase.h"
 
 
 ULimenSensitivitySetting::ULimenSensitivitySetting()
@@ -13,7 +14,6 @@ ULimenSensitivitySetting::ULimenSensitivitySetting()
 	Category = FText::FromString(TEXT("General"));
 	DisplayName = FText::FromString(TEXT("Mouse Sensitivity"));
 	Description = FText::FromString(TEXT("Multiplier for the mouse movement."));
-	bUseRecurrentAction = true;
 	MinValuePerChange = .1f;
 }
 
@@ -27,24 +27,30 @@ void ULimenSensitivitySetting::SetDefaults()
 	DefaultSettingValue = 1.f;
 }
 
-void ULimenSensitivitySetting::RecurrentAction()
+void ULimenSensitivitySetting::ApplyCurrentSetting(bool bUserRequest)
 {
-	APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0);
-	ALimenPlayerCharacter* Character = Cast<ALimenPlayerCharacter>(Pawn);
-	PlayerCharacter = IsValid(Character) ? Character : nullptr;
-}
+	Super::ApplyCurrentSetting(bUserRequest);
 
-bool ULimenSensitivitySetting::ShouldStopRecurrentAction()
-{
-	return PlayerCharacter != nullptr;
-}
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController == nullptr)
+	{
+		// Player controller should never be null, this means it was not initialized yet
+		GetWorld()->GetTimerManager().SetTimerForNextTick([this, bUserRequest]
+		{
+			ApplyCurrentSetting(bUserRequest);
+		});
 
-void ULimenSensitivitySetting::ActionSuccessful()
-{
-	Super::ActionSuccessful();
+		return;
+	}
 
-	FMouseParameters MouseParams = PlayerCharacter->GetMouseParameters();
+	ALimenPlayerControllerBase* LimenPlayerController = Cast<ALimenPlayerControllerBase>(PlayerController);
+	if (LimenPlayerController == nullptr)
+	{
+		return;
+	}
+
+	FMouseParameters MouseParams = LimenPlayerController->GetMouseParameters();
 	MouseParams.SensitivityY = GetCurrentValue();
 	MouseParams.SensitivityX = GetCurrentValue();
-	PlayerCharacter->SetMouseParameters(MouseParams);
+	LimenPlayerController->SetMouseParameters(MouseParams);
 }

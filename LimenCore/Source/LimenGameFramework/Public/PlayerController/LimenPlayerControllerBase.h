@@ -37,6 +37,14 @@ enum class ELimenInputMode : uint8
 	UIOnly,
 };
 
+struct FMouseParameters
+{	
+	float SensitivityX = 1;
+	float SensitivityY = 1;
+	bool bInvertAxisX = false;
+	bool bInvertAxisY = false;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPauseRequestDelegate, ALimenPlayerControllerBase*, Player, const EPauseReason, PauseReason);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPauseRequestDelegate, ALimenPlayerControllerBase*, Player);
 
@@ -87,6 +95,9 @@ public:
 	bool CanSeeLocation(const FVector& InLocation) const;
 	UFUNCTION(BlueprintCallable)
 	bool CanSeeActor(const AActor* OtherActor) const;
+	
+	const FMouseParameters& GetMouseParameters() const;
+	void SetMouseParameters(const FMouseParameters& InNewParams);
 
 protected:
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
@@ -103,4 +114,6 @@ protected:
 	
 private:
 	ELimenInputMode CurrentInputMode;
+	
+	FMouseParameters MouseParameters;
 };
