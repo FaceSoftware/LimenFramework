@@ -145,8 +145,11 @@ public:
 	const TSoftObjectPtr<UInputAction>& GetSprintInputAction() const;
 	const TSoftObjectPtr<UInputAction>& GetJumpInputAction() const;
 	const TSoftObjectPtr<UInputAction>& GetCrouchInputAction() const;
+
+	virtual void AddControllerYawInput(float Val) override;
+	virtual void AddControllerPitchInput(float Val) override;
 	
-protected:
+protected:	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
 	TObjectPtr<ULimenInventoryComponent> CharacterInventory;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")

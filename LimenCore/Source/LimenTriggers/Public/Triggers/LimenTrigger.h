@@ -6,7 +6,6 @@
 #include "Actors/LimenGameplayActor.h"
 #include "LimenTrigger.generated.h"
 
-class ALimenBasePlayerController;
 class UBoxComponent;
 
 UCLASS(Abstract, NotBlueprintable)

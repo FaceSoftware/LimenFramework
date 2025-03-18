@@ -15,17 +15,6 @@ struct FNotificationParams;
 struct FInputActionInstance;
 class UInputAction;
 
-USTRUCT(BlueprintType)
-struct FMouseParameters
-{
-	GENERATED_BODY();
-	
-	float SensitivityX = 1;
-	float SensitivityY = 1;
-	bool bInvertAxisX = false;
-	bool bInvertAxisY = false;
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharacterCrouchDelegate, const bool, bIsCrouched);
 DECLARE_MULTICAST_DELEGATE(FInputDelegate);
 
@@ -52,9 +41,6 @@ public:
 	 * @return The player controller associated with this character.
 	 */
 	ALimenPlayerControllerBase* GetLimenBasePlayerController() const;
-
-	const FMouseParameters& GetMouseParameters() const;
-	void SetMouseParameters(const FMouseParameters& InNewParams);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Character")
 	ULimenAbilityComponent* GetAbilityComponent() const;
@@ -63,12 +49,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FVector GetLookTarget(const float MaxDistance) const;
-	
-	
-protected:		
-	UPROPERTY(EditAnywhere, Category="Limen|Input")
-	FMouseParameters MouseParameters;
-	
+
+protected:	
 	UPROPERTY(EditAnywhere, Category="Limen")
 	TObjectPtr<ULimenAbilityComponent> AbilityComponent;
 	
