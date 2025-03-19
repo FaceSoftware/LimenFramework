@@ -25,9 +25,10 @@ protected:
 	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 
 private:
-	UPROPERTY()
-	TObjectPtr<APawn> PlayerPawn;
+	FDelegateHandle ApplySettingToSpawnedActorHandle;
 	
 	static FString FormatCameraShakeSetting(const bool bEnabled);
 	static bool UnFormatCameraShakeSetting(const FString& Selection);
+
+	void ApplyCurrentSettingInternal(AActor* Actor) const;
 };
