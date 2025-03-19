@@ -407,28 +407,6 @@ const TSoftObjectPtr<UInputAction>& ALimenPlayerCharacter::GetCrouchInputAction(
 	return CrouchInputAction;
 }
 
-void ALimenPlayerCharacter::AddControllerYawInput(float Val)
-{
-	if (LimenPlayerControllerPtr.IsValid())
-	{
-		Val = LimenPlayerControllerPtr->GetMouseParameters().bInvertAxisX ? -Val : Val;
-		Val *= LimenPlayerControllerPtr->GetMouseParameters().SensitivityX;
-	}
-
-	Super::AddControllerYawInput(Val);
-}
-
-void ALimenPlayerCharacter::AddControllerPitchInput(float Val)
-{
-	if (LimenPlayerControllerPtr.IsValid())
-	{
-		Val = LimenPlayerControllerPtr->GetMouseParameters().bInvertAxisY ? -Val : Val;
-		Val *= LimenPlayerControllerPtr->GetMouseParameters().SensitivityY;
-	}
-
-	Super::AddControllerPitchInput(Val);
-}
-
 void ALimenPlayerCharacter::InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping)
 {
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetPlayerController()->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();

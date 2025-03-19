@@ -3,20 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
 #include <typeinfo>
 
-#include "Kismet/BlueprintFunctionLibrary.h"
-#include "LimenPolymorphicData.generated.h"
 
 /**
  * 
  */
-USTRUCT(BlueprintType)
 struct LIMENCORE_API FLimenPolymorphicData
 {
-	GENERATED_BODY()
-
 public:
 	FLimenPolymorphicData();
 	~FLimenPolymorphicData();
@@ -33,40 +27,34 @@ public:
 	template<class T>
 	bool ContainsDataType() const
 	{
-		return DataType == typeid(T);
+		return DataType == GetTypeHash(typeid(T).name());
 	}
 	
 	template<class T>
 	operator T() const
 	{
-		check(ContainsDataType<T>())
-		T OutData = *reinterpret_cast<T>(Data.Get());
+		static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
+		check(ContainsDataType<T>());
+
+		T OutData;
+		FMemory::Memcpy(&OutData, Data.Get(), sizeof(T));
 		return OutData;
 	}
 
 	void Serialize(FArchive& Ar);
 
 private:
-	FString DataType;
+	uint32 DataType;
 	int32 DataSize;
 	TUniquePtr<std::byte[]> Data;
 
 	template<class T>
 	void SetDataInternal(const T& InData)
 	{
-		DataType = typeid(T).name();
+		DataType = GetTypeHash(typeid(T).name());
 		DataSize = sizeof(InData);
 		
 		Data = MakeUnique<std::byte[]>(DataSize);
 		FMemory::Memcpy(Data.Get(), &InData, DataSize);
 	}
-};
-
-UCLASS()
-class ULimenPolymorphicDataUtils : public UBlueprintFunctionLibrary
-{
-	GENERATED_BODY()
-
-public:
-	
 };

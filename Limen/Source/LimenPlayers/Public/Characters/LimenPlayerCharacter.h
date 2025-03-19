@@ -145,9 +145,6 @@ public:
 	const TSoftObjectPtr<UInputAction>& GetSprintInputAction() const;
 	const TSoftObjectPtr<UInputAction>& GetJumpInputAction() const;
 	const TSoftObjectPtr<UInputAction>& GetCrouchInputAction() const;
-
-	virtual void AddControllerYawInput(float Val) override;
-	virtual void AddControllerPitchInput(float Val) override;
 	
 protected:	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")

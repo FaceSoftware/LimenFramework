@@ -24,7 +24,7 @@ void ULimenAtomicSpawner::SpawnItem(const TSubclassOf<AActor>& Class, const int3
 	{
 		const FBoxSphereBounds SpawnBounds = GetLocalBounds();
 
-		TSharedRef<FRandomStream> RandomStream = ULimenGlobalRandomStreamSubsystem::Get()->GetGlobalRandomStream();
+		FRandomStreamRef RandomStream = ULimenGlobalRandomStreamSubsystem::Get()->GetGlobalRandomStream();
 		
 		const FVector SpawnLocation = GetComponentLocation() + UKismetMathLibrary::RandomPointInBoundingBoxFromStream(RandomStream.Get(), SpawnBounds.Origin, SpawnBounds.BoxExtent);
 		

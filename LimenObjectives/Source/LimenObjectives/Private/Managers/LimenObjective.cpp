@@ -3,6 +3,9 @@
 
 #include "Managers/LimenObjective.h"
 
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
+
 
 void FObjectiveData::operator=(const FObjectiveData& Other)
 {
@@ -23,7 +26,7 @@ ALimenObjective::ALimenObjective()
 
 void ALimenObjective::BindToPlayer(APlayerController* PlayerController, APawn* Pawn)
 {
-	if (!IsValid(PlayerController) || !IsValid(Pawn))
+	if (PlayerController == nullptr)
 	{
 		return;
 	}
@@ -49,7 +52,7 @@ void ALimenObjective::BindToCurrentClientPlayer()
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	check(Controller != nullptr);
 	APawn* Pawn = Controller->GetPawn();
-	// You can bind to a player not currently possessing a pawn but you must bind it to a valid player controller
+	// You can bind to a player not currently possessing a pawn, but you must bind it to a valid player controller
 	
 	BindToPlayer(Controller, Pawn);
 }

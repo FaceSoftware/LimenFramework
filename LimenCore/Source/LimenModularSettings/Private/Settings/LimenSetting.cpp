@@ -4,7 +4,6 @@
 #include "Settings/LimenSetting.h"
 
 #include "LogMacros/LimenLogMacros.h"
-#include "BlueprintAsyncActions/LimenRecurrentAction.h"
 
 
 const EConsoleVariableFlags ULimenSetting::ConsoleVariableUserSettingFlag = EConsoleVariableFlags::ECVF_SetByGameOverride;
@@ -15,7 +14,6 @@ ULimenSetting::ULimenSetting()
 	Category = FText::FromString(TEXT("DefaultCategory"));
 	DisplayName = FText::FromString(TEXT("DefaultSettingDisplayName"));
 	Description = FText::FromString(TEXT("Override this in a child class of ULimenSetting"));
-	bUseRecurrentAction = false;
 	bHasInitialized = false;
 	bShouldLoadData = false;
 }
@@ -54,6 +52,7 @@ void ULimenSetting::InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSub
 	ApplySetting();
 	bHasInitialized = true;
 	bShouldLoadData = true;
+
 	LIMEN_LOG(LogLimen, Log, this, "Initialized setting %s", *GetDevelopmentName().ToString());
 }
 
@@ -61,50 +60,12 @@ void ULimenSetting::SubsystemInitialized(ULimenModularSettingsSubsystem* Modular
 {
 }
 
-void ULimenSetting::RecurrentAction()
-{
-}
-
-bool ULimenSetting::ShouldStopRecurrentAction()
-{
-	return false;
-}
-
-void ULimenSetting::ActionSuccessful()
-{
-	DestroyRecurrentActionObject();
-}
-
-void ULimenSetting::ActionUnsuccessful()
-{
-	DestroyRecurrentActionObject();
-}
-
 void ULimenSetting::SetDefaults()
 {
 }
 
-void ULimenSetting::ApplyCurrentSetting(const bool bUserRequest)
+void ULimenSetting::ApplyCurrentSetting(bool bUserRequest)
 {
-	if (!bUseRecurrentAction)
-	{
-		return;
-	}
-
-	if (RecurrentActionObject != nullptr)
-	{
-		return;
-	}
-
-	FRecurrentActionDelegate RecurrentActionDelegate;
-	RecurrentActionDelegate.BindDynamic(this, &ThisClass::RecurrentAction);
-	FRecurrentActionStopCondition RecurrentActionStopCondition;
-	RecurrentActionStopCondition.BindDynamic(this, &ThisClass::ShouldStopRecurrentAction);
-
-	RecurrentActionObject = ULimenRecurrentAction::StartRecurrentAction(GetWorld(), RecurrentActionDelegate, 0, .1, RecurrentActionStopCondition);
-	RecurrentActionObject->OnSuccess.AddDynamic(this, &ThisClass::ActionSuccessful);
-	RecurrentActionObject->OnFailure.AddDynamic(this, &ThisClass::ActionUnsuccessful);
-	RecurrentActionObject->Activate();
 }
 
 void ULimenSetting::DataLoaded()
@@ -121,10 +82,4 @@ bool ULimenSetting::ShouldLoadData() const
 	}
 
 	return bShouldLoadData;
-}
-
-void ULimenSetting::DestroyRecurrentActionObject()
-{
-	RecurrentActionObject->ConditionalBeginDestroy();
-	RecurrentActionObject = nullptr;
 }

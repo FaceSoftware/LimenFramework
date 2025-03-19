@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "LimenPlayerControllerBase.generated.h"
 
+
+class ULimenMouseSensitivityComponent;
 class ALimenBaseHUD;
 class ULimenMenuWidget;
 class ULimenNotificationComponent;
@@ -17,7 +19,6 @@ class ULimenPauseMenuWidget;
 class FLimenNotification;
 struct FNotificationParams;
 struct FInputActionInstance;
-
 
 UENUM()
 enum class EPauseReason : uint8
@@ -35,14 +36,6 @@ enum class ELimenInputMode : uint8
 	Game,
 	UI,
 	UIOnly,
-};
-
-struct FMouseParameters
-{	
-	float SensitivityX = 1;
-	float SensitivityY = 1;
-	bool bInvertAxisX = false;
-	bool bInvertAxisY = false;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPauseRequestDelegate, ALimenPlayerControllerBase*, Player, const EPauseReason, PauseReason);
@@ -87,19 +80,23 @@ public:
 	void SetUIInput();
 	UFUNCTION(BlueprintCallable)
 	void SetUIOnlyInput(const bool bShowMouse = true);
-	void SetInputMode(const FInputModeDataBase& InData) override;
 	void SetInputMode(const ELimenInputMode InInputMode);
 	ELimenInputMode GetInputMode() const;
+
+	virtual void SetInputMode(const FInputModeDataBase& InData) override;
 
 	UFUNCTION(BlueprintCallable)
 	bool CanSeeLocation(const FVector& InLocation) const;
 	UFUNCTION(BlueprintCallable)
 	bool CanSeeActor(const AActor* OtherActor) const;
-	
-	const FMouseParameters& GetMouseParameters() const;
-	void SetMouseParameters(const FMouseParameters& InNewParams);
+
+	virtual void AddYawInput(const float Val) override;
+	virtual void AddPitchInput(const float Val) override;
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<ULimenMouseSensitivityComponent> MouseInputSensitivityComponent;
+	
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
 
 	virtual void BindPawnDelegates(APawn* NewPawn);
@@ -114,6 +111,4 @@ protected:
 	
 private:
 	ELimenInputMode CurrentInputMode;
-	
-	FMouseParameters MouseParameters;
 };
