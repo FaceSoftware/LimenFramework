@@ -12,12 +12,11 @@ void ULimenGlobalRandomStreamSubsystem::Initialize(FSubsystemCollectionBase& Col
 #if WITH_EDITOR
 	Seed = 0;
 #else
-	FDateTime Now = FDateTime::Now();
-	Seed = Now.GetSecond() * Now.GetMinute() * Now.GetHour() * Now.GetDayOfYear();
+	Seed = FDateTime::UtcNow().ToUnixTimestamp() ^ FPlatformTime::Cycles();
 #endif
 
 	FScopeLock Lock(&RandomStreamSection);
-	GlobalRandomStream = MakeShared<FRandomStream>(Seed);
+	GlobalRandomStream = MakeShared<FRandomStream, ESPMode::NotThreadSafe>(Seed);
 }
 
 void ULimenGlobalRandomStreamSubsystem::Deinitialize()
@@ -37,7 +36,7 @@ void ULimenGlobalRandomStreamSubsystem::SetSeedWithCurrentTime()
 	GlobalRandomStream->Initialize(NAME_None);
 }
 
-TSharedRef<FRandomStream> ULimenGlobalRandomStreamSubsystem::GetGlobalRandomStream()
+FRandomStreamRef ULimenGlobalRandomStreamSubsystem::GetGlobalRandomStream()
 {
 	FScopeLock Lock(&RandomStreamSection);
 	return GlobalRandomStream.ToSharedRef();

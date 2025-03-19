@@ -17,7 +17,6 @@ ULimenCameraShakeSetting::ULimenCameraShakeSetting()
 	Category = FText::FromString(TEXT("Gameplay"));
 	DisplayName = FText::FromString(TEXT("Camera Shakes"));
 	Description = FText::FromString(TEXT("Whether or not to play camera shakes."));
-	bUseRecurrentAction = false;
 }
 
 void ULimenCameraShakeSetting::SetDefaults()

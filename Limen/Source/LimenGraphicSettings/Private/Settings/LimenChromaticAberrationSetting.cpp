@@ -10,7 +10,6 @@
 
 ULimenChromaticAberrationSetting::ULimenChromaticAberrationSetting()
 {
-	bUseRecurrentAction = false;
 	DevelopmentName = TEXT("setting_chromaticaberration");
 	Category = FText::FromString(TEXT("Post Process FX"));
 	DisplayName = FText::FromString(TEXT("Chromatic Aberration"));

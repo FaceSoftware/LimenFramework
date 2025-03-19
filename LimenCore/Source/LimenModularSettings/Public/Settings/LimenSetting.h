@@ -52,15 +52,7 @@ public:
 	virtual void SubsystemInitialized(ULimenModularSettingsSubsystem* ModularSettingsSubsystem);
 	
 protected:
-	UFUNCTION()
-	virtual void RecurrentAction();
-	UFUNCTION()
-	virtual bool ShouldStopRecurrentAction();
-	UFUNCTION()
-	virtual void ActionSuccessful();
-	UFUNCTION()
-	virtual void ActionUnsuccessful();
-	
+
 	template<typename SubsystemClass>
 	SubsystemClass* GetOwnerSubsystem() const
 	{
@@ -72,19 +64,20 @@ protected:
 	/**
 	 * @brief Sets default variable values of the setting, such as possible states, default state, etc.
 	 * Can also serve for initialization purposes.
-	 * @warning Must be overriden
+	 * @warning Should be overriden
 	 */
 	virtual void SetDefaults();
 	/**
 	 * @brief (For blueprints) Sets default variable values of the setting, such as possible states, default state, etc.
 	 * Can also serve for initialization purposes.
-	 * @warning Must be overriden
+	 * @warning Should be overriden
 	 */
 	UFUNCTION(BlueprintImplementableEvent, Category="Limen|Modular Settings", DisplayName="Set Defaults")
 	void BP_SetDefaults();
 	/**
-	 * @brief Should apply the current setting without notifying the OnSettingChanged delegate
-	 * @warning Must be overriden
+	 * @brief Should apply the current setting without notifying the OnSettingChanged delegate.
+	 * @param bUserRequest Whether the setting change was manually requested by the user through UI or an internal system.
+	 * @warning Should be overriden
 	 */
 	virtual void ApplyCurrentSetting(bool bUserRequest = false);
 	
@@ -97,17 +90,9 @@ protected:
 	UPROPERTY()
 	TObjectPtr<ULimenModularSettingsSubsystem> OwnerSubsystem;
 
-	bool bUseRecurrentAction;
-
 private:
-	UPROPERTY()
-	TObjectPtr<ULimenRecurrentAction> RecurrentActionObject;
-
 	bool bHasInitialized;
-
 	bool bShouldLoadData;
-
-	void DestroyRecurrentActionObject();
 };
 
 
