@@ -19,7 +19,9 @@ class LIMENMODALS_API ULimenModalsSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
-public:	
+public:
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+
 	ULimenGenericModalWidget* DisplayConfirmationModal(const FModalParams& InParams) const;
 	ULimenGenericModalWidget* DisplayConsentModal(const FModalParams& InParams) const;
 	ULimenGenericModalWidget* DisplayTimedModal(const FModalParams& InParams) const;

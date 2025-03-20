@@ -19,7 +19,7 @@ struct LIMENMODALS_API FModalParams
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText Title = FText::FromString(TEXT("ModalTile"));
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FText Content = FText::FromString(TEXT("ModalContent"));;
+	FText Content = FText::FromString(TEXT("ModalContent"));
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FModalDelegate, ULimenGenericModalWidget*, ModalWidget, bool, bAccepted);
