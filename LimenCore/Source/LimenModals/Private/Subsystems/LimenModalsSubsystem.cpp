@@ -9,6 +9,16 @@
 #include "Engine/GameInstance.h"
 
 
+bool ULimenModalsSubsystem::ShouldCreateSubsystem(UObject* Outer) const
+{
+	if (!Super::ShouldCreateSubsystem(Outer))
+	{
+		return false;
+	}
+
+	return !IsRunningDedicatedServer();
+}
+
 ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConfirmationModal(const FModalParams& InParams) const
 {
 	const ULimenModalsDeveloperSettings* Settings = GetDefault<ULimenModalsDeveloperSettings>();
@@ -40,8 +50,8 @@ ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayModalInternal(const TSub
 {
 	ULimenGenericModalWidget* ModalWidgetInstance = CreateWidget<ULimenGenericModalWidget>(GetWorld(), ModalClass);
 	ModalWidgetInstance->ShowWidget();
-	
 	ModalWidgetInstance->SetParams(InParams);
+
 	return ModalWidgetInstance;
 }
 
