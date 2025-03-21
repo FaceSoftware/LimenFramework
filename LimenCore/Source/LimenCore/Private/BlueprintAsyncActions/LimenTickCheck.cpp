@@ -8,7 +8,7 @@
 
 
 FLimenTickCheck::FLimenTickCheck(const int32 InMaxTicks)
-	: World(GEngine != nullptr ? GEngine->GetWorld() : nullptr), MaxTicks(InMaxTicks), CurrentTicks(0)
+	: World(GEngine != nullptr ? GEngine->GetWorld() : nullptr), MaxTicks(FMath::Max(InMaxTicks, MaxPossibleTicks)), CurrentTicks(0)
 {
 }
 
