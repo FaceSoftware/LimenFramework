@@ -16,6 +16,9 @@ class LIMENMODULARSETTINGS_API ULimenSelectionSetting : public ULimenSetting, pu
 	GENERATED_BODY()
 
 public:
+	static const FString EnabledString; 
+	static const FString DisabledString; 
+	
 	ULimenSelectionSetting();
 
 	/// Readable Interface
@@ -38,10 +41,10 @@ public:
 	virtual void SetDefaultValue() override final;
 	virtual void DataLoaded() override final;
 
-protected:
-	static const FString EnabledString; 
-	static const FString DisabledString; 
-	
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	bool IsEnabled() const;
+
+protected:	
 	UPROPERTY(EditAnywhere)
 	TArray<FString> PossibleSelections;
 	UPROPERTY(EditAnywhere)

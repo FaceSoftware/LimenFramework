@@ -81,3 +81,8 @@ void ULimenSelectionSetting::DataLoaded()
 	
 	Super::DataLoaded();
 }
+
+bool ULimenSelectionSetting::IsEnabled() const
+{
+	return CurrentSelection == EnabledString;
+}

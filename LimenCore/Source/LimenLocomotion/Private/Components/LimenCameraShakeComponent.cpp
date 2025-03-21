@@ -10,16 +10,17 @@
 #include "Shakes/WaveOscillatorCameraShakePattern.h"
 
 
-ULimenCameraShakeComponent::ULimenCameraShakeComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+ULimenCameraShakeComponent::ULimenCameraShakeComponent(const FObjectInitializer& ObjectInitializer) :
+	Super(ObjectInitializer), VelocityPtr(nullptr)
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickInterval = 1 / 64;
 	PrimaryComponentTick.bTickEvenWhenPaused = false;
 	bAllowConcurrentTick = true;
 	bAutoActivate = true;
-	
+
 	VelocityPtr = nullptr;
-	CameraShakeClass = nullptr;
+	CameraShakePtr = nullptr;
 	CameraShake = nullptr;
 }
 
@@ -38,7 +39,7 @@ void ULimenCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickT
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (const float CurrentSpeed = GetSpeed(); !FMath::IsNaN(CurrentSpeed) && CameraShake != nullptr)
+	if (const float CurrentSpeed = GetSpeed(); !FMath::IsNaN(CurrentSpeed) && CameraShakePtr != nullptr)
 	{
 		float NewScale = CurrentSpeed * FastestSpeedScale.B / FastestSpeedScale.A;
 		if (NewScale > FastestSpeedScale.B)
@@ -51,8 +52,8 @@ void ULimenCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickT
 		}
 
 		FMinimalViewInfo Temp;
-		CameraShake->ShakeScale = NewScale;
-		CameraShake->UpdateAndApplyCameraShake(DeltaTime, 1.f, Temp);
+		CameraShakePtr->ShakeScale = NewScale;
+		CameraShakePtr->UpdateAndApplyCameraShake(DeltaTime, 1.f, Temp);
 	}
 }
 
@@ -67,11 +68,11 @@ void ULimenCameraShakeComponent::Activate(bool bReset)
 		return;
 	}
 
-	CameraShake = PlayerController->PlayerCameraManager->StartCameraShake(CameraShakeClass.LoadSynchronous(), 1.f, ECameraShakePlaySpace::CameraLocal);
-	if (CameraShake != nullptr)
+	CameraShakePtr = PlayerController->PlayerCameraManager->StartCameraShakeFromSource(CameraShake, this, 1.f, ECameraShakePlaySpace::CameraLocal);
+	if (CameraShakePtr != nullptr)
 	{
-		PerlinNoisePattern = Cast<UPerlinNoiseCameraShakePattern>(CameraShake->GetRootShakePattern());
-		WaveOscillatorPattern = Cast<UWaveOscillatorCameraShakePattern>(CameraShake->GetRootShakePattern());
+		PerlinNoisePattern = Cast<UPerlinNoiseCameraShakePattern>(CameraShakePtr->GetRootShakePattern());
+		WaveOscillatorPattern = Cast<UWaveOscillatorCameraShakePattern>(CameraShakePtr->GetRootShakePattern());
 	}
 }
 
@@ -79,9 +80,9 @@ void ULimenCameraShakeComponent::Deactivate()
 {
 	Super::Deactivate();
 
-	if (CameraShake && CameraShake->IsActive())
+	if (CameraShakePtr && CameraShakePtr->IsActive())
 	{
-		CameraShake->StopShake();
+		CameraShakePtr->StopShake();
 	}
 }
 
