@@ -4,17 +4,11 @@
 #include "BlueprintAsyncActions/LimenTickCheck.h"
 
 #include "TimerManager.h"
+#include "Engine.h"
 
 
-FLimenTickCheck::FLimenTickCheck()
-{
-	World = nullptr;
-	MaxTicks = 0;
-	CurrentTicks = 0;
-}
-
-FLimenTickCheck::FLimenTickCheck(UWorld* InWorld, const int32 InMaxTicks)
-	: World(InWorld), MaxTicks(InMaxTicks), CurrentTicks(0)
+FLimenTickCheck::FLimenTickCheck(const int32 InMaxTicks)
+	: World(GEngine != nullptr ? GEngine->GetWorld() : nullptr), MaxTicks(FMath::Max(InMaxTicks, MaxPossibleTicks)), CurrentTicks(0)
 {
 }
 
