@@ -63,7 +63,7 @@ void ULimenGraphicalSettingsSubsystem::PostWorldInitialization(UWorld* World,
 {
 	Super::PostWorldInitialization(World, InitValues);
 	
-	FindGlobalPostProcess = MakeUnique<FLimenTickCheck>(GetWorld());
+	FindGlobalPostProcess = MakeUnique<FLimenTickCheck>();
 	FindGlobalPostProcess->AddLambda([this]
 	{
 		APostProcessVolume* TempGlobalPostProcess = FindGlobalPostProcessVolume(GetWorld(), SubsystemSettings->GlobalPostProcessTag);
