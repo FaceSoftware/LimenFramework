@@ -154,7 +154,7 @@ private:
 
 	UPROPERTY()
 	TArray<USceneComponent*> Scenarios;
-	TSharedPtr<FRandomStream> RandomStream;
+	TSharedPtr<FRandomStream, ESPMode::NotThreadSafe> RandomStream;
 
 	TWeakObjectPtr<ALimenProceduralMapManager> BoundMapManager;
 

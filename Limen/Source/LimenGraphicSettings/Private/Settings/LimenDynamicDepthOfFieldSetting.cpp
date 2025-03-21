@@ -10,7 +10,6 @@
 
 ULimenDynamicDepthOfFieldSetting::ULimenDynamicDepthOfFieldSetting()
 {
-	bUseRecurrentAction = false;
 	DevelopmentName = TEXT("setting_ddof");
 	Category = FText::FromString(TEXT("Post Process FX"));
 	DisplayName = FText::FromString(TEXT("Depth of Field"));

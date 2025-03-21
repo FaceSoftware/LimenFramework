@@ -5,11 +5,8 @@
 
 #include "TimerManager.h"
 #include "BlueprintAsyncActions/LimenTickCheck.h"
-#include "GameMode/LimenGameModeBase.h"
 #include "GameplayManagers/LimenHintsManager.h"
-#include "HUDs/LimenHUD.h"
 #include "Kismet/GameplayStatics.h"
-#include "LimenNotifications/Public/Components/LimenNotificationComponent.h"
 
 
 ULimenHintsSetting::ULimenHintsSetting()
@@ -26,7 +23,7 @@ void ULimenHintsSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
-	HintsManagerSpawn = FLimenTickCheck(GetWorld());
+	HintsManagerSpawn = FLimenTickCheck();
 	HintsManagerSpawn.AddLambda([this]
 	{
 		if (HintsManager = ALimenGameplayManager::GetGameplayManager<ALimenHintsManager>(this); HintsManager.IsValid())

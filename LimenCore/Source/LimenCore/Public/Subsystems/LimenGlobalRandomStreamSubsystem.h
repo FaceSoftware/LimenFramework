@@ -3,8 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Subsystems/GameInstanceSubsystem.h"
+#include "Engine/Engine.h"
+#include "Subsystems/EngineSubsystem.h"
 #include "LimenGlobalRandomStreamSubsystem.generated.h"
+
+
+typedef TSharedRef<FRandomStream, ESPMode::NotThreadSafe> FRandomStreamRef;
+typedef TSharedPtr<FRandomStream, ESPMode::NotThreadSafe> FRandomStreamPtr;
 
 /**
  * 
@@ -29,7 +34,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetSeedWithCurrentTime();
 	
-	TSharedRef<FRandomStream, ESPMode::ThreadSafe> GetGlobalRandomStream();
+	FRandomStreamRef GetGlobalRandomStream();
 	
 	float RandomFloat();
 
@@ -52,7 +57,7 @@ public:
 protected:
 	
 private:
-	TSharedPtr<FRandomStream, ESPMode::ThreadSafe> GlobalRandomStream;
+	FRandomStreamPtr GlobalRandomStream;
 
 	FCriticalSection RandomStreamSection;
 };

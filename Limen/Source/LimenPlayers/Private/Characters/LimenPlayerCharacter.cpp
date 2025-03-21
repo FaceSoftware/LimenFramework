@@ -664,8 +664,8 @@ inline void ALimenPlayerCharacter::MoveRightInput(const FInputActionInstance& In
 void ALimenPlayerCharacter::LookInput(const FInputActionInstance& Instance)
 {
 	const auto Input = Instance.GetValue().Get<FVector2D>();
-	AddControllerYawInput((MouseParameters.bInvertAxisX ? -Input.X : Input.X) * MouseParameters.SensitivityX);
-	AddControllerPitchInput((MouseParameters.bInvertAxisY ? Input.Y : -Input.Y) * MouseParameters.SensitivityY);
+	AddControllerYawInput(Input.X);
+	AddControllerPitchInput(-Input.Y);
 }
 
 void ALimenPlayerCharacter::SprintInput(const FInputActionInstance& Instance)

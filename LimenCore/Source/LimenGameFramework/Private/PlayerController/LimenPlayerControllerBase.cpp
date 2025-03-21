@@ -3,6 +3,7 @@
 
 #include "PlayerController/LimenPlayerControllerBase.h"
 
+#include "Components/LimenMouseSensitivityComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/LocalPlayer.h"
@@ -37,6 +38,8 @@ ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer&
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
 	CurrentInputMode = ELimenInputMode::Undefined;
+
+	MouseInputSensitivityComponent = CreateDefaultSubobject<ULimenMouseSensitivityComponent>(TEXT("MouseInputSensitivityComponent"));
 }
 
 void ALimenPlayerControllerBase::BeginPlay()
@@ -252,6 +255,24 @@ bool ALimenPlayerControllerBase::CanSeeActor(const AActor* OtherActor) const
 	}
 
 	return true;
+}
+
+void ALimenPlayerControllerBase::AddYawInput(const float Val)
+{
+	const float MouseMultiplier = MouseInputSensitivityComponent->GetMouseX();
+	const bool bInvert = MouseInputSensitivityComponent->GetInvertMouseX();
+	const float FinalInput = Val * MouseMultiplier * (bInvert ? -1.0f : 1.0f);
+
+	Super::AddYawInput(FinalInput);
+}
+
+void ALimenPlayerControllerBase::AddPitchInput(const float Val)
+{
+	const float MouseMultiplier = MouseInputSensitivityComponent->GetMouseY();
+	const bool bInvert = MouseInputSensitivityComponent->GetInvertMouseY();
+	const float FinalInput = Val * MouseMultiplier * (bInvert ? -1.0f : 1.0f);
+
+	Super::AddPitchInput(FinalInput);
 }
 
 void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)

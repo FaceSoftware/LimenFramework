@@ -213,8 +213,15 @@ bool ULimenGameSaveSubsystem::InitializeHandlersForLoading()
 	for (FObjectSaveData& HandlerData : CurrentGameSaveData->StoredSaveHandlers)
 	{
 		check(!HandlerData.GetObjectClass().IsNull());
+
+		FSoftClassPath HandlerClassPath = HandlerData.GetObjectClass();
+		const UClass* HandlerClass = HandlerClassPath.TryLoadClass<ULimenSavesHandler>();
+		if (HandlerClass == nullptr)
+		{
+			continue;
+		}
 		
-		ULimenSavesHandler* Handler = NewObject<ULimenSavesHandler>(this, HandlerData.GetObjectClass().LoadSynchronous());
+		ULimenSavesHandler* Handler = NewObject<ULimenSavesHandler>(this, HandlerClass);
 		HandlerData.LoadData(Handler); // Load the saved data to the handler
 		
 		if (!Handler->LoadDataTo(GetWorld())) // Load the handler data to the world

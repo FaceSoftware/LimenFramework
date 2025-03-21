@@ -4,7 +4,7 @@
 #include "Utils/LimenPolymorphicData.h"
 
 
-FLimenPolymorphicData::FLimenPolymorphicData(): DataSize(-1)
+FLimenPolymorphicData::FLimenPolymorphicData(): DataType(-1), DataSize(-1)
 {
 }
 
@@ -14,16 +14,15 @@ FLimenPolymorphicData::~FLimenPolymorphicData()
 
 FLimenPolymorphicData& FLimenPolymorphicData::operator=(const FLimenPolymorphicData& InData)
 {
-	if (this != &InData)
-	{
-		DataType = InData.DataType;
-		DataSize = sizeof(*InData.Data.Get());
-		
-		Data = MakeUnique<std::byte[]>(DataSize);
-		FMemory::Memcpy(Data.Get(), InData.Data.Get(), DataSize);
-	}
+    if (this != &InData)
+    {
+        DataType = InData.DataType;
+        DataSize = InData.DataSize;  // Fix incorrect size calculation
 
-	return *this;
+        Data = MakeUnique<std::byte[]>(DataSize);
+        FMemory::Memcpy(Data.Get(), InData.Data.Get(), DataSize);
+    }
+    return *this;
 }
 
 void FLimenPolymorphicData::Serialize(FArchive& Ar)

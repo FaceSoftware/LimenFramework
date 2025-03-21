@@ -56,7 +56,7 @@ public:
 		ObjectSaveInterface->DataLoaded();
 	}
 
-	const TSoftClassPtr<UObject>& GetObjectClass() const
+	const FSoftClassPath& GetObjectClass() const
 	{
 		return ObjectClass;
 	}
@@ -66,7 +66,7 @@ private:
 	UPROPERTY(SaveGame)
 	TArray<uint8> ByteData;
 	UPROPERTY(SaveGame)
-	TSoftClassPtr<UObject> ObjectClass;
+	FSoftClassPath ObjectClass;
 };
 
 USTRUCT()

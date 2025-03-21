@@ -146,7 +146,7 @@ public:
 	const TSoftObjectPtr<UInputAction>& GetJumpInputAction() const;
 	const TSoftObjectPtr<UInputAction>& GetCrouchInputAction() const;
 	
-protected:
+protected:	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
 	TObjectPtr<ULimenInventoryComponent> CharacterInventory;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")

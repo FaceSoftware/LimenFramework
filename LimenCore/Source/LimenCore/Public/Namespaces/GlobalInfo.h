@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "HAL/RunnableThread.h"
+#include "Stats/Stats2.h"
 
 namespace ErrorInformation
 {

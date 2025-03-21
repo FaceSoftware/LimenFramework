@@ -7,6 +7,7 @@
 #include "LimenMenuGameMode.generated.h"
 
 
+class ULimenGenericModalWidget;
 class ULimenSaveData;
 
 UCLASS(Blueprintable)

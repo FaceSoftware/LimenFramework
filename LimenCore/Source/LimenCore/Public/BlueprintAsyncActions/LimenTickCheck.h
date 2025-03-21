@@ -11,13 +11,14 @@
 class LIMENCORE_API FLimenTickCheck
 {
 public:	
-	FLimenTickCheck();
-	explicit FLimenTickCheck(UWorld* InWorld, const int32 InMaxTicks = 100);
+	FLimenTickCheck(const int32 InMaxTicks = 128);
 	~FLimenTickCheck();
 
 	void AddLambda(const TFunction<bool()>& InFunc);
 
 private:
+	static constexpr int32 MaxPossibleTicks = 1024;
+	
 	UWorld* World;
 	int32 MaxTicks;
 	int32 CurrentTicks;

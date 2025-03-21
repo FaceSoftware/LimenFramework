@@ -10,7 +10,6 @@
 
 ULimenMotionBlurSetting::ULimenMotionBlurSetting()
 {
-	bUseRecurrentAction = false;
 	DevelopmentName = TEXT("setting_motionblur");
 	Category = FText::FromString(TEXT("Post Process FX"));
 	DisplayName = FText::FromString(TEXT("Motion Blur"));
