@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BlueprintLibraries/LimenCoreStatics.h"
-#include "Components/ActorComponent.h"
+#include "Camera/CameraShakeSourceComponent.h"
 #include "LimenCameraShakeComponent.generated.h"
 
 
@@ -18,7 +18,7 @@ class UPerlinNoiseCameraShakePattern;
  * 
  */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LIMENLOCOMOTION_API ULimenCameraShakeComponent : public UActorComponent
+class LIMENLOCOMOTION_API ULimenCameraShakeComponent : public UCameraShakeSourceComponent
 {
 	GENERATED_BODY()
 
@@ -35,10 +35,9 @@ protected:
 	FPair SlowestSpeedScale;
 	UPROPERTY(EditAnywhere, Category="Limen")
 	FPair FastestSpeedScale;
-	UPROPERTY(EditAnywhere, Category="Limen")
-	TSoftClassPtr<UCameraShakeBase> CameraShakeClass;
+
 	UPROPERTY()
-	TObjectPtr<UCameraShakeBase> CameraShake;
+	TObjectPtr<UCameraShakeBase> CameraShakePtr;
 	
 	float GetSpeed() const;
 

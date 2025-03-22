@@ -14,10 +14,7 @@ class LIMENGAMESETTINGS_API ULimenCameraShakeSetting : public ULimenSelectionSet
 {
 	GENERATED_BODY()
 
-public:
-	inline static const FString Enabled = TEXT("Enabled");
-	inline static const FString Disabled = TEXT("Disabled");
-	
+public:	
 	ULimenCameraShakeSetting();
 	
 protected:

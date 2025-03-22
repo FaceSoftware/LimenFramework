@@ -4,6 +4,8 @@
 #include "Components/LimenConeTraceComponent.h"
 
 #include "CollisionQueryParams.h"
+#include "Engine/HitResult.h"
+#include "Engine/World.h"
 #include "Namespaces/LimenCoreMath.h"
 
 

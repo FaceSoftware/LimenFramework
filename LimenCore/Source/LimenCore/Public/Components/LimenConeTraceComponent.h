@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CollisionQueryParams.h"
 #include "Namespaces/LimenCoreMath.h"
+#include "Components/ActorComponent.h"
 #include "LimenConeTraceComponent.generated.h"
 
 
@@ -50,6 +52,7 @@ private:
 	TMap<AActor*, bool> ActorsToCheck;
 
 	FCollisionQueryParams LineTraceQueryParams;
+
 	UPROPERTY()
 	TArray<AActor*> IgnoredActors;
 

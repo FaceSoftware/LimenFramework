@@ -308,14 +308,14 @@ bool ALimenHUD::IsAnyAnimationInProgress() const
 	return false;
 }
 
-bool ALimenHUD::CanSwitchWidgetsVisibility() const
+bool ALimenHUD::CanSwitchWidgetVisibility(UWidget* InWidget) const
 {
-	if (!Super::CanSwitchWidgetsVisibility())
+	if (IsAnyAnimationInProgress() || (InWidget != GetPauseMenuWidget() && !Super::CanSwitchWidgetVisibility(InWidget)))
 	{
 		return false;
 	}
 
-	return !IsAnyAnimationInProgress();
+	return true;
 }
 
 void ALimenHUD::LoadingScreenVisibilityChanged(const bool bIsVisible)

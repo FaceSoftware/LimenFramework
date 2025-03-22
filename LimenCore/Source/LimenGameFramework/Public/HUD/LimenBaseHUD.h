@@ -8,6 +8,7 @@
 #include "LimenBaseHUD.generated.h"
 
 
+class UWidget;
 class ULimenLoadingScreenWidget;
 class ULimenNotificationComponent;
 struct FNotificationParams;
@@ -71,7 +72,7 @@ protected:
 	void OnPostProcessDisabled();
 
 	UFUNCTION(BlueprintCallable)
-	virtual bool CanSwitchWidgetsVisibility() const;
+	virtual bool CanSwitchWidgetVisibility(UWidget* InWidget) const;
 
 	void ShowWidget_Internal(ULimenWidget* Widget);
 	void HideWidget_Internal(ULimenWidget* Widget);

@@ -22,9 +22,13 @@ void ULimenCameraShakeSetting::SetDefaults()
 {
 	Super::SetDefaults();
 
-	PossibleSelections.Push(Enabled);
-	PossibleSelections.Push(Disabled);
-	DefaultSelection = Enabled;
+	PossibleSelections.Push(EnabledString);
+	PossibleSelections.Push(DisabledString);
+	DefaultSelection = EnabledString;
+
+	const FOnActorSpawned::FDelegate Delegate = FOnActorSpawned::FDelegate::CreateUObject(this,
+		&ThisClass::ApplyCurrentSettingInternal);
+	ApplySettingToSpawnedActorHandle = GetWorld()->AddOnActorSpawnedHandler(Delegate);
 }
 
 void ULimenCameraShakeSetting::ApplyCurrentSetting(const bool bUserRequest)
@@ -35,24 +39,20 @@ void ULimenCameraShakeSetting::ApplyCurrentSetting(const bool bUserRequest)
 	{		
 		ApplyCurrentSettingInternal(*It);
 	}
-
-	const FOnActorSpawned::FDelegate Delegate = FOnActorSpawned::FDelegate::CreateUObject(this,
-		&ThisClass::ApplyCurrentSettingInternal);
-	ApplySettingToSpawnedActorHandle = GetWorld()->AddOnActorSpawnedHandler(Delegate);
 }
 
 FString ULimenCameraShakeSetting::FormatCameraShakeSetting(const bool bEnabled)
 {
-	return bEnabled ? Enabled : Disabled;
+	return bEnabled ? EnabledString : DisabledString;
 }
 
 bool ULimenCameraShakeSetting::UnFormatCameraShakeSetting(const FString& Selection)
 {
-	if (Selection.Compare(Enabled) == 0)
+	if (Selection.Compare(EnabledString) == 0)
 	{
 		return true;
 	}
-	if (Selection.Compare(Disabled) == 0)
+	if (Selection.Compare(DisabledString) == 0)
 	{
 		return false;
 	}
@@ -67,6 +67,6 @@ void ULimenCameraShakeSetting::ApplyCurrentSettingInternal(AActor* Actor) const
 	Actor->GetComponents<ULimenCameraShakeComponent>(CameraShakes, false);
 	for (ULimenCameraShakeComponent* const& CameraShake : CameraShakes)
 	{
-		CameraShake->SetActive(UnFormatCameraShakeSetting(GetCurrentValue()), true);
+		CameraShake->SetActive(UnFormatCameraShakeSetting(GetCurrentValue()), false);
 	}
 }

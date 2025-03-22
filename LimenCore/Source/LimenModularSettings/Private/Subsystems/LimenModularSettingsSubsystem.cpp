@@ -116,6 +116,9 @@ void ULimenModularSettingsSubsystem::PostWorldInitialization(UWorld* World,
 {
 	World->OnWorldBeginPlay.AddLambda([this]
 	{
-		Load();
+		for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
+		{
+			Setting->ApplySetting(false);
+		}
 	});
 }
