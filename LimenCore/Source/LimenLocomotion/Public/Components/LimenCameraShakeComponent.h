@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Camera/CameraShakeSourceComponent.h"
-#include "Components/ActorComponent.h"
 #include "LimenCameraShakeComponent.generated.h"
 
 

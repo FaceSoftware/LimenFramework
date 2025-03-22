@@ -67,6 +67,6 @@ void ULimenCameraShakeSetting::ApplyCurrentSettingInternal(AActor* Actor) const
 	Actor->GetComponents<ULimenCameraShakeComponent>(CameraShakes, false);
 	for (ULimenCameraShakeComponent* const& CameraShake : CameraShakes)
 	{
-		CameraShake->SetActive(UnFormatCameraShakeSetting(GetCurrentValue()), true);
+		CameraShake->SetActive(UnFormatCameraShakeSetting(GetCurrentValue()), false);
 	}
 }

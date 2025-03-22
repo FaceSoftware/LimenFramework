@@ -38,6 +38,8 @@ ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer&
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
 	CurrentInputMode = ELimenInputMode::Undefined;
+	MouseYawMultiplier = 1.f;
+	MousePitchMultiplier = 1.f;
 
 	MouseInputSensitivityComponent = CreateDefaultSubobject<ULimenMouseSensitivityComponent>(TEXT("MouseInputSensitivityComponent"));
 }
@@ -45,6 +47,9 @@ ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer&
 void ALimenPlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	MouseInputSensitivityComponent->OnSensitivityUpdated.AddUniqueDynamic(this, &ThisClass::SensitivityUpdated);
+	SensitivityUpdated(MouseInputSensitivityComponent.Get());
 
 	if (CreateHudReference() && GetPawn() == nullptr)
 	{
@@ -259,20 +264,12 @@ bool ALimenPlayerControllerBase::CanSeeActor(const AActor* OtherActor) const
 
 void ALimenPlayerControllerBase::AddYawInput(const float Val)
 {
-	const float MouseMultiplier = MouseInputSensitivityComponent->GetMouseX();
-	const bool bInvert = MouseInputSensitivityComponent->GetInvertMouseX();
-	const float FinalInput = Val * MouseMultiplier * (bInvert ? -1.0f : 1.0f);
-
-	Super::AddYawInput(FinalInput);
+	Super::AddYawInput(Val * MouseYawMultiplier);
 }
 
 void ALimenPlayerControllerBase::AddPitchInput(const float Val)
 {
-	const float MouseMultiplier = MouseInputSensitivityComponent->GetMouseY();
-	const bool bInvert = MouseInputSensitivityComponent->GetInvertMouseY();
-	const float FinalInput = Val * MouseMultiplier * (bInvert ? -1.0f : 1.0f);
-
-	Super::AddPitchInput(FinalInput);
+	Super::AddPitchInput(Val * MousePitchMultiplier);
 }
 
 void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
@@ -327,4 +324,19 @@ void ALimenPlayerControllerBase::BindWidgetDelegates()
 
 void ALimenPlayerControllerBase::UnbindWidgetDelegates()
 {
+}
+
+void ALimenPlayerControllerBase::SensitivityUpdated(ULimenMouseSensitivityComponent* Component)
+{
+	{
+		const float MouseMultiplier = MouseInputSensitivityComponent->GetMouseX();
+		const bool bInvert = MouseInputSensitivityComponent->GetInvertMouseX();
+		MouseYawMultiplier = MouseMultiplier * (bInvert ? -1.0f : 1.0f);
+	}
+
+	{
+		const float MouseMultiplier = MouseInputSensitivityComponent->GetMouseY();
+		const bool bInvert = MouseInputSensitivityComponent->GetInvertMouseY();
+		MousePitchMultiplier = MouseMultiplier * (bInvert ? -1.0f : 1.0f);
+	}
 }

@@ -59,31 +59,41 @@ void ULimenCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 void ULimenCameraShakeComponent::Activate(bool bReset)
 {
-	Super::Activate(bReset);
-
 	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
-	if (PlayerController == nullptr)
+	if (PlayerController != nullptr)
 	{
-		return;
+		if (CameraShakePtr != nullptr)
+		{
+			CameraShakePtr->StopShake(true);
+			CameraShakePtr->TeardownShake();
+			CameraShakePtr->ConditionalBeginDestroy();
+			CameraShakePtr = nullptr;
+		}
+
+		CameraShakePtr = PlayerController->PlayerCameraManager->StartCameraShakeFromSource(CameraShake, this, 1.f, ECameraShakePlaySpace::CameraLocal);
+
+		if (CameraShakePtr != nullptr)
+		{
+			PerlinNoisePattern = Cast<UPerlinNoiseCameraShakePattern>(CameraShakePtr->GetRootShakePattern());
+			WaveOscillatorPattern = Cast<UWaveOscillatorCameraShakePattern>(CameraShakePtr->GetRootShakePattern());
+		}
 	}
 
-	CameraShakePtr = PlayerController->PlayerCameraManager->StartCameraShakeFromSource(CameraShake, this, 1.f, ECameraShakePlaySpace::CameraLocal);
-	if (CameraShakePtr != nullptr)
-	{
-		PerlinNoisePattern = Cast<UPerlinNoiseCameraShakePattern>(CameraShakePtr->GetRootShakePattern());
-		WaveOscillatorPattern = Cast<UWaveOscillatorCameraShakePattern>(CameraShakePtr->GetRootShakePattern());
-	}
+	Super::Activate(bReset);
 }
 
 void ULimenCameraShakeComponent::Deactivate()
 {
-	Super::Deactivate();
-
-	if (CameraShakePtr && CameraShakePtr->IsActive())
+	if (CameraShakePtr != nullptr && CameraShakePtr->IsActive())
 	{
-		CameraShakePtr->StopShake();
+		CameraShakePtr->StopShake(true);
+		CameraShakePtr->TeardownShake();
+		CameraShakePtr->ConditionalBeginDestroy();
+		CameraShakePtr = nullptr;
 	}
+
+	Super::Deactivate();
 }
 
 float ULimenCameraShakeComponent::GetSpeed() const

@@ -111,4 +111,10 @@ protected:
 	
 private:
 	ELimenInputMode CurrentInputMode;
+
+	float MouseYawMultiplier;
+	float MousePitchMultiplier;
+
+	UFUNCTION()
+	virtual void SensitivityUpdated(ULimenMouseSensitivityComponent* Component);
 };
