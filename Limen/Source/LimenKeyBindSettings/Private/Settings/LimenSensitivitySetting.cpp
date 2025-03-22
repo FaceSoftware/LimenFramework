@@ -12,7 +12,7 @@
 ULimenSensitivitySetting::ULimenSensitivitySetting()
 {
 	DevelopmentName = TEXT("setting_sensitivity");
-	Category = FText::FromString(TEXT("General"));
+	Category = FText::FromString(TEXT("Mouse"));
 	DisplayName = FText::FromString(TEXT("Mouse Sensitivity"));
 	Description = FText::FromString(TEXT("Multiplier for the mouse movement."));
 	MinValuePerChange = .1f;
@@ -45,7 +45,7 @@ void ULimenSensitivitySetting::ApplyCurrentSetting(bool bUserRequest)
 	}
 
 	auto* MouseSensitivityComponent = PlayerController->GetComponentByClass<ULimenMouseSensitivityComponent>();
-	if (MouseSensitivityComponent == nullptr)
+	if (!ensure(MouseSensitivityComponent != nullptr))
 	{
 		return;
 	}

@@ -13,7 +13,7 @@ class ULimenRecurrentAction;
  * 
  */
 UCLASS()
-class LIMENGAMESETTINGS_API ULimenSensitivitySetting : public ULimenValueSetting
+class LIMENKEYBINDSETTINGS_API ULimenSensitivitySetting : public ULimenValueSetting
 {
 	GENERATED_BODY()
 
