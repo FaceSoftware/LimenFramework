@@ -35,5 +35,7 @@ protected:
 private:
 	TWeakObjectPtr<ULimenArchive> ArchivePtr;
 	FTimerHandle InteractAnimationTimerHandle;
-	
+
+	UFUNCTION()
+	virtual void NewArchiveAdded(ULimenArchive* NewArchive);
 };

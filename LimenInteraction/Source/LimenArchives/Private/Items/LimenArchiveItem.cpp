@@ -20,6 +20,9 @@ void ALimenArchiveItem::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ULimenArchiveSubsystem* ArchivesManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenArchiveSubsystem>();
+	ArchivesManager->OnArchiveAdded.AddUniqueDynamic(this, &ThisClass::NewArchiveAdded);
+
 	if (HasAlreadyBeenArchived())
 	{
 		RemoveFromGameplay();
@@ -50,11 +53,13 @@ void ALimenArchiveItem::Interact(AController* InController, APawn* InPawn)
 	ULimenArchiveSubsystem* ArchivesManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenArchiveSubsystem>();
 	check(ArchivesManager != nullptr)
 	
+	
 	if (!ArchivePtr.IsValid())
 	{
 		ArchivePtr = NewObject<ULimenArchive>(ArchivesManager, BoundArchiveClass.LoadSynchronous());
 	}
 
+	ArchivesManager->OnArchiveAdded.RemoveDynamic(this, &ThisClass::NewArchiveAdded);
 	ArchivesManager->AddArchive(ArchivePtr.Get());
 	InteractionStopped(InController, InPawn);
 
@@ -71,5 +76,13 @@ void ALimenArchiveItem::Interact(AController* InController, APawn* InPawn)
 	{
 		InteractAnimation(InteractAnimationTime);
 		GetWorld()->GetTimerManager().SetTimer(InteractAnimationTimerHandle, this, &ALimenArchiveItem::RemoveFromGameplay, InteractAnimationTime, false);
+	}
+}
+
+void ALimenArchiveItem::NewArchiveAdded(ULimenArchive* NewArchive)
+{
+	if (BoundArchiveClass.LoadSynchronous() == NewArchive->GetClass())
+	{
+		RemoveFromGameplay();
 	}
 }
