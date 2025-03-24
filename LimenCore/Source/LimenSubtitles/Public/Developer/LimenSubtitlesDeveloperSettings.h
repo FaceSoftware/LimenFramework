@@ -21,6 +21,10 @@ class LIMENSUBTITLES_API ULimenSubtitlesDeveloperSettings : public UDeveloperSet
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, Config, meta=(ClampMin="0"))
+	float SubtitlesDelay;
+	UPROPERTY(EditAnywhere, Config, meta=(ClampMin="0"))
+	float DialogueDelay;
 	UPROPERTY(EditAnywhere, Config)
 	TSubclassOf<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass = ULimenSubtitleDisplay::StaticClass();
 	UPROPERTY(EditAnywhere, Config)
@@ -28,10 +32,10 @@ public:
 	UPROPERTY(EditAnywhere, Config)
 	TSubclassOf<UDialoguePlayerBase> DialoguePlayerClass;
 	
-	ULimenSubtitlesDeveloperSettings()
+	ULimenSubtitlesDeveloperSettings(): SubtitlesDelay(0), DialogueDelay(0)
 	{
 		CategoryName = TEXT("Game");
-		SectionName = TEXT("Limen Subtitles");	
+		SectionName = TEXT("Limen Subtitles");
 	}
 
 	virtual FName GetContainerName() const override

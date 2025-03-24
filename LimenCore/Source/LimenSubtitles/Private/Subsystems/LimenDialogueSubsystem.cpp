@@ -3,6 +3,7 @@
 
 #include "Subsystems/LimenDialogueSubsystem.h"
 
+#include "TimerManager.h"
 #include "Developer/LimenSubtitlesDeveloperSettings.h"
 #include "DialoguePlayer/DialoguePlayerBase.h"
 #include "LimenCore/Public/LogMacros/LimenLogMacros.h"
@@ -10,7 +11,7 @@
 #include "UMG/LimenSubtitleDisplay.h"
 
 
-ULimenDialogueSubsystem::ULimenDialogueSubsystem()
+ULimenDialogueSubsystem::ULimenDialogueSubsystem() : Super(), SubtitlesDelay(0), DialogueDelay(0)
 {
 }
 
@@ -23,6 +24,8 @@ void ULimenDialogueSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	SubtitleDisplayWidgetClass = Settings->SubtitleDisplayWidgetClass;
 	SubtitleWidgetClass = Settings->SubtitleWidgetClass;
 	DialoguePlayerClass = Settings->DialoguePlayerClass;
+	SubtitlesDelay = Settings->SubtitlesDelay;
+	SubtitlesDelay = Settings->DialogueDelay;
 }
 
 void ULimenDialogueSubsystem::Deinitialize()
@@ -40,7 +43,7 @@ void ULimenDialogueSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void ULimenDialogueSubsystem::AddDialogue(const UDataTable* InDialogueData)
+void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData)
 {
 	if (InDialogueData == nullptr || !InDialogueData->RowStruct->IsChildOf(FLimenDialogueCue::StaticStruct()))
 	{
@@ -53,23 +56,27 @@ void ULimenDialogueSubsystem::AddDialogue(const UDataTable* InDialogueData)
 		return;
 	}
 
-	if (SubtitleWidgetClass != nullptr)
+	if (FMath::IsNearlyZero(DialogueDelay))
 	{
-		ULimenSubtitle* TempSubtitleWidget = CreateWidget<ULimenSubtitle>(GetWorld(), SubtitleWidgetClass);
-		TempSubtitleWidget->SetSubtitleData(InDialogueData);
-
-		if (SubtitleDisplayWidget != nullptr)
-		{
-			SubtitleDisplayWidget->AddSubtitle(TempSubtitleWidget);
-		}
+		DisplayDialogue(InDialogueData);
+	}
+	else
+	{
+		const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::DisplayDialogue, InDialogueData);
+		FTimerHandle TempHandle;
+		GetWorldRef().GetTimerManager().SetTimer(TempHandle, Delegate, SubtitlesDelay, true);
 	}
 
-	if (DialoguePlayerClass.Get() != nullptr)
+	
+	if (FMath::IsNearlyZero(SubtitlesDelay))
 	{
-		const TStrongObjectPtr DialoguePlayer = TStrongObjectPtr(NewObject<UDialoguePlayerBase>(this, DialoguePlayerClass));
-		DialoguePlayer->PlayDialogue(InDialogueData);
-
-		DialoguePlayers.Push(DialoguePlayer);
+		DisplaySubtitles(InDialogueData);
+	}
+	else
+	{
+		const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::DisplaySubtitles, InDialogueData);
+		FTimerHandle TempHandle;
+		GetWorldRef().GetTimerManager().SetTimer(TempHandle, Delegate, SubtitlesDelay, true);
 	}
 }
 
@@ -97,3 +104,32 @@ void ULimenDialogueSubsystem::DialogueFinished(UDialoguePlayerBase* DialoguePlay
 		DialoguePlayers.RemoveAt(Index);
 	}
 }
+
+void ULimenDialogueSubsystem::DisplaySubtitles(const UDataTable* InDialogueData)
+{
+	if (SubtitleWidgetClass != nullptr)
+	{
+		ULimenSubtitle* TempSubtitleWidget = CreateWidget<ULimenSubtitle>(GetWorld(), SubtitleWidgetClass);
+		TempSubtitleWidget->SetSubtitleData(InDialogueData);
+
+		if (SubtitleDisplayWidget != nullptr)
+		{
+			SubtitleDisplayWidget->AddSubtitle(TempSubtitleWidget);
+		}
+	}
+}
+
+void ULimenDialogueSubsystem::DisplayDialogue(const UDataTable* InDialogueData)
+{
+	if (DialoguePlayerClass.Get() != nullptr)
+	{
+		const TStrongObjectPtr DialoguePlayer = TStrongObjectPtr(NewObject<UDialoguePlayerBase>(this, DialoguePlayerClass));
+		DialoguePlayer->SubscribeToFinishEvent(this, &ThisClass::DialogueFinished);
+		DialoguePlayer->PlayDialogue(InDialogueData);
+
+		DialoguePlayers.Push(DialoguePlayer);
+	}
+
+	LIMEN_LOG(LogLimen, Log, this, "Instanced new dialogue player. Currently there are %d active instances.", DialoguePlayers.Num())
+}
+

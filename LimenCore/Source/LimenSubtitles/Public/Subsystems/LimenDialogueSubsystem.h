@@ -14,6 +14,7 @@ struct FDataTableRowHandle;
 class ULimenSubtitle;
 class ULimenSubtitleDisplay;
 struct FLimenDialogueCue;
+
 /**
  * 
  */
@@ -29,7 +30,7 @@ public:
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable)
-	virtual void AddDialogue(const UDataTable* InDialogueData);
+	virtual void PlayDialogue(const UDataTable* InDialogueData);
 
 protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
@@ -40,10 +41,15 @@ private:
 
 	TSubclassOf<UDialoguePlayerBase> DialoguePlayerClass;
 	TArray<TStrongObjectPtr<UDialoguePlayerBase>> DialoguePlayers;
+
+	float SubtitlesDelay;
+	float DialogueDelay;
 	
 	UPROPERTY()
 	TObjectPtr<ULimenSubtitleDisplay> SubtitleDisplayWidget;
 
-	virtual void DialogueFinished(UDialoguePlayerBase* DialoguePlayer);
+	void DialogueFinished(UDialoguePlayerBase* DialoguePlayer);
 
+	void DisplaySubtitles(const UDataTable* InDialogueData);
+	void DisplayDialogue(const UDataTable* InDialogueData);
 };
