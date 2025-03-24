@@ -93,14 +93,15 @@ void ULimenSubtitle::HideCurrentSubtitle()
 {
 	HideWidget();
 	
-	if (!SubtitleRows.IsValidIndex(SubtitleIndex + 1))
+	const FLimenDialogueCue* CurrentCue = SubtitleRows[SubtitleIndex];
+
+	if (!SubtitleRows.IsValidIndex(++SubtitleIndex))
 	{
 		OnSubtitleFinish.Broadcast(this);
 		return;
 	}
 	
-	const FLimenDialogueCue* CurrentCue = SubtitleRows[SubtitleIndex];
-	const FLimenDialogueCue* NextCue = SubtitleRows[++SubtitleIndex];
+	const FLimenDialogueCue* NextCue = SubtitleRows[SubtitleIndex];
 
 	const float SecondsUntilNextCue = NextCue->StartTime - CurrentCue->EndTime;
 	if (FMath::IsNearlyZero(SecondsUntilNextCue))

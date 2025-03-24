@@ -22,15 +22,16 @@ void ULimenDialogueSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	SubtitleDisplayWidgetClass = Settings->SubtitleDisplayWidgetClass;
 	SubtitleWidgetClass = Settings->SubtitleWidgetClass;
-
-	if (Settings->DialoguePlayerClass.Get() != nullptr)
-	{
-		DialoguePlayer = TStrongObjectPtr(NewObject<UDialoguePlayerBase>(this, Settings->DialoguePlayerClass));
-	}
+	DialoguePlayerClass = Settings->DialoguePlayerClass;
 }
 
 void ULimenDialogueSubsystem::Deinitialize()
 {
+	for (auto& Player : DialoguePlayers)
+	{
+		Player.Reset();
+	}
+	
 	if (SubtitleDisplayWidget != nullptr)
 	{
 		SubtitleDisplayWidget->DestroyWidget(false);
@@ -63,9 +64,12 @@ void ULimenDialogueSubsystem::AddDialogue(const UDataTable* InDialogueData)
 		}
 	}
 
-	if (DialoguePlayer.IsValid())
+	if (DialoguePlayerClass.Get() != nullptr)
 	{
+		const TStrongObjectPtr DialoguePlayer = TStrongObjectPtr(NewObject<UDialoguePlayerBase>(this, DialoguePlayerClass));
 		DialoguePlayer->PlayDialogue(InDialogueData);
+
+		DialoguePlayers.Push(DialoguePlayer);
 	}
 }
 
@@ -78,5 +82,18 @@ void ULimenDialogueSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		SubtitleDisplayWidget = CreateWidget<ULimenSubtitleDisplay>(&InWorld, SubtitleDisplayWidgetClass.LoadSynchronous());
 		check(SubtitleDisplayWidget != nullptr)
 		SubtitleDisplayWidget->ShowWidget();
+	}
+}
+
+void ULimenDialogueSubsystem::DialogueFinished(UDialoguePlayerBase* DialoguePlayer)
+{
+	const int32 Index = DialoguePlayers.IndexOfByPredicate([&DialoguePlayer] (const TStrongObjectPtr<UDialoguePlayerBase>& Test)
+	{
+		return Test.Get() == DialoguePlayer;
+	});
+
+	if (DialoguePlayers.IsValidIndex(Index))
+	{
+		DialoguePlayers.RemoveAt(Index);
 	}
 }

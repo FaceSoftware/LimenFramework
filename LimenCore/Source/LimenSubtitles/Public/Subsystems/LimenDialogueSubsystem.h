@@ -38,9 +38,12 @@ private:
 	TSoftClassPtr<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass;
 	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass;
 
-	TStrongObjectPtr<UDialoguePlayerBase> DialoguePlayer;
+	TSubclassOf<UDialoguePlayerBase> DialoguePlayerClass;
+	TArray<TStrongObjectPtr<UDialoguePlayerBase>> DialoguePlayers;
 	
 	UPROPERTY()
 	TObjectPtr<ULimenSubtitleDisplay> SubtitleDisplayWidget;
+
+	virtual void DialogueFinished(UDialoguePlayerBase* DialoguePlayer);
 
 };

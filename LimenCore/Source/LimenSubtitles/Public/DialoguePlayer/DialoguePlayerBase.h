@@ -8,6 +8,9 @@
 
 
 class UDataTable;
+class UDialoguePlayerBase;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FDialogueEvent, UDialoguePlayerBase* /* DialoguePlayer */);
 
 /**
  * 
