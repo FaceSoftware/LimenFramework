@@ -9,6 +9,7 @@
 #include "UMG/LimenSubtitleDisplay.h"
 #include "LimenSubtitlesDeveloperSettings.generated.h"
 
+class UDialoguePlayerBase;
 class ULimenSubtitleDisplay;
 class ULimenSubtitle;
 /**
@@ -24,6 +25,8 @@ public:
 	TSubclassOf<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass = ULimenSubtitleDisplay::StaticClass();
 	UPROPERTY(EditAnywhere, Config)
 	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass = ULimenSubtitle::StaticClass();
+	UPROPERTY(EditAnywhere, Config)
+	TSubclassOf<UDialoguePlayerBase> DialoguePlayerClass;
 	
 	ULimenSubtitlesDeveloperSettings()
 	{

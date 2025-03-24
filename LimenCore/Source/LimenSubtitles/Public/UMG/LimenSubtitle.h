@@ -32,7 +32,7 @@ public:
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
-	void SubtitleCueSet(const FLimenSubtitleCue& InSubtitleCue);
+	void SubtitleCueSet(const FLimenDialogueCue& InSubtitleCue);
 	
 	TStrongObjectPtr<const UDataTable> SubtitleData;
 
@@ -41,7 +41,7 @@ private:
 	FTimerHandle NextCueTimerHandle;
 	int32 SubtitleIndex;
 
-	TArray<FLimenSubtitleCue*> SubtitleRows;
+	TArray<FLimenDialogueCue*> SubtitleRows;
 	void ShowCurrentSubtitle();
 	void HideCurrentSubtitle();
 };

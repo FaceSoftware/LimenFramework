@@ -62,12 +62,12 @@ void ULimenRayTracedShadowsSetting::SetDefaults()
 
 	{
 		TConsoleSetting<bool> EnabledSetting(Enabled);
-		EnabledSetting.AddCVar(TEXT("r.RayTracing.Shadows"), true);
+		EnabledSetting.AddCVar(TEXT("r.MegaLights.Allowed"), true);
 		SettingsDescription.Push(EnabledSetting);
 	}
 	{
 		TConsoleSetting<bool> DisabledSetting(Disabled);
-		DisabledSetting.AddCVar(TEXT("r.RayTracing.Shadows"), false);
+		DisabledSetting.AddCVar(TEXT("r.MegaLights.Allowed"), false);
 		SettingsDescription.Push(DisabledSetting);
 	}
 	

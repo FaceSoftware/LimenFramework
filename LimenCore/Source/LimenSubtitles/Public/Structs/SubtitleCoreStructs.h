@@ -7,12 +7,12 @@
 #include "SubtitleCoreStructs.generated.h"
 
 USTRUCT(BlueprintType)
-struct FLimenSubtitleCue : public FTableRowBase
+struct FLimenDialogueCue : public FTableRowBase
 {
 	GENERATED_BODY()
 
 public:
-	FLimenSubtitleCue() = default;
+	FLimenDialogueCue() = default;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float StartTime = 0.f;
@@ -23,7 +23,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FColor SpeakerTextColor = FColor::Cyan;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText SubtitleText = FText::FromString("SubtitleText");;
+	FText SubtitleText = FText::FromString("SubtitleText");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FColor SubtitleTextColor = FColor::White;
 };

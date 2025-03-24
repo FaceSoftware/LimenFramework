@@ -5,31 +5,31 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Templates/SubclassOf.h"
-#include "UObject/StrongObjectPtr.h"
-#include "LimenSubtitlesSubsystem.generated.h"
+#include "LimenDialogueSubsystem.generated.h"
 
 
+class UDialoguePlayerBase;
 class UDataTable;
 struct FDataTableRowHandle;
 class ULimenSubtitle;
 class ULimenSubtitleDisplay;
-struct FLimenSubtitleCue;
+struct FLimenDialogueCue;
 /**
  * 
  */
 UCLASS()
-class LIMENSUBTITLES_API ULimenSubtitlesSubsystem : public UWorldSubsystem
+class LIMENSUBTITLES_API ULimenDialogueSubsystem : public UWorldSubsystem
 {
 	GENERATED_BODY()
 
 public:
-	ULimenSubtitlesSubsystem();
+	ULimenDialogueSubsystem();
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable)
-	virtual void AddSubtitle(const UDataTable* InSubtitleData);
+	virtual void AddDialogue(const UDataTable* InDialogueData);
 
 protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
@@ -37,6 +37,8 @@ protected:
 private:
 	TSoftClassPtr<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass;
 	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass;
+
+	TStrongObjectPtr<UDialoguePlayerBase> DialoguePlayer;
 	
 	UPROPERTY()
 	TObjectPtr<ULimenSubtitleDisplay> SubtitleDisplayWidget;
