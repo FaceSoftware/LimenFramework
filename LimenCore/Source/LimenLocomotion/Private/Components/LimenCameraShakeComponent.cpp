@@ -86,8 +86,13 @@ void ULimenCameraShakeComponent::Deactivate()
 {
 	if (CameraShakePtr != nullptr && CameraShakePtr->IsActive())
 	{
-		CameraShakePtr->StopShake(true);
-		CameraShakePtr->TeardownShake();
+		const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+		const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
+		if (PlayerController != nullptr && PlayerController->PlayerCameraManager != nullptr)
+		{
+			PlayerController->PlayerCameraManager->StopCameraShake(CameraShakePtr.Get(), true);
+		}
+
 		CameraShakePtr->ConditionalBeginDestroy();
 		CameraShakePtr = nullptr;
 	}
