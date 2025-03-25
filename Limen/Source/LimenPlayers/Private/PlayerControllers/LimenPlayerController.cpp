@@ -235,8 +235,6 @@ void ALimenPlayerController::UnbindWidgetDelegates()
 void ALimenPlayerController::LoadingScreenVisibilityChanged(const bool bIsVisible)
 {
 	Super::LoadingScreenVisibilityChanged(bIsVisible);
-
-	SetGameInput();
 }
 
 void ALimenPlayerController::GameMenuVisibilityChanged(const bool bIsVisible)
