@@ -79,6 +79,9 @@ void ULimenCameraShakeComponent::Activate(bool bReset)
 		}
 	}
 
+	// Force an update
+	CachedSpeed = -1.f;
+
 	Super::Activate(bReset);
 }
 
