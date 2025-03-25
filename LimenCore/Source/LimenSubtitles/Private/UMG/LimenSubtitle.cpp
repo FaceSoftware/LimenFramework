@@ -51,7 +51,7 @@ void ULimenSubtitle::StartDisplayingSubtitles()
 	
 	SubtitleIndex = 0;
 	
-	if (const FLimenSubtitleCue* CurrentCue = SubtitleRows[SubtitleIndex]; !FMath::IsNearlyZero(CurrentCue->StartTime))
+	if (const FLimenDialogueCue* CurrentCue = SubtitleRows[SubtitleIndex]; !FMath::IsNearlyZero(CurrentCue->StartTime))
 	{		
 		FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 		TimerManager.SetTimer(CurrentCueTimerHandle, this, &ThisClass::ShowCurrentSubtitle, CurrentCue->StartTime, false);
@@ -64,7 +64,7 @@ void ULimenSubtitle::StartDisplayingSubtitles()
 
 void ULimenSubtitle::ShowCurrentSubtitle()
 {
-	const FLimenSubtitleCue* CurrentCue = SubtitleRows[SubtitleIndex];
+	const FLimenDialogueCue* CurrentCue = SubtitleRows[SubtitleIndex];
 	if (CurrentCue == nullptr)
 	{
 		const FName RowName = SubtitleData->GetRowNames()[SubtitleIndex];
@@ -93,14 +93,15 @@ void ULimenSubtitle::HideCurrentSubtitle()
 {
 	HideWidget();
 	
-	if (!SubtitleRows.IsValidIndex(SubtitleIndex + 1))
+	const FLimenDialogueCue* CurrentCue = SubtitleRows[SubtitleIndex];
+
+	if (!SubtitleRows.IsValidIndex(++SubtitleIndex))
 	{
 		OnSubtitleFinish.Broadcast(this);
 		return;
 	}
 	
-	const FLimenSubtitleCue* CurrentCue = SubtitleRows[SubtitleIndex];
-	const FLimenSubtitleCue* NextCue = SubtitleRows[++SubtitleIndex];
+	const FLimenDialogueCue* NextCue = SubtitleRows[SubtitleIndex];
 
 	const float SecondsUntilNextCue = NextCue->StartTime - CurrentCue->EndTime;
 	if (FMath::IsNearlyZero(SecondsUntilNextCue))
