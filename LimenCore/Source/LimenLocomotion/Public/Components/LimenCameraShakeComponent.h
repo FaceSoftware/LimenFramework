@@ -50,4 +50,5 @@ private:
 	TWeakObjectPtr<UPawnMovementComponent> MovementComponent;
 
 	const FVector* VelocityPtr;
+	float CachedSpeed;
 };
