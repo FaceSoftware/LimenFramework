@@ -47,6 +47,12 @@ ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer&
 void ALimenPlayerControllerBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>(); LevelTransitionHandler != nullptr)
+	{
+		LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::LoadingScreenVisibilityChanged);
+		LoadingScreenVisibilityChanged(LevelTransitionHandler->IsLoadingScreenActive());
+	}
 	
 	MouseInputSensitivityComponent->OnSensitivityUpdated.AddUniqueDynamic(this, &ThisClass::SensitivityUpdated);
 	SensitivityUpdated(MouseInputSensitivityComponent.Get());
@@ -61,10 +67,6 @@ void ALimenPlayerControllerBase::BeginPlay()
 void ALimenPlayerControllerBase::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-
-	ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>();
-	LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::LoadingScreenVisibilityChanged);
-	LoadingScreenVisibilityChanged(LevelTransitionHandler->IsLoadingScreenActive());
 }
 
 void ALimenPlayerControllerBase::OnPossess(APawn* InPawn)
