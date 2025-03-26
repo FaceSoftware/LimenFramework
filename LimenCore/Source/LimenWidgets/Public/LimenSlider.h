@@ -47,7 +47,7 @@ public:
 	
 	ULimenSlider();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintCallable)
 	float GetValue() const;
 	UFUNCTION(BlueprintCallable)
 	void SetValue(const float NewValue);
@@ -55,7 +55,11 @@ public:
 	void SetMaxValue(const float NewMax);
 	UFUNCTION(BlueprintCallable)
 	void SetMinValue(const float NewMin);
-	
+	UFUNCTION(BlueprintCallable)
+	void SetDecimalDigitsCount(const int32 NewDecimalDigits);
+	UFUNCTION(BlueprintCallable)
+	int32 GetDecimalDigitsCount() const;
+
 protected:
 	UPROPERTY(EditAnywhere)
 	ELimenSliderInputMethod SliderInputMethod;
@@ -69,7 +73,9 @@ protected:
 	float SliderMaxValue;
 	
 	UPROPERTY(EditAnywhere)
-	FSlateBrush Background;
+	FSlateBrush BackgroundBrush;
+	UPROPERTY(EditAnywhere)
+	FSlateBrush BackgroundHoveredBrush;
 
 	UPROPERTY(EditAnywhere)
 	FSlateBrush BorderBrush;
@@ -112,50 +118,26 @@ private:
 	TSharedPtr<SMouseDetector> InputDetector;
 	TSharedPtr<SImage> SliderImage;
 	TSharedPtr<SEditableText> NumberText;
+	TSharedPtr<SImage> SliderBackground;
 	TSharedPtr<SPanel> Root;
 
 	float CurrentSliderValue;
 	bool bIsDragging;
+	bool bIsHovering;
 	FVector2D LastMousePosition;
 
 	EMouseCursor::Type PreviousMouseCursor;
 	bool bShouldRevertCursorIcon;
 
+	FDelegateHandle WorldTickDelegate;
+	bool bBroadcastValueSetDelegate;
+	ELimenSliderInput LastInputType;
+	
+
 	bool ValidateTextInput(const FString& InputText) const;
 	FText GetValueAsText() const;
 	void UpdateSliderPositionWithDelta(const FGeometry& MyGeometry, const float DeltaX);
 	void UpdateSliderPositionWithCursorPosition(const FGeometry& MyGeometry, const float LocalMouseX);
-
 	void SetValueInternal(const ELimenSliderInput InputType, const float Value, const bool bShouldBroadcast);
-
-	class FDefaultBackgroundBrush final : public FSlateBrush
-	{
-	public:
-		FDefaultBackgroundBrush() : FSlateBrush(ESlateBrushDrawType::Type::Image, TEXT(""),
-												FMargin(),
-												ESlateBrushTileType::Type::NoTile,
-												ESlateBrushImageType::Type::FullColor,
-												FVector2D(0.f, 0.f),
-												FLinearColor::Transparent, nullptr,
-												false)
-		{
-		}
-	};
-	
-	class FDefaultBorderBrush final : public FSlateBrush
-	{
-	public:
-		FDefaultBorderBrush() : FSlateBrush(ESlateBrushDrawType::Type::RoundedBox, TEXT(""),
-											FMargin(),
-												ESlateBrushTileType::Type::NoTile,
-											ESlateBrushImageType::Type::FullColor,
-											FVector2D(0.f, 0.f),
-											FLinearColor::Transparent, nullptr,
-											false)
-		{
-			OutlineSettings.Color = FLinearColor::White;
-			OutlineSettings.Width = 1.f;
-			OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
-		}
-	};
+	void WorldTick(UWorld* WorldPtr, const ELevelTick LevelTick, const float DeltaTime);
 };

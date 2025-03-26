@@ -12,7 +12,7 @@ ULimenVolumeLevelSetting::ULimenVolumeLevelSetting()
 	DevelopmentName = FName(TEXT("setting_"));
 	DisplayName = FText();
 	Category = FText();
-	MinValuePerChange = .1f;
+	DecimalsDisplayed = 2;
 }
 
 void ULimenVolumeLevelSetting::ApplyCurrentSetting(const bool bUserRequest)

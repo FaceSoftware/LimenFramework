@@ -19,6 +19,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetMinValuePerChange() const;
+	UFUNCTION(BlueprintCallable)
+	int32 GetDecimalCount() const;
 
 	/// Readable Interface
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
@@ -49,8 +51,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float DefaultSettingValue;
 
-	UPROPERTY(EditAnywhere)
-	float MinValuePerChange;
+	UPROPERTY(EditAnywhere, meta=(ClampMin="0"))
+	int32 DecimalsDisplayed;
 	
 private:	
 	float CurrentSettingValue;
@@ -60,4 +62,6 @@ private:
 	// A float doesn't override its value after loading if it's 0, don't know why...
 	UPROPERTY(SaveGame)
 	FString StringValue;
+
+	float MinValuePerChange;
 };

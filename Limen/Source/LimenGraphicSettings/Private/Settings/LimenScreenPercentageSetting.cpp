@@ -10,7 +10,7 @@ ULimenScreenPercentageSetting::ULimenScreenPercentageSetting()
 	Category = FText::FromString(TEXT("Display"));
 	DisplayName = FText::FromString(TEXT("Screen Percentage"));
 	Description = FText::FromString(TEXT(""));
-	MinValuePerChange = 5.f;
+	DecimalsDisplayed = 0;
 }
 
 void ULimenScreenPercentageSetting::ApplyCurrentSetting(const bool bUserRequest)

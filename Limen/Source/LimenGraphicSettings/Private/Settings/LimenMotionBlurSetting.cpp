@@ -14,7 +14,7 @@ ULimenMotionBlurSetting::ULimenMotionBlurSetting()
 	Category = FText::FromString(TEXT("Post Process FX"));
 	DisplayName = FText::FromString(TEXT("Motion Blur"));
 	Description = FText::FromString(TEXT("Blurs objects on screen when they move too fast."));
-	MinValuePerChange = .1f;
+	DecimalsDisplayed = 2;
 }
 
 void ULimenMotionBlurSetting::ApplyCurrentSetting(bool bUserRequest)

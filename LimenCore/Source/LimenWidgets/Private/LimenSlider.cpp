@@ -3,6 +3,7 @@
 
 #include "LimenSlider.h"
 
+#include "TimerManager.h"
 #include "Components/HorizontalBox.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
@@ -18,14 +19,38 @@
 
 ULimenSlider::ULimenSlider() : Super(), SliderInputMethod(ELimenSliderInputMethod::MousePosition),
 							   InitialSliderValue(0.f), DecimalDigits(1), SliderMinValue(0), SliderMaxValue(1),
-							   Background(static_cast<FSlateBrush>(FDefaultBackgroundBrush())),
-							   BorderBrush(static_cast<FSlateBrush>(FDefaultBorderBrush())), SliderPadding(4.f),
-							   bUseValueText(true), TextColor(FColor::White), InvalidTextColor(FColor::Yellow),
-							   NumberTextJustification(ETextJustify::Type::Center), NumberBoxWidth(100.f),
-							   CurrentSliderValue(InitialSliderValue), bIsDragging(false), LastMousePosition(),
-							   PreviousMouseCursor(), bShouldRevertCursorIcon(false)
+							   SliderPadding(FMargin(4.f)), bUseValueText(true), TextColor(FColor::White),
+							   InvalidTextColor(FColor::Yellow), NumberTextJustification(ETextJustify::Type::Center),
+							   NumberBoxWidth(100.f), CurrentSliderValue(InitialSliderValue), bIsDragging(false),
+							   bIsHovering(false), LastMousePosition(), PreviousMouseCursor(),
+							   bShouldRevertCursorIcon(false), bBroadcastValueSetDelegate(false),
+							   LastInputType(ELimenSliderInput::Undefined)
 {
 	InitialSliderValue = SliderMinValue;
+
+	BackgroundBrush.DrawAs = ESlateBrushDrawType::Type::Image;
+	BackgroundBrush.Margin = FMargin();
+	BackgroundBrush.Tiling = ESlateBrushTileType::Type::NoTile;
+	BackgroundBrush.ImageType = ESlateBrushImageType::Type::FullColor;
+	BackgroundBrush.ImageSize = FVector2D(0.f, 0.f);
+	BackgroundBrush.TintColor = FSlateColor(FLinearColor::Transparent);
+
+	BackgroundHoveredBrush.DrawAs = ESlateBrushDrawType::Type::Image;
+	BackgroundHoveredBrush.Margin = FMargin();
+	BackgroundHoveredBrush.Tiling = ESlateBrushTileType::Type::NoTile;
+	BackgroundHoveredBrush.ImageType = ESlateBrushImageType::Type::FullColor;
+	BackgroundHoveredBrush.ImageSize = FVector2D(0.f, 0.f);
+	BackgroundHoveredBrush.TintColor = FLinearColor(1.f, 1.f, 1.f, .3f);
+
+	BorderBrush.DrawAs = ESlateBrushDrawType::Type::RoundedBox;
+	BorderBrush.Margin = FMargin();
+	BorderBrush.Tiling = ESlateBrushTileType::Type::NoTile;
+	BorderBrush.ImageType = ESlateBrushImageType::Type::FullColor;
+	BorderBrush.ImageSize = FVector2D(0.f, 0.f);
+	BorderBrush.TintColor = FLinearColor::Transparent;
+	BorderBrush.OutlineSettings.Color = FLinearColor::White;
+	BorderBrush.OutlineSettings.Width = 1.f;
+	BorderBrush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
 }
 
 float ULimenSlider::GetValue() const
@@ -50,6 +75,17 @@ void ULimenSlider::SetMinValue(const float NewMin)
 	SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
 }
 
+void ULimenSlider::SetDecimalDigitsCount(const int32 NewDecimalDigits)
+{
+	DecimalDigits = NewDecimalDigits;
+	SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
+}
+
+int32 ULimenSlider::GetDecimalDigitsCount() const
+{
+	return DecimalDigits;
+}
+
 TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 {
 	// return Super::RebuildWidget();
@@ -63,6 +99,10 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 	
 	SliderImage = SNew(SImage)
 		.Image(&SliderBrush);
+
+	SliderBackground = SNew(SImage)
+		.Image(&BackgroundHoveredBrush)
+		.ColorAndOpacity(FSlateColor(FColor::Transparent));
 
 	const TSharedRef<SHorizontalBox> HorizontalBox = SNew(SHorizontalBox)
 	+SHorizontalBox::Slot()
@@ -80,7 +120,14 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 			+SOverlay::Slot()
 			.HAlign(HAlign_Fill)
 			.VAlign(VAlign_Fill)
+			.Padding(0.f)
+			[
+				SliderBackground.ToSharedRef()
+			]
+			+SOverlay::Slot()
 			.Padding(SliderPadding)
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Fill)
 			[					
 				SliderImage.ToSharedRef()
 			]
@@ -111,24 +158,25 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 		[
 			SNew(SBox)
 			.WidthOverride(NumberBoxWidth)
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Fill)
 			[
 				NumberText.ToSharedRef()
 			]
 		];
 	}
-	
+
 	Root = SNew(SOverlay)
 		+SOverlay::Slot() // Background
 		[
-			SNew(SImage)
-			.Image(&Background)
+			SNew(SImage).Image(&BackgroundBrush)
 		]
 		+SOverlay::Slot() // Slider
 		[
 			HorizontalBox
 		];
 
-	
+	SetValueInternal(ELimenSliderInput::Undefined, InitialSliderValue, false);
 
 	return Root.ToSharedRef();
 }
@@ -138,6 +186,7 @@ void ULimenSlider::ReleaseSlateResources(const bool bReleaseChildren)
 	InputDetector.Reset();
 	SliderImage.Reset();
 	NumberText.Reset();
+	SliderBackground.Reset();
 	Root.Reset();
 
 	Super::ReleaseSlateResources(bReleaseChildren);
@@ -145,14 +194,18 @@ void ULimenSlider::ReleaseSlateResources(const bool bReleaseChildren)
 
 void ULimenSlider::OnHover(const FGeometry& InGeometry, const FPointerEvent& Event)
 {
+	bIsHovering = true;
 	PreviousMouseCursor = GetCursor();
 	bShouldRevertCursorIcon = false;
 	SetCursor(EMouseCursor::ResizeLeftRight);
+	SliderBackground->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 }
 
 void ULimenSlider::OnUnHover(const FPointerEvent& Event)
 {
+	bIsHovering = false;
 	bShouldRevertCursorIcon = true;
+	if (!bIsDragging) SliderBackground->SetColorAndOpacity(FSlateColor(FLinearColor::Transparent));
 }
 
 FReply ULimenSlider::OnPressed(const FGeometry& InGeometry, const FPointerEvent& Event)
@@ -160,6 +213,11 @@ FReply ULimenSlider::OnPressed(const FGeometry& InGeometry, const FPointerEvent&
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		bIsDragging = true;
+
+		if (!WorldTickDelegate.IsValid())
+		{
+			WorldTickDelegate = FWorldDelegates::OnWorldTickEnd.AddUObject(this, &ThisClass::WorldTick);
+		}
 
 		switch (SliderInputMethod)
 		{
@@ -186,7 +244,13 @@ FReply ULimenSlider::OnReleased(const FGeometry& InGeometry, const FPointerEvent
 	if (bIsDragging && Event.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		bIsDragging = false;
+
+		if (!bIsHovering) SliderBackground->SetColorAndOpacity(FSlateColor(FLinearColor::Transparent));
 		if (bShouldRevertCursorIcon) SetCursor(PreviousMouseCursor);
+
+		verify(FWorldDelegates::OnWorldTickEnd.Remove(WorldTickDelegate));
+		WorldTickDelegate.Reset();
+
 		return FReply::Handled().ReleaseMouseCapture();
 	}
 
@@ -201,8 +265,8 @@ FReply ULimenSlider::OnMoved(const FGeometry& InGeometry, const FPointerEvent& E
 		{
 		case ELimenSliderInputMethod::Drag:
 			{
-				UpdateSliderPositionWithDelta(InGeometry, (Event.GetScreenSpacePosition() - LastMousePosition).X);
 				LastMousePosition = Event.GetScreenSpacePosition();
+				UpdateSliderPositionWithDelta(InGeometry, (Event.GetScreenSpacePosition() - LastMousePosition).X);
 			}
 			break;
 
@@ -334,6 +398,16 @@ void ULimenSlider::SetValueInternal(const ELimenSliderInput InputType, const flo
 	if (bShouldBroadcast)
 	{
 		check(InputType != ELimenSliderInput::Undefined)
-		OnNewValueSet.Broadcast(InputType, Value);
+		LastInputType = InputType;
+		bBroadcastValueSetDelegate = true;
+	}
+}
+
+void ULimenSlider::WorldTick(UWorld* WorldPtr, const ELevelTick LevelTick, const float DeltaTime)
+{
+	if (bBroadcastValueSetDelegate)
+	{
+		bBroadcastValueSetDelegate = false;
+		OnNewValueSet.Broadcast(LastInputType, GetValue());
 	}
 }
