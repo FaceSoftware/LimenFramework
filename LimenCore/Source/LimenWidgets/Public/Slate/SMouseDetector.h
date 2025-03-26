@@ -23,6 +23,8 @@ public:
 		SLATE_EVENT( FPointerEventHandler, OnMouseButtonUp )
 		SLATE_EVENT( FPointerEventHandler, OnMouseMove )
 		SLATE_EVENT( FPointerEventHandler, OnMouseDoubleClick )
+		SLATE_EVENT( FNoReplyPointerEventHandler, OnMouseHover )
+		SLATE_EVENT( FSimpleNoReplyPointerEventHandler, OnMouseUnHover )
 
 	SLATE_END_ARGS()
 

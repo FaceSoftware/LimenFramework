@@ -16,50 +16,38 @@
 #include "Widgets/Layout/SBox.h"
 
 
-ULimenSlider::ULimenSlider() : Super(), DecimalDigits(1), SliderMinValue(0), SliderMaxValue(1),
-							   NumberTextJustification(ETextJustify::Type::Center), NumberBoxWidth(0),
-							   CurrentSliderValue(0),
-							   bIsDragging(false), LastMousePosition(), TextColor(FColor::White), InvalidTextColor(FColor::Red)
+ULimenSlider::ULimenSlider() : Super(), SliderInputMethod(ELimenSliderInputMethod::MousePosition),
+							   InitialSliderValue(0.f), DecimalDigits(1), SliderMinValue(0), SliderMaxValue(1),
+							   Background(static_cast<FSlateBrush>(FDefaultBackgroundBrush())),
+							   BorderBrush(static_cast<FSlateBrush>(FDefaultBorderBrush())), SliderPadding(4.f),
+							   bUseValueText(true), TextColor(FColor::White), InvalidTextColor(FColor::Yellow),
+							   NumberTextJustification(ETextJustify::Type::Center), NumberBoxWidth(100.f),
+							   CurrentSliderValue(InitialSliderValue), bIsDragging(false), LastMousePosition(),
+							   PreviousMouseCursor(), bShouldRevertCursorIcon(false)
 {
+	InitialSliderValue = SliderMinValue;
 }
 
-float ULimenSlider::GetValue()
+float ULimenSlider::GetValue() const
 {
 	return CurrentSliderValue;
 }
 
 void ULimenSlider::SetValue(const float NewValue)
 {
-	// Clamp the value within the allowed range
-	CurrentSliderValue = FMath::Clamp(NewValue, SliderMinValue, SliderMaxValue);
-
-	// Update the UI elements if they exist
-	if (SliderImage.IsValid())
-	{
-		// Calculate the fill percentage
-		const float FillPercent = (CurrentSliderValue - SliderMinValue) / (SliderMaxValue - SliderMinValue);
-		
-		// Scale the image horizontally (fill effect)
-		SliderImage->SetRenderTransform(FSlateRenderTransform(FScale2D(FillPercent, 1.0f)));
-
-	}
-
-	if (NumberText.IsValid())
-	{
-		NumberText->SetText(GetValueAsText());
-	}
+	SetValueInternal(ELimenSliderInput::Undefined, NewValue, false);
 }
 
 void ULimenSlider::SetMaxValue(const float NewMax)
 {
 	SliderMaxValue = FMath::Max(NewMax, SliderMinValue);
-	SetValue(CurrentSliderValue);
+	SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
 }
 
 void ULimenSlider::SetMinValue(const float NewMin)
 {
 	SliderMinValue = FMath::Min(NewMin, SliderMaxValue);
-	SetValue(CurrentSliderValue);
+	SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
 }
 
 TSharedRef<SWidget> ULimenSlider::RebuildWidget()
@@ -69,18 +57,65 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 	InputDetector = SNew(SMouseDetector)
 		.OnMouseButtonDown(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnPressed))
 		.OnMouseButtonUp(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnReleased))
-		.OnMouseMove(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnMoved));
+		.OnMouseMove(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnMoved))
+		.OnMouseHover(BIND_UOBJECT_DELEGATE(FNoReplyPointerEventHandler, OnHover))
+		.OnMouseUnHover(BIND_UOBJECT_DELEGATE(FSimpleNoReplyPointerEventHandler, OnUnHover));
 	
 	SliderImage = SNew(SImage)
 		.Image(&SliderBrush);
 
-	NumberText = SNew(SEditableText)
-		.Font(NumberTextFont)
-		.Justification(NumberTextJustification)
-		.Text(GetValueAsText())
-		.ColorAndOpacity(FSlateColor(FColor::White))
-		.OnTextChanged(BIND_UOBJECT_DELEGATE(FOnTextChanged, TextValueChanged))
-		.OnTextCommitted(BIND_UOBJECT_DELEGATE(FOnTextCommitted, TextValueCommited));
+	const TSharedRef<SHorizontalBox> HorizontalBox = SNew(SHorizontalBox)
+	+SHorizontalBox::Slot()
+	.SizeParam(FStretch())
+	.HAlign(HAlign_Fill)
+	.VAlign(VAlign_Fill)
+	[
+		SNew(SBorder)
+		.Padding(BorderPadding)
+		.BorderImage(&BorderBrush)
+		.HAlign(HAlign_Fill)
+		.VAlign(VAlign_Fill)
+		[
+			SNew(SOverlay)
+			+SOverlay::Slot()
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Fill)
+			.Padding(SliderPadding)
+			[					
+				SliderImage.ToSharedRef()
+			]
+			+SOverlay::Slot()
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Fill)
+			[
+				InputDetector.ToSharedRef()
+			]
+		]
+	];
+
+	if (bUseValueText)
+	{
+		NumberText = SNew(SEditableText)
+			.Font(NumberTextFont)
+			.Justification(NumberTextJustification)
+			.Text(GetValueAsText())
+			.ColorAndOpacity(FSlateColor(FColor::White))
+			.OnTextChanged(BIND_UOBJECT_DELEGATE(FOnTextChanged, TextValueChanged))
+			.OnTextCommitted(BIND_UOBJECT_DELEGATE(FOnTextCommitted, TextValueCommited));
+
+		HorizontalBox->AddSlot()
+		.Padding(NumberTextMargin)
+		.SizeParam(FAuto())
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SBox)
+			.WidthOverride(NumberBoxWidth)
+			[
+				NumberText.ToSharedRef()
+			]
+		];
+	}
 	
 	Root = SNew(SOverlay)
 		+SOverlay::Slot() // Background
@@ -90,47 +125,10 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 		]
 		+SOverlay::Slot() // Slider
 		[
-			SNew(SHorizontalBox)
-			+SHorizontalBox::Slot()
-			.SizeParam(FStretch())
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-			[
-				SNew(SBorder)
-				.Padding(BorderPadding)
-				.BorderImage(&BorderBrush)
-				.HAlign(HAlign_Fill)
-				.VAlign(VAlign_Fill)
-				[
-					SNew(SOverlay)
-					+SOverlay::Slot()
-					.HAlign(HAlign_Fill)
-					.VAlign(VAlign_Fill)
-					.Padding(SliderPadding)
-					[					
-						SliderImage.ToSharedRef()
-					]
-					+SOverlay::Slot()
-					.HAlign(HAlign_Fill)
-					.VAlign(VAlign_Fill)
-					[
-						InputDetector.ToSharedRef()
-					]
-				]
-			]
-			+SHorizontalBox::Slot()
-			.Padding(NumberTextMargin)
-			.SizeParam(FAuto())
-			.HAlign(HAlign_Center)
-			.VAlign(VAlign_Center)
-			[
-				SNew(SBox)
-				.WidthOverride(NumberBoxWidth)
-				[
-					NumberText.ToSharedRef()
-				]
-			]
+			HorizontalBox
 		];
+
+	
 
 	return Root.ToSharedRef();
 }
@@ -145,12 +143,38 @@ void ULimenSlider::ReleaseSlateResources(const bool bReleaseChildren)
 	Super::ReleaseSlateResources(bReleaseChildren);
 }
 
+void ULimenSlider::OnHover(const FGeometry& InGeometry, const FPointerEvent& Event)
+{
+	PreviousMouseCursor = GetCursor();
+	bShouldRevertCursorIcon = false;
+	SetCursor(EMouseCursor::ResizeLeftRight);
+}
+
+void ULimenSlider::OnUnHover(const FPointerEvent& Event)
+{
+	bShouldRevertCursorIcon = true;
+}
+
 FReply ULimenSlider::OnPressed(const FGeometry& InGeometry, const FPointerEvent& Event)
 {
 	if (Event.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		bIsDragging = true;
-		LastMousePosition = Event.GetScreenSpacePosition();
+
+		switch (SliderInputMethod)
+		{
+		case ELimenSliderInputMethod::MousePosition:
+			{
+				const FVector2D& MouseScreenPosition = Event.GetScreenSpacePosition();
+				const float LocalMouseX = InGeometry.AbsoluteToLocal(MouseScreenPosition).X;
+				UpdateSliderPositionWithCursorPosition(InGeometry, LocalMouseX);
+			}
+			break;
+
+		default:
+			break;
+		}
+		
 		return FReply::Handled().CaptureMouse(InputDetector.ToSharedRef());
 	}
 
@@ -162,6 +186,7 @@ FReply ULimenSlider::OnReleased(const FGeometry& InGeometry, const FPointerEvent
 	if (bIsDragging && Event.GetEffectingButton() == EKeys::LeftMouseButton)
 	{
 		bIsDragging = false;
+		if (bShouldRevertCursorIcon) SetCursor(PreviousMouseCursor);
 		return FReply::Handled().ReleaseMouseCapture();
 	}
 
@@ -172,15 +197,23 @@ FReply ULimenSlider::OnMoved(const FGeometry& InGeometry, const FPointerEvent& E
 {
 	if (bIsDragging)
 	{
-		// Calculate the delta (how much the mouse has moved since the last frame)
-		const FVector2D MouseDelta = Event.GetScreenSpacePosition() - LastMousePosition;
-		
-		// Update the slider value based on the delta
-		// You might want to scale the movement for more precision
-		UpdateSliderPosition(InGeometry, MouseDelta.X);
+		switch (SliderInputMethod)
+		{
+		case ELimenSliderInputMethod::Drag:
+			{
+				UpdateSliderPositionWithDelta(InGeometry, (Event.GetScreenSpacePosition() - LastMousePosition).X);
+				LastMousePosition = Event.GetScreenSpacePosition();
+			}
+			break;
 
-		// Update the last mouse position to the current one
-		LastMousePosition = Event.GetScreenSpacePosition();
+		case ELimenSliderInputMethod::MousePosition:
+			{
+				const FVector2D& MouseScreenPosition = Event.GetScreenSpacePosition();
+				const float LocalMouseX = InGeometry.AbsoluteToLocal(MouseScreenPosition).X;
+				UpdateSliderPositionWithCursorPosition(InGeometry, LocalMouseX);
+			}
+			break;
+		}
 
 		return FReply::Handled();
 	}
@@ -190,13 +223,21 @@ FReply ULimenSlider::OnMoved(const FGeometry& InGeometry, const FPointerEvent& E
 
 void ULimenSlider::TextValueChanged(const FText& InText)
 {
-	if (InText.IsEmpty())
+	FString InputString = InText.ToString();
+	if (InputString.IsEmpty())
 	{
 		NumberText->SetColorAndOpacity(TextColor);
+		return;
+	}
+	
+	if (InputString.IsNumeric())
+	{
+		NumberText->SetColorAndOpacity(ValidateTextInput(InputString) ? TextColor : InvalidTextColor);
 	}
 	else
 	{
-		NumberText->SetColorAndOpacity(ValidateTextInput(InText.ToString()) ? TextColor : InvalidTextColor);
+		InputString.RemoveAt(InputString.Len() - 1);
+		NumberText->SetText(FText::FromString(InputString));
 	}
 }
 
@@ -204,19 +245,19 @@ void ULimenSlider::TextValueCommited(const FText& InText, const ETextCommit::Typ
 {
 	if (!InText.IsNumeric())
 	{
-		SetValue(CurrentSliderValue);
+		SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
 		return;
 	}
 
 	const FString NewValueString = InText.ToString();
-	if (ValidateTextInput(NewValueString))
+	if (!ValidateTextInput(NewValueString))
 	{
-		SetValue(CurrentSliderValue);
+		SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
 		return;
 	}
 	
 	const float NewValue = FCString::Atof(*NewValueString);
-	SetValue(FMath::Clamp(NewValue, SliderMinValue, SliderMaxValue));
+	SetValueInternal(ELimenSliderInput::Typed, FMath::Clamp(NewValue, SliderMinValue, SliderMaxValue), true);
 }
 
 bool ULimenSlider::ValidateTextInput(const FString& InputText) const
@@ -251,15 +292,48 @@ FText ULimenSlider::GetValueAsText() const
 	return FText::FromString(Result);
 }
 
-void ULimenSlider::UpdateSliderPosition(const FGeometry& MyGeometry, const float DeltaX)
+void ULimenSlider::UpdateSliderPositionWithDelta(const FGeometry& MyGeometry, const float DeltaX)
 {
 	const float SliderWidth = MyGeometry.GetLocalSize().X;
-	if (SliderWidth <= 0.f) return; // Prevent division by zero
+	if (FMath::IsNearlyZero(SliderWidth)) return; // Prevent division by zero
 
 	const float SliderDelta = DeltaX / SliderWidth;
 	const float NewValue = FMath::Clamp(CurrentSliderValue + SliderDelta * (SliderMaxValue - SliderMinValue),
 										SliderMinValue,
 										SliderMaxValue);
 
-	SetValue(NewValue);
+	SetValueInternal(ELimenSliderInput::MouseDrag, NewValue, true);
+}
+
+void ULimenSlider::UpdateSliderPositionWithCursorPosition(const FGeometry& MyGeometry, const float LocalMouseX)
+{
+	const float SliderWidth = MyGeometry.GetLocalSize().X;
+	if (SliderWidth <= 0.f) return; // Prevent division by zero
+
+	const float NormalizedValue = FMath::Clamp(LocalMouseX / SliderWidth, 0.0f, 1.0f);
+
+	const float NewValue = FMath::Lerp(SliderMinValue, SliderMaxValue, NormalizedValue);
+	SetValueInternal(ELimenSliderInput::MouseDrag, NewValue, true);
+}
+
+void ULimenSlider::SetValueInternal(const ELimenSliderInput InputType, const float Value, const bool bShouldBroadcast)
+{
+	CurrentSliderValue = FMath::Clamp(Value, SliderMinValue, SliderMaxValue);
+
+	if (SliderImage.IsValid())
+	{
+		const float FillPercent = (CurrentSliderValue - SliderMinValue) / (SliderMaxValue - SliderMinValue);
+		SliderImage->SetRenderTransform(FSlateRenderTransform(FScale2D(FillPercent, 1.0f)));
+	}
+
+	if (NumberText.IsValid())
+	{
+		NumberText->SetText(GetValueAsText());
+	}
+
+	if (bShouldBroadcast)
+	{
+		check(InputType != ELimenSliderInput::Undefined)
+		OnNewValueSet.Broadcast(InputType, Value);
+	}
 }

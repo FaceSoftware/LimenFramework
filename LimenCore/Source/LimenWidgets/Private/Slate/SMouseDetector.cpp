@@ -28,6 +28,16 @@ void SMouseDetector::Construct(const FArguments& InArgs)
 		SetOnMouseDoubleClick(InArgs._OnMouseDoubleClick);
 	}
 
+	if (InArgs._OnMouseHover.IsBound())
+	{
+		SetOnMouseEnter(InArgs._OnMouseHover);
+	}
+
+	if (InArgs._OnMouseUnHover.IsBound())
+	{
+		SetOnMouseLeave(InArgs._OnMouseUnHover);
+	}
+
 	ChildSlot
 	.HAlign(EHorizontalAlignment::HAlign_Fill)
 	.VAlign(EVerticalAlignment::VAlign_Fill)
