@@ -15,7 +15,7 @@ ULimenSensitivitySetting::ULimenSensitivitySetting()
 	Category = FText::FromString(TEXT("Mouse"));
 	DisplayName = FText::FromString(TEXT("Mouse Sensitivity"));
 	Description = FText::FromString(TEXT("Multiplier for the mouse movement."));
-	MinValuePerChange = .1f;
+	DecimalsDisplayed = 1;
 }
 
 void ULimenSensitivitySetting::SetDefaults()

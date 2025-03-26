@@ -6,16 +6,22 @@
 #include "BlueprintLibraries/LimenCoreStatics.h"
 
 
-ULimenValueSetting::ULimenValueSetting(): DefaultSettingValue(0),
-										  MinValuePerChange(1.f),
-										  CurrentSettingValue(0),
-										  PreviousSettingValue(0)
+ULimenValueSetting::ULimenValueSetting() : DefaultSettingValue(0),
+										   DecimalsDisplayed(0),
+										   CurrentSettingValue(0),
+										   PreviousSettingValue(0),
+										   MinValuePerChange(1.f)
 {
 }
 
 float ULimenValueSetting::GetMinValuePerChange() const
 {
 	return MinValuePerChange;
+}
+
+int32 ULimenValueSetting::GetDecimalCount() const
+{
+	return DecimalsDisplayed;
 }
 
 const TArray<float>& ULimenValueSetting::GetSettingValues() const
@@ -64,6 +70,7 @@ void ULimenValueSetting::SetDefaults()
 	Super::SetDefaults();
 	
 	PreviousSettingValue = CurrentSettingValue;
+	MinValuePerChange = FMath::Pow(10.f, -DecimalsDisplayed);
 }
 
 void ULimenValueSetting::SetDefaultValue()
