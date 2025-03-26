@@ -11,7 +11,7 @@
 
 
 ULimenCameraShakeComponent::ULimenCameraShakeComponent(const FObjectInitializer& ObjectInitializer) :
-	Super(ObjectInitializer), VelocityPtr(nullptr)
+	Super(ObjectInitializer), VelocityPtr(nullptr), CachedSpeed(0)
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickInterval = 1 / 64;
@@ -31,7 +31,7 @@ void ULimenCameraShakeComponent::BeginPlay()
 	MovementComponent = GetOwner()->GetComponentByClass<UPawnMovementComponent>();
 	VelocityPtr = &MovementComponent->Velocity;
 
-	if (IsActive()) Activate(true);
+	IsActive() ? Activate(true) : Deactivate();
 }
 
 void ULimenCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -39,9 +39,9 @@ void ULimenCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickT
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (const float CurrentSpeed = GetSpeed(); !FMath::IsNaN(CurrentSpeed) && CameraShakePtr != nullptr)
+	if (const float CurrentSpeed = GetSpeed(); !FMath::IsNaN(CurrentSpeed) && CameraShakePtr != nullptr && !FMath::IsNearlyEqual(CachedSpeed, CurrentSpeed))
 	{
-		float NewScale = CurrentSpeed * FastestSpeedScale.B / FastestSpeedScale.A;
+ 		float NewScale = CurrentSpeed * FastestSpeedScale.B / FastestSpeedScale.A;
 		if (NewScale > FastestSpeedScale.B)
 		{
 			NewScale = FastestSpeedScale.B;
@@ -53,7 +53,7 @@ void ULimenCameraShakeComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 		FMinimalViewInfo Temp;
 		CameraShakePtr->ShakeScale = NewScale;
-		CameraShakePtr->UpdateAndApplyCameraShake(DeltaTime, 1.f, Temp);
+		CachedSpeed = CurrentSpeed;
 	}
 }
 
@@ -61,12 +61,11 @@ void ULimenCameraShakeComponent::Activate(bool bReset)
 {
 	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
-	if (PlayerController != nullptr)
+	if (PlayerController != nullptr && PlayerController->PlayerCameraManager != nullptr)
 	{
 		if (CameraShakePtr != nullptr)
 		{
-			CameraShakePtr->StopShake(true);
-			CameraShakePtr->TeardownShake();
+			PlayerController->PlayerCameraManager->StopCameraShake(CameraShakePtr.Get(), true);
 			CameraShakePtr->ConditionalBeginDestroy();
 			CameraShakePtr = nullptr;
 		}
@@ -80,6 +79,9 @@ void ULimenCameraShakeComponent::Activate(bool bReset)
 		}
 	}
 
+	// Force an update
+	CachedSpeed = -1.f;
+
 	Super::Activate(bReset);
 }
 
@@ -87,8 +89,13 @@ void ULimenCameraShakeComponent::Deactivate()
 {
 	if (CameraShakePtr != nullptr && CameraShakePtr->IsActive())
 	{
-		CameraShakePtr->StopShake(true);
-		CameraShakePtr->TeardownShake();
+		const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+		const APlayerController* PlayerController = Cast<APlayerController>(OwnerPawn->GetController());
+		if (PlayerController != nullptr && PlayerController->PlayerCameraManager != nullptr)
+		{
+			PlayerController->PlayerCameraManager->StopCameraShake(CameraShakePtr.Get(), true);
+		}
+
 		CameraShakePtr->ConditionalBeginDestroy();
 		CameraShakePtr = nullptr;
 	}

@@ -176,6 +176,7 @@ void ALimenPlayerController::BindWidgetDelegates()
 	if (LimenHUD->GetGameMenuWidget())
 	{
 		LimenHUD->GetGameMenuWidget()->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::GameMenuVisibilityChanged);
+		LimenHUD->GetGameMenuWidget()->OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::GameMenuAnimationFinished);
 		LimenHUD->GetGameMenuWidget()->OnItemActionRequest.AddUniqueDynamic(this, &ThisClass::HandleItemActionRequest);
 	}
 
@@ -234,8 +235,6 @@ void ALimenPlayerController::UnbindWidgetDelegates()
 void ALimenPlayerController::LoadingScreenVisibilityChanged(const bool bIsVisible)
 {
 	Super::LoadingScreenVisibilityChanged(bIsVisible);
-
-	SetGameInput();
 }
 
 void ALimenPlayerController::GameMenuVisibilityChanged(const bool bIsVisible)
@@ -243,17 +242,23 @@ void ALimenPlayerController::GameMenuVisibilityChanged(const bool bIsVisible)
 	if (bIsVisible)
 	{
 		RequestPause(EPauseReason::GameMenu);
+	}
+	else
+	{
+		SetGameInput();
+	}
+}
+
+void ALimenPlayerController::GameMenuAnimationFinished(const bool bIsVisible)
+{
+	if (bIsVisible)
+	{
 		SetUIInput();
 	}
 	else
 	{
 		RequestUnPause();
 	}
-}
-
-void ALimenPlayerController::GameMenuAnimationFinished(const bool bIsVisible)
-{
-	
 }
 
 void ALimenPlayerController::PauseMenuVisibilityChanged(const bool bIsVisible)
@@ -261,6 +266,17 @@ void ALimenPlayerController::PauseMenuVisibilityChanged(const bool bIsVisible)
 	if (bIsVisible)
 	{
 		RequestPause(EPauseReason::PauseMenu);
+	}
+	else
+	{
+		SetGameInput();
+	}
+}
+
+void ALimenPlayerController::PauseMenuAnimationFinished(const bool bIsVisible)
+{
+	if (bIsVisible)
+	{
 		SetUIInput();
 	}
 	else
@@ -269,12 +285,15 @@ void ALimenPlayerController::PauseMenuVisibilityChanged(const bool bIsVisible)
 	}
 }
 
-void ALimenPlayerController::PauseMenuAnimationFinished(const bool bIsVisible)
-{
-}
-
 void ALimenPlayerController::HUDVisibilityChanged(const bool bIsVisible)
 {
+	if (bIsVisible)
+	{
+	}
+	else
+	{
+		SetGameInput();
+	}
 }
 
 void ALimenPlayerController::HUDAnimationFinished(const bool bIsVisible)
@@ -285,7 +304,6 @@ void ALimenPlayerController::HUDAnimationFinished(const bool bIsVisible)
 	}
 	else
 	{
-		
 	}
 }
 
@@ -293,14 +311,20 @@ void ALimenPlayerController::DeathScreenVisibilityChanged(const bool bIsVisible)
 {
 	if (bIsVisible)
 	{
-		SetUIInput();
 	}
 	else
 	{
-		
+		SetGameInput();
 	}
 }
 
 void ALimenPlayerController::DeathScreenAnimationFinished(const bool bIsVisible)
 {
+	if (bIsVisible)
+	{
+		SetGameInput();
+	}
+	else
+	{
+	}
 }
