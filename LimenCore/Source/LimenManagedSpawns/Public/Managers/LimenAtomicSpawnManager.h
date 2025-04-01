@@ -27,7 +27,7 @@ struct LIMENMANAGEDSPAWNS_API FAtomicSpawnParameters
 	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="1"))
 	int32 MaxAmountPerSpawner;
 	
-	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="1"))
+	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="0"))
 	int32 MinAmountPerSpawner;
 
 	FAtomicSpawnParameters();

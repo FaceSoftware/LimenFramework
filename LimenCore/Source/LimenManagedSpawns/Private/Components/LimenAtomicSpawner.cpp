@@ -12,7 +12,7 @@ ULimenAtomicSpawner::ULimenAtomicSpawner()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	SpawnParams.Instigator = nullptr;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	BodyInstance.SetResponseToAllChannels(ECR_Ignore);
 	BodyInstance.SetCollisionEnabled(ECollisionEnabled::Type::NoCollision, false);
@@ -22,11 +22,11 @@ void ULimenAtomicSpawner::SpawnItem(const TSubclassOf<AActor>& Class, const int3
 {
 	for (int i = 0; i < Amount; ++i)
 	{
-		const FBoxSphereBounds SpawnBounds = GetLocalBounds();
+		const FBoxSphereBounds SpawnBounds = GetLocalBounds().TransformBy(GetComponentTransform());
 
 		FRandomStreamRef RandomStream = ULimenGlobalRandomStreamSubsystem::Get()->GetGlobalRandomStream();
 		
-		const FVector SpawnLocation = GetComponentLocation() + UKismetMathLibrary::RandomPointInBoundingBoxFromStream(RandomStream.Get(), SpawnBounds.Origin, SpawnBounds.BoxExtent);
+		const FVector SpawnLocation = SpawnBounds.Origin + UKismetMathLibrary::RandomPointInBoundingBoxFromStream(RandomStream.Get(), FVector::ZeroVector, SpawnBounds.BoxExtent);
 		
 		AActor* SpawnedActor = GetWorld()->SpawnActor(Class, &SpawnLocation, &FRotator::ZeroRotator, SpawnParams);
 
@@ -47,6 +47,11 @@ bool ULimenAtomicSpawner::IsTagCompatible(const FName& Test) const
 	return ComponentTags.Contains(Test);
 }
 
+int32 ULimenAtomicSpawner::GetSpawnedItemsCount() const
+{
+	return SpawnedActors.Num();
+}
+
 void ULimenAtomicSpawner::SnapToFloor(AActor* Item) const
 {
 	FCollisionQueryParams QueryParams;
@@ -60,15 +65,31 @@ void ULimenAtomicSpawner::SnapToFloor(AActor* Item) const
 
 	const FVector Start = Item->GetActorLocation();
 	const FVector End = Start + (FVector::DownVector * 1000);
-	
-	FHitResult Hit;
-	if (!GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Camera, QueryParams, ResponseParams))
+
+	if (FHitResult Hit;
+		GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Camera, QueryParams, ResponseParams))
 	{
-		return;
+		const FBox BoundingBox = Item->GetComponentsBoundingBox(false, true);
+		const FVector SnappedLocation = Hit.Location + FVector(0.0, 0.0, BoundingBox.GetExtent().Z + UE_DOUBLE_KINDA_SMALL_NUMBER);
+		Item->SetActorLocation(SnappedLocation, false, nullptr, ETeleportType::ResetPhysics);
 	}
+
+	/*
+	if (FHitResult Hit;
+		GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Camera, QueryParams, ResponseParams))
+	{
+		const FVector SnappedLocation = Hit.Location + Hit.ImpactNormal * 0.1f;
+		Item->SetActorLocation(SnappedLocation, false, nullptr, ETeleportType::ResetPhysics);
+		// Item->SetActorLocationAndRotation(SnappedLocation, Hit.ImpactNormal.ToOrientationRotator(), false, nullptr, ETeleportType::ResetPhysics);
+	}
+	*/
+}
+
+ALimenAtomicSpawnerActor::ALimenAtomicSpawnerActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+	PrimaryActorTick.bCanEverTick = false;
 	
-	const FBox BoundingBox = Item->GetComponentsBoundingBox(false, true);
-	const FVector SnappedLocation = Hit.Location + FVector(0.0, 0.0, BoundingBox.GetExtent().Z + UE_DOUBLE_KINDA_SMALL_NUMBER);
-	Item->SetActorLocation(SnappedLocation);
+	AtomicSpawnerComponent = CreateDefaultSubobject<ULimenAtomicSpawner>(TEXT("AtomicSpawnerComponent"));
+	RootComponent = AtomicSpawnerComponent;
 }
 
