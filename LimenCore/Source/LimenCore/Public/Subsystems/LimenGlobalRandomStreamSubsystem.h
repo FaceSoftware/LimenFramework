@@ -45,14 +45,14 @@ public:
 	float RandomFloatRange(const float Max, const float Min);
 	
 	UFUNCTION(BlueprintCallable)
-	TArray<int> GenerateRandomUniqueNumbers(const int& Max, const int& Min, const int Count);
+	TArray<int> GenerateRandomUniqueNumbers(const int32 Max, const int32 Min, const int32 Count);
 
 	UFUNCTION(BlueprintCallable)
-	TArray<int> GenerateRandomNumbers(const int& Max, const int& Min, const int Count);
+	TArray<int> GenerateRandomNumbers(const int32 Max, const int32 Min, const int32 Count);
 	
-	TArray<int> GenerateValidRandomUniqueNumbers(const int& Max, const int& Min, const int Count, const TFunction<bool(const int&)>& IsNumberValid = [] (const int&) { return true; });
+	TArray<int> GenerateValidRandomUniqueNumbers(const int32 Max, const int32 Min, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid = [] (const int32) { return true; });
 
-	TArray<int> GenerateValidRandomNumbers(const int& Max, const int& Min, const int Count, const TFunction<bool(const int&)>& IsIndexValid = [] (const int&) { return true; });
+	TArray<int> GenerateValidRandomNumbers(const int32 Max, const int32 Min, const int32 Count, const TFunction<bool(const int32)>& IsIndexValid = [] (const int32) { return true; });
 	
 protected:
 	

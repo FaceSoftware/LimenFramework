@@ -26,6 +26,13 @@ ALimenPlayerController::ALimenPlayerController(const FObjectInitializer& InObjec
 	bEnableClickEvents = true;
 }
 
+void ALimenPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	SetGameInput();
+}
+
 void ALimenPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();

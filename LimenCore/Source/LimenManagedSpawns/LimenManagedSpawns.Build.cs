@@ -9,7 +9,8 @@ public class LimenManagedSpawns : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
+                "Core", 
+                "LimenCore",
             }
         );
 

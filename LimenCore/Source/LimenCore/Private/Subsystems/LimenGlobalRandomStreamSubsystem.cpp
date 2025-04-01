@@ -48,31 +48,36 @@ float ULimenGlobalRandomStreamSubsystem::RandomFloat()
 	return GlobalRandomStream->FRand();
 }
 
-int ULimenGlobalRandomStreamSubsystem::RandomIntRange(const int Max, const int Min)
+int ULimenGlobalRandomStreamSubsystem::RandomIntRange(const int32 Max, const int32 Min)
 {
+	check(Max >= Min);
 	FScopeLock Lock(&RandomStreamSection);
 	return GlobalRandomStream->RandRange(Min, Max);
 }
 
 float ULimenGlobalRandomStreamSubsystem::RandomFloatRange(const float Max, const float Min)
 {
+	check(Max >= Min);
 	FScopeLock Lock(&RandomStreamSection);
 	return GlobalRandomStream->FRandRange(Min, Max);
 }
 
-TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateRandomUniqueNumbers(const int& Max, const int& Min, const int Count)
+TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateRandomUniqueNumbers(const int32 Max, const int32 Min, const int32 Count)
 {
+	check(Max >= Min);
 	return GenerateValidRandomUniqueNumbers(Max, Min, Count);
 }
 
-TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateRandomNumbers(const int& Max, const int& Min, const int Count)
+TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateRandomNumbers(const int32 Max, const int32 Min, const int32 Count)
 {
+	check(Max >= Min);
 	return GenerateValidRandomNumbers(Max, Min, Count);
 }
 
-TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomUniqueNumbers(const int& Max, const int& Min, const int Count, const TFunction<bool(const int&)>& IsNumberValid)
+TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomUniqueNumbers(const int32 Max, const int32 Min, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid)
 {
-	ensureMsgf(Count <= FMath::Abs(Max - Min) + 1, TEXT("Requested number count too big for the given range"));
+	check(Max >= Min);
+	checkf(Count <= FMath::Abs(Max - Min) + 1, TEXT("Requested number count too big for the given range"));
 
 	TArray<int> OutIndexes;
 	OutIndexes.Reserve(Count);
@@ -113,8 +118,10 @@ TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomUniqueNumbers(
 	return OutIndexes;
 }
 
-TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomNumbers(const int& Max, const int& Min, const int Count, const TFunction<bool(const int&)>& IsIndexValid)
+TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomNumbers(const int32 Max, const int32 Min, const int32 Count, const TFunction<bool(const int32)>& IsIndexValid)
 {
+	check(Max >= Min);
+
 	TArray<int> OutIndexes;
 	OutIndexes.Reserve(Count);
 	

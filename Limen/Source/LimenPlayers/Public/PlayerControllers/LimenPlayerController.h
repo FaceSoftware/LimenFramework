@@ -27,7 +27,8 @@ class LIMENPLAYERS_API ALimenPlayerController : public ALimenPlayerControllerBas
 
 public:
 	explicit ALimenPlayerController(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
-	
+
+	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
