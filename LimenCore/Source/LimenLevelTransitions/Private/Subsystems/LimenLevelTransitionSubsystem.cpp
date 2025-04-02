@@ -12,6 +12,7 @@
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/GameViewportClient.h"
+#include "Engine/LevelStreaming.h"
 #include "Framework/Application/IInputProcessor.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Objects/LimenLoadingScreenParameters.h"
@@ -256,6 +257,14 @@ bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
 	for (FActorIterator It(GetWorld()); It; ++It)
 	{
 		if (It->Implements<ULimenAsyncInitializer>() && ILimenAsyncInitializer::Execute_IsWorking(*It))
+		{
+			return true;
+		}
+	}
+
+	for (const ULevelStreaming* StreamingLevel : GetWorld()->GetStreamingLevels())
+	{
+		if (StreamingLevel->IsStreamingStatePending())
 		{
 			return true;
 		}
