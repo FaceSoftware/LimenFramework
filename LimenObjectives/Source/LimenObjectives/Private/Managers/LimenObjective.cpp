@@ -123,7 +123,6 @@ void ALimenObjective::CompleteObjective()
 {
 	ObjectiveData.State = EObjectiveState::Completed;
 	ObjectiveCompleted(BoundPlayerController.Get(), BoundPawn.Get());
-	OnObjectiveUpdated.Broadcast(this, ObjectiveData);
 	OnObjectiveCompleted.Broadcast(this, ObjectiveData);
 }
 

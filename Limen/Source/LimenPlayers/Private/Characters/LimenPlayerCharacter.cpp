@@ -795,7 +795,7 @@ void ALimenPlayerCharacter::ObjectiveUpdated(ALimenObjective* UpdatedObjective)
 	const FString Message = TEXT("Objective Updated: ") + UpdatedObjective->GetObjectiveData().Title.ToString();
 	
 	FNotificationParams Params;	
-	Params.NotificationMessage = UpdatedObjective->GetObjectiveData().Title;
+	Params.NotificationMessage = FText::FromString(Message);
 	QueueNotification(Params);
 
 	LIMEN_LOG(LogLimen, Log, this, "Received 'objective updated' notification")
@@ -808,7 +808,7 @@ void ALimenPlayerCharacter::ObjectiveComplete(ALimenObjective* UpdatedObjective)
 	const FString Message = TEXT("Objective Completed: ") + UpdatedObjective->GetObjectiveData().Title.ToString();
 
 	FNotificationParams Params;
-	Params.NotificationMessage = UpdatedObjective->GetObjectiveData().Title;
+	Params.NotificationMessage = FText::FromString(Message);
 	QueueNotification(Params);
 
 	LIMEN_LOG(LogLimen, Log, this, "Received 'objective completed' notification")
