@@ -5,10 +5,11 @@
 
 #include "Actors/LimenTool.h"
 #include "Actors/LimenWeapon.h"
-#include "..\..\Public\Characters\LimenPlayerCharacter.h"
+#include "Characters/LimenPlayerCharacter.h"
 #include "Components/LimenInventoryComponent.h"
 #include "Components/LimenObjectiveComponent.h"
 #include "Components/LimenPhysicalItemHoldComponent.h"
+#include "GameFramework/PlayerController.h"
 #include "Managers/LimenObjectivesManager.h"
 
 
@@ -100,13 +101,15 @@ void ALimenPlayerState::ObjectiveAdded(ALimenObjective* Objective, const FObject
 
 void ALimenPlayerState::ObjectiveUpdated(ALimenObjective* Objective, const FObjectiveData& Data)
 {
-	PlayerObjectives[Objective->GetClass()] = Data;
+	if (PlayerObjectives.Contains(Objective->GetClass()))
+	{
+		PlayerObjectives[Objective->GetClass()] = Data;
+	}
 }
 
 void ALimenPlayerState::ObjectivesManagerInitialized(UObject* ObjectivesManagerObject)
 {
-	const ALimenObjectivesManager* ObjectivesManager = Cast<ALimenObjectivesManager>(ObjectivesManagerObject);
-	check(ObjectivesManager != nullptr);
+	const ALimenObjectivesManager* ObjectivesManager = CastChecked<ALimenObjectivesManager>(ObjectivesManagerObject);
 	for (auto* Objective : ObjectivesManager->GetObjectivesInstances())
 	{
 		Objective->OnObjectiveAdded.AddUniqueDynamic(this, &ThisClass::ALimenPlayerState::ObjectiveAdded);

@@ -86,7 +86,10 @@ void ALimenPlayerCharacter::BeginPlay()
 	CharacterInventory->OnItemAdded.AddUniqueDynamic(this, &ThisClass::ItemAdded);
 	CharacterInventory->OnItemFailedToAdd.AddUniqueDynamic(this, &ThisClass::ItemCouldNotBeAdded);
 	CharacterInventory->OnItemUpdated.AddUniqueDynamic(this, &ThisClass::ItemUpdated);
-	CharacterObjectives->OnNewObjectiveAdded.AddUniqueDynamic(this, &ThisClass::ObjectivesUpdated);
+
+	CharacterObjectives->OnNewObjectiveAdded.AddUniqueDynamic(this, &ThisClass::ObjectiveAdded);
+	CharacterObjectives->OnObjectiveUpdated.AddUniqueDynamic(this, &ThisClass::ObjectiveUpdated);
+	CharacterObjectives->OnObjectiveCompleted.AddUniqueDynamic(this, &ThisClass::ObjectiveComplete);
 	
 	WeaponHold->OnItemChanged.AddUniqueDynamic(this, &ThisClass::WeaponChanged);
 	WeaponHold->OnItemChanged.AddUniqueDynamic(this, &ThisClass::OnWeaponChanged);
@@ -772,15 +775,43 @@ void ALimenPlayerCharacter::ItemUpdated(TSubclassOf<ALimenItemBase> NewItem)
 	QueueNotification(Params);
 }
 
-void ALimenPlayerCharacter::ObjectivesUpdated(ALimenObjective* UpdatedObjective)
+void ALimenPlayerCharacter::ObjectiveAdded(ALimenObjective* NewObjective)
+{
+	check(NewObjective != nullptr)
+
+	const FString Message = TEXT("New Objective: ") + NewObjective->GetObjectiveData().Title.ToString();
+	
+	FNotificationParams Params;
+	Params.NotificationMessage = FText::FromString(Message);
+	QueueNotification(Params);
+
+	LIMEN_LOG(LogLimen, Log, this, "Received 'new objective' notification")
+}
+
+void ALimenPlayerCharacter::ObjectiveUpdated(ALimenObjective* UpdatedObjective)
 {
 	check(UpdatedObjective != nullptr)
-	LIMEN_LOG(LogLimen, Log, this, "Received 'objective updated' notification")
-		
-	FNotificationParams Params;
-	Params.NotificationTitle = FText::FromString(TEXT("Objective update"));
+	
+	const FString Message = TEXT("Objective Updated: ") + UpdatedObjective->GetObjectiveData().Title.ToString();
+	
+	FNotificationParams Params;	
 	Params.NotificationMessage = UpdatedObjective->GetObjectiveData().Title;
 	QueueNotification(Params);
+
+	LIMEN_LOG(LogLimen, Log, this, "Received 'objective updated' notification")
+}
+
+void ALimenPlayerCharacter::ObjectiveComplete(ALimenObjective* UpdatedObjective)
+{
+	check(UpdatedObjective != nullptr)
+
+	const FString Message = TEXT("Objective Completed: ") + UpdatedObjective->GetObjectiveData().Title.ToString();
+
+	FNotificationParams Params;
+	Params.NotificationMessage = UpdatedObjective->GetObjectiveData().Title;
+	QueueNotification(Params);
+
+	LIMEN_LOG(LogLimen, Log, this, "Received 'objective completed' notification")
 }
 
 void ALimenPlayerCharacter::ToolChanged(ALimenPhysicalItem* Old, ALimenPhysicalItem* New)

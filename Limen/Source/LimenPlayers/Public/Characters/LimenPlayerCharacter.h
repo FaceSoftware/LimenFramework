@@ -235,8 +235,14 @@ protected:
 	virtual void ItemCouldNotBeAdded(TSubclassOf<ALimenItemBase> NewItem);
 	UFUNCTION()
 	virtual void ItemUpdated(TSubclassOf<ALimenItemBase> NewItem);
+
 	UFUNCTION()
-	virtual void ObjectivesUpdated(ALimenObjective* UpdatedObjective);
+	virtual void ObjectiveAdded(ALimenObjective* NewObjective);
+	UFUNCTION()
+	virtual void ObjectiveUpdated(ALimenObjective* UpdatedObjective);
+	UFUNCTION()
+	virtual void ObjectiveComplete(ALimenObjective* UpdatedObjective);
+
 	UFUNCTION()
 	virtual void ToolChanged(ALimenPhysicalItem* Old, ALimenPhysicalItem* New);
 	UFUNCTION()

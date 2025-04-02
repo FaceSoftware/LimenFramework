@@ -47,7 +47,7 @@ void ALimenObjective::BindToPlayer(APlayerController* PlayerController, APawn* P
 	OnObjectiveAdded.Broadcast(this, NewData);
 }
 
-void ALimenObjective::BindToCurrentClientPlayer()
+void ALimenObjective::BindToCurrentPlayer()
 {
 	APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 	check(Controller != nullptr);

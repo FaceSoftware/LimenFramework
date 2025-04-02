@@ -73,7 +73,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category="Limen|Objectives")
 	void BindToPlayer(APlayerController* PlayerController, APawn* Pawn);
-	void BindToCurrentClientPlayer();
+	void BindToCurrentPlayer();
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Objectives")
 	const FObjectiveData& GetObjectiveData() const;
@@ -94,12 +94,14 @@ public:
 
 	void ResetObjective();
 
-	// ILimenSaveObjectInterface - Start
+#pragma region ILimenSaveObjectInterface
+
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
 	virtual void DataSaved() override;
 	virtual void DataLoaded() override;
-	// ILimenSaveObjectInterface - End
+
+#pragma endregion
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Limen")
