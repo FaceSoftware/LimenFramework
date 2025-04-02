@@ -19,6 +19,10 @@ class LIMENOBJECTIVES_API ULimenObjectiveComponent : public UActorComponent
 public:
 	UPROPERTY(BlueprintAssignable)
 	FObjectiveUpdate OnNewObjectiveAdded;
+	UPROPERTY(BlueprintAssignable)
+	FObjectiveUpdate OnObjectiveUpdated;
+	UPROPERTY(BlueprintAssignable)
+	FObjectiveUpdate OnObjectiveCompleted;
 	
 	UPROPERTY(BlueprintAssignable)
 	FObjectiveComponentUpdate OnObjectivesLoaded;
@@ -46,4 +50,8 @@ private:
 
 	bool ObjectiveAlreadyExist(const ALimenObjective* InTest) const;
 
+	UFUNCTION()
+	void ObjectiveUpdated(ALimenObjective* InObjective, const FObjectiveData& NewData);
+	UFUNCTION()
+	void ObjectiveCompleted(ALimenObjective* InObjective, const FObjectiveData& NewData);
 };

@@ -24,12 +24,12 @@ public:
 	const TArray<ALimenObjective*>& GetObjectivesInstances() const;
 
 	template<typename ObjectiveClass>
-	ALimenObjective* FindObjective() const
+	ObjectiveClass* FindObjective() const
 	{
 		static_assert(std::is_base_of_v<ALimenObjective, ObjectiveClass>);
 		for (ALimenObjective* Objective : ObjectiveInstances)
 		{
-			if (Objective->GetClass() == ObjectiveClass::StaticClass())
+			if (Objective->IsA<ObjectiveClass>())
 			{
 				return Objective;
 			}

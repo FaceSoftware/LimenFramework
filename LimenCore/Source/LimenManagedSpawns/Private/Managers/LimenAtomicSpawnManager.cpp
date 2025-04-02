@@ -6,7 +6,6 @@
 #include "EngineUtils.h"
 #include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Components/LimenAtomicSpawner.h"
-#include "LogMacros/LimenLogMacros.h"
 
 
 FAtomicSpawnParameters::FAtomicSpawnParameters()
@@ -39,8 +38,14 @@ void ALimenAtomicSpawnManager::SpawnItems(const TArray<FAtomicSpawnParameters>& 
 
 	for (FAtomicSpawnParameters& ItemParam : ULimenCoreStatics::ShuffleArray(ItemParameters))
 	{
-		TArray<ULimenAtomicSpawner*> ShuffledSpawners = ULimenCoreStatics::ShuffleArray(GetItemSpawners(ItemParam.SpawnTag));
-
+		TArray<ULimenAtomicSpawner*> Spawners = GetItemSpawners(ItemParam.SpawnTag);
+		check(CanSpawnAllItems(ItemParam, Spawners))
+		if (Spawners.IsEmpty())
+		{
+			continue;
+		}
+		
+		TArray<ULimenAtomicSpawner*> ShuffledSpawners = ULimenCoreStatics::ShuffleArray(Spawners);
 		while (ItemParam.SpawnedAmount < ItemParam.TotalAmount)
 		{
 			for (ULimenAtomicSpawner* Spawner : ShuffledSpawners)
@@ -65,7 +70,8 @@ TArray<ULimenAtomicSpawner*> ALimenAtomicSpawnManager::GetItemSpawners(const FNa
 	TArray<ULimenAtomicSpawner*> Spawners;
 	Spawners.Reserve(128);
 
-	for (const AActor* Actor : TActorRange<AActor>(GetWorld()))
+	TActorRange<AActor> Range(GetWorld(), AActor::StaticClass(), EActorIteratorFlags::SkipPendingKill);
+	for (const AActor* Actor : Range)
 	{
 		if (Actor->IsActorBeingDestroyed())
 		{

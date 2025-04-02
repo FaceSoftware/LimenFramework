@@ -8,6 +8,7 @@
 #include "PlayerState/LimenPlayerStateBase.h"
 #include "LimenPlayerState.generated.h"
 
+class ALimenObjectivesManager;
 class ALimenPhysicalItem;
 class ULimenInventoryComponent;
 

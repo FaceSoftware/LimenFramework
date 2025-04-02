@@ -75,7 +75,7 @@ void ULimenRayTracedShadowsSetting::SetDefaults()
 	
 	PossibleSelections.Push(Enabled);
 	PossibleSelections.Push(Disabled);
-	DefaultSelection = Disabled;
+	DefaultSelection = Enabled;
 }
 
 void ULimenRayTracedShadowsSetting::RayTracingSettingApplied(const ULimenSetting* Setting)

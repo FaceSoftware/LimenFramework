@@ -5,6 +5,8 @@
 
 #include "Managers/LimenObjective.h"
 #include "Components/LimenObjectiveComponent.h"
+#include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
 
 
 ALimenObjectivesManager::ALimenObjectivesManager()
@@ -19,10 +21,10 @@ void ALimenObjectivesManager::Start()
 	
 	for (const auto& ObjectiveClass : ObjectivesClassList)
 	{
-		ALimenObjective* NewObjective = GetWorld()->SpawnActor<ALimenObjective>(ObjectiveClass);
-		check(NewObjective != nullptr);
-
+		ALimenObjective* NewObjective = GetWorld()->SpawnActorDeferred<ALimenObjective>(ObjectiveClass, FTransform::Identity, this);
 		NewObjective->OnObjectiveAdded.AddUniqueDynamic(this, &ThisClass::ObjectiveAdded);
+		NewObjective->FinishSpawning(FTransform::Identity, false);
+		
 		ObjectiveInstances.Push(NewObjective);
 	}
 }

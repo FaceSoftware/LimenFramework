@@ -23,7 +23,13 @@ bool ULimenObjectiveComponent::TrackObjective(ALimenObjective* NewObjective)
 	}
 
 	ObjectivesList.Push(NewObjective);
+
+	NewObjective->OnObjectiveUpdated.AddUniqueDynamic(this, &ThisClass::ObjectiveUpdated);
+	NewObjective->OnObjectiveCompleted.AddUniqueDynamic(this, &ThisClass::ObjectiveCompleted);
+
+
 	OnNewObjectiveAdded.Broadcast(NewObjective);
+
 	LIMEN_LOG(LogLimenObjectives, Log, this, "Added new objective")
 	return true;
 }
@@ -79,4 +85,14 @@ bool ULimenObjectiveComponent::ObjectiveAlreadyExist(const ALimenObjective* InTe
 	}
 
 	return false;
+}
+
+void ULimenObjectiveComponent::ObjectiveUpdated(ALimenObjective* InObjective, const FObjectiveData& NewData)
+{
+	OnObjectiveUpdated.Broadcast(InObjective);
+}
+
+void ULimenObjectiveComponent::ObjectiveCompleted(ALimenObjective* InObjective, const FObjectiveData& NewData)
+{
+	OnObjectiveCompleted.Broadcast(InObjective);
 }
