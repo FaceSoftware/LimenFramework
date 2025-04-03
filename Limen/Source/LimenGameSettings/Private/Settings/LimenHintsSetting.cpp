@@ -23,17 +23,10 @@ void ULimenHintsSetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
-	HintsManagerSpawn = FLimenTickCheck();
-	HintsManagerSpawn.AddLambda([this]
+	if (HintsManager = ALimenGameplayManager::GetGameplayManager<ALimenHintsManager>(this); HintsManager.IsValid())
 	{
-		if (HintsManager = ALimenGameplayManager::GetGameplayManager<ALimenHintsManager>(this); HintsManager.IsValid())
-		{
-			UnFormatHintsSetting(GetCurrentValue()) ? HintsManager->EnableHints() : HintsManager->DisableHints();
-			return true;
-		}
-
-		return false;
-	});
+		UnFormatHintsSetting(GetCurrentValue()) ? HintsManager->EnableHints() : HintsManager->DisableHints();
+	}
 }
 
 void ULimenHintsSetting::SetDefaults()
