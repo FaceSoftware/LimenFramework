@@ -33,13 +33,15 @@ public:
 	APostProcessVolume* GetGlobalPostProcess() const;
 
 protected:
-	virtual void PostWorldInitialization(UWorld* World, const UWorld::InitializationValues InitValues) override;
+	virtual void WorldInitializedActors(const FActorsInitializedParams& InitParams) override;
 
 private:
 	UPROPERTY()
 	TObjectPtr<const ULimenGraphicalSettingsDeveloperSettings> SubsystemSettings;
 	UPROPERTY()
 	TObjectPtr<APostProcessVolume> GlobalPostProcess;
+
+	FTimerHandle FindPostProcessHandle;
 
 	void FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag);
 };

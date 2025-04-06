@@ -3,8 +3,6 @@
 
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 
-#include "Engine/Engine.h"
-
 
 void ULimenModularSettingsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -17,7 +15,7 @@ void ULimenModularSettingsSubsystem::Initialize(FSubsystemCollectionBase& Collec
 		Setting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::OnSettingUpdated);
 		Setting->SubsystemInitialized(this);
 	}
-	FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &ThisClass::PostWorldInitialization);
+	FWorldDelegates::OnWorldInitializedActors.AddUObject(this, &ThisClass::WorldInitializedActors);
 	
 	Super::Initialize(Collection);
 }
@@ -108,17 +106,12 @@ void ULimenModularSettingsSubsystem::LoadDefaultSettingsList()
 void ULimenModularSettingsSubsystem::OnSettingUpdated(const ULimenSetting* UpdatedSetting)
 {
 	Save();
-	GEngine->ForceGarbageCollection(true);
 }
 
-void ULimenModularSettingsSubsystem::PostWorldInitialization(UWorld* World,
-	const UWorld::InitializationValues InitValues)
+void ULimenModularSettingsSubsystem::WorldInitializedActors(const FActorsInitializedParams& InitParams)
 {
-	World->OnWorldBeginPlay.AddLambda([this]
+	for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
 	{
-		for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
-		{
-			Setting->ApplySetting(false);
-		}
-	});
+		Setting->ApplySetting(false);
+	}
 }

@@ -59,27 +59,27 @@ APostProcessVolume* ULimenGraphicalSettingsSubsystem::GetGlobalPostProcess() con
 	return GlobalPostProcess.Get();
 }
 
-void ULimenGraphicalSettingsSubsystem::PostWorldInitialization(UWorld* World,
-	const UWorld::InitializationValues InitValues)
+void ULimenGraphicalSettingsSubsystem::WorldInitializedActors(const FActorsInitializedParams& InitParams)
 {
-	Super::PostWorldInitialization(World, InitValues);
-
-	FindGlobalPostProcessVolume(World, SubsystemSettings->GlobalPostProcessTag);
+	Super::WorldInitializedActors(InitParams);
+	
+	GetWorld()->GetTimerManager().ClearTimer(FindPostProcessHandle);
+	FindGlobalPostProcessVolume(InitParams.World, SubsystemSettings->GlobalPostProcessTag);
 }
 
 void ULimenGraphicalSettingsSubsystem::FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag)
 {
-	for (TActorIterator<APostProcessVolume> It(World); It; ++It)
+	for (APostProcessVolume* PostProcess : TActorRange<APostProcessVolume>(World))
 	{
-		if (It->Tags.Contains(Tag))
+		if (PostProcess->ActorHasTag(Tag))
 		{
-			GlobalPostProcess = *It;
+			GlobalPostProcess = PostProcess;
 			OnGlobalPostProcessFound.Broadcast(GlobalPostProcess.Get());
 			return;
 		}
 	}
 
-	GetWorld()->GetTimerManager().SetTimerForNextTick([this, World, Tag]
+	FindPostProcessHandle = GetWorld()->GetTimerManager().SetTimerForNextTick([this, World, Tag]
 	{
 		FindGlobalPostProcessVolume(World, Tag);
 	});
