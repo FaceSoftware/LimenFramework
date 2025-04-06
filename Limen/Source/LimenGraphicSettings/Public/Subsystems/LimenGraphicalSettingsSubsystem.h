@@ -41,7 +41,5 @@ private:
 	UPROPERTY()
 	TObjectPtr<APostProcessVolume> GlobalPostProcess;
 
-	TUniquePtr<FLimenTickCheck> FindGlobalPostProcess;
-
-	static APostProcessVolume* FindGlobalPostProcessVolume(const UWorld* World, FName Tag);
+	void FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag);
 };
