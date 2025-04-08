@@ -77,7 +77,7 @@ protected:
 	UFUNCTION()
 	virtual void OnSettingUpdated(const ULimenSetting* UpdatedSetting);
 	
-	virtual void PostWorldInitialization(UWorld* World, const UWorld::InitializationValues InitValues);
+	virtual void WorldInitializedActors(const FActorsInitializedParams& InitParams);
 	
 private:
 

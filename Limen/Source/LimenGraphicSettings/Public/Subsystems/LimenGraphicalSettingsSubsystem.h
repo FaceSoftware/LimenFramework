@@ -33,7 +33,7 @@ public:
 	APostProcessVolume* GetGlobalPostProcess() const;
 
 protected:
-	virtual void PostWorldInitialization(UWorld* World, const UWorld::InitializationValues InitValues) override;
+	virtual void WorldInitializedActors(const FActorsInitializedParams& InitParams) override;
 
 private:
 	UPROPERTY()
@@ -41,7 +41,7 @@ private:
 	UPROPERTY()
 	TObjectPtr<APostProcessVolume> GlobalPostProcess;
 
-	TUniquePtr<FLimenTickCheck> FindGlobalPostProcess;
+	FTimerHandle FindPostProcessHandle;
 
-	static APostProcessVolume* FindGlobalPostProcessVolume(const UWorld* World, FName Tag);
+	void FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag);
 };

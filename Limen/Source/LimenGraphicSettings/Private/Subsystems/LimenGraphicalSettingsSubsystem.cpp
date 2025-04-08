@@ -4,6 +4,7 @@
 #include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 
 #include "EngineUtils.h"
+#include "TimerManager.h"
 #include "Developer/LimenGraphicalSettingsDeveloperSettings.h"
 #include "Engine/PostProcessVolume.h"
 #include "LogMacros/LimenLogMacros.h"
@@ -58,34 +59,28 @@ APostProcessVolume* ULimenGraphicalSettingsSubsystem::GetGlobalPostProcess() con
 	return GlobalPostProcess.Get();
 }
 
-void ULimenGraphicalSettingsSubsystem::PostWorldInitialization(UWorld* World,
-	const UWorld::InitializationValues InitValues)
+void ULimenGraphicalSettingsSubsystem::WorldInitializedActors(const FActorsInitializedParams& InitParams)
 {
-	Super::PostWorldInitialization(World, InitValues);
+	Super::WorldInitializedActors(InitParams);
 	
-	FindGlobalPostProcess = MakeUnique<FLimenTickCheck>();
-	FindGlobalPostProcess->AddLambda([this]
-	{
-		APostProcessVolume* TempGlobalPostProcess = FindGlobalPostProcessVolume(GetWorld(), SubsystemSettings->GlobalPostProcessTag);
-		if (TempGlobalPostProcess == nullptr)
-		{
-			return false;
-		}
-
-		GlobalPostProcess = TempGlobalPostProcess;
-		return true;
-	});
+	GetWorld()->GetTimerManager().ClearTimer(FindPostProcessHandle);
+	FindGlobalPostProcessVolume(InitParams.World, SubsystemSettings->GlobalPostProcessTag);
 }
 
-APostProcessVolume* ULimenGraphicalSettingsSubsystem::FindGlobalPostProcessVolume(const UWorld* World, const FName Tag)
+void ULimenGraphicalSettingsSubsystem::FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag)
 {
-	for (TActorIterator<APostProcessVolume> It(World); It; ++It)
+	for (APostProcessVolume* PostProcess : TActorRange<APostProcessVolume>(World))
 	{
-		if (It->Tags.Contains(Tag))
+		if (PostProcess->ActorHasTag(Tag))
 		{
-			return *It;
+			GlobalPostProcess = PostProcess;
+			OnGlobalPostProcessFound.Broadcast(GlobalPostProcess.Get());
+			return;
 		}
 	}
 
-	return nullptr;
+	FindPostProcessHandle = GetWorld()->GetTimerManager().SetTimerForNextTick([this, World, Tag]
+	{
+		FindGlobalPostProcessVolume(World, Tag);
+	});
 }
