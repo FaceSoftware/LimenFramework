@@ -53,4 +53,6 @@ private:
 
 	bool bIsEnabled;
 	bool bHasTriedToShowHint;
+
+	void HideHintInternal(const bool bDestroyWidget);
 };
