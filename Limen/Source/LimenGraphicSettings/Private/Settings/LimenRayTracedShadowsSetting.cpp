@@ -63,13 +63,11 @@ void ULimenRayTracedShadowsSetting::SetDefaults()
 	{
 		TConsoleSetting<bool> EnabledSetting(Enabled);
 		EnabledSetting.AddCVar(TEXT("r.MegaLights.Allowed"), true);
-		EnabledSetting.AddCVar(TEXT("r.RayTracing.Shadows.EnableTwoSidedGeometry"), true);
 		SettingsDescription.Push(EnabledSetting);
 	}
 	{
 		TConsoleSetting<bool> DisabledSetting(Disabled);
 		DisabledSetting.AddCVar(TEXT("r.MegaLights.Allowed"), false);
-		DisabledSetting.AddCVar(TEXT("r.RayTracing.Shadows.EnableTwoSidedGeometry"), false);
 		SettingsDescription.Push(DisabledSetting);
 	}
 	

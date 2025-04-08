@@ -51,7 +51,7 @@ void ULimenHint::Disable()
 	}
 	
 	bIsEnabled = false;
-	HideHint();
+	HideHintInternal(false);
 }
 
 bool ULimenHint::HasEverBeenVisible() const
@@ -107,17 +107,25 @@ void ULimenHint::ShowHint()
 
 void ULimenHint::HideHint()
 {
+	HideHintInternal(true);
+}
+
+void ULimenHint::HideHintInternal(const bool bDestroyWidget)
+{
 	if (HintWidgetInstance == nullptr)
 	{
 		return;
 	}
 
-	if (bIsEnabled)
+	OnHintDismissed.Broadcast();
+
+	if (bDestroyWidget)
+	{
+		HintWidgetInstance->DestroyWidget(true);
+		HintWidgetInstance = nullptr;
+	}
+	else
 	{
 		HintWidgetInstance->HideWidget();
 	}
-	
-	OnHintDismissed.Broadcast();
-	HintWidgetInstance->DestroyWidget();
-	HintWidgetInstance = nullptr;
 }
