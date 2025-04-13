@@ -12,6 +12,7 @@ public class LimenWeapons : ModuleRules
                 "Core",
                 
                 "LimenInteraction",
+                "AIModule",
             }
         );
 

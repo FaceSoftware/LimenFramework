@@ -479,9 +479,6 @@ void ALimenPlayerCharacter::FireInput(const FInputActionInstance& Instance)
 			return;
 		}
 		
-		FRotator Rotation;
-		FVector Location;
-		GetController()->GetPlayerViewPoint(Location, Rotation);
 		GetCurrentWeapon()->StartFiring();
 	}
 	else
@@ -840,11 +837,6 @@ void ALimenPlayerCharacter::WeaponChanged(ALimenPhysicalItem* Old, ALimenPhysica
 void ALimenPlayerCharacter::AimDownSights()
 {
 	check(!bIsAimingDownSights);
-
-	// Aim with the weapon
-	check(GetCurrentWeapon() != nullptr);
-	check(GetPlayerController() != nullptr)
-	GetPlayerController()->SetViewTargetWithBlend(GetCurrentWeapon(), 0.2);
 	bIsAimingDownSights = true;
 
 	OnAimDownSights(GetCurrentWeapon());
