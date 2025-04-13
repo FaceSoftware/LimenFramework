@@ -303,7 +303,6 @@ protected:
 	 */
 	UFUNCTION(BlueprintCosmetic, BlueprintImplementableEvent)
 	void OnWeaponReload(ALimenWeapon* InWeapon, const double ReloadTimeSeconds);
-
 	
 	UFUNCTION(BlueprintCosmetic, BlueprintImplementableEvent)
 	void OnToolChanged(ALimenPhysicalItem* Old, ALimenPhysicalItem* New);

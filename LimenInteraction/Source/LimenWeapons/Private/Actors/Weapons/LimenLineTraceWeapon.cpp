@@ -56,6 +56,10 @@ void ALimenLineTraceWeapon::FireMethod()
 
 	float CurrentDamageWithFalloff = GetBaseDamage();
 	uint16 DamageCount = 0;
+
+	UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
+	UAIPerceptionSystem* AIPerceptionSystem = AISystem->GetPerceptionSystem();
+
 	for (int i = 0; i < OutHits.Num(); ++i)
 	{
 		// C++ Interface
@@ -67,7 +71,9 @@ void ALimenLineTraceWeapon::FireMethod()
 			
 			const FAIDamageEvent DamageEvent(OutHits[i].GetActor(), this, CurrentDamageWithFalloff, GetActorLocation());
 			check(DamageEvent.IsValid())
-			GetAIPerceptionSystem()->OnEvent(DamageEvent);
+
+
+			if (AIPerceptionSystem) AIPerceptionSystem->OnEvent(DamageEvent);
 		}
 
 		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;

@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Items/LimenPhysicalItem.h"
+#include "Perception/AISense_Hearing.h"
 #include "LimenWeapon.generated.h"
 
 
+class UCameraShakeBase;
 class ULimenCameraTiltComponent;
 class USpringArmComponent;
 class UCameraComponent;
@@ -88,39 +90,41 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
 	void BP_WeaponReload();
-	
-	UCameraComponent* GetAimDownSightsCamera() const;
 		
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<ULimenCameraTiltComponent> AimDownSightsCamera;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="1"))
+protected:	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
 	double BaseDamage;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
 	int32 RoundsPerSecond;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
 	int32 MagazineCapacity;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
 	double ReloadTimeInSeconds;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
 	bool bIsAutomatic;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
 	TSubclassOf<ALimenAmmo> CompatibleAmmo;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
 	int32 CurrentAmmo;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
 	double WeaponRange;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
 	double ImpactDamageFalloffMultiplier;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
 	double FireSoundRange;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	float AINoiseEventLoudness;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
+	TSubclassOf<UCameraShakeBase> RecoilCameraShakeClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	float RecoilCameraShakeScale;
 	
 	void DecrementAmmo(const int Value = 1);
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
 	void ReloadStart(const double ReloadTimeSeconds);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
+	void BP_WeaponFired();
 	void WeaponFired();
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
 	void WeaponFiredWithoutAmmo();
@@ -128,8 +132,6 @@ protected:
 	void Fire();
 	virtual void FireMethod() {}
 	virtual void Interact(AController* InController, APawn* InPawn) override;
-
-	UAIPerceptionSystem* GetAIPerceptionSystem() const;
 	
 private:
 	double TimeBetweenShots;
@@ -152,9 +154,6 @@ private:
 	void Reload(ULimenInventoryComponent* PlayerInventory);
 	void StartReloadTimer(ULimenInventoryComponent* PlayerInventory);
 	void StopReloadTimer();
-
-	UPROPERTY()
-	TObjectPtr<UAIPerceptionSystem> AIPerceptionSystem;
 	
 	EWeaponState CurrentWeaponState;
 };
