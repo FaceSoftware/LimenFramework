@@ -55,6 +55,14 @@ void ALimenWeapon::Drop()
 	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
 }
 
+void ALimenWeapon::PickUp(AController* InController, APawn* InPawn)
+{
+	Super::PickUp(InController, InPawn);
+
+	CurrentWeaponState = EWeaponState::Active;
+	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
+}
+
 void ALimenWeapon::StartFiring()
 {
 	bIsHoldingTrigger = true;
@@ -220,14 +228,6 @@ void ALimenWeapon::Fire()
 	GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &ThisClass::HandleWeaponCooldown, TimeBetweenShots, false);
 	
 	OnWeaponFired.Broadcast(this);
-}
-
-void ALimenWeapon::Interact(AController* InController, APawn* InPawn)
-{
-	Super::Interact(InController, InPawn);
-
-	CurrentWeaponState = EWeaponState::Active;
-	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
 }
 
 void ALimenWeapon::HandleWeaponCooldown()

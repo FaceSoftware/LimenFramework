@@ -65,6 +65,7 @@ public:
 	ALimenWeapon();
 	virtual void BeginPlay() override;
 	void Drop();
+	virtual void PickUp(AController* InController, APawn* InPawn) override;
 	
 	void StartFiring();
 	void StopFiring();
@@ -131,7 +132,6 @@ protected:
 
 	void Fire();
 	virtual void FireMethod() {}
-	virtual void Interact(AController* InController, APawn* InPawn) override;
 	
 private:
 	double TimeBetweenShots;

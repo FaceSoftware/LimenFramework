@@ -23,10 +23,9 @@ ALimenLineTraceWeapon::ALimenLineTraceWeapon() : Super()
 	TraceChannel = ECollisionChannel::ECC_Visibility;
 }
 
-void ALimenLineTraceWeapon::Interact(AController* InController, APawn* InPawn)
+void ALimenLineTraceWeapon::PickUp(AController* InController, APawn* InPawn)
 {
-	Super::Interact(InController, InPawn);
-	
+	Super::PickUp(InController, InPawn);
 	CachedOwnerPawn = GetOwner<APawn>();
 }
 

@@ -27,6 +27,7 @@ void ALimenGameplayActor::Initialize()
 
 void ALimenGameplayActor::RemoveFromGameplay()
 {
+	check(HasAuthority())
 	if (bIsRemovedFromGameplay)
 	{
 		return;
@@ -35,10 +36,12 @@ void ALimenGameplayActor::RemoveFromGameplay()
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
 	bIsRemovedFromGameplay = true;
+	SetReplicates(false);
 }
 
 void ALimenGameplayActor::AddToGameplay()
 {
+	check(HasAuthority())
 	if (!bIsRemovedFromGameplay)
 	{
 		return;
@@ -47,6 +50,7 @@ void ALimenGameplayActor::AddToGameplay()
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(true);
 	bIsRemovedFromGameplay = false;
+	SetReplicates(true);
 }
 
 bool ALimenGameplayActor::IsRemovedFromGameplay() const
