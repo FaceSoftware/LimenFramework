@@ -59,28 +59,35 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Items|Actions", BlueprintPure)
 	TArray<ULimenItemAction*> GetItemActions() const;
 	
+	virtual void PickUp(AController* InController, APawn* InPawn);
+
+	int32 GetItemQuantity() const;
+	void SetItemQuantity(const int32 InItemQuantity);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Limen")
 	float InteractAnimationTime;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Item Actions")
 	TArray<TSubclassOf<ULimenItemAction>> ItemActionsClass;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(ClampMin="1"))
+	int32 ItemQuantity;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters")
 	FText DisplayName;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters")
 	FText Description;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(EditCondition = "!bUseSceneCaptureForImage"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "!bUseSceneCaptureForImage"))
 	TObjectPtr<UTexture> ItemImage;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(EditCondition = "ItemImageSceneCapture != nullptr"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "ItemImageSceneCapture != nullptr"))
 	bool bUseSceneCaptureForImage;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(EditCondition = "bUseSceneCaptureForImage"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
 	FColor RenderTargetBackgroundColor;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Item Parameters")
 	TObjectPtr<USceneCaptureComponent2D> ItemImageSceneCapture;
 
-	virtual void Interact(AController* InController, APawn* InPawn) override;
+	virtual void Interact(AController* InController, APawn* InPawn) override final;
 	virtual void InteractionStopped(AController* InController, APawn* InPawn) override final;
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic)

@@ -13,9 +13,9 @@ class LIMENWEAPONS_API ALimenLineTraceWeapon : public ALimenWeapon
 
 public:
 	ALimenLineTraceWeapon();
+	virtual void PickUp(AController* InController, APawn* InPawn) override;
 
 protected:
-	virtual void Interact(AController* InController, APawn* InPawn) override;
 	
 private:
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Debug")

@@ -330,14 +330,8 @@ void ALimenPlayerCharacter::GiveStartingItems(const TArray<TSubclassOf<ALimenIte
 			continue;
 		}
 
-		ULimenInteractableAreaComponent* InteractableComponent = Item->GetComponentByClass<ULimenInteractableAreaComponent>();
-		if (!ensureAlwaysMsgf(InteractableComponent, TEXT("Items must have a ULimenInteractableAreaComponent component")))
-		{
-			return;
-		}
-		
-		InteractableComponent->Interact(GetController(), this);
 		CharacterInventory->AddItem(Item);
+		Item->PickUp(GetController(), this);
 	}
 }
 
@@ -735,6 +729,7 @@ void ALimenPlayerCharacter::OnInteract(AActor* InteractableActor, const TScriptI
 	
 	if (CharacterInventory->AddItem(LimenItem))
 	{
+		LimenItem->PickUp(GetController(), this);
 		LIMEN_LOG(LogLimenPlayer, Log, this, "Item picked up")
 	}
 }

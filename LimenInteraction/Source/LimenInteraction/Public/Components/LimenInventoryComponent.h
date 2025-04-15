@@ -219,7 +219,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
 	int32 GetItemQuantity(const TSubclassOf<ALimenItemBase>& ItemClass) const;
 
-	bool HasCapacity() const;
+	bool HasCapacity(const int32 ExtraDesiredSpace) const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Config", meta=(ClampMin="0", EditCondition="bUseStaticSize", EditConditionHides))
@@ -228,7 +228,7 @@ protected:
 	bool bUseStaticSize;
 	
 private:
-	uint16 InventoryLoad;
+	uint16 CurrentInventoryLoad;
 
 	UPROPERTY()
 	TArray<FItemRegistry> ItemRegistries;
