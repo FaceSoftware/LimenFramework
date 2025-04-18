@@ -6,7 +6,8 @@
 
 ULimenDamageComponent::ULimenDamageComponent()
 {
-	
+	PrimaryComponentTick.bCanEverTick = true;
+	bAutoActivate = true;
 }
 
 void ULimenDamageComponent::BeginPlay()
@@ -19,18 +20,15 @@ void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTic
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	for (int32 i = ActiveDamageInfo.Num() - 1; i >= 0; ++i)
+	for (int32 i = ActiveDamageInfo.Num() - 1; i >= 0; --i)
 	{
 		const FDamageInfo& Info = ActiveDamageInfo[i];
 
 		// Process the damage with the damage type
-		const float RawDamage = Info.DamageType->ProcessRawDamage(DeltaTime, Info.DamageParameters);
-
-		// Check if we should stop applying the damage
-		if (Info.DamageType->ShouldStopApplyingDamage())
+		float RawDamage = Info.DamageParameters.DamageValue; // Default to the damage parameter
+		if (Info.DamageType)
 		{
-			ActiveDamageInfo.RemoveAt(i);
-			continue;
+			RawDamage = Info.DamageType->ProcessRawDamage(DeltaTime, Info.DamageParameters);
 		}
 
 		// Create new parameters with the processed damage type
@@ -41,6 +39,12 @@ void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTic
 		// Broadcast the damage received
 		OnDamageReceived.Broadcast(Info.Instigator.Get(), Info.Causer.Get(),
 								   Info.DamageType.Get(), PostProcessedDamage);
+
+		// Check if we should stop applying the damage
+		if (!Info.DamageType || Info.DamageType->ShouldStopApplyingDamage())
+		{
+			ActiveDamageInfo.RemoveAt(i);
+		}
 	}
 }
 

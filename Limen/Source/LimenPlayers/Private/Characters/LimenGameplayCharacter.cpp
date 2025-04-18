@@ -87,8 +87,7 @@ float ALimenGameplayCharacter::ProcessIncomingDamage(const FDamageParameters& In
 void ALimenGameplayCharacter::DamageReceived(AController* InInstigator, AActor* InCauser,
 											 const ULimenDamageType* DamageType, const float Damage)
 {
-	// Remove value from health attribute
-	// Add VFX
+	if (HealthAttribute.IsValid()) HealthAttribute->ModifyValueBy(-Damage);
 }
 
 void ALimenGameplayCharacter::HealthAttributeEmpty(const float NewValue)
