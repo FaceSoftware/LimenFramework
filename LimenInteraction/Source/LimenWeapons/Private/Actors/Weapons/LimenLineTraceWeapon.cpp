@@ -59,9 +59,13 @@ void ALimenLineTraceWeapon::FireMethod()
 	UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
 	UAIPerceptionSystem* AIPerceptionSystem = AISystem->GetPerceptionSystem();
 
+	TArray<AActor*> HitActors;
+	HitActors.Reserve(OutHits.Num());
+
 	for (int i = 0; i < OutHits.Num(); ++i)
 	{
-		if (!OutHits[i].GetActor())
+		// Prevent hitting the same actor twice
+		if (!OutHits[i].GetActor() || HitActors.Contains(OutHits[i].GetActor()))
 		{
 			continue;
 		}
@@ -85,8 +89,9 @@ void ALimenLineTraceWeapon::FireMethod()
 			GetActorLocation());
 		if (AIPerceptionSystem) AIPerceptionSystem->OnEvent(AIDamageEvent);
 
-		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;
 
+		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;
+		HitActors.Push(OutHits[i].GetActor());
 		DamageCount++;
 	}
 
