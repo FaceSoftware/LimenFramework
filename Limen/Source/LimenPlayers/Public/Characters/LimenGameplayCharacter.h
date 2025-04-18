@@ -55,11 +55,11 @@ protected:
 	virtual void OnEndCrouch(const float HalfHeightAdjust, const float ScaledHalfHeightAdjust) override;
 
 	virtual float ProcessIncomingDamage(const FDamageParameters& InParams,
-										const TSubclassOf<ULimenDamageType>& InDamageType) const;
+										const ULimenDamageType* InDamageType) const;
 	
 	UFUNCTION()
 	virtual void DamageReceived(AController* InInstigator, AActor* InCauser,
-								TSubclassOf<ULimenDamageType> DamageType, const float Damage);
+								const ULimenDamageType* DamageType, const float Damage);
 
 	UFUNCTION()
 	virtual void HealthAttributeEmpty(const float NewValue);

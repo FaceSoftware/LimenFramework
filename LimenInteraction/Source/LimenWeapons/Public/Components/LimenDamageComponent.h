@@ -12,7 +12,7 @@ class AController;
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FLimenDamageEvent, AController*, Instigator,
-	AActor*, Causer, TSubclassOf<ULimenDamageType>, DamageType, const float, Damage);
+	AActor*, Causer, const ULimenDamageType*, DamageType, const float, Damage);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENWEAPONS_API ULimenDamageComponent : public UActorComponent
@@ -38,21 +38,21 @@ public:
 
 	template<typename T>
 	void SetDamageCalculationFunction(T* Object,
-		typename TMemFunPtrType<true, T, float(const FDamageParameters&, const TSubclassOf<ULimenDamageType>&)>::Type Callback);
+		typename TMemFunPtrType<true, T, float(const FDamageParameters&, const ULimenDamageType*)>::Type Callback);
 
 protected:
 
 private:
 	TArray<FDamageInfo> ActiveDamageInfo;
-	TFunction<float(const FDamageParameters&, const TSubclassOf<ULimenDamageType>&)> DamageCalcFunc;
+	TFunction<float(const FDamageParameters&, const ULimenDamageType*)> DamageCalcFunc;
 
 };
 
 template <typename T>
 void ULimenDamageComponent::SetDamageCalculationFunction(T* Object,
-	typename TMemFunPtrType<true, T, float(const FDamageParameters&, const TSubclassOf<ULimenDamageType>&)>::Type Callback)
+	typename TMemFunPtrType<true, T, float(const FDamageParameters&, const ULimenDamageType*)>::Type Callback)
 {
-	DamageCalcFunc = [=] (const FDamageParameters& Params, const TSubclassOf<ULimenDamageType>& Type)
+	DamageCalcFunc = [=] (const FDamageParameters& Params, const ULimenDamageType* Type)
 	{
 		if (Object != nullptr) return (Object->*Callback)(Params, Type);
 

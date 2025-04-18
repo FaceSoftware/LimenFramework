@@ -36,11 +36,11 @@ void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTic
 		// Create new parameters with the processed damage type
 		FDamageParameters NewDamageParameters(RawDamage);
 		NewDamageParameters.DamageValue = RawDamage;
-		const float PostProcessedDamage = DamageCalcFunc(NewDamageParameters, Info.DamageType->GetClass());
+		const float PostProcessedDamage = DamageCalcFunc(NewDamageParameters, Info.DamageType.Get());
 
 		// Broadcast the damage received
 		OnDamageReceived.Broadcast(Info.Instigator.Get(), Info.Causer.Get(),
-								   Info.DamageType->GetClass(), PostProcessedDamage);
+								   Info.DamageType.Get(), PostProcessedDamage);
 	}
 }
 

@@ -76,7 +76,7 @@ void ALimenGameplayCharacter::OnEndCrouch(const float HalfHeightAdjust, const fl
 }
 
 float ALimenGameplayCharacter::ProcessIncomingDamage(const FDamageParameters& InParams,
-													 const TSubclassOf<ULimenDamageType>& InDamageType) const
+													 const ULimenDamageType* InDamageType) const
 {
 	const float* DamageMult = DamageMultipliers.Find(InParams.HitBoneName);
 	if (!DamageMult) return InParams.DamageValue;
@@ -85,9 +85,10 @@ float ALimenGameplayCharacter::ProcessIncomingDamage(const FDamageParameters& In
 }
 
 void ALimenGameplayCharacter::DamageReceived(AController* InInstigator, AActor* InCauser,
-											 TSubclassOf<ULimenDamageType> DamageType, const float Damage)
+											 const ULimenDamageType* DamageType, const float Damage)
 {
-	
+	// Remove value from health attribute
+	// Add VFX
 }
 
 void ALimenGameplayCharacter::HealthAttributeEmpty(const float NewValue)
