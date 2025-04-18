@@ -3,29 +3,23 @@
 
 #include "Characters/LimenGameplayCharacter.h"
 
-#include "EnhancedInputComponent.h"
 #include "Attributes/LimenHealthAttribute.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/LimenAbilityComponent.h"
+#include "Components/LimenDamageComponent.h"
 #include "Components/LimenStepsSoundComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 
 const FName ALimenGameplayCharacter::StepsComponentName = TEXT("StepsSoundComponent");
 
-ALimenGameplayCharacter::ALimenGameplayCharacter(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
+ALimenGameplayCharacter::ALimenGameplayCharacter(const FObjectInitializer& InObjectInitializer)
+	: Super(InObjectInitializer)
 {
 	StepsSoundComponent = CreateDefaultSubobject<ULimenStepsSoundComponent>(StepsComponentName);
 	StepsSoundComponent->SetupAttachment(GetCapsuleComponent());
-}
 
-void ALimenGameplayCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	auto* EnhancedInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	check(EnhancedInput)
-
-
+	DamageComponent = CreateDefaultSubobject<ULimenDamageComponent>(TEXT("DamageComponent"));
 }
 
 void ALimenGameplayCharacter::BeginPlay()
@@ -35,11 +29,12 @@ void ALimenGameplayCharacter::BeginPlay()
 	HealthAttribute = GetAbilityComponent()->GetAttribute<ULimenHealthAttribute>();
 	if (HealthAttribute != nullptr)
 	{
-		HealthAttribute->OnAttributeEmpty.AddUniqueDynamic(this, &ThisClass::OnHealthAttributeEmpty);
+		HealthAttribute->OnAttributeEmpty.AddUniqueDynamic(this, &ThisClass::HealthAttributeEmpty);
 	}
+
+	DamageComponent->SetDamageCalculationFunction(this, &ThisClass::ProcessIncomingDamage);
+	DamageComponent->OnDamageReceived.AddUniqueDynamic(this, &ALimenGameplayCharacter::DamageReceived);
 }
-
-
 
 ULimenStepsSoundComponent* ALimenGameplayCharacter::GetStepsSoundComponent() const
 {
@@ -58,7 +53,7 @@ void ALimenGameplayCharacter::ToggleCrouch()
 	}
 }
 
-void ALimenGameplayCharacter::Crouch(bool bClientSimulation)
+void ALimenGameplayCharacter::Crouch(const bool bClientSimulation)
 {
 	Super::Crouch(bClientSimulation);
 
@@ -68,51 +63,35 @@ void ALimenGameplayCharacter::Crouch(bool bClientSimulation)
 	}
 }
 
-float ALimenGameplayCharacter::ApplyPointDamage(AController* DamageInstigator, AActor* DamageCauser,
-	const float DamageTaken, const FName& BoneName)
+ULimenInteractionComponent* ALimenGameplayCharacter::GetInteractionComponent() const
 {
-	float AbsoluteDamage = FMath::Abs(DamageTaken);
-
-	if (BoneName != NAME_None || !BoneName.ToString().IsEmpty())
-	{
-		if (const float* Multiplier = DamageMultipliers.Find(BoneName); Multiplier != nullptr)
-		{
-			AbsoluteDamage *= *Multiplier;
-		}
-	}
-	
-	if (HealthAttribute != nullptr)
-	{
-		HealthAttribute->ModifyValueBy(-AbsoluteDamage);
-	}
-	
-	DamageReceived(DamageInstigator, DamageCauser, AbsoluteDamage);
-	return AbsoluteDamage;
+	return nullptr;
 }
 
-float ALimenGameplayCharacter::ApplyMaxDamage(AController* DamageInstigator, AActor* DamageCauser)
-{
-	if (HealthAttribute != nullptr)
-	{
-		const float LeftOverValue = HealthAttribute->GetCurrentValue();
-		HealthAttribute->SetCurrentValueAsMin();
-
-		DamageReceived(DamageInstigator, DamageCauser, LeftOverValue);
-		return LeftOverValue;
-	}
-
-	DamageReceived(DamageInstigator, DamageCauser, 0);
-	return 0;
-}
-
-void ALimenGameplayCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+void ALimenGameplayCharacter::OnEndCrouch(const float HalfHeightAdjust, const float ScaledHalfHeightAdjust)
 {
 	Super::OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
 
 	OnCharacterCrouched.Broadcast(false);
 }
 
-void ALimenGameplayCharacter::DamageReceived(AController* DamageInstigator, AActor* DamageCauser,
-	const float DamageTaken)
+float ALimenGameplayCharacter::ProcessIncomingDamage(const FDamageParameters& InParams,
+													 const TSubclassOf<ULimenDamageType>& InDamageType) const
 {
+	const float* DamageMult = DamageMultipliers.Find(InParams.HitBoneName);
+	if (!DamageMult) return InParams.DamageValue;
+
+	return *DamageMult * InParams.DamageValue;
+}
+
+void ALimenGameplayCharacter::DamageReceived(AController* InInstigator, AActor* InCauser,
+											 TSubclassOf<ULimenDamageType> DamageType, const float Damage)
+{
+	
+}
+
+void ALimenGameplayCharacter::HealthAttributeEmpty(const float NewValue)
+{
+	GetCharacterMovement()->DisableMovement();
+	AbilityComponent->DeactivateAllAbilities();
 }

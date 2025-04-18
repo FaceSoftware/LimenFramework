@@ -6,6 +6,8 @@
 #include "Actors/LimenWeapon.h"
 #include "LimenLineTraceWeapon.generated.h"
 
+class ULimenDamageType;
+
 UCLASS(Blueprintable, BlueprintType)
 class LIMENWEAPONS_API ALimenLineTraceWeapon : public ALimenWeapon
 {

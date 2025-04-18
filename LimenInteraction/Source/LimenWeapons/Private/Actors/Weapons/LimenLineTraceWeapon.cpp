@@ -5,11 +5,11 @@
 
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
+#include "Components/LimenDamageComponent.h"
 #include "Engine/HitResult.h"
 #include "Engine/World.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
-#include "Interfaces/LimenDamageable.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Perception/AIPerceptionSystem.h"
@@ -61,21 +61,33 @@ void ALimenLineTraceWeapon::FireMethod()
 
 	for (int i = 0; i < OutHits.Num(); ++i)
 	{
-		// C++ Interface
-		if (auto* Damageable = Cast<ILimenDamageable>(OutHits[i].GetActor()))
+		if (!OutHits[i].GetActor())
 		{
-			Damageable->ApplyPointDamage(CachedOwnerPawn->GetController(), CachedOwnerPawn.Get(), CurrentDamageWithFalloff, OutHits[i].BoneName);
-			
+			continue;
+		}
+		ULimenDamageComponent* DamageComponent = OutHits[i].GetActor()->GetComponentByClass<ULimenDamageComponent>();
+		if (!DamageComponent)
+		{
 			DamageCount++;
-			
-			const FAIDamageEvent DamageEvent(OutHits[i].GetActor(), this, CurrentDamageWithFalloff, GetActorLocation());
-			check(DamageEvent.IsValid())
-
-
-			if (AIPerceptionSystem) AIPerceptionSystem->OnEvent(DamageEvent);
+			continue;
 		}
 
+		FDamageParameters DamageParams;
+		DamageParams.DamageValue = CurrentDamageWithFalloff;
+		DamageParams.HitBoneName = OutHits[i].BoneName;
+		DamageParams.HitComponent = OutHits[i].Component;
+
+		DamageComponent->ApplyDamage(CachedOwnerPawn->GetController(), CachedOwnerPawn.Get(),
+			DamageType, DamageParams);
+
+
+		const FAIDamageEvent AIDamageEvent(OutHits[i].GetActor(), this, CurrentDamageWithFalloff,
+			GetActorLocation());
+		if (AIPerceptionSystem) AIPerceptionSystem->OnEvent(AIDamageEvent);
+
 		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;
+
+		DamageCount++;
 	}
 
 	LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);

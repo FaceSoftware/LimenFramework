@@ -8,6 +8,7 @@
 #include "LimenWeapon.generated.h"
 
 
+class ULimenDamageType;
 class UCameraShakeBase;
 class ULimenCameraTiltComponent;
 class USpringArmComponent;
@@ -92,7 +93,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
 	void BP_WeaponReload();
 		
-protected:	
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
+	TSubclassOf<ULimenDamageType> DamageType;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
 	double BaseDamage;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))

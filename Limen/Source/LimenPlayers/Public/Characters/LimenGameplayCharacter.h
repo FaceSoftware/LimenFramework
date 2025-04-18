@@ -4,16 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Pawn/LimenCharacterBase.h"
-#include "Interfaces/LimenDamageable.h"
 #include "LimenGameplayCharacter.generated.h"
 
 
+struct FDamageParameters;
+class ULimenDamageType;
+class ULimenDamageComponent;
 class ULimenHealthAttribute;
 class ULimenStepsSoundComponent;
 class ULimenInteractionComponent;
 
 UCLASS(Abstract)
-class LIMENPLAYERS_API ALimenGameplayCharacter : public ALimenCharacterBase, public ILimenDamageable
+class LIMENPLAYERS_API ALimenGameplayCharacter : public ALimenCharacterBase
 {
 	GENERATED_BODY()
 
@@ -24,36 +26,43 @@ public:
 	FCharacterCrouchDelegate OnCharacterCrouched;
 	
 	explicit ALimenGameplayCharacter(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void BeginPlay() override;
 	
 	ULimenStepsSoundComponent* GetStepsSoundComponent() const;
 
 	/**
-	 * @brief Toggles between Crouch and UnCrouch
+	 * @brief Toggles between Crouch and UnCrouch states
 	 */
 	void ToggleCrouch();
 	virtual void Crouch(bool bClientSimulation = false) override;
 
 	virtual void Interact() PURE_VIRTUAL(ALimenGameplayCharacter::Interact);
 	virtual void StopInteraction() PURE_VIRTUAL(ALimenGameplayCharacter::Interact);
-	UFUNCTION(BlueprintCallable, Category="Limen|Characters")
-	virtual ULimenInteractionComponent* GetInteractionComponent() const PURE_VIRTUAL(ALimenGameplayCharacter::Interact, return nullptr;);
 
-	virtual float ApplyPointDamage(AController* DamageInstigator, AActor* DamageCauser, const float DamageTaken, const FName& BoneName) override;
-	virtual float ApplyMaxDamage(AController* DamageInstigator, AActor* DamageCauser) override;
+	UFUNCTION(BlueprintCallable, Category="Limen|Characters")
+	virtual ULimenInteractionComponent* GetInteractionComponent() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TMap<FName, float> DamageMultipliers;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<ULimenDamageComponent> DamageComponent;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<ULimenStepsSoundComponent> StepsSoundComponent;
 	
-	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	virtual void OnEndCrouch(const float HalfHeightAdjust, const float ScaledHalfHeightAdjust) override;
 
-	UFUNCTION(BlueprintCosmetic)
-	virtual void DamageReceived(AController* DamageInstigator, AActor* DamageCauser, const float DamageTaken);
+	virtual float ProcessIncomingDamage(const FDamageParameters& InParams,
+										const TSubclassOf<ULimenDamageType>& InDamageType) const;
+	
+	UFUNCTION()
+	virtual void DamageReceived(AController* InInstigator, AActor* InCauser,
+								TSubclassOf<ULimenDamageType> DamageType, const float Damage);
+
+	UFUNCTION()
+	virtual void HealthAttributeEmpty(const float NewValue);
 	
 private:
 	TWeakObjectPtr<ULimenHealthAttribute> HealthAttribute;
