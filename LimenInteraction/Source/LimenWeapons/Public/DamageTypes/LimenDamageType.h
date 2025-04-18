@@ -14,9 +14,11 @@ struct FDamageParameters
 {
 	GENERATED_BODY()
 
-	float DamageValue = 0.0f;
-	TWeakObjectPtr<UPrimitiveComponent> HitComponent = nullptr;
-	FName HitBoneName = NAME_None;
+	FDamageParameters() = default;
+
+	float DamageValue;
+	TWeakObjectPtr<UPrimitiveComponent> HitComponent;
+	FName HitBoneName;
 };
 
 UCLASS()
