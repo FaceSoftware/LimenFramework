@@ -81,7 +81,6 @@ public:
 	bool CanReload(const ULimenInventoryComponent* PlayerInventory) const;
 	bool CanFire() const;
 	double GetBaseDamage() const;
-	bool HasGameRelevantOwner() const;
 
 	const TSubclassOf<ALimenAmmo>& GetCompatibleAmmo() const;
 

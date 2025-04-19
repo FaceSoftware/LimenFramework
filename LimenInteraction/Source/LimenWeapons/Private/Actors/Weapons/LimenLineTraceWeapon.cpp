@@ -50,7 +50,10 @@ void ALimenLineTraceWeapon::FireMethod()
 	Params.bDebugQuery = bDebugMode;
 #endif
 
-	GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params);
+	if (!GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params))
+	{
+		return;
+	}
 
 	float CurrentDamageWithFalloff = GetBaseDamage();
 	uint16 DamageCount = 0;
