@@ -19,6 +19,7 @@ struct FDamageParameters
 	float DamageValue;
 	TWeakObjectPtr<UPrimitiveComponent> HitComponent;
 	FName HitBoneName;
+	FVector DamageDirection;
 };
 
 UCLASS()

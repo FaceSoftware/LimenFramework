@@ -64,6 +64,10 @@ void ALimenLineTraceWeapon::FireMethod()
 	TArray<AActor*> HitActors;
 	HitActors.Reserve(OutHits.Num());
 
+	FDamageParameters DamageParams;
+
+	APawn* PawnOwner = GetOwner<APawn>();
+
 	for (int i = 0; i < OutHits.Num(); ++i)
 	{
 		// Prevent hitting the same actor twice
@@ -78,12 +82,13 @@ void ALimenLineTraceWeapon::FireMethod()
 			continue;
 		}
 
-		FDamageParameters DamageParams;
 		DamageParams.DamageValue = CurrentDamageWithFalloff;
 		DamageParams.HitBoneName = OutHits[i].BoneName;
 		DamageParams.HitComponent = OutHits[i].Component;
+		DamageParams.DamageDirection = OutHits[i].ImpactPoint - Start;
+		DamageParams.DamageDirection.Normalize();
 
-		if (APawn* PawnOwner = GetOwner<APawn>())
+		if (PawnOwner)
 		{
 			DamageComponent->ApplyDamage(PawnOwner->GetController(), this, DamageType, DamageParams);
 		}
@@ -97,7 +102,6 @@ void ALimenLineTraceWeapon::FireMethod()
 			GetActorLocation());
 
 		if (AIPerceptionSystem) AIPerceptionSystem->OnEvent(AIDamageEvent);
-
 
 		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;
 		HitActors.Push(OutHits[i].GetActor());
