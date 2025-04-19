@@ -25,8 +25,6 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Weapon Stats")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
-
-	TWeakObjectPtr<APawn> CachedOwnerPawn;
 	
 	virtual void FireMethod() override;
 };

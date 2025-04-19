@@ -26,7 +26,6 @@ ALimenLineTraceWeapon::ALimenLineTraceWeapon() : Super()
 void ALimenLineTraceWeapon::PickUp(AController* InController, APawn* InPawn)
 {
 	Super::PickUp(InController, InPawn);
-	CachedOwnerPawn = GetOwner<APawn>();
 }
 
 void ALimenLineTraceWeapon::FireMethod()
@@ -38,8 +37,8 @@ void ALimenLineTraceWeapon::FireMethod()
 	FVector Start;
 	FRotator Rotation;
 
-	check(CachedOwnerPawn != nullptr) // If a weapon is being fired it should always have an owner
-	CachedOwnerPawn->GetController()->GetPlayerViewPoint(Start, Rotation);
+	check(GetOwner() != nullptr) // If a weapon is firing, it should always have an owner
+	GetOwner()->GetActorEyesViewPoint(Start, Rotation);
 
 	const FVector End = Start + Rotation.Vector() * WeaponRange;
 
@@ -50,7 +49,7 @@ void ALimenLineTraceWeapon::FireMethod()
 #if !(UE_BUILD_TEST || UE_BUILD_SHIPPING)
 	Params.bDebugQuery = bDebugMode;
 #endif
-	
+
 	GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params);
 
 	float CurrentDamageWithFalloff = GetBaseDamage();
@@ -81,12 +80,19 @@ void ALimenLineTraceWeapon::FireMethod()
 		DamageParams.HitBoneName = OutHits[i].BoneName;
 		DamageParams.HitComponent = OutHits[i].Component;
 
-		DamageComponent->ApplyDamage(CachedOwnerPawn->GetController(), CachedOwnerPawn.Get(),
-			DamageType, DamageParams);
+		if (APawn* PawnOwner = GetOwner<APawn>())
+		{
+			DamageComponent->ApplyDamage(PawnOwner->GetController(), this, DamageType, DamageParams);
+		}
+		else
+		{
+			DamageComponent->ApplyDamage(nullptr, this, DamageType, DamageParams);
+		}
 
 
 		const FAIDamageEvent AIDamageEvent(OutHits[i].GetActor(), this, CurrentDamageWithFalloff,
 			GetActorLocation());
+
 		if (AIPerceptionSystem) AIPerceptionSystem->OnEvent(AIDamageEvent);
 
 
