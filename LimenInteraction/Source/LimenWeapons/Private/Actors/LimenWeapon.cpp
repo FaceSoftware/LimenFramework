@@ -7,7 +7,7 @@
 #include "TimerManager.h"
 #include "Actors/LimenAmmo.h"
 #include "Camera/CameraComponent.h"
-#include "Components/LimenCameraTiltComponent.h"
+#include "Camera/CameraShakeBase.h"
 #include "Components/LimenInventoryComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Perception/AIPerceptionSystem.h"
@@ -17,10 +17,6 @@
 ALimenWeapon::ALimenWeapon() : Super()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	AimDownSightsCamera = CreateDefaultSubobject<ULimenCameraTiltComponent>(TEXT("AimDownSightsCamera"));
-	check(AimDownSightsCamera != nullptr);
-	AimDownSightsCamera->SetupAttachment(GetRootComponent());
 
 	BaseDamage = 0.f;
 	RoundsPerSecond = 0.f;
@@ -38,6 +34,7 @@ ALimenWeapon::ALimenWeapon() : Super()
 	WeaponRange = 0;
 	ImpactDamageFalloffMultiplier = 0;
 	FireSoundRange = 5000;
+	RecoilCameraShakeScale = 1.f;
 }
 
 void ALimenWeapon::BeginPlay()
@@ -48,10 +45,6 @@ void ALimenWeapon::BeginPlay()
 	{
 		TimeBetweenShots = 1 / static_cast<double>(RoundsPerSecond);
 		ensureAlways(TimeBetweenShots > 0);
-		
-		UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
-		AIPerceptionSystem = AISystem->GetPerceptionSystem();
-		check(AIPerceptionSystem != nullptr);
 	}
 }
 
@@ -59,6 +52,14 @@ void ALimenWeapon::Drop()
 {
 	SetOwner(nullptr);
 	CurrentWeaponState = EWeaponState::None;
+	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
+}
+
+void ALimenWeapon::PickUp(AController* InController, APawn* InPawn)
+{
+	Super::PickUp(InController, InPawn);
+
+	CurrentWeaponState = EWeaponState::Active;
 	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
 }
 
@@ -161,12 +162,6 @@ double ALimenWeapon::GetBaseDamage() const
 	return BaseDamage;
 }
 
-bool ALimenWeapon::HasGameRelevantOwner() const
-{
-	const APawn* OwnerPawn = GetOwner<APawn>();
-	return OwnerPawn != nullptr && OwnerPawn->GetController() != nullptr;
-}
-
 const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const
 {
 	return CompatibleAmmo;
@@ -183,15 +178,29 @@ uint8 ALimenWeapon::GetAmmoCountUntilFull() const
 	return MagazineCapacity - CurrentAmmo;
 }
 
-UCameraComponent* ALimenWeapon::GetAimDownSightsCamera() const
-{
-	return AimDownSightsCamera.Get();
-}
-
 void ALimenWeapon::DecrementAmmo(const int Value)
 {
 	CurrentAmmo -= Value;
 	OnAmmoUpdated.Broadcast(CurrentAmmo);
+}
+
+void ALimenWeapon::WeaponFired()
+{
+	if (const APawn* Pawn = GetOwner<APawn>(); Pawn && Pawn->IsPlayerControlled())
+	{
+		if (RecoilCameraShakeClass)
+		{
+			const APlayerController* PC = Pawn->GetController<APlayerController>();
+			PC->PlayerCameraManager->StartCameraShake(RecoilCameraShakeClass, RecoilCameraShakeScale);
+		}
+	}
+
+	UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
+	if (UAIPerceptionSystem* AIPerceptionSystem = AISystem->GetPerceptionSystem())
+	{
+		const FAINoiseEvent NoiseEvent(this, GetActorLocation(), AINoiseEventLoudness, FireSoundRange);
+		AIPerceptionSystem->OnEvent(NoiseEvent);
+	}
 }
 
 void ALimenWeapon::Fire()
@@ -202,34 +211,17 @@ void ALimenWeapon::Fire()
 		bIsFiring = false;
 		return;
 	}
+
+	DecrementAmmo();
+	FireMethod();
+
+	WeaponFired();
+	BP_WeaponFired();
 	
 	bIsFireRateCooldownOver = false;
 	GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &ThisClass::HandleWeaponCooldown, TimeBetweenShots, false);
-
-	if (AIPerceptionSystem != nullptr)
-	{
-		const FAINoiseEvent NoiseEvent(this, GetActorLocation(), 1, FireSoundRange);
-		AIPerceptionSystem->OnEvent(NoiseEvent);
-	}
-	
-	DecrementAmmo();
-	WeaponFired();
-	FireMethod();
 	
 	OnWeaponFired.Broadcast(this);
-}
-
-void ALimenWeapon::Interact(AController* InController, APawn* InPawn)
-{
-	Super::Interact(InController, InPawn);
-
-	CurrentWeaponState = EWeaponState::Active;
-	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
-}
-
-UAIPerceptionSystem* ALimenWeapon::GetAIPerceptionSystem() const
-{
-	return AIPerceptionSystem.Get();
 }
 
 void ALimenWeapon::HandleWeaponCooldown()

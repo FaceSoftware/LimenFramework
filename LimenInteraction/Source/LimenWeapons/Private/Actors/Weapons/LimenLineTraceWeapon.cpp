@@ -5,11 +5,11 @@
 
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
+#include "Components/LimenDamageComponent.h"
 #include "Engine/HitResult.h"
 #include "Engine/World.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
-#include "Interfaces/LimenDamageable.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Perception/AIPerceptionSystem.h"
@@ -23,11 +23,9 @@ ALimenLineTraceWeapon::ALimenLineTraceWeapon() : Super()
 	TraceChannel = ECollisionChannel::ECC_Visibility;
 }
 
-void ALimenLineTraceWeapon::Interact(AController* InController, APawn* InPawn)
+void ALimenLineTraceWeapon::PickUp(AController* InController, APawn* InPawn)
 {
-	Super::Interact(InController, InPawn);
-	
-	CachedOwnerPawn = GetOwner<APawn>();
+	Super::PickUp(InController, InPawn);
 }
 
 void ALimenLineTraceWeapon::FireMethod()
@@ -39,8 +37,8 @@ void ALimenLineTraceWeapon::FireMethod()
 	FVector Start;
 	FRotator Rotation;
 
-	check(CachedOwnerPawn != nullptr) // If a weapon is being fired it should always have an owner
-	CachedOwnerPawn->GetController()->GetPlayerViewPoint(Start, Rotation);
+	check(GetOwner() != nullptr) // If a weapon is firing, it should always have an owner
+	GetOwner()->GetActorEyesViewPoint(Start, Rotation);
 
 	const FVector End = Start + Rotation.Vector() * WeaponRange;
 
@@ -51,26 +49,63 @@ void ALimenLineTraceWeapon::FireMethod()
 #if !(UE_BUILD_TEST || UE_BUILD_SHIPPING)
 	Params.bDebugQuery = bDebugMode;
 #endif
-	
-	GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params);
+
+	if (!GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params))
+	{
+		return;
+	}
 
 	float CurrentDamageWithFalloff = GetBaseDamage();
 	uint16 DamageCount = 0;
+
+	UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
+	UAIPerceptionSystem* AIPerceptionSystem = AISystem->GetPerceptionSystem();
+
+	TArray<AActor*> HitActors;
+	HitActors.Reserve(OutHits.Num());
+
+	FDamageParameters DamageParams;
+
+	APawn* PawnOwner = GetOwner<APawn>();
+
 	for (int i = 0; i < OutHits.Num(); ++i)
 	{
-		// C++ Interface
-		if (auto* Damageable = Cast<ILimenDamageable>(OutHits[i].GetActor()))
+		// Prevent hitting the same actor twice
+		if (!OutHits[i].GetActor() || HitActors.Contains(OutHits[i].GetActor()))
 		{
-			Damageable->ApplyPointDamage(CachedOwnerPawn->GetController(), CachedOwnerPawn.Get(), CurrentDamageWithFalloff, OutHits[i].BoneName);
-			
+			continue;
+		}
+		ULimenDamageComponent* DamageComponent = OutHits[i].GetActor()->GetComponentByClass<ULimenDamageComponent>();
+		if (!DamageComponent)
+		{
 			DamageCount++;
-			
-			const FAIDamageEvent DamageEvent(OutHits[i].GetActor(), this, CurrentDamageWithFalloff, GetActorLocation());
-			check(DamageEvent.IsValid())
-			GetAIPerceptionSystem()->OnEvent(DamageEvent);
+			continue;
 		}
 
+		DamageParams.DamageValue = CurrentDamageWithFalloff;
+		DamageParams.HitBoneName = OutHits[i].BoneName;
+		DamageParams.HitComponent = OutHits[i].Component;
+		DamageParams.DamageDirection = OutHits[i].ImpactPoint - Start;
+		DamageParams.DamageDirection.Normalize();
+
+		if (PawnOwner)
+		{
+			DamageComponent->ApplyDamage(PawnOwner->GetController(), this, DamageType, DamageParams);
+		}
+		else
+		{
+			DamageComponent->ApplyDamage(nullptr, this, DamageType, DamageParams);
+		}
+
+
+		const FAIDamageEvent AIDamageEvent(OutHits[i].GetActor(), this, CurrentDamageWithFalloff,
+			GetActorLocation());
+
+		if (AIPerceptionSystem) AIPerceptionSystem->OnEvent(AIDamageEvent);
+
 		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;
+		HitActors.Push(OutHits[i].GetActor());
+		DamageCount++;
 	}
 
 	LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);

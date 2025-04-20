@@ -116,12 +116,6 @@ FVector ALimenCharacterBase::GetLookTarget(const float MaxDistance) const
 	return Hit.Location;
 }
 
-void ALimenCharacterBase::OnHealthAttributeEmpty(const float NewValue)
-{
-	GetCharacterMovement()->DisableMovement();
-	AbilityComponent->DeactivateAllAbilities();
-}
-
 void ALimenCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);

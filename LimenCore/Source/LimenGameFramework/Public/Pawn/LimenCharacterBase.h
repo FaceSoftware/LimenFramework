@@ -50,12 +50,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector GetLookTarget(const float MaxDistance) const;
 
-protected:	
+protected:
 	UPROPERTY(EditAnywhere, Category="Limen")
 	TObjectPtr<ULimenAbilityComponent> AbilityComponent;
-	
-	UFUNCTION()
-	virtual void OnHealthAttributeEmpty(const float NewValue);
 
 	virtual void PossessedBy(AController* NewController) override;
 

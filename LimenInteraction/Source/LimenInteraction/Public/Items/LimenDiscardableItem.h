@@ -15,5 +15,7 @@ class LIMENINTERACTION_API ALimenDiscardableItem : public ALimenNonPhysicalItem
 	GENERATED_BODY()
 
 public:
+
+private:
 	
 };

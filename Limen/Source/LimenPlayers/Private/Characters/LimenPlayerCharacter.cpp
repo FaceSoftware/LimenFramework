@@ -330,14 +330,8 @@ void ALimenPlayerCharacter::GiveStartingItems(const TArray<TSubclassOf<ALimenIte
 			continue;
 		}
 
-		ULimenInteractableAreaComponent* InteractableComponent = Item->GetComponentByClass<ULimenInteractableAreaComponent>();
-		if (!ensureAlwaysMsgf(InteractableComponent, TEXT("Items must have a ULimenInteractableAreaComponent component")))
-		{
-			return;
-		}
-		
-		InteractableComponent->Interact(GetController(), this);
 		CharacterInventory->AddItem(Item);
+		Item->PickUp(GetController(), this);
 	}
 }
 
@@ -479,9 +473,6 @@ void ALimenPlayerCharacter::FireInput(const FInputActionInstance& Instance)
 			return;
 		}
 		
-		FRotator Rotation;
-		FVector Location;
-		GetController()->GetPlayerViewPoint(Location, Rotation);
 		GetCurrentWeapon()->StartFiring();
 	}
 	else
@@ -738,6 +729,7 @@ void ALimenPlayerCharacter::OnInteract(AActor* InteractableActor, const TScriptI
 	
 	if (CharacterInventory->AddItem(LimenItem))
 	{
+		LimenItem->PickUp(GetController(), this);
 		LIMEN_LOG(LogLimenPlayer, Log, this, "Item picked up")
 	}
 }
@@ -840,11 +832,6 @@ void ALimenPlayerCharacter::WeaponChanged(ALimenPhysicalItem* Old, ALimenPhysica
 void ALimenPlayerCharacter::AimDownSights()
 {
 	check(!bIsAimingDownSights);
-
-	// Aim with the weapon
-	check(GetCurrentWeapon() != nullptr);
-	check(GetPlayerController() != nullptr)
-	GetPlayerController()->SetViewTargetWithBlend(GetCurrentWeapon(), 0.2);
 	bIsAimingDownSights = true;
 
 	OnAimDownSights(GetCurrentWeapon());

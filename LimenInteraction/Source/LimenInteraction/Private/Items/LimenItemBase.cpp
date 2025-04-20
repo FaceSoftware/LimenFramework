@@ -1,7 +1,7 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
-#include "Items/LimenItemBase.h"
+ #include "Items/LimenItemBase.h"
 
 #include "TextureResource.h"
 #include "TimerManager.h"
@@ -76,6 +76,7 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 	bHasBeenLoaded = false;
 	RenderTargetBackgroundColor = FColor::Transparent;
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	ItemQuantity = 1;
 
 	ItemImageSceneCapture = CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(TEXT("ItemImageSceneCapture"));
 	bUseSceneCaptureForImage = ItemImageSceneCapture != nullptr;
@@ -184,6 +185,36 @@ TArray<ULimenItemAction*> ALimenItemBase::GetItemActions() const
 	return Out;
 }
 
+void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
+{
+	SetOwner(InPawn);
+
+	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
+	{
+		InteractableComponent->Deactivate();
+	}
+
+	if (FMath::IsNearlyZero(InteractAnimationTime))
+	{
+		RemoveFromGameplay();
+	}
+	else
+	{
+		InteractAnimation(InteractAnimationTime);
+		GetWorld()->GetTimerManager().SetTimer(InteractAnimationTimerHandle, this, &ThisClass::RemoveFromGameplay, InteractAnimationTime, false);
+	}
+}
+
+int32 ALimenItemBase::GetItemQuantity() const
+{
+	return ItemQuantity;
+}
+
+void ALimenItemBase::SetItemQuantity(const int32 InItemQuantity)
+{
+	ItemQuantity = InItemQuantity;
+}
+
 const FColor& ALimenItemBase::GetRenderTargetBackgroundColor() const
 {
 	return RenderTargetBackgroundColor;
@@ -203,23 +234,6 @@ void ALimenItemBase::CaptureItemImage()
 void ALimenItemBase::Interact(AController* InController, APawn* InPawn)
 {
 	Super::Interact(InController, InPawn);
-
-	SetOwner(InPawn);
-
-	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
-	{
-		InteractableComponent->Deactivate();
-	}
-
-	if (FMath::IsNearlyZero(InteractAnimationTime))
-	{
-		RemoveFromGameplay();
-	}
-	else
-	{
-		InteractAnimation(InteractAnimationTime);
-		GetWorld()->GetTimerManager().SetTimer(InteractAnimationTimerHandle, this, &ThisClass::RemoveFromGameplay, InteractAnimationTime, false);
-	}
 }
 
 void ALimenItemBase::InteractionStopped(AController* InController, APawn* InPawn)
