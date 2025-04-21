@@ -25,7 +25,7 @@ protected:
 	/**
 	 * @brief Event fired when a character is associated with this HUD.
 	 * BindCharacter function should be called by the PlayerController
-	 * to associate the controlled pawn. After that this event is fired.
+	 * to associate the controlled pawn. After that, this event is fired.
 	 * @param Pawn The character associated with this HUD.
 	 */
 	UFUNCTION(BlueprintImplementableEvent)

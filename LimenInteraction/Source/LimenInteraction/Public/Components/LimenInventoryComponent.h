@@ -60,7 +60,7 @@ public:
 	 * @param NewItem The instance of the new item.
 	 * @return True if it could be added, false if it could not.
 	 */
-	bool AddItem(ALimenItemBase* NewItem);
+	virtual bool AddItem(ALimenItemBase* NewItem);
 	/**
 	 * @brief Gets an item, removing it from the inventory.
 	 * @return The item instance.

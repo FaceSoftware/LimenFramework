@@ -3,12 +3,15 @@
 
 #include "Actors/LimenWeapon.h"
 
+#include <DamageTypes/LimenDamageType.h>
+
 #include "AISystem.h"
 #include "TimerManager.h"
 #include "Actors/LimenAmmo.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraShakeBase.h"
 #include "Components/LimenInventoryComponent.h"
+#include "FireMethods/LimenWeaponFireMethod.h"
 #include "GameFramework/Pawn.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Hearing.h"
@@ -18,6 +21,8 @@ ALimenWeapon::ALimenWeapon() : Super()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	FireMethodClass = ULimenDamageType::StaticClass();
+	DamageType = ULimenDamageType::StaticClass();
 	BaseDamage = 0.f;
 	RoundsPerSecond = 0.f;
 	TimeBetweenShots = 0.f;
@@ -35,17 +40,29 @@ ALimenWeapon::ALimenWeapon() : Super()
 	ImpactDamageFalloffMultiplier = 0;
 	FireSoundRange = 5000;
 	RecoilCameraShakeScale = 1.f;
+	AINoiseEventLoudness = 0;
 }
 
 void ALimenWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ULimenWeaponFireMethod* FireMethodInstance = NewObject<ULimenWeaponFireMethod>(
+		this, FireMethodClass.LoadSynchronous());
+	FireMethodObject = TStrongObjectPtr(FireMethodInstance);
+
 	if (GetWorld()->IsGameWorld())
 	{
-		TimeBetweenShots = 1 / static_cast<double>(RoundsPerSecond);
+		TimeBetweenShots = 1 / static_cast<float>(RoundsPerSecond);
 		ensureAlways(TimeBetweenShots > 0);
 	}
+}
+
+void ALimenWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	FireMethodObject.Reset();
+	
+	Super::EndPlay(EndPlayReason);
 }
 
 void ALimenWeapon::Drop()
@@ -121,12 +138,12 @@ bool ALimenWeapon::IsFiring() const
 	return bIsFiring;
 }
 
-double ALimenWeapon::GetSecondsPerShot() const
+float ALimenWeapon::GetSecondsPerShot() const
 {
 	return TimeBetweenShots;
 }
 
-double ALimenWeapon::GetReloadTime() const
+float ALimenWeapon::GetReloadTime() const
 {
 	return ReloadTimeInSeconds;
 }
@@ -157,9 +174,24 @@ bool ALimenWeapon::CanFire() const
 	return CurrentAmmo > 0;
 }
 
-double ALimenWeapon::GetBaseDamage() const
+float ALimenWeapon::GetBaseDamage() const
 {
 	return BaseDamage;
+}
+
+float ALimenWeapon::GetWeaponRange() const
+{
+	return WeaponRange;
+}
+
+TSubclassOf<ULimenDamageType> ALimenWeapon::GetDamageType() const
+{
+	return DamageType;
+}
+
+float ALimenWeapon::GetImpactDamageFalloffMultiplier() const
+{
+	return ImpactDamageFalloffMultiplier;
 }
 
 const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const
@@ -213,7 +245,8 @@ void ALimenWeapon::Fire()
 	}
 
 	DecrementAmmo();
-	FireMethod();
+	check(FireMethodObject.IsValid())
+	FireMethodObject->ProcessFire(this);
 
 	WeaponFired();
 	BP_WeaponFired();
