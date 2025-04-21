@@ -30,6 +30,7 @@ public class LimenGameFramework : ModuleRules
                 "LimenLocomotion", 
                 "LimenAbilitySystem",
                 "LimenLevelTransitions", 
+                "AIModule", 
             }
         );
     }

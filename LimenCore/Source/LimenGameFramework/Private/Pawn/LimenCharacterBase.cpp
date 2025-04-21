@@ -3,6 +3,7 @@
 
 #include "Pawn/LimenCharacterBase.h"
 
+#include "AIController.h"
 #include "EnhancedInputComponent.h"
 #include "Components/LimenMovementComponent.h"
 #include "Components/LimenNotificationComponent.h"
@@ -13,6 +14,7 @@
 #include "LogMacros/LimenLogMacros.h"
 #include "PlayerController/LimenPlayerControllerBase.h"
 #include "PlayerState/LimenPlayerStateBase.h"
+#include "AIController.h"
 
 
 ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -48,27 +50,35 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 void ALimenCharacterBase::EnableInput(class APlayerController* InPlayerController)
 {
 	Super::EnableInput(InPlayerController);
+
 	
-	GetComponentByClass<UEnhancedInputComponent>()->Activate();
+	if (InPlayerController == PlayerController)
+	{
+		GetComponentByClass<UEnhancedInputComponent>()->Activate();
+	}
+	
 }
 
 void ALimenCharacterBase::DisableInput(class APlayerController* InPlayerController)
 {
 	Super::DisableInput(InPlayerController);
-	
-	GetComponentByClass<UEnhancedInputComponent>()->Deactivate();
+
+	if (InPlayerController == PlayerController)
+	{
+		GetComponentByClass<UEnhancedInputComponent>()->Deactivate();
+	}
 }
 
 bool ALimenCharacterBase::QueueNotification(const FNotificationParams& InParams)
 {
-	if (PlayerController == nullptr)
+	if (Controller->IsA<AAIController>())
 	{
 		LIMEN_LOG(LogLimen, Error, this, "Cannot queue notifications to AI controlled characters")
 		return false;
 	}
 
-	auto* NotificationComponent = PlayerController->GetHUD()->GetComponentByClass<ULimenNotificationComponent>();
-	if (!IsValid(NotificationComponent))
+	ULimenNotificationComponent* NotificationComponent = PlayerController->GetHUD()->GetComponentByClass<ULimenNotificationComponent>();
+	if (NotificationComponent == nullptr)
 	{
 		LIMEN_LOG(LogLimen, Error, this, "Could not find a notification component in the player's HUD class")
 		return false;
