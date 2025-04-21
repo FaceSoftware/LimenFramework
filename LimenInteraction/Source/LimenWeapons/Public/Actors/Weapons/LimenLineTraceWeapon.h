@@ -6,7 +6,6 @@
 #include "Actors/LimenWeapon.h"
 #include "LimenLineTraceWeapon.generated.h"
 
-class ULimenDamageType;
 
 UCLASS(Blueprintable, BlueprintType)
 class LIMENWEAPONS_API ALimenLineTraceWeapon : public ALimenWeapon
@@ -15,16 +14,4 @@ class LIMENWEAPONS_API ALimenLineTraceWeapon : public ALimenWeapon
 
 public:
 	ALimenLineTraceWeapon();
-	virtual void PickUp(AController* InController, APawn* InPawn) override;
-
-protected:
-	
-private:
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Debug")
-	bool bDebugMode;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Weapon Stats")
-	TEnumAsByte<ECollisionChannel> TraceChannel;
-	
-	virtual void FireMethod() override;
 };
