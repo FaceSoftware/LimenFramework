@@ -58,6 +58,13 @@ void ALimenWeapon::BeginPlay()
 	}
 }
 
+void ALimenWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	FireMethodObject.Reset();
+	
+	Super::EndPlay(EndPlayReason);
+}
+
 void ALimenWeapon::Drop()
 {
 	SetOwner(nullptr);

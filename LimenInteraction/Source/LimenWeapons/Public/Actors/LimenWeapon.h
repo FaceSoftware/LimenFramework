@@ -72,6 +72,8 @@ public:
 	
 	ALimenWeapon();
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	void Drop();
 	virtual void PickUp(AController* InController, APawn* InPawn) override;
 	
