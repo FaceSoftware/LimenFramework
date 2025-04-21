@@ -302,7 +302,7 @@ protected:
 	 * @warning Should not contain any logic for reloading the weapon.
 	 */
 	UFUNCTION(BlueprintCosmetic, BlueprintImplementableEvent)
-	void OnWeaponReload(ALimenWeapon* InWeapon, const double ReloadTimeSeconds);
+	void OnWeaponReload(ALimenWeapon* InWeapon, const float ReloadTimeSeconds);
 	
 	UFUNCTION(BlueprintCosmetic, BlueprintImplementableEvent)
 	void OnToolChanged(ALimenPhysicalItem* Old, ALimenPhysicalItem* New);
