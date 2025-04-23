@@ -22,10 +22,7 @@ class LIMENGAMEFRAMEWORK_API ALimenBaseHUD : public AHUD
 {
 	GENERATED_BODY()
 	
-public:
-	UPROPERTY(BlueprintAssignable)
-	FObjectInitializationDelegate OnHudInitialized;
-	
+public:	
 	ALimenBaseHUD();
 	virtual void ShowHUD() override;
 

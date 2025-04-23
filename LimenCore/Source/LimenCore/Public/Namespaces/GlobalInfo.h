@@ -21,19 +21,19 @@ namespace ErrorInformation
 namespace LimenThreading::ExitCodes
 {
 	// Success execution 
-	constexpr uint32 Success = 0;
+	constexpr static uint32 Success = 0;
 	
 	// When kill is requested
-	constexpr uint32 EarlyStop = 1;
+	constexpr static uint32 EarlyStop = 1;
 
 	// Error that the thread cannot recover from
-	constexpr uint32 CriticalError = 2;
+	constexpr static uint32 CriticalError = 2;
 
 	// Non critical error
-	constexpr uint32 NonCriticalError = 3;
+	constexpr static uint32 NonCriticalError = 3;
 
 	// When something made the operation redundant
-	constexpr uint32 RedundancyWarning = 4;
+	constexpr static uint32 RedundancyWarning = 4;
 }
 
 namespace LimenThreading

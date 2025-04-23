@@ -58,9 +58,17 @@ void ALimenWeapon::BeginPlay()
 	}
 }
 
-void ALimenWeapon::Drop()
+void ALimenWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	SetOwner(nullptr);
+	FireMethodObject.Reset();
+	
+	Super::EndPlay(EndPlayReason);
+}
+
+void ALimenWeapon::Drop(AController* InController, APawn* InPawn)
+{
+	Super::Drop(InController, InPawn);
+
 	CurrentWeaponState = EWeaponState::None;
 	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
 }

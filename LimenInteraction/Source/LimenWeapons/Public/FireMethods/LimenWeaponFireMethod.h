@@ -17,7 +17,7 @@ class ALimenWeapon;
  * Acts as an abstract representation for managing weapon fire mechanics.
  *
  * Inherits from:
- *   - UObject: The base class for all UE4 objects.
+ *   - UObject: The base class for all UE objects.
  *
  * Intended Usage:
  *   This class is designed to be extended to implement specific weapon fire behaviors
@@ -26,7 +26,7 @@ class ALimenWeapon;
  * Module:
  *   - LIMENWEAPONS_API: Provides API access to this class for the LimenWeapons module.
  */
-UCLASS()
+UCLASS(Blueprintable, BlueprintType)
 class LIMENWEAPONS_API ULimenWeaponFireMethod : public UObject
 {
 	GENERATED_BODY()

@@ -16,6 +16,10 @@ class LIMENOBJECTIVES_API ALimenObjectivesManager : public ALimenGameplayManager
 	GENERATED_BODY()
 
 public:
+	DECLARE_MULTICAST_DELEGATE_OneParam(FObjectivesManagerInit, ALimenObjectivesManager* /* ObjectivesManager */);
+
+	FObjectivesManagerInit OnInitialized;
+	
 	ALimenObjectivesManager();
 	virtual void Start() override;
 

@@ -63,23 +63,17 @@ void ALimenGameplayManager::BeginPlay()
 	}
 	else
 	{
-		Initialize();
+		Start();
+		BP_Start();
+		bHasInitialized = true;
 	}
-}
-
-void ALimenGameplayManager::Initialize()
-{
-	Start();
-	BP_Start();
-	OnObjectInitialized.Broadcast(this);
-	bHasInitialized = true;
 }
 
 void ALimenGameplayManager::Start()
 {
 }
 
-bool ALimenGameplayManager::CanStart()
+bool ALimenGameplayManager::CanStart() const
 {
 	const TArray<ALimenGameplayManager*> Managers = GetGameplayManagers(GetWorld(), GetClass());
 	return Managers.Num() == 1 && IsValid(GetWorld()) && GetWorld()->IsGameWorld();
