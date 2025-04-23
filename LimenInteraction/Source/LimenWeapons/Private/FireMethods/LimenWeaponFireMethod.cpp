@@ -81,7 +81,6 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 		ULimenDamageComponent* DamageComponent = OutHits[i].GetActor()->GetComponentByClass<ULimenDamageComponent>();
 		if (!DamageComponent)
 		{
-			DamageCount++;
 			continue;
 		}
 

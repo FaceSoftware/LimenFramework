@@ -60,6 +60,7 @@ public:
 	TArray<ULimenItemAction*> GetItemActions() const;
 	
 	virtual void PickUp(AController* InController, APawn* InPawn);
+	virtual void Drop(AController* InController, APawn* InPawn);
 
 	int32 GetItemQuantity() const;
 	void SetItemQuantity(const int32 InItemQuantity);

@@ -205,6 +205,18 @@ void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
 	}
 }
 
+void ALimenItemBase::Drop(AController* InController, APawn* InPawn)
+{
+	SetOwner(nullptr);
+
+	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
+	{
+		InteractableComponent->Activate(true);
+	}
+
+	AddToGameplay();
+}
+
 int32 ALimenItemBase::GetItemQuantity() const
 {
 	return ItemQuantity;

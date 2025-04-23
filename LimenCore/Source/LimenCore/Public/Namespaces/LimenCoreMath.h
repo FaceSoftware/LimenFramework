@@ -22,34 +22,24 @@ struct FConeData
 		Out.Height = InHeight;
 		return Out;
 	}
-
-	/* static FConeData FromRadius(const FVector& InApex, const FQuat& InOrientation, const float InBaseRadius, const float InHeight)
-	{
-		FConeData Out;
-		Out.Apex = InApex;
-		Out.Orientation = InOrientation;
-		Out.Height = InHeight;
-		Out.BaseRadius = InBaseRadius;
-		return Out;
-	} */
 	
 	~FConeData() = default;
 
 	bool IsPossible() const
 	{
-		return Apex.IsNearlyZero() || FMath::IsNearlyZero(Angle) || FMath::IsNearlyZero(Height); 
+		return !Apex.IsNearlyZero() && !FMath::IsNearlyZero(Angle) || !FMath::IsNearlyZero(Height);
 	}
 	
 	// The apex point of the cone
-	const FVector& GetApex() { return Apex; }
+	const FVector& GetApex() const { return Apex; }
 	// The orientation of the cone
-	const FQuat& GetOrientation() { return Orientation; }
+	const FQuat& GetOrientation() const { return Orientation; }
 	// The full angle of the cone
-	const float& GetAngle() { return Angle; }
+	float GetAngle() const { return Angle; }
 	// The height of the cone
-	const float& GetHeight() { return Height; }
+	float GetHeight() const { return Height; }
 	// The base center point. Lazy evaluation
-	const FVector& GetBaseCenterPoint()
+	const FVector& GetBaseCenterPoint() const
 	{
 		if (!BaseCenterPoint.IsSet())
 		{
@@ -64,7 +54,7 @@ struct FConeData
 	}
 	
 	// The length of the cone's hypotenuse. Lazy evaluation
-	const float& GetHypotenuseLength()
+	float GetHypotenuseLength() const
 	{
 		if (!HypotenuseLength.IsSet())
 		{
@@ -75,7 +65,7 @@ struct FConeData
 		return HypotenuseLength.GetValue();
 	}
 	// The cone's volume. Lazy evaluation
-	const float& GetVolume()
+	float GetVolume() const
 	{
 		if (!Volume.IsSet())
 		{
@@ -85,7 +75,7 @@ struct FConeData
 		return Volume.GetValue();
 	}
 	// The base radius. Lazy evaluation
-	const float& GetBaseRadius()
+	float GetBaseRadius() const
 	{
 		if (!BaseRadius.IsSet())
 		{
@@ -94,7 +84,7 @@ struct FConeData
 
 		return BaseRadius.GetValue();	
 	}
-	float GetRadiusAtHeight(const float TestHeight)
+	float GetRadiusAtHeight(const float TestHeight) const
 	{
 		return TestHeight * FMath::Tan(FMath::DegreesToRadians(Angle / 2));
 	}
@@ -110,13 +100,13 @@ private:
 	// The height of the cone
 	float Height;
 	// The base center point
-	TOptional<FVector> BaseCenterPoint;
+	mutable TOptional<FVector> BaseCenterPoint;
 	// The length of the cone's hypotenuse
-	TOptional<float> HypotenuseLength;
+	mutable TOptional<float> HypotenuseLength;
 	// The cone's volume
-	TOptional<float> Volume;
+	mutable TOptional<float> Volume;
 	// The base radius
-	TOptional<float> BaseRadius;
+	mutable TOptional<float> BaseRadius;
 
 	TOptional<FVector2D> LocalHypotenuseBasePoint;
 	

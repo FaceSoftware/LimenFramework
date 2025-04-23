@@ -27,6 +27,8 @@ void ALimenObjectivesManager::Start()
 		
 		ObjectiveInstances.Push(NewObjective);
 	}
+
+	OnInitialized.Broadcast(this);
 }
 
 TArray<ALimenObjective*> ALimenObjectivesManager::LoadObjectivesForPlayer(APlayerController* Controller, APawn* Pawn,

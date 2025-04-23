@@ -5,6 +5,7 @@
 
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "Net/UnrealNetwork.h"
 
 
 ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -16,18 +17,22 @@ ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitial
 void ALimenGameplayActor:: BeginPlay()
 {
 	Super::BeginPlay();
-	
-	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::Initialize_Internal);
 }
 
-void ALimenGameplayActor::Initialize()
+void ALimenGameplayActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	OnActorInitialized.Broadcast(this);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+	Params.Condition = ELifetimeCondition::COND_None;
+	Params.RepNotifyCondition = ELifetimeRepNotifyCondition::REPNOTIFY_OnChanged;
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ALimenGameplayActor, bIsRemovedFromGameplay, Params);
 }
 
 void ALimenGameplayActor::RemoveFromGameplay()
 {
-	check(HasAuthority())
 	if (bIsRemovedFromGameplay)
 	{
 		return;
@@ -41,7 +46,6 @@ void ALimenGameplayActor::RemoveFromGameplay()
 
 void ALimenGameplayActor::AddToGameplay()
 {
-	check(HasAuthority())
 	if (!bIsRemovedFromGameplay)
 	{
 		return;
@@ -58,8 +62,14 @@ bool ALimenGameplayActor::IsRemovedFromGameplay() const
 	return bIsRemovedFromGameplay;
 }
 
-void ALimenGameplayActor::Initialize_Internal()
+void ALimenGameplayActor::OnRep_IsRemovedFromGameplay()
 {
-	Initialize();
-	OnActorInitialized.Broadcast(this);
+	if (bIsRemovedFromGameplay)
+	{
+		RemoveFromGameplay();
+	}
+	else
+	{
+		AddToGameplay();
+	}
 }
