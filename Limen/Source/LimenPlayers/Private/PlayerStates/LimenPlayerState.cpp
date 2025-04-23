@@ -46,7 +46,7 @@ void ALimenPlayerState::BeginPlay()
 		}
 		else
 		{
-			ObjectivesManager->OnObjectInitialized.AddUObject(this, &ThisClass::ObjectivesManagerInitialized);
+			ObjectivesManager->OnInitialized.AddUObject(this, &ThisClass::ObjectivesManagerInitialized);
 		} 
 	}
 }
@@ -107,9 +107,8 @@ void ALimenPlayerState::ObjectiveUpdated(ALimenObjective* Objective, const FObje
 	}
 }
 
-void ALimenPlayerState::ObjectivesManagerInitialized(UObject* ObjectivesManagerObject)
+void ALimenPlayerState::ObjectivesManagerInitialized(ALimenObjectivesManager* ObjectivesManager)
 {
-	const ALimenObjectivesManager* ObjectivesManager = CastChecked<ALimenObjectivesManager>(ObjectivesManagerObject);
 	for (auto* Objective : ObjectivesManager->GetObjectivesInstances())
 	{
 		Objective->OnObjectiveAdded.AddUniqueDynamic(this, &ThisClass::ALimenPlayerState::ObjectiveAdded);

@@ -74,7 +74,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	void Drop();
+	virtual void Drop(AController* InController, APawn* InPawn) override;
 	virtual void PickUp(AController* InController, APawn* InPawn) override;
 	
 	void StartFiring();

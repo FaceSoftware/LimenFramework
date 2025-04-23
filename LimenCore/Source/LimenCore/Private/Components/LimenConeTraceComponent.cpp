@@ -39,29 +39,31 @@ void ULimenConeTraceComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	ActorsToCheck.Remove(nullptr);
 
-	if (ConeData.IsPossible() || !ActorsToCheck.IsEmpty())
+	if (!ConeData.IsPossible())
 	{
-		for (auto& Actor : ActorsToCheck)
+		return;
+	}
+
+	for (TPair<AActor*, bool>& Actor : ActorsToCheck)
+	{
+		if (Actor.Key == nullptr)
 		{
-			if (Actor.Key == nullptr)
-			{
-				continue;
-			}
-			
-			LineTraceQueryParams.ClearIgnoredSourceObjects();
-			IgnoredActors[0] = Actor.Key;
-			LineTraceQueryParams.AddIgnoredActors(IgnoredActors);
-			
-			if (const bool bIsActorInCone = IsActorInCone(Actor.Key); bIsActorInCone && !Actor.Value)
-			{
-				Actor.Value = true;
-				OnConeCollisionUpdate.Broadcast(Actor.Key, Actor.Value);
-			}
-			else if (!bIsActorInCone && Actor.Value)
-			{
-				Actor.Value = false;
-				OnConeCollisionUpdate.Broadcast(Actor.Key, Actor.Value);
-			}
+			continue;
+		}
+		
+		LineTraceQueryParams.ClearIgnoredSourceObjects();
+		IgnoredActors[0] = Actor.Key;
+		LineTraceQueryParams.AddIgnoredActors(IgnoredActors);
+		
+		if (const bool bIsActorInCone = IsActorInCone(Actor.Key); bIsActorInCone && !Actor.Value)
+		{
+			Actor.Value = true;
+			OnConeCollisionUpdate.Broadcast(Actor.Key, Actor.Value);
+		}
+		else if (!bIsActorInCone && Actor.Value)
+		{
+			Actor.Value = false;
+			OnConeCollisionUpdate.Broadcast(Actor.Key, Actor.Value);
 		}
 	}
 }

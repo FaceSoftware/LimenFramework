@@ -36,7 +36,7 @@ protected:
 	UFUNCTION()
 	virtual void ObjectiveUpdated(ALimenObjective* Objective, const FObjectiveData& Data);
 
-	virtual void ObjectivesManagerInitialized(UObject* ObjectivesManagerObject);
+	virtual void ObjectivesManagerInitialized(ALimenObjectivesManager* ObjectivesManager);
 	
 private:
 	UPROPERTY()
