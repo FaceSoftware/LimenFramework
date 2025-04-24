@@ -52,18 +52,29 @@ public:
 	
 	ULimenInventoryComponent();
 
+	/**
+	 * @brief Loads the specified inventory items into the component.
+	 * @param NewInventoryToLoad A list of item classes to load into the inventory.
+	 * @return An array of item instances that have been successfully loaded.
+	 */
 	TArray<ALimenItemBase*> LoadInventory(const TArray<TSubclassOf<ALimenItemBase>>& NewInventoryToLoad);
+	/**
+	 * @brief Saves the current inventory by collecting all item instances present in the component's registries.
+	 * @return An array of item instances currently stored in the inventory.
+	 */
 	TArray<ALimenItemBase*> SaveInventory() const;
 
 	/**
 	 * @brief Adds a new item to the inventory.
-	 * @param NewItem The instance of the new item.
-	 * @return True if it could be added, false if it could not.
+	 * @param NewItem The item to add to the inventory. Must not be null.
+	 * @return True if the item was successfully added, false otherwise.
 	 */
 	virtual bool AddItem(ALimenItemBase* NewItem);
+	virtual bool CanAddItem(ALimenItemBase* NewItem) const;
 	/**
-	 * @brief Gets an item, removing it from the inventory.
-	 * @return The item instance.
+	 * @brief Retrieves an item of the specified type from the inventory.
+	 * @tparam T The type of the item to retrieve. Must derive from ALimenItemBase.
+	 * @return A pointer to the item instance of the specified type. Returns nullptr if the item is not found.
 	 */
 	template<typename T>
 	T* GetItem()
@@ -72,10 +83,12 @@ public:
 		const TSubclassOf<ALimenItemBase> Class = T::StaticClass();
 		return Cast<T>(GetItem(Class));
 	}
+
 	/**
-	 * @brief Gets an item, removing it from the inventory.
-	 * @param Class The class of the item.
-	 * @return The item instance.
+	 * @brief Retrieves an item of the specified type from the inventory.
+	 * @tparam T The type of the item to retrieve. Must derive from ALimenItemBase.
+	 * @param Class The class of the item to search for.
+	 * @return A pointer to the item instance of the specified type. Returns nullptr if the item is not found.
 	 */
 	template<typename T>
 	T* GetItem(const TSubclassOf<ALimenItemBase>& Class)
@@ -83,53 +96,77 @@ public:
 		static_assert(std::is_base_of_v<ALimenItemBase, T>);
 		return Cast<T>(GetItem(Class));
 	}
+
 	/**
-	 * @brief Gets an item, removing it from the inventory.
-	 * @param Class The class of the item.
-	 * @param Count The number of instances to get.
-	 * @return The item instance.
+	 * @brief Retrieves a specified number of item instances of a given class from the inventory.
+	 * @param Class The class type of the items to retrieve from the inventory.
+	 * @param Count The number of instances to attempt to retrieve.
+	 * @return An array with the retrieved item instances of the specified class.
+	 * Returns an empty array if the class is not found or the count exceeds available items.
 	 */
 	TArray<ALimenItemBase*> GetItem(const TSubclassOf<ALimenItemBase>& Class, const int32 Count);
 	/**
-	 * @brief Gets an item, removing it from the inventory.
-	 * @param Class The class of the item.
-	 * @return The item instance.
+	 * @brief Retrieves an item instance of the specified class from the inventory.
+	 * @param Class The class type of the item to retrieve from the inventory.
+	 * @return A pointer to the item instance of the specified class. Returns nullptr if the item is not found.
 	 */
 	ALimenItemBase* GetItem(const TSubclassOf<ALimenItemBase>& Class);
 	/**
-	 * @brief Gets all the inventory items, without removing them.
-	 * @return A map containing the inventory item classes with their respective quantity.
+	 * @brief Retrieves a summary of inventory items currently stored in the component without modifying the inventory.
+	 * @return A map where the keys represent item classes and the values indicate the respective quantities of
+	 * each item in the inventory.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
 	TMap<TSubclassOf<ALimenItemBase>, int32> PeekInventory() const;
+	/**
+	 * @brief Retrieves all inventory item instances that match the specified class or its subclasses without
+	 * removing them.
+	 * @param Class The class type to filter inventory items by, including subclasses of the specified class.
+	 * @return An array of inventory item instances matching the specified class or its subclasses.
+	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory", meta=(DeterminesOutputType="Class"))
 	TArray<ALimenItemBase*> PeekInventoryInstances(const TSubclassOf<ALimenItemBase> Class) const;
+	/**
+	 * @brief Retrieves the first inventory item instance matching the specified class type without removing them.
+	 * @param Class The class type of the item to search for in the inventory.
+	 * @return A pointer to the first item instance that matches the specified class type.
+	 * Returns nullptr if no matching item is found.
+	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory", meta=(DeterminesOutputType="Class"))
 	ALimenItemBase* PeekInventoryInstance(const TSubclassOf<ALimenItemBase> Class) const;
 
+	/**
+	 * @brief Provides a read-only view of the items currently available in the inventory.
+	 * @return A map associating item classes with their corresponding counts in the inventory.
+	 */
 	TMap<TSubclassOf<ALimenItemBase>, int32> PeekItems() const;
+	/**
+	 * @brief Retrieves a list of item classes currently stored in the inventory.
+	 * @return An array of item classes that represent the types of items present in the inventory.
+	 */
 	TArray<TSubclassOf<ALimenItemBase>> PeekItemsClass() const;
 	/**
-	 * @brief Gets inventory items from a specific class, without removing them.
-	 * @param ItemClass The class to search.
-	 * @return A map containing the inventory items of the specified class and their respective quantity.
+	 * @brief Retrieves a map of item classes and their corresponding counts available in the inventory that match or derive from the specified item class.
+	 * @param ItemClass The class of the items to peek at. Can include derived classes.
+	 * @return A map containing the matched item classes as keys and their respective counts as values.
 	 */
 	TMap<TSubclassOf<ALimenItemBase>, int32> PeekItems(const TSubclassOf<ALimenItemBase>& ItemClass) const;
 	/**
-	 * @brief Gets inventory items from a specific class, without removing them.
-	 * @param InterfaceClass The interface class to search.
-	 * @return A map containing the inventory items using the specified interface and their respective quantity.
-	 */
+	 * @brief Retrieves a mapping of item classes to their respective instance counts that
+	 * implement the specified interface.
+	 * @param InterfaceClass The interface class to filter the inventory items by.
+	 * Only items implementing this interface will be included.
+	 * @return A map where the keys are item classes that implement the specified interface*/
 	TMap<TSubclassOf<ALimenItemBase>, int32> PeekItems(const UClass* InterfaceClass) const;
 	/**
-	 * @brief Gets an instance from an item of the inventory, without removing it.
-	 * @param ItemClass The item class to search.
-	 * @return The item instance.
+	 * @brief Retrieves the first instance of a specific item class from the inventory without removing it.
+	 * @param ItemClass The class type of the item to be retrieved.
+	 * @return A pointer to the first item instance of the specified class, or nullptr if no such instance exists.
 	 */
 	template<typename T>
 	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass)
 	{
-		static_assert(std::is_base_of_v<ALimenItemBase, T>);
+		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
 		check(ItemClass != nullptr);
 		for (FItemRegistry& Registry : ItemRegistries)
 		{
@@ -141,14 +178,16 @@ public:
 		return nullptr;
 	}
 	/**
-	 * @brief Gets an instance from an item of the inventory, without removing it.
-	 * @return The item instance.
+	 * @brief Retrieves the first available item instance of the specified type from the inventory without removing it.
+	 * @tparam T A class type that must derive from ALimenItemBase.
+	 * @return A pointer to the item instance of the specified type if found, or nullptr if no such item exists.
 	 */
 	template<typename T>
-	T* PeekItemInstance()
+	T* PeekItemInstance() const
 	{
-		static_assert(std::is_base_of_v<ALimenItemBase, T>);
-		for (FItemRegistry& Registry : ItemRegistries)
+		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
+
+		for (const FItemRegistry& Registry : ItemRegistries)
 		{
 			T* Item = Registry.ItemInstances.IsEmpty() ? nullptr : Cast<T>(Registry.ItemInstances[0]);
 			if (Item != nullptr)
@@ -158,6 +197,11 @@ public:
 		}
 		return nullptr;
 	}
+	/**
+	 * @brief Retrieves the first item instance of the specified type from the inventory at the given index without removing it.
+	 * @param Index The index of the inventory slot to retrieve the item instance from.
+	 * @return A pointer to the item instance if it exists and is of the specified type, otherwise nullptr.
+	 */
 	template<typename T>
 	T* PeekItemInstance(const int32 Index)
 	{
@@ -167,6 +211,11 @@ public:
 		T* Item = Cast<T>(ItemRegistries[Index].ItemInstances[0]);
 		return Item;
 	}
+	/**
+	 * @brief Retrieves an array with item instances of the specified type from the item registries without modifying their state.
+	 * @tparam T The type of items to retrieve, which must derive from ALimenItemBase.
+	 * @return An array with item instances of the specified type found in the registries.
+	 */
 	template<typename T>
 	TArray<T*> PeekItemInstances()
 	{
@@ -196,6 +245,11 @@ public:
 		
 		return Out;
 	}
+	/**
+	 * @brief Retrieves item instances from the inventory that implement a specific interface.
+	 * @tparam InterfaceClass The class of the interface to filter item instances by.
+	 * @return An array of item instances that implement the specified interface.
+	 */
 	template<typename InterfaceClass>
 	TArray<ALimenItemBase*> PeekItemInstancesByInterface()
 	{
@@ -216,9 +270,19 @@ public:
 		return Out;
 	}
 
+	/**
+	 * @brief Retrieves the quantity of items of the specified class stored in the inventory.
+	 * @param ItemClass The class of the item for which the quantity is being requested.
+	 * @return The total quantity of items of the specified class present in the inventory.
+	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
 	int32 GetItemQuantity(const TSubclassOf<ALimenItemBase>& ItemClass) const;
 
+	/**
+	 * @brief Checks if the inventory has the capacity to accommodate additional space.
+	 * @param ExtraDesiredSpace The additional space required in the inventory.
+	 * @return True if the inventory can accommodate the additional space, false otherwise.
+	 */
 	bool HasCapacity(const int32 ExtraDesiredSpace) const;
 
 protected:
@@ -226,6 +290,9 @@ protected:
 	uint16 InventorySize;
 	UPROPERTY(EditDefaultsOnly, Category="Limen|Config")
 	bool bUseStaticSize;
+
+	virtual void ItemAdded(ALimenItemBase* NewItem);
+	virtual void ItemRemoved(ALimenItemBase* NewItem);
 	
 private:
 	uint16 CurrentInventoryLoad;

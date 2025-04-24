@@ -71,6 +71,7 @@ public:
 	FWeaponFireDelegate OnWeaponCooldownOver;
 	
 	ALimenWeapon();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -102,6 +103,10 @@ public:
 	TSubclassOf<ULimenDamageType> GetDamageType() const;
 	UFUNCTION(BlueprintCallable)
 	float GetImpactDamageFalloffMultiplier() const;
+	UFUNCTION(BlueprintCallable)
+	float GetAINoiseEventLoudness() const;
+	UFUNCTION(BlueprintCallable)
+	float GetFireSoundRange() const;
 	
 
 	const TSubclassOf<ALimenAmmo>& GetCompatibleAmmo() const;
@@ -148,26 +153,35 @@ protected:
 	
 	void DecrementAmmo(const int Value = 1);
 	
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=ReloadStart)
+	void BP_ReloadStart(const float ReloadTimeSeconds);
 	void ReloadStart(const float ReloadTimeSeconds);
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=WeaponFired)
 	void BP_WeaponFired();
-	void WeaponFired();
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
-	void WeaponFiredWithoutAmmo();
+	virtual void WeaponFired();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=WeaponFiredWithoutAmmo)
+	void BP_WeaponFiredWithoutAmmo();
+	virtual void WeaponFiredWithoutAmmo();
 
 	void Fire();
 	
 private:
+	UPROPERTY(Replicated)
 	float TimeBetweenShots;
+	UPROPERTY(Replicated)
 	bool bIsHoldingTrigger;
+	UPROPERTY(Replicated)
 	bool bIsFireRateCooldownOver;
+	UPROPERTY(Replicated)
 	bool bIsFiring;
 	FTimerHandle FireRateTimer;
 	FTimerHandle CooldownTimer;
 	FTimerHandle ReloadTimer;
+	UPROPERTY(Replicated)
 	bool bIsReloading;
+	UPROPERTY(Replicated)
 	bool bIsNextShotReady;
+	UPROPERTY(Replicated)
 	EWeaponState CurrentWeaponState;
 	TStrongObjectPtr<ULimenWeaponFireMethod> FireMethodObject;
 
@@ -178,4 +192,6 @@ private:
 	void StartReloadTimer(ULimenInventoryComponent* PlayerInventory);
 	void StopReloadTimer();
 	
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_WeaponFired();
 };

@@ -70,10 +70,7 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::SaveInventory() const
 
 bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 {
-	check(NewItem != nullptr);
-
-	const int32 ItemQuantity = NewItem->GetItemQuantity();
-	if (!HasCapacity(ItemQuantity))
+	if (!CanAddItem(NewItem))
 	{
 		return false;
 	}
@@ -95,7 +92,7 @@ bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 	SpawnParameters.Template = NewItem;
 	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	SpawnParameters.Owner = NewItem->GetOwner();
-	for (int i = 1; i < ItemQuantity; ++i)
+	for (int i = 1; i < NewItem->GetItemQuantity(); ++i)
 	{
 		ALimenItemBase* Item = GetWorld()->SpawnActor<ALimenItemBase>(NewItem->GetClass(), SpawnParameters);
 		Item->RemoveFromGameplay();
@@ -115,8 +112,25 @@ bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 	{
 		OnItemUpdated.Broadcast(NewItem->GetClass());
 	}
-	
+
+	ItemAdded(NewItem);
 	OnInventoryUpdated.Broadcast(this);
+	return true;
+}
+
+bool ULimenInventoryComponent::CanAddItem(ALimenItemBase* NewItem) const
+{
+	if (!NewItem)
+	{
+		return false;
+	}
+
+	const int32 ItemQuantity = NewItem->GetItemQuantity();
+	if (!HasCapacity(ItemQuantity))
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -136,7 +150,8 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALim
 		ALimenItemBase* TempItem = Registry->ItemInstances.Pop(EAllowShrinking::Yes);
 		check(TempItem != nullptr);
 		OutItems.Push(TempItem);
-		
+		ItemRemoved(TempItem);
+
 		if (Registry->ItemInstances.IsEmpty())
 		{
 			break;
@@ -305,6 +320,14 @@ bool ULimenInventoryComponent::HasCapacity(const int32 ExtraDesiredSpace) const
 {
 	return !bUseStaticSize ||
 		  ((CurrentInventoryLoad + ExtraDesiredSpace) <= InventorySize);
+}
+
+void ULimenInventoryComponent::ItemAdded(ALimenItemBase* NewItem)
+{
+}
+
+void ULimenInventoryComponent::ItemRemoved(ALimenItemBase* NewItem)
+{
 }
 
 void ULimenInventoryComponent::AddItemToRegistry(ALimenItemBase* NewItem)

@@ -64,6 +64,7 @@ void ALimenInteractable::SimulateInteraction()
 
 void ALimenInteractable::Interact(AController* InController, APawn* InPawn)
 {
+	check(HasAuthority())
 	bWasInteracted = true;
 	bIsBeingContinuouslyInteracted = true;
 }
