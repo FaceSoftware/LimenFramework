@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "LimenWeaponFireMethod.generated.h"
 
+class UMaterialInterface;
 enum ECollisionChannel : int;
 class ALimenWeapon;
 
@@ -46,9 +47,17 @@ public:
 	virtual void ProcessFire(ALimenWeapon* Weapon) override;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Debug")
+	UPROPERTY(EditDefaultsOnly, Category="Debug")
 	bool bDebugMode;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Weapon Stats")
+	UPROPERTY(EditDefaultsOnly, Category="Collision")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
+
+	UPROPERTY(EditDefaultsOnly, Category="VFX")
+	TObjectPtr<UMaterialInterface> BulletHoleDecalMaterial;
+	UPROPERTY(EditDefaultsOnly, Category="VFX")
+	FVector DecalSize;
+	UPROPERTY(EditDefaultsOnly, Category="VFX", meta=(Units=seconds))
+	float DecalLifetime;
+	
 };

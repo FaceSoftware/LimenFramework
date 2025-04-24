@@ -818,12 +818,16 @@ void ALimenPlayerCharacter::ToolChanged(ALimenPhysicalItem* Old, ALimenPhysicalI
 
 void ALimenPlayerCharacter::WeaponChanged(ALimenPhysicalItem* Old, ALimenPhysicalItem* New)
 {
-	GetCurrentWeapon()->OnWeaponReload.AddUniqueDynamic(this, &ThisClass::OnWeaponReload);
+	check(GetCurrentWeapon() == New)
 
 	if (Old != nullptr)
 	{
 		ALimenWeapon* OldWeapon = Cast<ALimenWeapon>(Old);
 		OldWeapon->OnWeaponReload.RemoveDynamic(this, &ThisClass::OnWeaponReload);
+	}
+	if (New != nullptr)
+	{
+		GetCurrentWeapon()->OnWeaponReload.AddUniqueDynamic(this, &ThisClass::OnWeaponReload);
 	}
 	
 	OnCharacterHoldWeapon(GetCurrentWeapon());
