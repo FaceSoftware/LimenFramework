@@ -8,6 +8,7 @@
 #include "LimenWeapon.generated.h"
 
 
+class ADecalActor;
 class ULimenWeaponFireMethod;
 class ULimenDamageType;
 class UCameraShakeBase;
@@ -115,9 +116,6 @@ public:
 	uint8 GetCurrentAmmo() const;
 
 	uint8 GetAmmoCountUntilFull() const;
-
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons")
-	void BP_WeaponReload();
 		
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
@@ -150,6 +148,8 @@ protected:
 	TSubclassOf<UCameraShakeBase> RecoilCameraShakeClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
 	float RecoilCameraShakeScale;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	bool bIsSilenced;
 	
 	void DecrementAmmo(const int Value = 1);
 	
@@ -166,20 +166,14 @@ protected:
 	void Fire();
 	
 private:
-	UPROPERTY(Replicated)
 	float TimeBetweenShots;
-	UPROPERTY(Replicated)
 	bool bIsHoldingTrigger;
-	UPROPERTY(Replicated)
 	bool bIsFireRateCooldownOver;
-	UPROPERTY(Replicated)
 	bool bIsFiring;
 	FTimerHandle FireRateTimer;
 	FTimerHandle CooldownTimer;
 	FTimerHandle ReloadTimer;
-	UPROPERTY(Replicated)
 	bool bIsReloading;
-	UPROPERTY(Replicated)
 	bool bIsNextShotReady;
 	UPROPERTY(Replicated)
 	EWeaponState CurrentWeaponState;

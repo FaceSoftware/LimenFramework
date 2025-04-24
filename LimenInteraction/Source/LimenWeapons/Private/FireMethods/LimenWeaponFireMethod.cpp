@@ -9,10 +9,13 @@
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
 #include "Actors/LimenWeapon.h"
+#include "Components/DecalComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/HitResult.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
+#include "Kismet/GameplayStatics.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Damage.h"
@@ -20,6 +23,7 @@
 
 void ULimenWeaponFireMethod::ProcessFire(ALimenWeapon* Weapon)
 {
+	check(Weapon->HasAuthority())
 	check(Weapon != nullptr)
 }
 
@@ -27,13 +31,14 @@ ULimenLineTraceFireMethod::ULimenLineTraceFireMethod()
 {
 	bDebugMode = false;
 	TraceChannel = ECollisionChannel::ECC_Visibility;
+	DecalSize = FVector(5.f);
+	DecalLifetime = 10.f;
 }
 
 void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 {
 	Super::ProcessFire(Weapon);
 
-	TArray<FHitResult> OutHits;
 	
 	FVector Start;
 	FRotator Rotation;
@@ -52,6 +57,7 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 	Params.bDebugQuery = bDebugMode;
 #endif
 
+	TArray<FHitResult> OutHits;
 	if (!GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params))
 	{
 		return;
@@ -69,7 +75,7 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 	FDamageParameters DamageParams;
 
 	APawn* PawnOwner = Weapon->GetOwner<APawn>();
-	const float ImpactDamageFalloffMultiplier = Weapon->GetImpactDamageFalloffMultiplier();;;
+	const float ImpactDamageFalloffMultiplier = Weapon->GetImpactDamageFalloffMultiplier();
 
 	for (int i = 0; i < OutHits.Num(); ++i)
 	{
@@ -111,11 +117,20 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 		DamageCount++;
 	}
 
-	if (AIPerceptionSystem)
+	if (!OutHits.IsEmpty())
 	{
-		const FAINoiseEvent NoiseEvent(Weapon, Weapon->GetActorLocation(), Weapon->GetAINoiseEventLoudness(),
-									   Weapon->GetFireSoundRange());
-		AIPerceptionSystem->OnEvent(NoiseEvent);
+		if (const FHitResult& LastHit = OutHits[OutHits.Num() - 1]; LastHit.GetComponent()->IsA<UStaticMeshComponent>())
+		{
+			const FVector ImpactPoint = LastHit.ImpactPoint;
+			const FRotator ImpactSurfaceOrientation = LastHit.ImpactNormal.Rotation();
+
+			UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
+				BulletHoleDecalMaterial.Get(), DecalSize, ImpactPoint, ImpactSurfaceOrientation,
+				DecalLifetime);
+			Decal->SetFadeScreenSize(0.001);
+
+			// Decal->AttachToComponent(LastHit.GetComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		}
 	}
 
 	LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);

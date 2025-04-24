@@ -29,6 +29,8 @@ ALimenWeapon::ALimenWeapon() : Super()
 	TimeBetweenShots = 0.f;
 	MagazineCapacity = 0;
 	CurrentAmmo = 0;
+	bIsSilenced = false;
+	
 	bIsHoldingTrigger = false;
 	bIsFireRateCooldownOver = true;
 	bIsReloading = false;
@@ -51,12 +53,6 @@ void ALimenWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& O
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, TimeBetweenShots, Params);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsHoldingTrigger, Params);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsFireRateCooldownOver, Params);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsFiring, Params);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsReloading, Params);
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsNextShotReady, Params);
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentWeaponState, Params);
 }
 
@@ -261,6 +257,18 @@ void ALimenWeapon::WeaponFired()
 		{
 			const APlayerController* PC = Pawn->GetController<APlayerController>();
 			PC->PlayerCameraManager->StartCameraShake(RecoilCameraShakeClass, RecoilCameraShakeScale);
+		}
+	}
+
+	if (HasAuthority() && !bIsSilenced)
+	{
+		UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
+		if (UAIPerceptionSystem* AIPerceptionSystem = AISystem->GetPerceptionSystem())
+		{
+			const FAINoiseEvent NoiseEvent(this, GetActorLocation(), GetAINoiseEventLoudness(),
+										   GetFireSoundRange());
+
+			AIPerceptionSystem->OnEvent(NoiseEvent);
 		}
 	}
 }
