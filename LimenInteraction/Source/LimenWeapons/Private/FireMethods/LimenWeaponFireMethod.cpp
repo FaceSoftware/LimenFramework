@@ -111,6 +111,13 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 		DamageCount++;
 	}
 
+	if (AIPerceptionSystem)
+	{
+		const FAINoiseEvent NoiseEvent(Weapon, Weapon->GetActorLocation(), Weapon->GetAINoiseEventLoudness(),
+									   Weapon->GetFireSoundRange());
+		AIPerceptionSystem->OnEvent(NoiseEvent);
+	}
+
 	LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);
 
 	if (bDebugMode)

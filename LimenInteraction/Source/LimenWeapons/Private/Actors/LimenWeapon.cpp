@@ -13,6 +13,7 @@
 #include "Components/LimenInventoryComponent.h"
 #include "FireMethods/LimenWeaponFireMethod.h"
 #include "GameFramework/Pawn.h"
+#include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Hearing.h"
 
@@ -41,6 +42,22 @@ ALimenWeapon::ALimenWeapon() : Super()
 	FireSoundRange = 5000;
 	RecoilCameraShakeScale = 1.f;
 	AINoiseEventLoudness = 0;
+}
+
+void ALimenWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, TimeBetweenShots, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsHoldingTrigger, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsFireRateCooldownOver, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsFiring, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsReloading, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsNextShotReady, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentWeaponState, Params);
 }
 
 void ALimenWeapon::BeginPlay()
@@ -83,12 +100,15 @@ void ALimenWeapon::PickUp(AController* InController, APawn* InPawn)
 
 void ALimenWeapon::StartFiring()
 {
+	check(HasAuthority())
+
 	bIsHoldingTrigger = true;
 	if (!CanFire())
 	{
 		if (CurrentAmmo <= 0)
 		{
 			WeaponFiredWithoutAmmo();
+			BP_WeaponFiredWithoutAmmo();
 		}
 		
 		return;
@@ -100,6 +120,8 @@ void ALimenWeapon::StartFiring()
 
 void ALimenWeapon::StopFiring()
 {
+	check(HasAuthority())
+
 	if (!bIsHoldingTrigger)
 	{
 		return;
@@ -195,6 +217,16 @@ float ALimenWeapon::GetImpactDamageFalloffMultiplier() const
 	return ImpactDamageFalloffMultiplier;
 }
 
+float ALimenWeapon::GetAINoiseEventLoudness() const
+{
+	return AINoiseEventLoudness;
+}
+
+float ALimenWeapon::GetFireSoundRange() const
+{
+	return FireSoundRange;
+}
+
 const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const
 {
 	return CompatibleAmmo;
@@ -217,9 +249,13 @@ void ALimenWeapon::DecrementAmmo(const int Value)
 	OnAmmoUpdated.Broadcast(CurrentAmmo);
 }
 
+void ALimenWeapon::ReloadStart(const float ReloadTimeSeconds)
+{
+}
+
 void ALimenWeapon::WeaponFired()
 {
-	if (const APawn* Pawn = GetOwner<APawn>(); Pawn && Pawn->IsPlayerControlled())
+	if (const APawn* Pawn = GetOwner<APawn>(); Pawn && Pawn->IsPlayerControlled() && Pawn->IsLocallyControlled())
 	{
 		if (RecoilCameraShakeClass)
 		{
@@ -227,17 +263,16 @@ void ALimenWeapon::WeaponFired()
 			PC->PlayerCameraManager->StartCameraShake(RecoilCameraShakeClass, RecoilCameraShakeScale);
 		}
 	}
+}
 
-	UAISystem* AISystem = CastChecked<UAISystem>(GetWorld()->GetAISystem());
-	if (UAIPerceptionSystem* AIPerceptionSystem = AISystem->GetPerceptionSystem())
-	{
-		const FAINoiseEvent NoiseEvent(this, GetActorLocation(), AINoiseEventLoudness, FireSoundRange);
-		AIPerceptionSystem->OnEvent(NoiseEvent);
-	}
+void ALimenWeapon::WeaponFiredWithoutAmmo()
+{
 }
 
 void ALimenWeapon::Fire()
 {
+	check(HasAuthority())
+
 	if (CurrentAmmo <= 0 || bIsReloading)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(FireRateTimer);
@@ -249,8 +284,7 @@ void ALimenWeapon::Fire()
 	check(FireMethodObject.IsValid())
 	FireMethodObject->ProcessFire(this);
 
-	WeaponFired();
-	BP_WeaponFired();
+	Multicast_WeaponFired();
 	
 	bIsFireRateCooldownOver = false;
 	GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &ThisClass::HandleWeaponCooldown, TimeBetweenShots, false);
@@ -303,6 +337,7 @@ void ALimenWeapon::StartReloadTimer(ULimenInventoryComponent* PlayerInventory)
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, ReloadDelegate, ReloadTimeInSeconds, false);
 
 	ReloadStart(ReloadTimeInSeconds);
+	BP_ReloadStart(ReloadTimeInSeconds);
 	OnWeaponReload.Broadcast(this, GetReloadTime());
 }
 
@@ -310,4 +345,10 @@ void ALimenWeapon::StopReloadTimer()
 {
 	bIsReloading = false;
 	GetWorld()->GetTimerManager().ClearTimer(ReloadTimer);
+}
+
+void ALimenWeapon::Multicast_WeaponFired_Implementation()
+{
+	BP_WeaponFired();
+	WeaponFired();
 }

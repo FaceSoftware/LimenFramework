@@ -33,6 +33,7 @@ void ALimenGameplayActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 void ALimenGameplayActor::RemoveFromGameplay()
 {
+	check(HasAuthority())
 	if (bIsRemovedFromGameplay)
 	{
 		return;
@@ -46,6 +47,7 @@ void ALimenGameplayActor::RemoveFromGameplay()
 
 void ALimenGameplayActor::AddToGameplay()
 {
+	check(HasAuthority())
 	if (!bIsRemovedFromGameplay)
 	{
 		return;

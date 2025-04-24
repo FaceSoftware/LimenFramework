@@ -4,18 +4,20 @@
 #include "Components/LimenPhysicalItemHoldComponent.h"
 
 #include "Items/LimenPhysicalItem.h"
-#include "LogMacros/LimenInteractionLogMacros.h"
-#include "LogMacros/LimenLogMacros.h"
+#include "Net/UnrealNetwork.h"
 
 
-void ULimenPhysicalItemHoldComponent::BeginPlay()
+ULimenPhysicalItemHoldComponent::ULimenPhysicalItemHoldComponent()
 {
-	Super::BeginPlay();
+	bIsHoldingSomething = false;
+	SetIsReplicatedByDefault(true);
+}
 
-	if (IsHoldingSomething())
-	{
-		StopHolding();
-	}
+void ULimenPhysicalItemHoldComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, PhysicalItem)
 }
 
 void ULimenPhysicalItemHoldComponent::Hold(ALimenPhysicalItem* InPhysicalItem)
@@ -28,11 +30,14 @@ void ULimenPhysicalItemHoldComponent::Hold(ALimenPhysicalItem* InPhysicalItem)
 		StopHolding();
 	}
 
+	if (GetOwner()->HasAuthority())
+	{
+		PhysicalItem = InPhysicalItem;
+		PhysicalItem->AddToGameplay();
+	}
+
 	bIsHoldingSomething = true;
-	PhysicalItem = InPhysicalItem;
-	PhysicalItem->AddToGameplay();
 	PhysicalItem->SetActorEnableCollision(false);
-	
 	OnItemChanged.Broadcast(OldItem, PhysicalItem.Get());
 }
 
@@ -40,14 +45,14 @@ void ULimenPhysicalItemHoldComponent::StopHolding()
 {
 	check(PhysicalItem != nullptr)
 	
-	
-	PhysicalItem->RemoveFromGameplay();
+	if (GetOwner()->HasAuthority())
+	{
+		PhysicalItem->RemoveFromGameplay();
+		PhysicalItem = nullptr;
+	}
 
-	OnItemChanged.Broadcast(PhysicalItem.Get(), nullptr);
-
-	PhysicalItem = nullptr;
 	bIsHoldingSomething = false;
-
+	OnItemChanged.Broadcast(PhysicalItem.Get(), nullptr);
 }
 
 void ULimenPhysicalItemHoldComponent::Drop()
@@ -62,4 +67,16 @@ bool ULimenPhysicalItemHoldComponent::IsHoldingSomething() const
 ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
 {
 	return PhysicalItem.Get();
+}
+
+void ULimenPhysicalItemHoldComponent::OnRep_PhysicalItem()
+{
+	if (PhysicalItem == nullptr)
+	{
+		StopHolding();
+	}
+	else
+	{
+		Hold(PhysicalItem.Get());
+	}
 }
