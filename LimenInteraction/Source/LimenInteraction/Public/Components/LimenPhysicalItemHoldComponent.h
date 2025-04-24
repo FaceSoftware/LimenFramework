@@ -18,8 +18,9 @@ class LIMENINTERACTION_API ULimenPhysicalItemHoldComponent : public USceneCompon
 public:
 	UPROPERTY(BlueprintAssignable)
 	FPhysicalItemChange OnItemChanged;
-	
-	virtual void BeginPlay() override;
+
+	ULimenPhysicalItemHoldComponent();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	void Hold(ALimenPhysicalItem* InPhysicalItem);
@@ -33,9 +34,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	ALimenPhysicalItem* GetPhysicalItem() const;
 
+	template<typename T>
+	T* GetPhysicalItem() const
+	{
+		static_assert(TIsDerivedFrom<T, ALimenPhysicalItem>::Value, "T must be a derived from ALimenPhysicalItem");
+		return Cast<T>(GetPhysicalItem());
+	}
+
 private:
 	bool bIsHoldingSomething;
 
-	UPROPERTY()
+	UPROPERTY(ReplicatedUsing=OnRep_PhysicalItem)
 	TObjectPtr<ALimenPhysicalItem> PhysicalItem;
+
+	UFUNCTION()
+	void OnRep_PhysicalItem();
 };

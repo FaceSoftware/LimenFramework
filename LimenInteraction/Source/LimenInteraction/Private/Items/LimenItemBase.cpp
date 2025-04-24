@@ -187,6 +187,8 @@ TArray<ULimenItemAction*> ALimenItemBase::GetItemActions() const
 
 void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
 {
+	check(HasAuthority())
+
 	SetOwner(InPawn);
 
 	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
@@ -207,6 +209,7 @@ void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
 
 void ALimenItemBase::Drop(AController* InController, APawn* InPawn)
 {
+	check(HasAuthority())
 	SetOwner(nullptr);
 
 	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
