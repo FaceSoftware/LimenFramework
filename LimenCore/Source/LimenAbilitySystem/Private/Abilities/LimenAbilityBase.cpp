@@ -14,6 +14,12 @@ ULimenAbilityBase::ULimenAbilityBase() : Super()
 	bShouldForcefullyDeactivate = false;
 }
 
+bool ULimenAbilityBase::IsSupportedForNetworking() const
+{
+	// return Super::IsSupportedForNetworking();
+	return true;
+}
+
 void ULimenAbilityBase::Initialize(AActor* InOwner)
 {
 	check(InOwner != nullptr);

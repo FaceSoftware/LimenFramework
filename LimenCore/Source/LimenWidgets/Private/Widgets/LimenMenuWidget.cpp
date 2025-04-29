@@ -11,12 +11,7 @@ ULimenMenuWidget::ULimenMenuWidget(const FObjectInitializer& ObjectInitializer) 
 }
 
 void ULimenMenuWidget::BindPlayerController(APlayerController* InPlayerController)
-{
-	if (!IsValid(InPlayerController))
-	{
-		return;
-	}
-	
+{	
 	TArray<UWidget*> Widgets;
 	WidgetTree->GetChildWidgets(this, Widgets);
 	for (auto* Widget : Widgets)

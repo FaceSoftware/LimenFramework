@@ -43,7 +43,7 @@ struct FAmmoData
 };	
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAmmoUpdateDelegate, const int, CurrentAmmo);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateDelegate, ALimenWeapon*, Weapon, const EWeaponState, CurrentState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateDelegate, ALimenWeapon*, Weapon, const bool, bIsDropped);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponReload, ALimenWeapon*, Weapon, const float, ReloadTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWeaponFireDelegate, ALimenWeapon*, Weapon);
 
@@ -71,7 +71,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FWeaponFireDelegate OnWeaponCooldownOver;
 	
-	ALimenWeapon();
+	explicit ALimenWeapon(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -81,7 +81,7 @@ public:
 	
 	void StartFiring();
 	void StopFiring();
-	bool StartReloading(ULimenInventoryComponent* PlayerInventory);
+	void StartReloading(ULimenInventoryComponent* PlayerInventory);
 	void StopReloading();
 
 	UFUNCTION(BlueprintCallable)
@@ -93,9 +93,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsReloading() const;
 	UFUNCTION(BlueprintCallable)
-	bool CanReload(const ULimenInventoryComponent* PlayerInventory) const;
+	virtual bool CanReload(const ULimenInventoryComponent* PlayerInventory) const;
 	UFUNCTION(BlueprintCallable)
-	bool CanFire() const;
+	virtual bool CanFire() const;
 	UFUNCTION(BlueprintCallable)
 	float GetBaseDamage() const;
 	UFUNCTION(BlueprintCallable)
@@ -135,7 +135,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
 	TSubclassOf<ALimenAmmo> CompatibleAmmo;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
-	int32 CurrentAmmo;
+	int32 InitialAmmo;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
 	float WeaponRange;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
@@ -150,12 +150,14 @@ protected:
 	float RecoilCameraShakeScale;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
 	bool bIsSilenced;
+
+	virtual void OnRep_IsDropped() override;
 	
-	void DecrementAmmo(const int Value = 1);
+	virtual void DecrementAmmo(const int Value = 1);
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=ReloadStart)
 	void BP_ReloadStart(const float ReloadTimeSeconds);
-	void ReloadStart(const float ReloadTimeSeconds);
+	virtual void ReloadStart(const float ReloadTimeSeconds);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=WeaponFired)
 	void BP_WeaponFired();
 	virtual void WeaponFired();
@@ -163,9 +165,15 @@ protected:
 	void BP_WeaponFiredWithoutAmmo();
 	virtual void WeaponFiredWithoutAmmo();
 
-	void Fire();
+	virtual void Fire();
+	UFUNCTION()
+	virtual void Reload(ULimenInventoryComponent* PlayerInventory);
+
+	UFUNCTION()
+	virtual void OnRep_CurrentAmmo();
 	
 private:
+	UPROPERTY(Replicated)
 	float TimeBetweenShots;
 	bool bIsHoldingTrigger;
 	bool bIsFireRateCooldownOver;
@@ -175,16 +183,19 @@ private:
 	FTimerHandle ReloadTimer;
 	bool bIsReloading;
 	bool bIsNextShotReady;
-	UPROPERTY(Replicated)
-	EWeaponState CurrentWeaponState;
 	TStrongObjectPtr<ULimenWeaponFireMethod> FireMethodObject;
+
+	UPROPERTY(ReplicatedUsing=OnRep_CurrentAmmo, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
+	int32 CurrentAmmo;
 
 	void HandleWeaponCooldown();
 	void SetNextShotReady();
-	UFUNCTION()
-	void Reload(ULimenInventoryComponent* PlayerInventory);
 	void StartReloadTimer(ULimenInventoryComponent* PlayerInventory);
 	void StopReloadTimer();
+	void ReloadInternal(ULimenInventoryComponent* PlayerInventory);
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_ReloadStart();
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_WeaponFired();

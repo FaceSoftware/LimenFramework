@@ -58,10 +58,7 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 #endif
 
 	TArray<FHitResult> OutHits;
-	if (!GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params))
-	{
-		return;
-	}
+	GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params);
 
 	float CurrentDamageWithFalloff = Weapon->GetBaseDamage();
 	uint16 DamageCount = 0;
@@ -119,7 +116,8 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 
 	if (!OutHits.IsEmpty())
 	{
-		if (const FHitResult& LastHit = OutHits[OutHits.Num() - 1]; LastHit.GetComponent()->IsA<UStaticMeshComponent>())
+		if (const FHitResult& LastHit = OutHits[OutHits.Num() - 1];
+			LastHit.GetComponent()->IsA<UStaticMeshComponent>() && BulletHoleDecalMaterial)
 		{
 			const FVector ImpactPoint = LastHit.ImpactPoint;
 			const FRotator ImpactSurfaceOrientation = LastHit.ImpactNormal.Rotation();

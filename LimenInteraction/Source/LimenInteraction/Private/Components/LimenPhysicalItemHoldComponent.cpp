@@ -23,40 +23,29 @@ void ULimenPhysicalItemHoldComponent::GetLifetimeReplicatedProps(TArray<FLifetim
 void ULimenPhysicalItemHoldComponent::Hold(ALimenPhysicalItem* InPhysicalItem)
 {
 	check(InPhysicalItem != nullptr);
+	check(GetOwner()->HasAuthority())
 
-	ALimenPhysicalItem* OldItem = PhysicalItem.Get();
+	PreviousPhysicalItem = PhysicalItem.Get();
 	if (bIsHoldingSomething)
 	{
 		StopHolding();
 	}
-
-	if (GetOwner()->HasAuthority())
-	{
-		PhysicalItem = InPhysicalItem;
-		PhysicalItem->AddToGameplay();
-	}
-
-	bIsHoldingSomething = true;
-	PhysicalItem->SetActorEnableCollision(false);
-	OnItemChanged.Broadcast(OldItem, PhysicalItem.Get());
+	
+	PhysicalItem = InPhysicalItem;
+	OnRep_PhysicalItem();
 }
 
 void ULimenPhysicalItemHoldComponent::StopHolding()
 {
 	check(PhysicalItem != nullptr)
-	
-	if (GetOwner()->HasAuthority())
-	{
-		PhysicalItem->RemoveFromGameplay();
-		PhysicalItem = nullptr;
-	}
+	check(GetOwner()->HasAuthority())
+
+	ALimenPhysicalItem* Previous = PhysicalItem.Get();
+
+	PhysicalItem = nullptr;
 
 	bIsHoldingSomething = false;
-	OnItemChanged.Broadcast(PhysicalItem.Get(), nullptr);
-}
-
-void ULimenPhysicalItemHoldComponent::Drop()
-{
+	OnItemChanged.Broadcast(Previous, nullptr);
 }
 
 bool ULimenPhysicalItemHoldComponent::IsHoldingSomething() const
@@ -71,12 +60,14 @@ ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
 
 void ULimenPhysicalItemHoldComponent::OnRep_PhysicalItem()
 {
-	if (PhysicalItem == nullptr)
+	if (PhysicalItem)
 	{
-		StopHolding();
+		bIsHoldingSomething = true;
+		OnItemChanged.Broadcast(PreviousPhysicalItem.Get(), PhysicalItem.Get());
 	}
 	else
 	{
-		Hold(PhysicalItem.Get());
+		bIsHoldingSomething = false;
+		OnItemChanged.Broadcast(PreviousPhysicalItem.Get(), nullptr);
 	}
 }

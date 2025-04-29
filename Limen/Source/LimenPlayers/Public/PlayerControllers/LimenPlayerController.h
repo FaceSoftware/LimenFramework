@@ -7,6 +7,7 @@
 #include "LimenPlayerController.generated.h"
 
 
+class ULimenAttributeBase;
 struct FEnhancedActionKeyMapping;
 class ALimenPlayerCharacter;
 class ULimenItemAction;
@@ -48,15 +49,15 @@ protected:
 	TSoftObjectPtr<UInputAction> PauseMenuInputAction;
 	
 	TWeakObjectPtr<ALimenHUD> LimenHUD;
+
+	virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
 	
 	virtual void InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping);
 	
 	void PauseInput(const FInputActionInstance& Instance);
 
-	virtual bool CreateHudReference() override;
-
 	UFUNCTION()
-	virtual void OnPawnDeath(const float Health);
+	virtual void OnPawnDeath(ULimenAttributeBase* Attribute, const float Health);
 
 	virtual void BindPawnDelegates(APawn* NewPawn) override;
 	virtual void UnbindPawnDelegates(APawn* InPawn) override;

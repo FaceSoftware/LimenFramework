@@ -4,7 +4,9 @@
 #include "Attributes/LimenAttributeBase.h"
 
 #include "Components/LimenAbilityComponent.h"
+#include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "Net/UnrealNetwork.h"
 
 
 ULimenAttributeBase::ULimenAttributeBase() : Super()
@@ -15,6 +17,30 @@ ULimenAttributeBase::ULimenAttributeBase() : Super()
 	CurrentValue = 0.f;
 	bIsInitialized = false;
 	bIsFrozen = false;
+}
+
+void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentValue,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+}
+
+bool ULimenAttributeBase::IsSupportedForNetworking() const
+{
+	// Super::IsSupportedForNetworking();
+	return true;
+}
+
+bool ULimenAttributeBase::HasAuthority() const
+{
+	if (!Owner.IsValid())
+	{
+		return false;
+	}
+
+	return Owner->HasAuthority();
 }
 
 void ULimenAttributeBase::Initialize(AActor* InOwner)
@@ -43,9 +69,12 @@ bool ULimenAttributeBase::IsInitialized() const
 
 void ULimenAttributeBase::Tick(float DeltaTime)
 {
-	if (!FMath::IsNearlyZero(RechargeRate))
+	if (HasAuthority())
 	{
-		ModifyValueBy(RechargeRate * DeltaTime);
+		if (!FMath::IsNearlyZero(RechargeRate))
+		{
+			ModifyValueBy(RechargeRate * DeltaTime);
+		}
 	}
 }
 
@@ -251,7 +280,7 @@ void ULimenAttributeBase::SetCurrentValueAsMax()
 	SetCurrentValueAs(MaxValue);
 	check(CurrentValue == MaxValue);
 	AttributeFull();
-	OnAttributeFull.Broadcast(CurrentValue);
+	OnAttributeFull.Broadcast(this, CurrentValue);
 }
 
 void ULimenAttributeBase::SetCurrentValueAsMin()
@@ -264,7 +293,7 @@ void ULimenAttributeBase::SetCurrentValueAsMin()
 	SetCurrentValueAs(MinValue);
 	check(CurrentValue == MinValue);
 	AttributeEmpty();
-	OnAttributeEmpty.Broadcast(CurrentValue);
+	OnAttributeEmpty.Broadcast(this, CurrentValue);
 }
 
 void ULimenAttributeBase::SetCurrentValueAs(const float Value)
@@ -276,7 +305,7 @@ void ULimenAttributeBase::SetCurrentValueAs(const float Value)
 	
 	CurrentValue = Value;
 	AttributeUpdated();
-	OnAttributeChanged.Broadcast(CurrentValue);
+	OnAttributeChanged.Broadcast(this, CurrentValue);
 }
 
 ULimenAbilityComponent* ULimenAttributeBase::GetOwnerAbilityComponent() const
@@ -299,3 +328,31 @@ bool ULimenAttributeBase::IsFrozen() const
 	return bIsFrozen;
 }
 
+void ULimenAttributeBase::AttributeEmpty()
+{
+}
+
+void ULimenAttributeBase::AttributeFull()
+{
+}
+
+void ULimenAttributeBase::AttributeUpdated()
+{
+}
+
+void ULimenAttributeBase::OnRep_CurrentValue()
+{
+	if (CurrentValue <= MinValue)
+	{
+		AttributeEmpty();
+		OnAttributeEmpty.Broadcast(this, CurrentValue);
+	}
+	else if (CurrentValue >= MaxValue)
+	{
+		AttributeFull();
+		OnAttributeFull.Broadcast(this, CurrentValue);
+	}
+
+	AttributeUpdated();
+	OnAttributeChanged.Broadcast(this, CurrentValue);
+}

@@ -134,6 +134,22 @@ bool ULimenInventoryComponent::CanAddItem(ALimenItemBase* NewItem) const
 	return true;
 }
 
+TArray<ALimenItemBase*> ULimenInventoryComponent::GetAllItems()
+{
+	TArray<ALimenItemBase*> Result;
+	Result.Reserve(CurrentInventoryLoad);
+
+	for (int32 i = ItemRegistries.Num() - 1; i >= 0; --i)
+	{
+		TArray<ALimenItemBase*> RemovedInstances = GetItem(ItemRegistries[i].ItemClass.LoadSynchronous(),
+														   ItemRegistries[i].ItemInstances.Num());
+
+		Result.Append(RemovedInstances);
+	}
+
+	return Result;
+}
+
 TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALimenItemBase>& Class, const int32 Count)
 {
 	check(Class != nullptr && Count > 0);

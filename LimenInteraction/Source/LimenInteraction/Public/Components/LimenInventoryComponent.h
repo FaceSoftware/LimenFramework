@@ -71,6 +71,7 @@ public:
 	 */
 	virtual bool AddItem(ALimenItemBase* NewItem);
 	virtual bool CanAddItem(ALimenItemBase* NewItem) const;
+	TArray<ALimenItemBase*> GetAllItems();
 	/**
 	 * @brief Retrieves an item of the specified type from the inventory.
 	 * @tparam T The type of the item to retrieve. Must derive from ALimenItemBase.
@@ -163,7 +164,7 @@ public:
 	 * @param ItemClass The class type of the item to be retrieved.
 	 * @return A pointer to the first item instance of the specified class, or nullptr if no such instance exists.
 	 */
-	template<typename T>
+	template<typename T = ALimenItemBase>
 	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass)
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
@@ -182,7 +183,7 @@ public:
 	 * @tparam T A class type that must derive from ALimenItemBase.
 	 * @return A pointer to the item instance of the specified type if found, or nullptr if no such item exists.
 	 */
-	template<typename T>
+	template<typename T = ALimenItemBase>
 	T* PeekItemInstance() const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
@@ -202,7 +203,7 @@ public:
 	 * @param Index The index of the inventory slot to retrieve the item instance from.
 	 * @return A pointer to the item instance if it exists and is of the specified type, otherwise nullptr.
 	 */
-	template<typename T>
+	template<typename T = ALimenItemBase>
 	T* PeekItemInstance(const int32 Index)
 	{
 		static_assert(std::is_base_of_v<ALimenItemBase, T>);
@@ -216,7 +217,7 @@ public:
 	 * @tparam T The type of items to retrieve, which must derive from ALimenItemBase.
 	 * @return An array with item instances of the specified type found in the registries.
 	 */
-	template<typename T>
+	template<typename T = ALimenItemBase>
 	TArray<T*> PeekItemInstances()
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);

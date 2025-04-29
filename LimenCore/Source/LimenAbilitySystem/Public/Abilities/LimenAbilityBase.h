@@ -20,6 +20,7 @@ class LIMENABILITYSYSTEM_API ULimenAbilityBase : public ULimenStorageItem, publi
 
 public:
 	ULimenAbilityBase();
+	virtual bool IsSupportedForNetworking() const override;
 	
 	/**
 	 * @brief Called by the ability component after instancing this object

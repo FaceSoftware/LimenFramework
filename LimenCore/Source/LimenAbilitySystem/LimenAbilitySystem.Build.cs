@@ -11,7 +11,8 @@ public class LimenAbilitySystem : ModuleRules
             {
                 "Core",
                 "LimenStorage",
-                "LimenSaveSystem",
+                "LimenSaveSystem", 
+                "LimenCore",
             }
         );
 
@@ -24,6 +25,7 @@ public class LimenAbilitySystem : ModuleRules
                 "SlateCore",
                 "LimenLocomotion", 
                 "LimenCore",
+                "NetCore",
             }
         );
     }

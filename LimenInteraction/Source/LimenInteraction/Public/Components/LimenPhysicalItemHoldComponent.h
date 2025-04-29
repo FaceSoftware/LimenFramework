@@ -27,8 +27,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	void StopHolding();
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
-	void Drop();
-	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	bool IsHoldingSomething() const;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
@@ -46,6 +44,7 @@ private:
 
 	UPROPERTY(ReplicatedUsing=OnRep_PhysicalItem)
 	TObjectPtr<ALimenPhysicalItem> PhysicalItem;
+	TWeakObjectPtr<ALimenPhysicalItem> PreviousPhysicalItem;
 
 	UFUNCTION()
 	void OnRep_PhysicalItem();

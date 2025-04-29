@@ -9,7 +9,7 @@
 
 
 class ULimenAbilityComponent;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAttributeUpdate, const float, NewValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAttributeUpdate, class ULimenAttributeBase*, Attribute, const float, NewValue);
 
 /**
  * This class behaves as a meter,
@@ -40,9 +40,17 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FAttributeUpdate OnAttributeChanged;
 	
-	
-public:
 	ULimenAttributeBase();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual bool IsSupportedForNetworking() const override;
+
+	/**
+	 * Determines whether the current instance of ULimenAttributeBase has authority,
+	 * typically used to check if the current context is the server in a networked game.
+	 *
+	 * @return True if the instance has authority, false otherwise.
+	 */
+	bool HasAuthority() const;
 	
 	/**
 	 * @brief Used for initialization for pawn attributes
@@ -196,7 +204,7 @@ public:
 	AActor* GetOwner() const;
 	/**
 	 * @brief Freezing an attribute essentially freezing the value not allowing any modifications
-	 * @param bShouldFreeze Whether or not to freeze the attribute
+	 * @param bShouldFreeze Whether to freeze the attribute
 	 */
 	void FreezeAttribute(const bool bShouldFreeze);
 	bool IsFrozen() const;
@@ -205,26 +213,28 @@ protected:
 	/**
 	 * @brief The amount to recharge every second.
 	 */
-	UPROPERTY(EditAnywhere, Category="Limen")
+	UPROPERTY(EditAnywhere, Category="Limen", Replicated)
 	float RechargeRate;
 	UPROPERTY(EditAnywhere)
 	float MaxValue;
 	UPROPERTY(EditAnywhere)
 	float InitialValue;
 
-	virtual void AttributeEmpty() {};
-	virtual void AttributeFull() {};
-	virtual void AttributeUpdated() {};
+	virtual void AttributeEmpty();
+	virtual void AttributeFull();
+	virtual void AttributeUpdated();
+
+	UFUNCTION()
+	virtual void OnRep_CurrentValue();
 	
 private:
-	
 	const float MinValue = 0.f;
 
-	UPROPERTY(SaveGame)
+	UPROPERTY(SaveGame, ReplicatedUsing=OnRep_CurrentValue)
 	float CurrentValue;
 
 	UPROPERTY()
-	TObjectPtr<AActor> Owner;
+	TWeakObjectPtr<AActor> Owner;
 	UPROPERTY()
 	TObjectPtr<ULimenAbilityComponent> OwnerAbilityComponent;
 	bool bIsInitialized;

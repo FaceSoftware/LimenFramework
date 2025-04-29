@@ -7,7 +7,7 @@
 #include "GameFramework/Controller.h"
 
 
-ALimenPhysicalItem::ALimenPhysicalItem()
+ALimenPhysicalItem::ALimenPhysicalItem(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bIsHolstered = true;

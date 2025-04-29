@@ -17,34 +17,4 @@ UCLASS(Abstract, Blueprintable)
 class LIMENPLAYERS_API ULimenHudWidget : public ULimenBaseHudWidget
 {
 	GENERATED_BODY()
-
-public:
-	void BindPawn(APawn* Pawn);
-
-protected:
-	/**
-	 * @brief Event fired when a character is associated with this HUD.
-	 * BindCharacter function should be called by the PlayerController
-	 * to associate the controlled pawn. After that, this event is fired.
-	 * @param Pawn The character associated with this HUD.
-	 */
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnPawnBound(APawn* Pawn);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void WeaponChanged(ALimenWeapon* NewWeapon, ALimenWeapon* OldWeapon);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void ToolChanged(ALimenTool* NewTool, ALimenTool* OldTool);
-
-	/**
-	 * @brief Getter for the bound character.
-	 * @return The character bound with this HUD.
-	 */
-	UFUNCTION(BlueprintCallable)
-	APawn* GetBoundPawn() const;
-
-private:
-	UPROPERTY()
-	TObjectPtr<APawn> BoundPawn;
 };

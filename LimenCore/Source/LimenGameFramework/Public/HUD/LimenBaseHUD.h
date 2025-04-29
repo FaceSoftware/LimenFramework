@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/LimenGameplayActor.h"
 #include "GameFramework/HUD.h"
 #include "LimenBaseHUD.generated.h"
 
@@ -14,6 +13,13 @@ class ULimenNotificationComponent;
 struct FNotificationParams;
 class ULimenWidget;
 
+
+#define DECLARE_WIDGET_FUNC(Type, WidgetVarName) \
+	inline void Show##WidgetVarName() { ShowWidget_Internal(WidgetVarName.Get()); } \
+	inline void Hide##WidgetVarName() { HideWidget_Internal(WidgetVarName.Get()); } \
+	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName->IsShowing(); } \
+	inline Type Get##WidgetVarName() const { return WidgetVarName.Get(); } \
+	
 /**
  * 
  */
@@ -59,7 +65,7 @@ protected:
 	virtual void DestroyWidgets();
 	virtual void InitializeWidgets();
 
-	virtual void HudInitialized(APlayerController* PlayerController) {}
+	virtual void HudInitialized(APlayerController* PlayerController);
 	UFUNCTION(BlueprintImplementableEvent, Category="Limen|HUD", DisplayName="Hud Initialized")
 	void BP_HudInitialized(APlayerController* PlayerController);
 

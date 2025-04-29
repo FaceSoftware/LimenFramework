@@ -26,7 +26,9 @@ protected:
 	virtual void PawnBoundUpdated_Implementation(APawn* NewPawn) {}
 
 private:
-	UPROPERTY()
-	TObjectPtr<APawn> BoundPawn;
+	TWeakObjectPtr<APawn> BoundPawn;
+	TWeakObjectPtr<APlayerController> BoundPlayerController;
 	
+	UFUNCTION()
+	void PossessedPawnChanged(APawn* OldPawn, APawn* NewPawn);
 };

@@ -234,7 +234,7 @@ void ALimenHUD::InitializeWidgets()
 		CharacterHudWidget = ULimenWidget::IsWidgetValid<ULimenHudWidget>(
 			CharacterHudWidget.Get(), GetOwningPlayerController(), CharacterHudWidgetClass.LoadSynchronous(), true);
 		
-		CharacterHudWidget->BindPawn(GetOwningPlayerController()->GetPawn());
+		CharacterHudWidget->BindPlayerController(GetOwningPlayerController());
 		CharacterHudWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::CharacterHudVisibilityChanged);
 	}
 

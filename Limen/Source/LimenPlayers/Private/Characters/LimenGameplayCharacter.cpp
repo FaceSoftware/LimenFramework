@@ -90,7 +90,7 @@ void ALimenGameplayCharacter::DamageReceived(AController* InInstigator, AActor* 
 	if (HealthAttribute.IsValid()) HealthAttribute->ModifyValueBy(-Damage);
 }
 
-void ALimenGameplayCharacter::HealthAttributeEmpty(const float NewValue)
+void ALimenGameplayCharacter::HealthAttributeEmpty(ULimenAttributeBase* Attribute, const float NewValue)
 {
 	GetCharacterMovement()->DisableMovement();
 	AbilityComponent->DeactivateAllAbilities();

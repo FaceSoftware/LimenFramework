@@ -26,12 +26,13 @@ public:
 	ALimenMenuPlayerController();
 	virtual void SetupInputComponent() override;
 	
-protected:	
+protected:
+	virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
+	
 	virtual void BindWidgetDelegates() override;
 	virtual void UnbindWidgetDelegates() override;
 	
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible) override;
-	virtual bool CreateHudReference() override;	
 
 private:
 	UPROPERTY()

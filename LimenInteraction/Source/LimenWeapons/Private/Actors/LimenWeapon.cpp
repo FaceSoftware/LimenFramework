@@ -3,8 +3,7 @@
 
 #include "Actors/LimenWeapon.h"
 
-#include <DamageTypes/LimenDamageType.h>
-
+#include "DamageTypes/LimenDamageType.h"
 #include "AISystem.h"
 #include "TimerManager.h"
 #include "Actors/LimenAmmo.h"
@@ -18,7 +17,7 @@
 #include "Perception/AISense_Hearing.h"
 
 
-ALimenWeapon::ALimenWeapon() : Super()
+ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -28,13 +27,12 @@ ALimenWeapon::ALimenWeapon() : Super()
 	RoundsPerSecond = 0.f;
 	TimeBetweenShots = 0.f;
 	MagazineCapacity = 0;
-	CurrentAmmo = 0;
+	InitialAmmo = 0;
 	bIsSilenced = false;
-	
+
 	bIsHoldingTrigger = false;
 	bIsFireRateCooldownOver = true;
 	bIsReloading = false;
-	CurrentWeaponState = EWeaponState::None;
 	bIsAutomatic = false;
 	bIsNextShotReady = true;
 	bIsFiring = false;
@@ -44,31 +42,39 @@ ALimenWeapon::ALimenWeapon() : Super()
 	FireSoundRange = 5000;
 	RecoilCameraShakeScale = 1.f;
 	AINoiseEventLoudness = 0;
+	CurrentAmmo = 0;
 }
 
-void ALimenWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+void ALimenWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentWeaponState, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentAmmo, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, TimeBetweenShots, Params)
 }
 
 void ALimenWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ULimenWeaponFireMethod* FireMethodInstance = NewObject<ULimenWeaponFireMethod>(
-		this, FireMethodClass.LoadSynchronous());
-	FireMethodObject = TStrongObjectPtr(FireMethodInstance);
-
-	if (GetWorld()->IsGameWorld())
+	if (HasAuthority())
 	{
-		TimeBetweenShots = 1 / static_cast<float>(RoundsPerSecond);
-		ensureAlways(TimeBetweenShots > 0);
+		CurrentAmmo = InitialAmmo;
+
+		ULimenWeaponFireMethod* FireMethodInstance = NewObject<ULimenWeaponFireMethod>(
+			this, FireMethodClass.LoadSynchronous());
+		FireMethodObject = TStrongObjectPtr(FireMethodInstance);
+
+		if (GetWorld()->IsGameWorld())
+		{
+			TimeBetweenShots = 1 / static_cast<float>(RoundsPerSecond);
+			ensureAlways(TimeBetweenShots > 0);
+		}
 	}
+
 }
 
 void ALimenWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -82,16 +88,30 @@ void ALimenWeapon::Drop(AController* InController, APawn* InPawn)
 {
 	Super::Drop(InController, InPawn);
 
-	CurrentWeaponState = EWeaponState::None;
-	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
+	TArray<UPrimitiveComponent*> Components;
+	GetComponents<UPrimitiveComponent>(Components);	
+	for (UPrimitiveComponent*& Component : Components)
+	{
+		Component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Component->SetSimulatePhysics(true);
+	}
+
+	OnWeaponStateUpdated.Broadcast(this, true);
 }
 
 void ALimenWeapon::PickUp(AController* InController, APawn* InPawn)
 {
 	Super::PickUp(InController, InPawn);
 
-	CurrentWeaponState = EWeaponState::Active;
-	OnWeaponStateUpdated.Broadcast(this, CurrentWeaponState);
+	TArray<UPrimitiveComponent*> Components;
+	GetComponents<UPrimitiveComponent>(Components);
+	for (UPrimitiveComponent* Component : Components)
+	{
+		Component->SetSimulatePhysics(false);
+		Component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	}
+
+	OnWeaponStateUpdated.Broadcast(this, false);
 }
 
 void ALimenWeapon::StartFiring()
@@ -111,7 +131,8 @@ void ALimenWeapon::StartFiring()
 	}
 	
 	bIsFiring = true;
-	GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ThisClass::Fire, TimeBetweenShots, bIsAutomatic, 0.f);
+	GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ThisClass::Fire,
+		TimeBetweenShots, bIsAutomatic, 0.f);
 }
 
 void ALimenWeapon::StopFiring()
@@ -132,20 +153,23 @@ void ALimenWeapon::StopFiring()
 	bIsFiring = false;
 }
 
-bool ALimenWeapon::StartReloading(ULimenInventoryComponent* PlayerInventory)
+void ALimenWeapon::StartReloading(ULimenInventoryComponent* PlayerInventory)
 {
+	check(HasAuthority())
+
 	if (!CanReload(PlayerInventory))
 	{
-		return false;
+		return;
 	}
 	
 	StopFiring();
 	StartReloadTimer(PlayerInventory);
-	return true;
 }
 
 void ALimenWeapon::StopReloading()
 {
+	check(HasAuthority())
+
 	if (bIsReloading)
 	{
 		StopReloadTimer();
@@ -174,7 +198,7 @@ bool ALimenWeapon::IsReloading() const
 
 bool ALimenWeapon::CanReload(const ULimenInventoryComponent* PlayerInventory) const
 {
-	return !bIsReloading && CurrentAmmo != MagazineCapacity && PlayerInventory->GetItemQuantity(CompatibleAmmo) != 0;
+	return !bIsReloading && CurrentAmmo < MagazineCapacity && PlayerInventory->GetItemQuantity(CompatibleAmmo) > 0;
 }
 
 bool ALimenWeapon::CanFire() const
@@ -184,12 +208,11 @@ bool ALimenWeapon::CanFire() const
 		return false;
 	}
 
-	if (!bIsFireRateCooldownOver)
+	if (bIsFiring && !bIsAutomatic && !bIsFireRateCooldownOver)
 	{
 		return false;
 	}
-	
-	
+
 	return CurrentAmmo > 0;
 }
 
@@ -239,14 +262,30 @@ uint8 ALimenWeapon::GetAmmoCountUntilFull() const
 	return MagazineCapacity - CurrentAmmo;
 }
 
+void ALimenWeapon::OnRep_IsDropped()
+{
+	Super::OnRep_IsDropped();
+
+	TArray<UPrimitiveComponent*> Components;
+	GetComponents<UPrimitiveComponent>(Components);
+	for (auto& Component : Components)
+	{
+		Component->SetSimulatePhysics(IsDropped());
+	}
+
+	OnWeaponStateUpdated.Broadcast(this, IsDropped());
+}
+
 void ALimenWeapon::DecrementAmmo(const int Value)
 {
+	check(HasAuthority())
 	CurrentAmmo -= Value;
 	OnAmmoUpdated.Broadcast(CurrentAmmo);
 }
 
 void ALimenWeapon::ReloadStart(const float ReloadTimeSeconds)
 {
+	OnWeaponReload.Broadcast(this, GetReloadTime());
 }
 
 void ALimenWeapon::WeaponFired()
@@ -271,6 +310,8 @@ void ALimenWeapon::WeaponFired()
 			AIPerceptionSystem->OnEvent(NoiseEvent);
 		}
 	}
+
+	OnWeaponFired.Broadcast(this);
 }
 
 void ALimenWeapon::WeaponFiredWithoutAmmo()
@@ -281,7 +322,7 @@ void ALimenWeapon::Fire()
 {
 	check(HasAuthority())
 
-	if (CurrentAmmo <= 0 || bIsReloading)
+	if (!CanFire())
 	{
 		GetWorld()->GetTimerManager().ClearTimer(FireRateTimer);
 		bIsFiring = false;
@@ -296,12 +337,38 @@ void ALimenWeapon::Fire()
 	
 	bIsFireRateCooldownOver = false;
 	GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &ThisClass::HandleWeaponCooldown, TimeBetweenShots, false);
-	
-	OnWeaponFired.Broadcast(this);
+}
+
+void  ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
+{
+	check(HasAuthority())
+
+	const uint8 AmmoMissingInMagazine = MagazineCapacity - CurrentAmmo;
+	const int32 InventoryAmmo = PlayerInventory->GetItemQuantity(CompatibleAmmo);
+
+	if (InventoryAmmo >= AmmoMissingInMagazine)
+	{
+		PlayerInventory->GetItem(CompatibleAmmo, AmmoMissingInMagazine);
+		CurrentAmmo = MagazineCapacity;
+	}
+	else if (InventoryAmmo < AmmoMissingInMagazine)
+	{
+		PlayerInventory->GetItem(CompatibleAmmo, InventoryAmmo);
+		CurrentAmmo += InventoryAmmo;
+	}
+
+	OnAmmoUpdated.Broadcast(CurrentAmmo);
+}
+
+void ALimenWeapon::OnRep_CurrentAmmo()
+{
+	OnAmmoUpdated.Broadcast(CurrentAmmo);
 }
 
 void ALimenWeapon::HandleWeaponCooldown()
 {
+	check(HasAuthority())
+
 	bIsFireRateCooldownOver = true;
 	if (!bIsAutomatic)
 	{
@@ -317,36 +384,15 @@ void ALimenWeapon::SetNextShotReady()
 	bIsNextShotReady = true;
 }
 
-void ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
-{
-	const uint8 AmmoMissingInMagazine = MagazineCapacity - CurrentAmmo;
-	const int32 InventoryAmmo = PlayerInventory->GetItemQuantity(CompatibleAmmo);
-
-	if (InventoryAmmo >= AmmoMissingInMagazine)
-	{
-		PlayerInventory->GetItem(CompatibleAmmo, AmmoMissingInMagazine);
-		CurrentAmmo = MagazineCapacity;
-	}
-	else if (InventoryAmmo < AmmoMissingInMagazine)
-	{
-		PlayerInventory->GetItem(CompatibleAmmo, InventoryAmmo);
-		CurrentAmmo += InventoryAmmo;
-	}
-	
-	bIsReloading = false;
-	OnAmmoUpdated.Broadcast(CurrentAmmo);
-}
-
-
 void ALimenWeapon::StartReloadTimer(ULimenInventoryComponent* PlayerInventory)
 {
+	check(HasAuthority())
+
 	bIsReloading = true;
-	const FTimerDelegate ReloadDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::Reload, PlayerInventory);
+	const FTimerDelegate ReloadDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::ReloadInternal, PlayerInventory);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, ReloadDelegate, ReloadTimeInSeconds, false);
 
-	ReloadStart(ReloadTimeInSeconds);
-	BP_ReloadStart(ReloadTimeInSeconds);
-	OnWeaponReload.Broadcast(this, GetReloadTime());
+	Multicast_ReloadStart();
 }
 
 void ALimenWeapon::StopReloadTimer()
@@ -355,8 +401,22 @@ void ALimenWeapon::StopReloadTimer()
 	GetWorld()->GetTimerManager().ClearTimer(ReloadTimer);
 }
 
+void ALimenWeapon::ReloadInternal(ULimenInventoryComponent* PlayerInventory)
+{
+	check(HasAuthority())
+
+	Reload(PlayerInventory);
+	StopReloadTimer();
+}
+
+void ALimenWeapon::Multicast_ReloadStart_Implementation()
+{
+	ReloadStart(ReloadTimeInSeconds);
+	BP_ReloadStart(ReloadTimeInSeconds);
+}
+
 void ALimenWeapon::Multicast_WeaponFired_Implementation()
 {
-	BP_WeaponFired();
 	WeaponFired();
+	BP_WeaponFired();
 }

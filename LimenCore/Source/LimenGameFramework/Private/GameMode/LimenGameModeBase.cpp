@@ -4,6 +4,7 @@
 #include "GameMode/LimenGameModeBase.h"
 
 #include "Actors/LimenGameplayManager.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "GameState/LimenGameStateBase.h"
 #include "HUD/LimenBaseHUD.h"
 #include "Pawn/LimenCharacterBase.h"
@@ -28,6 +29,11 @@ void ALimenGameModeBase::InitGame(const FString& MapName, const FString& Options
 	Super::InitGame(MapName, Options, ErrorMessage);
 	SpawnManagers();
 	// OverrideLimenClasses();
+
+	if (!ErrorMessage.IsEmpty())
+	{
+		ULimenCoreStatics::LimenLog(this, ErrorMessage, ELogType::Error);
+	}
 }
 
 void ALimenGameModeBase::BeginPlay()
