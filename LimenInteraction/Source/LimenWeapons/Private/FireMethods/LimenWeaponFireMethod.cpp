@@ -13,8 +13,10 @@
 #include "Components/PrimitiveComponent.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/HitResult.h"
+#include "Engine/NetDriver.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
+#include "Iris/ReplicationSystem/ReplicationSystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Perception/AIPerceptionSystem.h"
@@ -25,6 +27,104 @@ void ULimenWeaponFireMethod::ProcessFire(ALimenWeapon* Weapon)
 {
 	check(Weapon->HasAuthority())
 	check(Weapon != nullptr)
+}
+
+bool ULimenWeaponFireMethod::IsSupportedForNetworking() const
+{
+	// Super::IsSupportedForNetworking();
+	return true;
+}
+
+int32 ULimenWeaponFireMethod::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
+{
+	// return Super::GetFunctionCallspace(Function, Stack);
+
+	if (Function->FunctionFlags & FUNC_Static || !(Function->FunctionFlags & FUNC_Net))
+	{
+		return FunctionCallspace::Local;
+	}
+
+	bool bIsOnServer = false;
+	if (const AActor* Owner = Cast<AActor>(GetOuter()))
+	{
+		if (const UNetDriver* NetDriver = Owner->GetNetDriver())
+		{
+			bIsOnServer = NetDriver->IsServer();
+		}
+	}
+
+	// get the top most function
+	while (Function->GetSuperFunction() != nullptr)
+	{
+		Function = Function->GetSuperFunction();
+	}
+
+	// Multicast RPCs
+	if ((Function->FunctionFlags & FUNC_NetMulticast))
+	{
+		if (bIsOnServer)
+		{
+			// Server should execute locally and call remotely
+			return (FunctionCallspace::Local | FunctionCallspace::Remote);
+		}
+		else
+		{
+			return FunctionCallspace::Local;
+		}
+	}
+
+	// if we are the authority
+	if (bIsOnServer)
+	{
+		if (Function->FunctionFlags & FUNC_NetClient)
+		{
+			return FunctionCallspace::Remote;
+		}
+		else
+		{
+			return FunctionCallspace::Local;
+		}
+
+	}
+	// if we are not the authority
+	else
+	{
+		if (Function->FunctionFlags & FUNC_NetServer)
+		{
+			return FunctionCallspace::Remote;
+		}
+		else
+		{
+			// don't replicate
+			return FunctionCallspace::Local;
+		}
+	}
+}
+
+bool ULimenWeaponFireMethod::CallRemoteFunction(UFunction* Function, void* Parameters, FOutParmRec* OutParms,
+	FFrame* Stack)
+{
+	// return Super::CallRemoteFunction(Function, Parameters, OutParms, Stack);
+
+	if (!Function || !GetOuter())
+	{
+		return false;
+	}
+
+	AActor* Owner = Cast<AActor>(GetOuter());
+	if (!Owner)
+	{
+		return false;
+	}
+
+	UNetDriver* NetDriver = Owner->GetNetDriver();
+	if (!NetDriver)
+	{
+		return false;
+	}
+
+	NetDriver->ProcessRemoteFunction(Owner, Function, Parameters, OutParms, Stack, this);
+	return true;
 }
 
 ULimenLineTraceFireMethod::ULimenLineTraceFireMethod()
@@ -39,7 +139,6 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 {
 	Super::ProcessFire(Weapon);
 
-	
 	FVector Start;
 	FRotator Rotation;
 
@@ -121,11 +220,7 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 		{
 			const FVector ImpactPoint = LastHit.ImpactPoint;
 			const FRotator ImpactSurfaceOrientation = LastHit.ImpactNormal.Rotation();
-
-			UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
-				BulletHoleDecalMaterial.Get(), DecalSize, ImpactPoint, ImpactSurfaceOrientation,
-				DecalLifetime);
-			Decal->SetFadeScreenSize(0.001);
+			Multicast_SpawnBulletDecal(ImpactPoint, ImpactSurfaceOrientation);
 
 			// Decal->AttachToComponent(LastHit.GetComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		}
@@ -136,5 +231,16 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 	if (bDebugMode)
 	{
 		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.f);
+	}
+}
+
+void ULimenLineTraceFireMethod::Multicast_SpawnBulletDecal_Implementation(const FVector& Location, const FRotator& Orientation)
+{
+	UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
+				BulletHoleDecalMaterial.Get(), DecalSize, Location, Orientation,
+				DecalLifetime);
+	if (Decal)
+	{
+		Decal->SetFadeScreenSize(0.001);
 	}
 }

@@ -9,6 +9,7 @@
 #include "Engine/Engine.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"
 
 
 ULimenAbilityComponent::ULimenAbilityComponent(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)

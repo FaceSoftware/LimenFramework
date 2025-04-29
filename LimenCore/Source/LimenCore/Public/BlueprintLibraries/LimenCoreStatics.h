@@ -131,6 +131,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game Config", BlueprintPure)
 	static FString GetCopyrightNotice();
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	static void GetPacketLoss(APlayerController* PC, float& InLoss, float& OutLoss);
 };
 
 template <typename T>

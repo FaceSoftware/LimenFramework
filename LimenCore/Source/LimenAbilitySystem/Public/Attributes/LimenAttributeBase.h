@@ -8,6 +8,7 @@
 #include "LimenAttributeBase.generated.h"
 
 
+class UReplicationSystem;
 class ULimenAbilityComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAttributeUpdate, class ULimenAttributeBase*, Attribute, const float, NewValue);
 
@@ -43,6 +44,8 @@ public:
 	ULimenAttributeBase();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual bool IsSupportedForNetworking() const override;
+	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
+	virtual bool CallRemoteFunction(UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack) override;
 
 	/**
 	 * Determines whether the current instance of ULimenAttributeBase has authority,
@@ -233,7 +236,6 @@ private:
 	UPROPERTY(SaveGame, ReplicatedUsing=OnRep_CurrentValue)
 	float CurrentValue;
 
-	UPROPERTY()
 	TWeakObjectPtr<AActor> Owner;
 	UPROPERTY()
 	TObjectPtr<ULimenAbilityComponent> OwnerAbilityComponent;

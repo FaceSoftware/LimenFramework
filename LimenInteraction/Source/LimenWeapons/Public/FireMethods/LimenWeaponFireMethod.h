@@ -12,20 +12,9 @@ class ALimenWeapon;
 
 
 /**
- * ULimenWeaponFireMethod
- *
- * A base class that defines a method for handling weapon firing in the LimenWeapons system.
- * Acts as an abstract representation for managing weapon fire mechanics.
- *
- * Inherits from:
- *   - UObject: The base class for all UE objects.
- *
- * Intended Usage:
- *   This class is designed to be extended to implement specific weapon fire behaviors
- *   and mechanisms. It serves as the foundation for weapon fire-related logic.
- *
- * Module:
- *   - LIMENWEAPONS_API: Provides API access to this class for the LimenWeapons module.
+ * Blueprintable and network-aware base class for weapon fire methods in the LimenWeapons system.
+ * This class provides a blueprint for implementing various weapon firing behaviors and supports
+ * customization and extension for specific use cases.
  */
 UCLASS(Blueprintable, BlueprintType)
 class LIMENWEAPONS_API ULimenWeaponFireMethod : public UObject
@@ -34,6 +23,9 @@ class LIMENWEAPONS_API ULimenWeaponFireMethod : public UObject
 
 public:
 	virtual void ProcessFire(ALimenWeapon* Weapon);
+	virtual bool IsSupportedForNetworking() const override;
+	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
+	virtual bool CallRemoteFunction(UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack) override;
 };
 
 
@@ -44,6 +36,7 @@ class ULimenLineTraceFireMethod : public ULimenWeaponFireMethod
 
 public:
 	ULimenLineTraceFireMethod();
+
 	virtual void ProcessFire(ALimenWeapon* Weapon) override;
 
 protected:
@@ -59,5 +52,8 @@ protected:
 	FVector DecalSize;
 	UPROPERTY(EditDefaultsOnly, Category="VFX", meta=(Units=seconds))
 	float DecalLifetime;
-	
+
+private:
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_SpawnBulletDecal(const FVector& Location, const FRotator& Orientation);
 };

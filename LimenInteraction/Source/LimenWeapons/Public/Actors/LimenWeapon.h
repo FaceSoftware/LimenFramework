@@ -67,6 +67,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FWeaponReload OnWeaponReload;
 	UPROPERTY(BlueprintAssignable)
+	FWeaponReload OnWeaponReloadCanceled;
+	UPROPERTY(BlueprintAssignable)
 	FWeaponFireDelegate OnWeaponFired;
 	UPROPERTY(BlueprintAssignable)
 	FWeaponFireDelegate OnWeaponCooldownOver;
@@ -74,7 +76,7 @@ public:
 	explicit ALimenWeapon(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void Tick(float DeltaSeconds) override;
 
 	virtual void Drop(AController* InController, APawn* InPawn) override;
 	virtual void PickUp(AController* InController, APawn* InPawn) override;
@@ -158,6 +160,9 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=ReloadStart)
 	void BP_ReloadStart(const float ReloadTimeSeconds);
 	virtual void ReloadStart(const float ReloadTimeSeconds);
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=ReloadStart)
+	void BP_ReloadCancelled(const float ReloadTimeSeconds);
+	virtual void ReloadCancelled(const float ReloadTimeSeconds);
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=WeaponFired)
 	void BP_WeaponFired();
 	virtual void WeaponFired();
@@ -175,15 +180,24 @@ protected:
 private:
 	UPROPERTY(Replicated)
 	float TimeBetweenShots;
+	UPROPERTY(Replicated)
 	bool bIsHoldingTrigger;
+	UPROPERTY(Replicated)
 	bool bIsFireRateCooldownOver;
+	UPROPERTY(Replicated)
 	bool bIsFiring;
 	FTimerHandle FireRateTimer;
 	FTimerHandle CooldownTimer;
 	FTimerHandle ReloadTimer;
+	UPROPERTY(Replicated)
 	bool bIsReloading;
+	UPROPERTY(Replicated)
 	bool bIsNextShotReady;
-	TStrongObjectPtr<ULimenWeaponFireMethod> FireMethodObject;
+
+	int32 ShotsInARow;
+
+	UPROPERTY(Replicated)
+	TObjectPtr<ULimenWeaponFireMethod> FireMethodObject;
 
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentAmmo, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	int32 CurrentAmmo;
@@ -194,9 +208,12 @@ private:
 	void StopReloadTimer();
 	void ReloadInternal(ULimenInventoryComponent* PlayerInventory);
 	
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ReloadStart();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ReloadCanceled();
 	
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_WeaponFired();
 };

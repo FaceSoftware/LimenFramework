@@ -4,9 +4,12 @@
 #include "Attributes/LimenAttributeBase.h"
 
 #include "Components/LimenAbilityComponent.h"
+#include "Engine/NetDriver.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "Iris/ReplicationSystem/ReplicationSystem.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"
 
 
 ULimenAttributeBase::ULimenAttributeBase() : Super()
@@ -30,6 +33,97 @@ void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 bool ULimenAttributeBase::IsSupportedForNetworking() const
 {
 	// Super::IsSupportedForNetworking();
+	return true;
+}
+
+int32 ULimenAttributeBase::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
+{
+	// return Super::GetFunctionCallspace(Function, Stack);
+
+	if (Function->FunctionFlags & FUNC_Static || !(Function->FunctionFlags & FUNC_Net))
+	{
+		return FunctionCallspace::Local;
+	}
+
+	bool bIsOnServer = false;
+	if (Owner.IsValid())
+	{
+		if (const UNetDriver* NetDriver = Owner->GetNetDriver())
+		{
+			bIsOnServer = NetDriver->IsServer();
+		}
+	}
+
+	// get the top most function
+	while (Function->GetSuperFunction() != nullptr)
+	{
+		Function = Function->GetSuperFunction();
+	}
+
+	// Multicast RPCs
+	if ((Function->FunctionFlags & FUNC_NetMulticast))
+	{
+		if (bIsOnServer)
+		{
+			// Server should execute locally and call remotely
+			return (FunctionCallspace::Local | FunctionCallspace::Remote);
+		}
+		else
+		{
+			return FunctionCallspace::Local;
+		}
+	}
+
+	// if we are the authority
+	if (bIsOnServer)
+	{
+		if (Function->FunctionFlags & FUNC_NetClient)
+		{
+			return FunctionCallspace::Remote;
+		}
+		else
+		{
+			return FunctionCallspace::Local;
+		}
+
+	}
+	// if we are not the authority
+	else
+	{
+		if (Function->FunctionFlags & FUNC_NetServer)
+		{
+			return FunctionCallspace::Remote;
+		}
+		else
+		{
+			// don't replicate
+			return FunctionCallspace::Local;
+		}
+	}
+}
+
+bool ULimenAttributeBase::CallRemoteFunction(UFunction* Function, void* Parameters, FOutParmRec* OutParms,
+	FFrame* Stack)
+{
+	// return Super::CallRemoteFunction(Function, Parameters, OutParms, Stack);
+
+	if (!Function || !GetOwner())
+	{
+		return false;
+	}
+
+	if (!Owner.IsValid())
+	{
+		return false;
+	}
+
+	UNetDriver* NetDriver = Owner->GetNetDriver();
+	if (!NetDriver)
+	{
+		return false;
+	}
+
+	NetDriver->ProcessRemoteFunction(Owner.Get(), Function, Parameters, OutParms, Stack, this);
 	return true;
 }
 

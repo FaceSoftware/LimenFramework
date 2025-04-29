@@ -6,7 +6,9 @@
 #include "EngineUtils.h"
 #include "GameMapsSettings.h"
 #include "NavigationSystem.h"
+#include "Engine/NetConnection.h"
 #include "Engine/PostProcessVolume.h"
+#include "GameFramework/PlayerController.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Misc/ConfigCacheIni.h"
@@ -401,4 +403,18 @@ FString ULimenCoreStatics::GetCopyrightNotice()
 	));
 
 	return CopyrightNotice;
+}
+
+void ULimenCoreStatics::GetPacketLoss(APlayerController* PC, float& InLoss, float& OutLoss)
+{
+	if (!PC)
+	{
+		return;
+	}
+
+	if (const UNetConnection* NetConnection = PC->GetNetConnection())
+	{
+		OutLoss = NetConnection->GetOutLossPercentage().GetLossPercentage();
+		InLoss = NetConnection->GetInLossPercentage().GetLossPercentage();
+	}
 }
