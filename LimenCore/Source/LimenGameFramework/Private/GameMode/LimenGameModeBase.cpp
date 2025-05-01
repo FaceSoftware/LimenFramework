@@ -34,6 +34,10 @@ void ALimenGameModeBase::InitGame(const FString& MapName, const FString& Options
 	{
 		ULimenCoreStatics::LimenLog(this, ErrorMessage, ELogType::Error);
 	}
+	else
+	{
+		ULimenCoreStatics::LimenLog(this, TEXT("Game initialized successfully"), ELogType::Log, false);
+	}
 }
 
 void ALimenGameModeBase::BeginPlay()
