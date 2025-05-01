@@ -8,6 +8,18 @@
 
 class ALimenPhysicalItem;
 
+
+USTRUCT()
+struct FLimenPhysicalItemHoldComponent_WeaponData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<ALimenPhysicalItem> PhysicalItem;
+	UPROPERTY()
+	TObjectPtr<ALimenPhysicalItem> PreviousPhysicalItem;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPhysicalItemChange, ALimenPhysicalItem*, Old, ALimenPhysicalItem*, New);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -40,10 +52,9 @@ public:
 	}
 
 private:
-	UPROPERTY(ReplicatedUsing=OnRep_PhysicalItem)
-	TWeakObjectPtr<ALimenPhysicalItem> PhysicalItem;
-	TWeakObjectPtr<ALimenPhysicalItem> PreviousPhysicalItem;
+	UPROPERTY(ReplicatedUsing=OnRep_WeaponData)
+	FLimenPhysicalItemHoldComponent_WeaponData WeaponData;
 
 	UFUNCTION()
-	void OnRep_PhysicalItem();
+	void OnRep_WeaponData();
 };

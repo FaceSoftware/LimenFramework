@@ -4,13 +4,23 @@
 #include "Components/LimenInventoryComponent.h"
 
 #include "EngineUtils.h"
+#include "Net/UnrealNetwork.h"
 
 
 ULimenInventoryComponent::ULimenInventoryComponent()
 {
+	SetIsReplicatedByDefault(true);
 	InventorySize = 0;
 	CurrentInventoryLoad = 0;
 	bUseStaticSize = false;
+}
+
+void ULimenInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ItemRegistries, FDoRepLifetimeParams(COND_None,
+		REPNOTIFY_OnChanged, true))
 }
 
 TArray<ALimenItemBase*> ULimenInventoryComponent::LoadInventory(const TArray<TSubclassOf<ALimenItemBase>>& NewInventoryToLoad)
@@ -59,9 +69,9 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::SaveInventory() const
 
 	for (const FItemRegistry& Registry : ItemRegistries)
 	{
-		for (ALimenItemBase* Item : Registry.ItemInstances)
+		for (const FLimenInventoryComponent_InventoryInstanceItem& Item : Registry.ItemInstances.Items)
 		{
-			Out.Push(Item);
+			Out.Push(Item.Instance.Get());
 		}
 	}
 
@@ -70,6 +80,8 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::SaveInventory() const
 
 bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 {
+	check(GetOwner()->HasAuthority())
+
 	if (!CanAddItem(NewItem))
 	{
 		return false;
@@ -96,10 +108,10 @@ bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 	{
 		ALimenItemBase* Item = GetWorld()->SpawnActor<ALimenItemBase>(NewItem->GetClass(), SpawnParameters);
 		Item->RemoveFromGameplay();
-		Registry->ItemInstances.Push(Item);
+		Registry->ItemInstances.Items.Push(FLimenInventoryComponent_InventoryInstanceItem(Item));
 	}
-	// Add the original item form the function args
-	Registry->ItemInstances.Push(NewItem);
+	// Add the original item from the function args
+	Registry->ItemInstances.Items.Push(FLimenInventoryComponent_InventoryInstanceItem(NewItem));
 
 	if (bIsFirstOfType)
 	{
@@ -136,13 +148,15 @@ bool ULimenInventoryComponent::CanAddItem(ALimenItemBase* NewItem) const
 
 TArray<ALimenItemBase*> ULimenInventoryComponent::GetAllItems()
 {
+	check(GetOwner()->HasAuthority())
+
 	TArray<ALimenItemBase*> Result;
 	Result.Reserve(CurrentInventoryLoad);
 
 	for (int32 i = ItemRegistries.Num() - 1; i >= 0; --i)
 	{
 		TArray<ALimenItemBase*> RemovedInstances = GetItem(ItemRegistries[i].ItemClass.LoadSynchronous(),
-														   ItemRegistries[i].ItemInstances.Num());
+														   ItemRegistries[i].ItemInstances.Items.Num());
 
 		Result.Append(RemovedInstances);
 	}
@@ -152,6 +166,8 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::GetAllItems()
 
 TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALimenItemBase>& Class, const int32 Count)
 {
+	check(GetOwner()->HasAuthority())
+
 	check(Class != nullptr && Count > 0);
 
 	FItemRegistry* Registry = FindItemRegistry(Class);
@@ -163,18 +179,19 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALim
 	TArray<ALimenItemBase*> OutItems;
 	for (int i = 0; i < Count; ++i)
 	{
-		ALimenItemBase* TempItem = Registry->ItemInstances.Pop(EAllowShrinking::Yes);
-		check(TempItem != nullptr);
-		OutItems.Push(TempItem);
-		ItemRemoved(TempItem);
+		FLimenInventoryComponent_InventoryInstanceItem TempItem = FLimenInventoryComponent_InventoryInstanceItem(Registry->ItemInstances.Items.Pop(EAllowShrinking::Yes));
+		check(TempItem.Instance.IsValid());
 
-		if (Registry->ItemInstances.IsEmpty())
+		OutItems.Push(TempItem.Instance.Get());
+		ItemRemoved(TempItem.Instance.Get());
+
+		if (Registry->ItemInstances.Items.IsEmpty())
 		{
 			break;
 		}
 	}
 
-	if (Registry->ItemInstances.IsEmpty())
+	if (Registry->ItemInstances.Items.IsEmpty())
 	{
 		ItemRegistries.RemoveAll([this, &Registry] (const FItemRegistry& Test)
 		{
@@ -194,6 +211,8 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALim
 
 ALimenItemBase* ULimenInventoryComponent::GetItem(const TSubclassOf<ALimenItemBase>& Class)
 {
+	check(GetOwner()->HasAuthority())
+
 	TArray<ALimenItemBase*> Instances = GetItem(Class, 1);
 	if (!Instances.IsValidIndex(0))
 	{
@@ -209,7 +228,7 @@ TMap<TSubclassOf<ALimenItemBase>, int32> ULimenInventoryComponent::PeekInventory
 
 	for (const FItemRegistry& Registry : ItemRegistries)
 	{
-		Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Num());
+		Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Items.Num());
 	}
 
 	return Out;
@@ -223,9 +242,9 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::PeekInventoryInstances(const T
 		const UClass* ClassPtr = Registry.ItemClass.LoadSynchronous();
 		if (ClassPtr == Class || ClassPtr->IsChildOf(Class))
 		{
-			for (ALimenItemBase* Item : Registry.ItemInstances)
+			for (const FLimenInventoryComponent_InventoryInstanceItem& Item : Registry.ItemInstances.Items)
 			{
-				Out.Push(Item);
+				Out.Push(Item.Instance.Get());
 			}
 		}
 	}
@@ -240,7 +259,7 @@ ALimenItemBase* ULimenInventoryComponent::PeekInventoryInstance(const TSubclassO
 		const UClass* ClassPtr = Registry.ItemClass.LoadSynchronous();
 		if (ClassPtr == Class || ClassPtr->IsChildOf(Class))
 		{
-			return Registry.ItemInstances.IsEmpty() ? nullptr : Registry.ItemInstances[0];
+			return Registry.ItemInstances.Items.IsEmpty() ? nullptr : Registry.ItemInstances.Items[0].Instance.Get();
 		}
 	}
 	
@@ -253,7 +272,7 @@ TMap<TSubclassOf<ALimenItemBase>, int32> ULimenInventoryComponent::PeekItems() c
 
 	for (const FItemRegistry& Registry : ItemRegistries)
 	{
-		Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Num());
+		Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Items.Num());
 	}
 
 	return Out;
@@ -285,7 +304,7 @@ TMap<TSubclassOf<ALimenItemBase>, int32> ULimenInventoryComponent::PeekItems(con
 		UClass* Class = Registry.ItemClass.LoadSynchronous();
 		if (Class == ItemClass || Class->IsChildOf(ItemClass))
 		{
-			Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Num());
+			Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Items.Num());
 		}
 	}
 
@@ -305,7 +324,7 @@ TMap<TSubclassOf<ALimenItemBase>, int32> ULimenInventoryComponent::PeekItems(con
 	{
 		if (Registry.ItemClass->ImplementsInterface(InterfaceClass))
 		{
-			Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Num());
+			Out.Add(Registry.ItemClass.LoadSynchronous(), Registry.ItemInstances.Items.Num());
 		}
 	}
 
@@ -325,7 +344,7 @@ int32 ULimenInventoryComponent::GetItemQuantity(const TSubclassOf<ALimenItemBase
 		const UClass* Class = Registry.ItemClass.LoadSynchronous();
 		if (Class == ItemClass || Class->IsChildOf(ItemClass))
 		{
-			ItemQuantity += Registry.ItemInstances.Num();
+			ItemQuantity += Registry.ItemInstances.Items.Num();
 		}
 	}
 	
@@ -354,14 +373,14 @@ void ULimenInventoryComponent::AddItemToRegistry(ALimenItemBase* NewItem)
 	{
 		FItemRegistry Registry;
 		Registry.ItemClass = NewItem->GetClass();
-		Registry.ItemInstances.Push(NewItem);
+		Registry.ItemInstances.Items.Push(FLimenInventoryComponent_InventoryInstanceItem(NewItem));
 		
 		ItemRegistries.Push(Registry);
 	}
 	else
 	{
 		FItemRegistry* Registry = FindItemRegistry(NewItem->GetClass());
-		Registry->ItemInstances.Push(NewItem);
+		Registry->ItemInstances.Items.Push(FLimenInventoryComponent_InventoryInstanceItem(NewItem));
 	}
 }
 
@@ -374,12 +393,12 @@ void ULimenInventoryComponent::RemoveItemsFromRegistry(const TSubclassOf<ALimenI
 		{
 			for (int i = 0; i < Count; ++i)
 			{
-				if (!Registry.ItemInstances.IsValidIndex(i))
+				if (!Registry.ItemInstances.Items.IsValidIndex(i))
 				{
 					return;
 				}
 				
-				Registry.ItemInstances.RemoveAt(i, EAllowShrinking::Yes);
+				Registry.ItemInstances.Items.RemoveAt(i, EAllowShrinking::Yes);
 			}
 		}
 	}
@@ -390,7 +409,7 @@ void ULimenInventoryComponent::UpdateInventoryLoad()
 	uint32 Count = 0;
 	for (const auto& Entry : ItemRegistries)
 	{
-		Count += Entry.ItemInstances.Num();
+		Count += Entry.ItemInstances.Items.Num();
 	}
 	CurrentInventoryLoad = Count;
 }
@@ -418,5 +437,5 @@ bool ULimenInventoryComponent::IsFirstOfType(const TSubclassOf<ALimenItemBase>& 
 		return true;
 	}
 
-	return Registry->ItemInstances.IsEmpty();
+	return Registry->ItemInstances.Items.IsEmpty();
 }

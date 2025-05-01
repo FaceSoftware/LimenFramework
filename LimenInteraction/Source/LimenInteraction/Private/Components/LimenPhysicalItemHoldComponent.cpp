@@ -16,53 +16,46 @@ void ULimenPhysicalItemHoldComponent::GetLifetimeReplicatedProps(TArray<FLifetim
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ThisClass, PhysicalItem)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, WeaponData, FDoRepLifetimeParams(COND_None,
+		REPNOTIFY_OnChanged, true))
 }
 
 void ULimenPhysicalItemHoldComponent::Hold(ALimenPhysicalItem* InPhysicalItem)
 {
-	check(InPhysicalItem != nullptr);
 	check(GetOwner()->HasAuthority())
 
-	PreviousPhysicalItem = PhysicalItem.Get();
-	if (PhysicalItem.IsValid())
+	if (InPhysicalItem == WeaponData.PhysicalItem.Get())
 	{
-		StopHolding();
+		return;
 	}
 	
-	PhysicalItem = InPhysicalItem;
-	OnRep_PhysicalItem();
+	WeaponData.PreviousPhysicalItem = WeaponData.PhysicalItem.Get();
+	WeaponData.PhysicalItem = InPhysicalItem;
+
+	OnItemChanged.Broadcast(WeaponData.PreviousPhysicalItem.Get(), WeaponData.PhysicalItem.Get());
 }
 
 void ULimenPhysicalItemHoldComponent::StopHolding()
 {
-	check(PhysicalItem != nullptr)
 	check(GetOwner()->HasAuthority())
 
-	ALimenPhysicalItem* Previous = PhysicalItem.Get();
+	WeaponData.PreviousPhysicalItem = WeaponData.PhysicalItem.Get();
+	WeaponData.PhysicalItem = nullptr;
 
-	PhysicalItem.Reset();
-	OnItemChanged.Broadcast(Previous, nullptr);
+	OnItemChanged.Broadcast(WeaponData.PreviousPhysicalItem.Get(), WeaponData.PhysicalItem.Get());
 }
 
 bool ULimenPhysicalItemHoldComponent::IsHoldingSomething() const
 {
-	return PhysicalItem.IsValid();
+	return IsValid(WeaponData.PhysicalItem.Get());
 }
 
 ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
 {
-	return PhysicalItem.Get();
+	return WeaponData.PhysicalItem.Get();
 }
 
-void ULimenPhysicalItemHoldComponent::OnRep_PhysicalItem()
+void ULimenPhysicalItemHoldComponent::OnRep_WeaponData()
 {
-	if (PhysicalItem.IsValid())
-	{
-		OnItemChanged.Broadcast(PreviousPhysicalItem.Get(), PhysicalItem.Get());
-	}
-	else
-	{
-		OnItemChanged.Broadcast(PreviousPhysicalItem.Get(), nullptr);
-	}
+	OnItemChanged.Broadcast(WeaponData.PreviousPhysicalItem.Get(), WeaponData.PhysicalItem.Get());
 }

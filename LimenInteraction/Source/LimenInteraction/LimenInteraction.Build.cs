@@ -43,6 +43,7 @@ public class LimenInteraction : ModuleRules
 				"UMG",
 				"LimenWidgets",
 				"LimenSaveSystem",
+				"NetCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

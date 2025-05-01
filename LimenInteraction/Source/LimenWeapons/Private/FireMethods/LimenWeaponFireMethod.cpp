@@ -151,6 +151,8 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Weapon);
 	Params.AddIgnoredActor(WeaponOwner);
+	Params.bTraceComplex = true;
+	Params.TraceTag = TEXT("Weapon bullet");
 	
 #if !(UE_BUILD_TEST || UE_BUILD_SHIPPING)
 	Params.bDebugQuery = bDebugMode;

@@ -21,6 +21,7 @@ ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Supe
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
+	bAlwaysRelevant = true;
 	bReplicateUsingRegisteredSubObjectList = true;
 
 	FireMethodClass = ULimenDamageType::StaticClass();
@@ -89,6 +90,15 @@ void ALimenWeapon::BeginPlay()
 			ensureAlways(TimeBetweenShots > 0);
 		}
 	}
+}
+
+void ALimenWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	RemoveReplicatedSubObject(FireMethodObject.Get());
+	FireMethodObject->ConditionalBeginDestroy();
+	FireMethodObject = nullptr;
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void ALimenWeapon::Tick(float DeltaSeconds)

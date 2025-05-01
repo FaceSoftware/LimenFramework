@@ -4,29 +4,62 @@
 
 #include "CoreMinimal.h"
 #include "Items/LimenItemBase.h"
+#include "Net/Serialization/FastArraySerializer.h"
+#include "Network/LimenNetworkUtils.h"
 #include "LimenInventoryComponent.generated.h"
 
-
 class ULimenInventoryComponent;
+struct FLimenInventoryComponent_InventoryInstancesArray;
 
 
-UENUM()
-enum class EInventoryFeedback : uint8
-{
-	Unknown,
-	Full,
-	Success
-};
 USTRUCT()
-struct FItemRegistry
+struct LIMENINTERACTION_API FLimenInventoryComponent_InventoryInstanceItem : public FFastArraySerializerItem
+{
+	GENERATED_BODY()
+
+	FLimenInventoryComponent_InventoryInstanceItem() = default;
+	explicit FLimenInventoryComponent_InventoryInstanceItem(ALimenItemBase* Inst) : Instance(Inst)
+	{
+	}
+
+	UPROPERTY()
+	TWeakObjectPtr<ALimenItemBase> Instance;
+
+	void PreReplicatedRemove(const FLimenInventoryComponent_InventoryInstancesArray& InArraySerializer) {}
+	void PostReplicatedAdd(const FLimenInventoryComponent_InventoryInstancesArray& InArraySerializer) {}
+	void PostReplicatedChange(const FLimenInventoryComponent_InventoryInstancesArray& InArraySerializer) {}
+	FString GetDebugString() { return TEXT(""); }
+};
+
+USTRUCT()
+struct LIMENINTERACTION_API FLimenInventoryComponent_InventoryInstancesArray : public FFastArraySerializer
+{
+	GENERATED_BODY()
+
+	FLimenInventoryComponent_InventoryInstancesArray() = default;
+
+	UPROPERTY()
+	TArray<FLimenInventoryComponent_InventoryInstanceItem> Items;
+
+	bool NetDeltaSerialize(FNetDeltaSerializeInfo & DeltaParms)
+	{
+		return FastArrayDeltaSerialize<FLimenInventoryComponent_InventoryInstanceItem, FLimenInventoryComponent_InventoryInstancesArray>(Items, DeltaParms,*this);
+	}
+};
+
+DECLARE_STRUCT_OPS_TYPE_TRAITS(FLimenInventoryComponent_InventoryInstancesArray)
+
+USTRUCT()
+struct LIMENINTERACTION_API FItemRegistry
 {
 	GENERATED_BODY();
 	
 	TSoftClassPtr<ALimenItemBase> ItemClass;
 
 	UPROPERTY()
-	TArray<ALimenItemBase*> ItemInstances;
+	FLimenInventoryComponent_InventoryInstancesArray ItemInstances;
 };
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, TSubclassOf<ALimenItemBase>, ItemClass);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryUpdate, ULimenInventoryComponent*, Inventory);
@@ -51,6 +84,7 @@ public:
 	FInventoryItemUpdate OnItemUpdated;
 	
 	ULimenInventoryComponent();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/**
 	 * @brief Loads the specified inventory items into the component.
@@ -165,15 +199,15 @@ public:
 	 * @return A pointer to the first item instance of the specified class, or nullptr if no such instance exists.
 	 */
 	template<typename T = ALimenItemBase>
-	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass)
+	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass) const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
 		check(ItemClass != nullptr);
-		for (FItemRegistry& Registry : ItemRegistries)
+		for (const FItemRegistry& Registry : ItemRegistries)
 		{
 			if (Registry.ItemClass.LoadSynchronous() == ItemClass)
 			{
-				return Registry.ItemInstances.IsEmpty() ? nullptr : Cast<T>(Registry.ItemInstances[0]);
+				return Registry.ItemInstances.Items.IsEmpty() ? nullptr : Cast<T>(Registry.ItemInstances.Items[0].Instance.Get());
 			}
 		}
 		return nullptr;
@@ -190,7 +224,7 @@ public:
 
 		for (const FItemRegistry& Registry : ItemRegistries)
 		{
-			T* Item = Registry.ItemInstances.IsEmpty() ? nullptr : Cast<T>(Registry.ItemInstances[0]);
+			T* Item = Registry.ItemInstances.Items.IsEmpty() ? nullptr : Cast<T>(Registry.ItemInstances.Items[0]);
 			if (Item != nullptr)
 			{
 				return Item;
@@ -204,12 +238,12 @@ public:
 	 * @return A pointer to the item instance if it exists and is of the specified type, otherwise nullptr.
 	 */
 	template<typename T = ALimenItemBase>
-	T* PeekItemInstance(const int32 Index)
+	T* PeekItemInstance(const int32 Index) const
 	{
 		static_assert(std::is_base_of_v<ALimenItemBase, T>);
 		check(ItemRegistries.IsValidIndex(Index));
 		
-		T* Item = Cast<T>(ItemRegistries[Index].ItemInstances[0]);
+		T* Item = Cast<T>(ItemRegistries[Index].ItemInstances.Items[0]);
 		return Item;
 	}
 	/**
@@ -218,25 +252,25 @@ public:
 	 * @return An array with item instances of the specified type found in the registries.
 	 */
 	template<typename T = ALimenItemBase>
-	TArray<T*> PeekItemInstances()
+	TArray<T*> PeekItemInstances() const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
 		
 		TArray<T*> Out;
 		Out.Reserve(ItemRegistries.Num());
-		for (FItemRegistry& Registry : ItemRegistries)
+		for (const FItemRegistry& Registry : ItemRegistries)
 		{
-			if (Registry.ItemInstances.IsEmpty() || !Registry.ItemClass->IsChildOf<T>() ||
+			if (Registry.ItemInstances.Items.IsEmpty() || !Registry.ItemClass->IsChildOf<T>() ||
 				Registry.ItemClass == T::StaticClass())
 			{
 				continue;
 			}
 
-			for (ALimenItemBase* Instance : Registry.ItemInstances)
+			for (const FLimenInventoryComponent_InventoryInstanceItem& Instance : Registry.ItemInstances.Items)
 			{
-				check(Instance != nullptr);
+				check(Instance.Instance != nullptr);
 				
-				T* Item = Cast<T>(Instance);
+				T* Item = Cast<T>(Instance.Instance);
 				if (Item != nullptr)
 				{
 					Out.Push(Item);
@@ -252,18 +286,18 @@ public:
 	 * @return An array of item instances that implement the specified interface.
 	 */
 	template<typename InterfaceClass>
-	TArray<ALimenItemBase*> PeekItemInstancesByInterface()
+	TArray<ALimenItemBase*> PeekItemInstancesByInterface() const
 	{
 		static_assert(TIsDerivedFrom<InterfaceClass, UInterface>::Value);
 		
 		TArray<ALimenItemBase*> Out;
-		for (FItemRegistry& Registry : ItemRegistries)
+		for (const FItemRegistry& Registry : ItemRegistries)
 		{
 			if (Registry.ItemClass->ImplementsInterface(InterfaceClass::StaticClass()))
 			{
-				for (ALimenItemBase* Item : Registry.ItemInstances)
+				for (const FLimenInventoryComponent_InventoryInstanceItem& Item : Registry.ItemInstances.Items)
 				{
-					Out.Push(Item);
+					Out.Push(Item.Instance.Get());
 				}
 			}
 		}
@@ -298,7 +332,7 @@ protected:
 private:
 	uint16 CurrentInventoryLoad;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	TArray<FItemRegistry> ItemRegistries;
 	
 	void AddItemToRegistry(ALimenItemBase* NewItem);
@@ -307,5 +341,4 @@ private:
 	FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass);
 	
 	bool IsFirstOfType(const TSubclassOf<ALimenItemBase>& ItemClass);
-	
 };
