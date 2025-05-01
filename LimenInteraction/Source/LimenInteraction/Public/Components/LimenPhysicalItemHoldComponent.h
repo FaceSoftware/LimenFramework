@@ -40,10 +40,8 @@ public:
 	}
 
 private:
-	bool bIsHoldingSomething;
-
 	UPROPERTY(ReplicatedUsing=OnRep_PhysicalItem)
-	TObjectPtr<ALimenPhysicalItem> PhysicalItem;
+	TWeakObjectPtr<ALimenPhysicalItem> PhysicalItem;
 	TWeakObjectPtr<ALimenPhysicalItem> PreviousPhysicalItem;
 
 	UFUNCTION()

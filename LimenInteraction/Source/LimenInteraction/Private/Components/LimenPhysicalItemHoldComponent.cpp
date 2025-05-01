@@ -9,7 +9,6 @@
 
 ULimenPhysicalItemHoldComponent::ULimenPhysicalItemHoldComponent()
 {
-	bIsHoldingSomething = false;
 	SetIsReplicatedByDefault(true);
 }
 
@@ -26,7 +25,7 @@ void ULimenPhysicalItemHoldComponent::Hold(ALimenPhysicalItem* InPhysicalItem)
 	check(GetOwner()->HasAuthority())
 
 	PreviousPhysicalItem = PhysicalItem.Get();
-	if (bIsHoldingSomething)
+	if (PhysicalItem.IsValid())
 	{
 		StopHolding();
 	}
@@ -42,15 +41,13 @@ void ULimenPhysicalItemHoldComponent::StopHolding()
 
 	ALimenPhysicalItem* Previous = PhysicalItem.Get();
 
-	PhysicalItem = nullptr;
-
-	bIsHoldingSomething = false;
+	PhysicalItem.Reset();
 	OnItemChanged.Broadcast(Previous, nullptr);
 }
 
 bool ULimenPhysicalItemHoldComponent::IsHoldingSomething() const
 {
-	return bIsHoldingSomething;
+	return PhysicalItem.IsValid();
 }
 
 ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
@@ -60,14 +57,12 @@ ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
 
 void ULimenPhysicalItemHoldComponent::OnRep_PhysicalItem()
 {
-	if (PhysicalItem)
+	if (PhysicalItem.IsValid())
 	{
-		bIsHoldingSomething = true;
 		OnItemChanged.Broadcast(PreviousPhysicalItem.Get(), PhysicalItem.Get());
 	}
 	else
 	{
-		bIsHoldingSomething = false;
 		OnItemChanged.Broadcast(PreviousPhysicalItem.Get(), nullptr);
 	}
 }
