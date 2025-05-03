@@ -9,7 +9,6 @@
 #include "GameFramework/Actor.h"
 #include "Iris/ReplicationSystem/ReplicationSystem.h"
 #include "Net/UnrealNetwork.h"
-#include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"
 
 
 ULimenAttributeBase::ULimenAttributeBase() : Super()
@@ -27,6 +26,8 @@ void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentValue,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, RechargeRate,
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 }
 
@@ -129,12 +130,11 @@ bool ULimenAttributeBase::CallRemoteFunction(UFunction* Function, void* Paramete
 
 bool ULimenAttributeBase::HasAuthority() const
 {
-	if (!Owner.IsValid())
-	{
-		return false;
-	}
+	if (Owner.IsValid()) return Owner->HasAuthority();
 
-	return Owner->HasAuthority();
+	if (GetWorld() && GetWorld()->IsGameWorld() && GetWorld()->GetAuthGameMode() != nullptr) return true;
+
+	return false;
 }
 
 void ULimenAttributeBase::Initialize(AActor* InOwner)
@@ -179,12 +179,12 @@ ETickableTickType ULimenAttributeBase::GetTickableTickType() const
 
 bool ULimenAttributeBase::IsTickable() const
 {
-	return !HasAnyFlags(RF_ClassDefaultObject);
+	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
 }
 
 bool ULimenAttributeBase::IsAllowedToTick() const
 {
-	return true;
+	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
 }
 
 TStatId ULimenAttributeBase::GetStatId() const

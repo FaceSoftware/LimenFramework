@@ -45,10 +45,15 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 	GetMesh()->bEditableWhenInherited = true;
 
 	AbilityComponent = CreateDefaultSubobject<ULimenAbilityComponent>(TEXT("AbilityComponent"));
-	AbilityComponent->AddAttribute(ULimenHealthAttribute::StaticClass());
 }
 
-void ALimenCharacterBase::EnableInput(class APlayerController* InPlayerController)
+void ALimenCharacterBase::BeginPlay()
+{
+	Super::BeginPlay();
+	SetupAbilityComponentInternal(AbilityComponent.Get());
+}
+
+void ALimenCharacterBase::EnableInput(APlayerController* InPlayerController)
 {
 	Super::EnableInput(InPlayerController);
 
@@ -60,7 +65,7 @@ void ALimenCharacterBase::EnableInput(class APlayerController* InPlayerControlle
 	
 }
 
-void ALimenCharacterBase::DisableInput(class APlayerController* InPlayerController)
+void ALimenCharacterBase::DisableInput(APlayerController* InPlayerController)
 {
 	Super::DisableInput(InPlayerController);
 
@@ -134,15 +139,24 @@ void ALimenCharacterBase::PossessedBy(AController* NewController)
 	PlayerController = Cast<APlayerController>(NewController);
 	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(NewController);
 	LimenBasePlayerState = NewController->GetPlayerState<ALimenPlayerStateBase>();
-
-	if (!AbilityComponent->IsReadyForGameplay())
-	{
-		AbilityComponent->LoadAbilities(this);
-		AbilityComponent->LoadAttributes(this);
-	}
 }
 
 ALimenPlayerStateBase* ALimenCharacterBase::GetLimenBasePlayerState() const
 {
 	return LimenBasePlayerState.Get();
+}
+
+void ALimenCharacterBase::SetupAbilityComponent(ULimenAbilityComponent* InAbilityComponent)
+{
+}
+
+void ALimenCharacterBase::SetupAbilityComponentInternal(ULimenAbilityComponent* InAbilityComponent)
+{
+	InAbilityComponent->OnAbilityComponentReady.AddUniqueDynamic(this, &ThisClass::SetupAbilityComponent);
+	
+	if (HasAuthority())
+	{
+		InAbilityComponent->LoadAbilities(this);
+		InAbilityComponent->LoadAttributes(this);
+	}
 }

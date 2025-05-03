@@ -13,6 +13,7 @@ ALimenProceduralMapBuilder::ALimenProceduralMapBuilder(const FObjectInitializer&
 {
 	PrimaryActorTick.bTickEvenWhenPaused = false;
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = false;
 	
 	AlgorithmFinishDelegate.BindLambda([this] (bool bSuccess, const FGuid& MapId, ULimenProceduralMap* Map)
 	{

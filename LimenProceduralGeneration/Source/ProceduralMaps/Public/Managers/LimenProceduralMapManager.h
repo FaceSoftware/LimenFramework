@@ -17,6 +17,8 @@ class PROCEDURALMAPS_API ALimenProceduralMapManager : public ALimenGameplayManag
 	GENERATED_BODY()
 
 public:
+	DECLARE_MULTICAST_DELEGATE(FMapComplete)
+
 	/**
 	 * @brief Called from the map builder class to notify the manager that the map has been built.
 	 * Do not call this directly!
@@ -24,8 +26,16 @@ public:
 	 */
 	virtual void MapBuilt(ULimenProceduralMap* Map);
 
+	UFUNCTION(BlueprintCallable)
+	void NotifyMapComplete();
+
+	FMapComplete& GetMapCompleteDelegate();
+	ALimenProceduralMapBuilder* GetTileMapBuilder();
+
+
 protected:
 
 private:
+	FMapComplete OnMapComplete;
 	
 };
