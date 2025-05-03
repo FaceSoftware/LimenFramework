@@ -39,7 +39,15 @@ struct FAmmoData
 	
 	UPROPERTY(BlueprintReadOnly)
 	int SpareAmmo = 0;
-};	
+};
+
+UENUM(BlueprintType)
+enum class EInfiniteAmmoType : uint8
+{
+	Disabled,
+	InfiniteBullets,
+	InfiniteMagazines,
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAmmoUpdateDelegate, const int, CurrentAmmo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateDelegate, ALimenWeapon*, Weapon, const bool, bIsDropped);
@@ -110,6 +118,8 @@ public:
 	float GetAINoiseEventLoudness() const;
 	UFUNCTION(BlueprintCallable)
 	float GetFireSoundRange() const;
+	UFUNCTION(BlueprintCallable)
+	EInfiniteAmmoType GetInfiniteAmmoType() const;
 	
 
 	const TSubclassOf<ALimenAmmo>& GetCompatibleAmmo() const;
@@ -152,6 +162,8 @@ protected:
 	float RecoilCameraShakeScale;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
 	bool bIsSilenced;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	EInfiniteAmmoType InfiniteAmmoType;
 
 	virtual void OnRep_IsDropped() override;
 	

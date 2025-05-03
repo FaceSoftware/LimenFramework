@@ -33,6 +33,7 @@ ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Supe
 	MagazineCapacity = 0;
 	InitialAmmo = 0;
 	bIsSilenced = false;
+	InfiniteAmmoType = EInfiniteAmmoType::Disabled;
 
 	bIsHoldingTrigger = false;
 	bIsFireRateCooldownOver = true;
@@ -263,6 +264,11 @@ float ALimenWeapon::GetFireSoundRange() const
 	return FireSoundRange;
 }
 
+EInfiniteAmmoType ALimenWeapon::GetInfiniteAmmoType() const
+{
+	return InfiniteAmmoType;
+}
+
 const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const
 {
 	return CompatibleAmmo;
@@ -296,8 +302,27 @@ void ALimenWeapon::OnRep_IsDropped()
 void ALimenWeapon::DecrementAmmo(const int Value)
 {
 	check(HasAuthority())
-	CurrentAmmo -= Value;
-	OnAmmoUpdated.Broadcast(CurrentAmmo);
+
+	switch (InfiniteAmmoType)
+	{
+	case EInfiniteAmmoType::InfiniteMagazines:
+	case EInfiniteAmmoType::Disabled:
+		{
+			CurrentAmmo -= Value;
+			OnAmmoUpdated.Broadcast(CurrentAmmo);
+		}
+		break;
+		
+	case EInfiniteAmmoType::InfiniteBullets:
+		{
+		}
+		break;
+
+	default:
+		{
+		}
+		break;
+	}
 }
 
 void ALimenWeapon::ReloadStart(const float ReloadTimeSeconds)
@@ -376,21 +401,40 @@ void ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
 {
 	check(HasAuthority())
 
-	const uint8 AmmoMissingInMagazine = MagazineCapacity - CurrentAmmo;
-	const int32 InventoryAmmo = PlayerInventory->GetItemQuantity(CompatibleAmmo);
-
-	if (InventoryAmmo >= AmmoMissingInMagazine)
+	switch (InfiniteAmmoType)
 	{
-		PlayerInventory->GetItem(CompatibleAmmo, AmmoMissingInMagazine);
-		CurrentAmmo = MagazineCapacity;
-	}
-	else if (InventoryAmmo < AmmoMissingInMagazine)
-	{
-		PlayerInventory->GetItem(CompatibleAmmo, InventoryAmmo);
-		CurrentAmmo += InventoryAmmo;
-	}
+	case EInfiniteAmmoType::InfiniteBullets: // Fallback
+	case EInfiniteAmmoType::InfiniteMagazines:
+		{
+			CurrentAmmo = MagazineCapacity;
+		}
+		break;
 
-	OnAmmoUpdated.Broadcast(CurrentAmmo);
+	case EInfiniteAmmoType::Disabled:
+		{
+			const uint8 AmmoMissingInMagazine = MagazineCapacity - CurrentAmmo;
+			const int32 InventoryAmmo = PlayerInventory->GetItemQuantity(CompatibleAmmo);
+
+			if (InventoryAmmo >= AmmoMissingInMagazine)
+			{
+				PlayerInventory->GetItem(CompatibleAmmo, AmmoMissingInMagazine);
+				CurrentAmmo = MagazineCapacity;
+			}
+			else if (InventoryAmmo < AmmoMissingInMagazine)
+			{
+				PlayerInventory->GetItem(CompatibleAmmo, InventoryAmmo);
+				CurrentAmmo += InventoryAmmo;
+			}
+
+			OnAmmoUpdated.Broadcast(CurrentAmmo);
+		}
+		break;
+
+	default:
+		{
+		}
+		break;
+	}
 }
 
 void ALimenWeapon::OnRep_CurrentAmmo()

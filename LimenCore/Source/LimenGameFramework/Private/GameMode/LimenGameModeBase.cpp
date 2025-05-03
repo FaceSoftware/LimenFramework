@@ -12,7 +12,7 @@
 #include "PlayerState/LimenPlayerStateBase.h"
 
 
-ALimenGameModeBase::ALimenGameModeBase()
+ALimenGameModeBase::ALimenGameModeBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
 
