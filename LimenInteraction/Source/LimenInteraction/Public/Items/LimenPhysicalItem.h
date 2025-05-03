@@ -22,6 +22,9 @@ class LIMENINTERACTION_API ALimenPhysicalItem : public ALimenItemBase, public IL
 public:
 	explicit ALimenPhysicalItem(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 
+	UFUNCTION(BlueprintCallable)
+	const FName& GetAttachmentSocket() const;
+
 #pragma region ILimenUpgradable
 	
 	virtual ULimenUpgradeManager* GetUpgradeManager_Implementation() const override;
@@ -33,6 +36,8 @@ public:
 #pragma endregion 
 	
 protected:
+	UPROPERTY(EditAnywhere, Category="Limen|Animation")
+	FName AttachSocket;
 	UPROPERTY(EditAnywhere, Category="Limen|Upgrades")
 	TObjectPtr<ULimenUpgradeManager> Upgrades;
 

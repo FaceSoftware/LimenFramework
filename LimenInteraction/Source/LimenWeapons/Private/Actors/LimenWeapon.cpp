@@ -23,6 +23,7 @@ ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Supe
 	bReplicates = true;
 	bAlwaysRelevant = true;
 	bReplicateUsingRegisteredSubObjectList = true;
+	SetReplicatingMovement(true);
 
 	FireMethodClass = ULimenDamageType::StaticClass();
 	DamageType = ULimenDamageType::StaticClass();
@@ -77,7 +78,7 @@ void ALimenWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (HasAuthority())
+	if (HasAuthority() && !FireMethodClass.IsNull())
 	{
 		CurrentAmmo = InitialAmmo;
 

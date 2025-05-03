@@ -12,9 +12,15 @@ ALimenPhysicalItem::ALimenPhysicalItem(const FObjectInitializer& InObjectInitial
 	PrimaryActorTick.bCanEverTick = true;
 	bIsHolstered = true;
 	CurrentUpgrade = 0;
+	AttachSocket = NAME_None;
 
 	Upgrades = CreateDefaultSubobject<ULimenUpgradeManager>(TEXT("UpgradeManager"));
 	check(Upgrades);
+}
+
+const FName& ALimenPhysicalItem::GetAttachmentSocket() const
+{
+	return AttachSocket;
 }
 
 ULimenUpgradeManager* ALimenPhysicalItem::GetUpgradeManager_Implementation() const

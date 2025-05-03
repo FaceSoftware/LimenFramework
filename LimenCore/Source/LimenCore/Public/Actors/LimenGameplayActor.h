@@ -13,6 +13,7 @@ class ULimenCollectableComponent;
 UENUM(BlueprintType)
 enum class ELimenGameplayActorState : uint8
 {
+	Undefined,
 	InGameplay,
 	InGameplayWithCollisionDisabled,
 	OutOfGameplay,

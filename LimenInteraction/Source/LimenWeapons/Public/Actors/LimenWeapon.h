@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Items/LimenPhysicalItem.h"
-#include "Perception/AISense_Hearing.h"
 #include "LimenWeapon.generated.h"
 
 

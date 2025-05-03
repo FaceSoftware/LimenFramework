@@ -3,140 +3,80 @@
 
 #include "Components/LimenMovementComponent.h"
 
-#include "GameFramework/CharacterMovementComponent.h"
-#include "HAL/RunnableThread.h"
-#include "LimenCore/Public/LogMacros/LimenLogMacros.h"
 
-
-UDEPRECATED_LimenMovementComponent::UDEPRECATED_LimenMovementComponent()
+ULimenMovementComponent::ULimenMovementComponent()
 {
-
-	
-	bWantsToSprint = false;
-	MovementMode = MOVE_Walking;
-	CustomMovementMode = static_cast<uint8>(ECustomMovementMode::None);
+	FastWalkSpeedMultiplier = 2.5f;
+	CrouchFastWalkSpeedMultiplier = 2.5f;
+	bFastMovementEnabledByDefault = false;
+	bIsFastMovementEnabled = false;
 }
 
-void UDEPRECATED_LimenMovementComponent::OnComponentCreated()
+ULimenMovementComponent::ULimenMovementComponent(const FObjectInitializer& InObjectInitializer)
+	: Super(InObjectInitializer)
 {
-	Super::OnComponentCreated();
+	FastWalkSpeedMultiplier = 2.5f;
+	CrouchFastWalkSpeedMultiplier = 2.5f;
+	bFastMovementEnabledByDefault = false;
+	bIsFastMovementEnabled = false;
 }
 
-void UDEPRECATED_LimenMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-	FActorComponentTickFunction* ThisTickFunction)
+void ULimenMovementComponent::BeginPlay()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	Super::BeginPlay();
 
-	UpdateMovementMode();
+	SetFastMovement(bFastMovementEnabledByDefault);
 }
 
-void UDEPRECATED_LimenMovementComponent::ToggleSprint()
+FNetworkPredictionData_Client* ULimenMovementComponent::GetPredictionData_Client() const
 {
-	if (CustomMovementMode == CustomMovementModeToByte(ECustomMovementMode::Sprinting))
+	// return Super::GetPredictionData_Client();
+
+	if (!ClientPredictionData)
 	{
-		StopSprinting();
+		ULimenMovementComponent* MutableThis = const_cast<ULimenMovementComponent*>(this);
+		MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_Limen(*this);
+	}
+
+	return ClientPredictionData;
+}
+
+void ULimenMovementComponent::SetFastMovement(const bool bEnabled)
+{
+	// check(GetOwner()->HasAuthority())
+	
+	if (bEnabled == bIsFastMovementEnabled)
+	{
+		return;
+	}
+
+	bIsFastMovementEnabled = bEnabled;
+	OnFastMovementChanged();
+}
+
+bool ULimenMovementComponent::IsFastMovementEnabled() const
+{
+	return bIsFastMovementEnabled;
+}
+
+void ULimenMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
+{
+	Super::UpdateFromCompressedFlags(Flags);
+
+	const bool bFastMovementEnabled = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
+	SetFastMovement(bFastMovementEnabled); // Re-apply local state for prediction
+}
+
+void ULimenMovementComponent::OnFastMovementChanged()
+{
+	if (bIsFastMovementEnabled)
+	{
+		MaxWalkSpeedCrouched *= CrouchFastWalkSpeedMultiplier;
+		MaxWalkSpeed *= FastWalkSpeedMultiplier;
 	}
 	else
 	{
-		StartSprinting();
+		MaxWalkSpeedCrouched /= CrouchFastWalkSpeedMultiplier;
+		MaxWalkSpeed /= FastWalkSpeedMultiplier;
 	}
-}
-
-void UDEPRECATED_LimenMovementComponent::StartSprinting()
-{
-	if (!WantsToSprint())
-	{
-		bWantsToSprint = true;
-	}
-}
-
-void UDEPRECATED_LimenMovementComponent::StopSprinting()
-{
-	if (WantsToSprint())
-	{
-		bWantsToSprint = false;
-	}
-}
-
-bool UDEPRECATED_LimenMovementComponent::IsSprinting() const
-{
-	return CustomMovementModeToByte(ECustomMovementMode::Sprinting) == CustomMovementMode;
-}
-
-bool UDEPRECATED_LimenMovementComponent::WantsToSprint() const
-{
-	return bWantsToSprint;
-}
-
-bool UDEPRECATED_LimenMovementComponent::IsStill() const
-{
-	return Velocity.Length() <= UE_KINDA_SMALL_NUMBER;
-}
-
-ECustomMovementMode UDEPRECATED_LimenMovementComponent::GetCustomMovementMode() const
-{
-	return static_cast<ECustomMovementMode>(CustomMovementMode);
-}
-
-void UDEPRECATED_LimenMovementComponent::SetMovementMode(EMovementMode NewMovementMode, uint8 NewCustomMode)
-{
-	Super::SetMovementMode(NewMovementMode, NewCustomMode);
-	
-	switch (static_cast<ECustomMovementMode>(NewCustomMode))
-	{
-	case ECustomMovementMode::None:
-		MaxCustomMovementSpeed = 0;
-		break;
-		
-	case ECustomMovementMode::CrouchWalking:
-		MaxCustomMovementSpeed = MaxCrouchWalkingSpeed;
-		break;
-		
-	case ECustomMovementMode::Sprinting:
-		MaxCustomMovementSpeed = MaxSprintSpeed;
-		break;
-		
-	case ECustomMovementMode::CrouchSprinting:
-		MaxCustomMovementSpeed = MaxCrouchSprintSpeed;
-		break;
-	}
-}
-
-void UDEPRECATED_LimenMovementComponent::UpdateMovementMode()
-{
-	if ((!CanSprint() && IsSprinting()) || (!bWantsToSprint && IsSprinting()))
-	{
-		if (IsCrouching())
-		{
-			OnMovementStatusUpdated.Broadcast();
-			LIMEN_LOG(LogLimenCore, Log, this, "Player is crouching and walking")
-			SetMovementMode(MOVE_Custom, CustomMovementModeToByte(ECustomMovementMode::CrouchWalking));
-		}
-		else
-		{
-			OnMovementStatusUpdated.Broadcast();
-			LIMEN_LOG(LogLimenCore, Log, this, "Player is walking")
-			SetMovementMode(MOVE_Walking, CustomMovementModeToByte(ECustomMovementMode::None));
-		}
-	}
-	else if (CanSprint() && !IsSprinting() && bWantsToSprint)
-	{
-		if (IsCrouching())
-		{
-			OnMovementStatusUpdated.Broadcast();
-			LIMEN_LOG(LogLimenCore, Log, this, "Player is crouch sprinting")
-			SetMovementMode(MOVE_Custom, CustomMovementModeToByte(ECustomMovementMode::CrouchSprinting));
-		}
-		else
-		{
-			OnMovementStatusUpdated.Broadcast();
-			LIMEN_LOG(LogLimenCore, Log, this, "Player is sprinting")
-			SetMovementMode(MOVE_Custom, CustomMovementModeToByte(ECustomMovementMode::Sprinting));
-		}
-	}
-}
-
-bool UDEPRECATED_LimenMovementComponent::CanSprint()
-{
-	return !IsFalling() && Velocity.Length() > UE_KINDA_SMALL_NUMBER;
 }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "LimenMovementComponent.generated.h"
 
@@ -23,71 +24,101 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementStatusUpdate);
 /**
  * Class that communicates with a character movement component instance to support Sprint movement mode.
  */
-UCLASS(Deprecated, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LIMENLOCOMOTION_API UDEPRECATED_LimenMovementComponent : public UCharacterMovementComponent
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class LIMENLOCOMOTION_API ULimenMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
 
 public:
-	static uint8 CustomMovementModeToByte(const ECustomMovementMode Mode)
-	{
-		return static_cast<uint8>(Mode);
-	}
-	
-	UPROPERTY(BlueprintAssignable)
-	FMovementStatusUpdate OnMovementStatusUpdated;
-	
-	UDEPRECATED_LimenMovementComponent();
-	virtual void OnComponentCreated() override;
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	
-	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay")
-	void ToggleSprint();
-	/**
-	 * @brief Sets the character's intent to sprint.
-	 */
-	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay")
-	void StartSprinting();
-	/**
-	 * @brief Removes the character's intent to sprint.
-	 */
-	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay")
-	void StopSprinting();
-	/**
-	 * @brief Checks if the character is sprinting.
-	 * @return True if is sprinting. False if is not sprinting.
-	 */
-	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay")
-	bool IsSprinting() const;
-	/**
-	 * @brief Checks if the character wants to sprint.
-	 * @return True if it wants. False if it does not.
-	 */
-	bool WantsToSprint() const;
-	bool IsStill() const;
+	ULimenMovementComponent();
+	explicit ULimenMovementComponent(const FObjectInitializer& InObjectInitializer);
+	virtual void BeginPlay() override;
+	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
 
-	ECustomMovementMode GetCustomMovementMode() const;
+	void SetFastMovement(const bool bEnabled);
+	bool IsFastMovementEnabled() const;
 
 protected:
-	virtual void SetMovementMode(EMovementMode NewMovementMode, uint8 NewCustomMode) override;
-	virtual void UpdateMovementMode();
-	
+	UPROPERTY(EditDefaultsOnly, Category="Fast Movement")
+	float FastWalkSpeedMultiplier;
+	UPROPERTY(EditDefaultsOnly, Category="Fast Movement")
+	float CrouchFastWalkSpeedMultiplier;
+	UPROPERTY(EditDefaultsOnly, Category="Fast Movement")
+	bool bFastMovementEnabledByDefault;
+
+	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
+
+	virtual void OnFastMovementChanged();
+
 private:
-	/**
-	 * @brief The speed of the character's sprint.
-	 */
-	UPROPERTY(EditAnywhere, Category="Limen|Sprinting")
-	float MaxSprintSpeed;
-	UPROPERTY(EditAnywhere, Category="Limen|Crouch Sprinting")
-	float MaxCrouchSprintSpeed;
-	UPROPERTY(EditAnywhere, Category="Limen|Crouch Walking")
-	float MaxCrouchWalkingSpeed;
-
-	bool bWantsToSprint;
-
-	/**
-	 * @brief Defines the rules for the character to sprint.
-	 * @return Whether the character can sprint or not.
-	 */
-	virtual bool CanSprint();
+	bool bIsFastMovementEnabled;
 };
+
+class FSavedMove_Limen : public FSavedMove_Character
+{
+public:
+	FSavedMove_Limen()
+	{
+		bSavedIsFastMovementEnabled = false;
+	}
+
+	virtual void Clear() override
+	{
+		FSavedMove_Character::Clear();
+		bSavedIsFastMovementEnabled = false;
+	}
+
+	virtual uint8 GetCompressedFlags() const override
+	{
+		/**
+		 * FLAG_Custom_0		= 0x10, -> Fast Movement
+		 * FLAG_Custom_1		= 0x20,
+		 * FLAG_Custom_2		= 0x40,
+		 * FLAG_Custom_3		= 0x80,
+		 */
+		uint8 Result = FSavedMove_Character::GetCompressedFlags();
+		if (bSavedIsFastMovementEnabled)
+		{
+			Result |= FLAG_Custom_0;
+		}
+		return Result;
+	}
+
+	virtual void SetMoveFor(ACharacter* C, const float InDeltaTime, FVector const& NewAccel,
+							FNetworkPredictionData_Client_Character& ClientData) override
+	{
+		FSavedMove_Character::SetMoveFor(C, InDeltaTime, NewAccel, ClientData);
+		if (const auto* Movement = Cast<ULimenMovementComponent>(C->GetCharacterMovement()))
+		{
+			bSavedIsFastMovementEnabled = Movement->IsFastMovementEnabled();
+		}
+	}
+
+	virtual void PrepMoveFor(ACharacter* C) override
+	{
+		FSavedMove_Character::PrepMoveFor(C);
+		if (auto* Movement = Cast<ULimenMovementComponent>(C->GetCharacterMovement()))
+		{
+			Movement->SetFastMovement(bSavedIsFastMovementEnabled);
+		}
+	}
+
+private:
+	bool bSavedIsFastMovementEnabled;
+};
+
+
+class FNetworkPredictionData_Client_Limen : public FNetworkPredictionData_Client_Character
+{
+public:
+	explicit FNetworkPredictionData_Client_Limen(const UCharacterMovementComponent& ClientMovement) :
+		FNetworkPredictionData_Client_Character(ClientMovement)
+	{
+	}
+
+	virtual FSavedMovePtr AllocateNewMove() override
+	{
+		return MakeShared<FSavedMove_Limen>();
+	}
+};
+

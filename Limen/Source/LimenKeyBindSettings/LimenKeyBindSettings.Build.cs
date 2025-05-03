@@ -10,6 +10,7 @@ public class LimenKeyBindSettings : ModuleRules
             new string[]
             {
                 "Core", 
+                "Engine",
                 "DeveloperSettings",
                 "EnhancedInput",
                 "InputCore",
@@ -23,7 +24,6 @@ public class LimenKeyBindSettings : ModuleRules
             new string[]
             {
                 "CoreUObject",
-                "Engine",
                 "Slate",
                 "SlateCore",
                 "UMG",

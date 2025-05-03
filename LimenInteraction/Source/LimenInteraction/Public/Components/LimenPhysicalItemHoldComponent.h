@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ChildActorComponent.h"
+#include "Components/ActorComponent.h"
 #include "LimenPhysicalItemHoldComponent.generated.h"
 
 class ALimenPhysicalItem;
@@ -23,7 +23,7 @@ struct FLimenPhysicalItemHoldComponent_WeaponData
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPhysicalItemChange, ALimenPhysicalItem*, Old, ALimenPhysicalItem*, New);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LIMENINTERACTION_API ULimenPhysicalItemHoldComponent : public USceneComponent
+class LIMENINTERACTION_API ULimenPhysicalItemHoldComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -40,6 +40,11 @@ public:
 	void StopHolding();
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	bool IsHoldingSomething() const;
+	template<typename T>
+	bool IsHoldingSomething() const
+	{
+		return Cast<T>(GetPhysicalItem()) != nullptr;
+	}
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	ALimenPhysicalItem* GetPhysicalItem() const;

@@ -11,7 +11,9 @@
 ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
-	GameplayState = ELimenGameplayActorState::OutOfGameplay;
+	GameplayState = ELimenGameplayActorState::Undefined;
+	bReplicates = true;
+	bAlwaysRelevant = true;
 }
 
 void ALimenGameplayActor:: BeginPlay()
@@ -23,12 +25,8 @@ void ALimenGameplayActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	FDoRepLifetimeParams Params;
-	Params.bIsPushBased = true;
-	Params.Condition = ELifetimeCondition::COND_None;
-	Params.RepNotifyCondition = ELifetimeRepNotifyCondition::REPNOTIFY_OnChanged;
-
-	DOREPLIFETIME_WITH_PARAMS_FAST(ALimenGameplayActor, GameplayState, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ALimenGameplayActor, GameplayState, FDoRepLifetimeParams(
+		COND_None, REPNOTIFY_OnChanged, true));
 }
 
 void ALimenGameplayActor::RemoveFromGameplay()
@@ -38,10 +36,11 @@ void ALimenGameplayActor::RemoveFromGameplay()
 	{
 		return;
 	}
+
+	GameplayState = ELimenGameplayActorState::OutOfGameplay;
 	
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
-	GameplayState = ELimenGameplayActorState::OutOfGameplay;
 }
 
 void ALimenGameplayActor::AddToGameplay(const bool bEnableCollision)
@@ -52,10 +51,11 @@ void ALimenGameplayActor::AddToGameplay(const bool bEnableCollision)
 	{
 		return;
 	}
+
+	GameplayState = bEnableCollision ? ELimenGameplayActorState::InGameplay : ELimenGameplayActorState::InGameplayWithCollisionDisabled;
 	
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(bEnableCollision);
-	GameplayState = bEnableCollision ? ELimenGameplayActorState::InGameplay : ELimenGameplayActorState::InGameplayWithCollisionDisabled;
 }
 
 bool ALimenGameplayActor::IsRemovedFromGameplay() const

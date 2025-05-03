@@ -14,7 +14,7 @@
 #include "LogMacros/LimenLogMacros.h"
 #include "PlayerController/LimenPlayerControllerBase.h"
 #include "PlayerState/LimenPlayerStateBase.h"
-#include "AIController.h"
+#include "Attributes/LimenHealthAttribute.h"
 
 
 ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -45,6 +45,7 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 	GetMesh()->bEditableWhenInherited = true;
 
 	AbilityComponent = CreateDefaultSubobject<ULimenAbilityComponent>(TEXT("AbilityComponent"));
+	AbilityComponent->AddAttribute(ULimenHealthAttribute::StaticClass());
 }
 
 void ALimenCharacterBase::EnableInput(class APlayerController* InPlayerController)

@@ -377,14 +377,14 @@ template <typename AbilityClass>
 AbilityClass* ULimenAbilityComponent::GetAbility()
 {
 	static_assert(std::is_base_of_v<ULimenAbilityBase, AbilityClass>);
-	return CastChecked<AbilityClass>(GetAbility(AbilityClass::StaticClass()));
+	return Cast<AbilityClass>(GetAbility(AbilityClass::StaticClass()));
 }
 
 template <typename AttributeClass>
 AttributeClass* ULimenAbilityComponent::GetAttribute() const
 {
 	static_assert(std::is_base_of_v<ULimenAttributeBase, AttributeClass>);
-	return CastChecked<AttributeClass>(GetAttribute(AttributeClass::StaticClass()));
+	return Cast<AttributeClass>(GetAttribute(AttributeClass::StaticClass()));
 }
 
 template <typename AbilityClass>

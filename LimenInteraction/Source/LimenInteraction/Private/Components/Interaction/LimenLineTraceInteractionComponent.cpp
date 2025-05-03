@@ -47,7 +47,7 @@ void ULimenLineTraceInteractionComponent::SetupInteraction()
 void ULimenLineTraceInteractionComponent::UpdateInteraction(const float DeltaTime)
 {
 	FVector Start, End;
-	if (!GetOwnerLineOfSightStartAndEndVectors(Start, End))
+	if (!GetOwnerViewPoint(Start, End))
 	{
 		return;
 	}
@@ -65,14 +65,14 @@ void ULimenLineTraceInteractionComponent::UpdateInteraction(const float DeltaTim
 	
 #endif
 	
-	CurrentInteractableInterface = nullptr;
+	SetCurrentInteractableInterface(nullptr);
 	InteractionHitResult.Reset();
 
 	if (!InteractionResults.IsEmpty())
 	{
 		FHitResult* InteractionHit = nullptr;
 		bool bIsHoveringItem = false;
-		TScriptInterface<ILimenInteractableComponent> FirstInteractableComponent = nullptr;
+		UPrimitiveComponent* FirstInteractableComponent = nullptr;
 		for (FHitResult& Result : InteractionResults)
 		{
 			// For better compatibility, we only check for the interactable component
@@ -87,24 +87,20 @@ void ULimenLineTraceInteractionComponent::UpdateInteraction(const float DeltaTim
 				bIsHoveringItem = true;
 				InteractionHit = &Result;
 
-				CurrentInteractableInterface.SetObject(Result.GetComponent());
-				CurrentInteractableInterface.SetInterface(Cast<ILimenInteractableComponent>(Result.GetComponent()));
-				
+				SetCurrentInteractableInterface(Result.GetComponent());
 				break;
 			}
 
 			if (FirstInteractableComponent == nullptr)
 			{
-				FirstInteractableComponent.SetObject(Result.GetComponent());
-				FirstInteractableComponent.SetInterface(Cast<ILimenInteractableComponent>(Result.GetComponent()));
-				
+				FirstInteractableComponent = Result.GetComponent();
 				InteractionHit = &Result;
 			}
 		}
 
 		if (!bIsHoveringItem)
 		{
-			CurrentInteractableInterface = FirstInteractableComponent;
+			SetCurrentInteractableInterface(FirstInteractableComponent);
 		}
 
 		if (InteractionHit != nullptr)
