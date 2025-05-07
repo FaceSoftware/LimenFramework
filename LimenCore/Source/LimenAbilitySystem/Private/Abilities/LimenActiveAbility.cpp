@@ -26,7 +26,10 @@ void ULimenActiveAbility::Initialize(AActor* InOwner)
 
 void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
 {
-	check(CanActivateAbility());
+	if (!CanActivateAbility())
+	{
+		return;
+	}
 	
 	bIsActive = true;
 	if (FMath::IsNearlyZero(AbilityActivationDelay))

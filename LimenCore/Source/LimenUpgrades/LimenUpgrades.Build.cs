@@ -1,8 +1,8 @@
 ﻿using UnrealBuildTool;
 
-public class LimenItemSmith : ModuleRules
+public class LimenUpgrades : ModuleRules
 {
-    public LimenItemSmith(ReadOnlyTargetRules Target) : base(Target)
+    public LimenUpgrades(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -23,6 +23,7 @@ public class LimenItemSmith : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
+
                 "LimenCore",
             }
         );

@@ -23,7 +23,7 @@ DECLARE_MULTICAST_DELEGATE(FInputDelegate);
  * and is able to queue notifications if the controller class is the LimenPlayerController.
  */
 UCLASS(Blueprintable)
-class LIMENGAMEFRAMEWORK_API ALimenCharacterBase : public ACharacter
+class LIMENGAMEFRAMEWORK_API			ALimenCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 

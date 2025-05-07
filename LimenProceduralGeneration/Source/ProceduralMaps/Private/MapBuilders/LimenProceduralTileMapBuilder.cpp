@@ -4,8 +4,10 @@
 #include "MapBuilders/LimenProceduralTileMapBuilder.h"
 
 #include "TimerManager.h"
+#include "DataAssets/ProceduralMapParameters.h"
 #include "Interfaces/LimenEndTileInterface.h"
 #include "Interfaces/LimenStartTileInterface.h"
+#include "Managers/LimenProceduralMapManager.h"
 #include "Maps/LimenProceduralTileMap.h"
 #include "Tiles/LimenMapTile.h"
 
@@ -45,6 +47,18 @@ TMap<FGuid, TScriptInterface<ILimenStartTileInterface>>& ALimenProceduralTileMap
 TMap<FGuid, TScriptInterface<ILimenEndTileInterface>>& ALimenProceduralTileMapBuilder::GetEndTiles()
 {
 	return EndTiles;
+}
+
+void ALimenProceduralTileMapBuilder::MapFinishBuild(const FGuid& MapId, ULimenProceduralMap* Map)
+{
+	Super::MapFinishBuild(MapId, Map);
+
+	ALimenProceduralMapManager* MapManager = GetMapManager(MapId);
+	for (const UTileInfo* Tile : GetMap<ULimenProceduralTileMap>(MapId)->GetTiles())
+	{
+		check(MapManager != nullptr);
+		Tile->TileActor->SetMapManager(MapManager);
+	}
 }
 
 void ALimenProceduralTileMapBuilder::SpawnTilesAsync(const FGuid& MapId, const FMapBuildCallback& FinishCallback)
@@ -159,13 +173,6 @@ void ALimenProceduralTileMapBuilder::StartBuildingMap(const FGuid& MapId, const 
 
 		FinishCallback.CheckCallable();
 		FinishCallback(bSuccess, BuiltMap);
-		
-		ALimenProceduralMapManager* MapManager = GetMapManager(MapId);
-		for (const UTileInfo* Tile : TileMapPtr->GetTiles())
-		{
-			check(MapManager != nullptr);
-			Tile->TileActor->SetMapManager(MapManager);
-		}
 	});
 }
 

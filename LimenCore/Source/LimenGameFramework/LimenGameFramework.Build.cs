@@ -24,13 +24,14 @@ public class LimenGameFramework : ModuleRules
                 "SlateCore",
                 "EnhancedInput", 
                 "UMG",
+                "AIModule", 
                 
                 "LimenNotifications",
                 "LimenWidgets",
                 "LimenLocomotion", 
                 "LimenAbilitySystem",
-                "LimenLevelTransitions", 
-                "AIModule", 
+                "LimenLevelTransitions",
+                "LimenUpgrades",
             }
         );
     }

@@ -8,9 +8,6 @@
 #include "LimenPlayerStateBase.generated.h"
 
 
-class ALimenTool;
-class ALimenWeapon;
-
 /**
  * 
  */
@@ -20,6 +17,4 @@ class LIMENGAMEFRAMEWORK_API ALimenPlayerStateBase : public APlayerState
 	GENERATED_BODY()
 
 public:
-
-private:
 };

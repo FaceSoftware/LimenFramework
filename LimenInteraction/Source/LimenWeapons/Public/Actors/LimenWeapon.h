@@ -99,6 +99,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetSecondsPerShot() const;
 	UFUNCTION(BlueprintCallable)
+	float GetFireRate() const;
+	UFUNCTION(BlueprintCallable)
+	void SetFireRate(float InFireRate);
+	UFUNCTION(BlueprintCallable)
 	float GetReloadTime() const;
 	UFUNCTION(BlueprintCallable)
 	bool IsReloading() const;
@@ -134,35 +138,33 @@ protected:
 	TSoftClassPtr<ULimenWeaponFireMethod> FireMethodClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
 	TSubclassOf<ULimenDamageType> DamageType;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"), Replicated)
 	float BaseDamage;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
-	int32 RoundsPerSecond;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"), Replicated)
+	float RoundsPerSecond;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"), Replicated)
 	int32 MagazineCapacity;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"), Replicated)
 	float ReloadTimeInSeconds;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", Replicated)
 	bool bIsAutomatic;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
 	TSubclassOf<ALimenAmmo> CompatibleAmmo;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
 	int32 InitialAmmo;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="1"), Replicated)
 	float WeaponRange;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"), Replicated)
 	float ImpactDamageFalloffMultiplier;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"), Replicated)
 	float FireSoundRange;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"), Replicated)
 	float AINoiseEventLoudness;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
 	TSubclassOf<UCameraShakeBase> RecoilCameraShakeClass;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
-	float RecoilCameraShakeScale;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"), Replicated)
 	bool bIsSilenced;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", meta=(ClampMin="0"), Replicated)
 	EInfiniteAmmoType InfiniteAmmoType;
 
 	virtual void OnRep_IsDropped() override;
@@ -181,6 +183,12 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=WeaponFiredWithoutAmmo)
 	void BP_WeaponFiredWithoutAmmo();
 	virtual void WeaponFiredWithoutAmmo();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=WeaponFired)
+	void BP_StartWeaponFire();
+	virtual void StartWeaponFire();
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, Category="Limen|Weapons", DisplayName=WeaponFired)
+	void BP_StopWeaponFire();
+	virtual void StopWeaponFire();
 
 	virtual void Fire();
 	UFUNCTION()
@@ -190,8 +198,6 @@ protected:
 	virtual void OnRep_CurrentAmmo();
 	
 private:
-	UPROPERTY(Replicated)
-	float TimeBetweenShots;
 	UPROPERTY(Replicated)
 	bool bIsHoldingTrigger;
 	UPROPERTY(Replicated)
@@ -208,6 +214,8 @@ private:
 
 	int32 ShotsInARow;
 
+	TWeakObjectPtr<UCameraShakeBase> RecoilCameraShakePtr;
+
 	UPROPERTY(Replicated)
 	TObjectPtr<ULimenWeaponFireMethod> FireMethodObject;
 
@@ -220,12 +228,20 @@ private:
 	void StopReloadTimer();
 	void ReloadInternal(ULimenInventoryComponent* PlayerInventory);
 	
+	virtual void StartFireCameraShake();
+	virtual void StopFireCameraShake();
+
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ReloadStart();
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ReloadCanceled();
 	
-	UFUNCTION(NetMulticast, Reliable)
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_StartWeaponFire();
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_StopWeaponFire();
+	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_WeaponFired();
+
 };

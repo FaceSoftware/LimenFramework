@@ -30,7 +30,6 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUDs/LimenHUD.h"
-#include "Interfaces/LimenUpgradable.h"
 #include "ItemActions/LimenItemAction.h"
 #include "MappableKeySettings/LimenPlayerMappableKeySettings.h"
 #include "Subsystems/LimenKeyBindSubsystem.h"
@@ -329,21 +328,6 @@ void ALimenPlayerCharacter::GiveStartingItems(const TArray<TSubclassOf<ALimenIte
 		CharacterInventory->AddItem(Item);
 		Item->PickUp(GetController(), this);
 	}
-}
-
-TArray<TScriptInterface<ILimenUpgradable>> ALimenPlayerCharacter::GetUpgradables() const
-{
-	TArray<ALimenItemBase*> Items = CharacterInventory->PeekItemInstancesByInterface<ULimenUpgradable>();
-
-	TArray<TScriptInterface<ILimenUpgradable>> Output;
-	Output.Reserve(Items.Num());
-	
-	for (auto* Item : Items)
-	{
-		Output.Push(TScriptInterface<ILimenUpgradable>(Item));
-	}
-
-	return Output;
 }
 
 void ALimenPlayerCharacter::SetActorHiddenInGame(const bool bNewHidden)

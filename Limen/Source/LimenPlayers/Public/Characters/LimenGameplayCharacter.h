@@ -60,7 +60,7 @@ protected:
 	
 	UFUNCTION()
 	virtual void DamageReceived(AController* InInstigator, AActor* InCauser,
-								const ULimenDamageType* DamageType, const float Damage);
+								 TSubclassOf<ULimenDamageType> DamageType, const float Damage);
 
 	UFUNCTION()
 	virtual void HealthAttributeEmpty(ULimenAttributeBase* Attribute, const float NewValue);

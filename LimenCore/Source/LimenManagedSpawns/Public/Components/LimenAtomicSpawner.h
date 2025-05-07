@@ -17,7 +17,7 @@ class LIMENMANAGEDSPAWNS_API ULimenAtomicSpawner : public UBoxComponent
 public:
 	ULimenAtomicSpawner();
 
-	void SpawnItem(const TSubclassOf<AActor>& Class, const int32 Amount);
+	TArray<AActor*> SpawnItem(const TSubclassOf<AActor>& Class, const int32 Amount, const bool bSnapToFloor);
 	bool IsTagCompatible(const FName& Test) const;
 	int32 GetSpawnedItemsCount() const;
 	

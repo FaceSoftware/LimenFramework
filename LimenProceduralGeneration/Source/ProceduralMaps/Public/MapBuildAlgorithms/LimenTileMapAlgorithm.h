@@ -27,7 +27,7 @@ enum class EMapTileDirection : uint8
 /**
  * 
  */
-UCLASS(Abstract, BlueprintType)
+UCLASS(BlueprintType)
 class PROCEDURALMAPS_API ULimenTileMapAlgorithm : public ULimenMapAlgorithm
 {
 	GENERATED_BODY()

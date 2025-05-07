@@ -20,15 +20,22 @@ struct LIMENMANAGEDSPAWNS_API FAtomicSpawnParameters
 
 	UPROPERTY(EditAnywhere, Category="Limen")
 	FName SpawnTag;
-	
-	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="1"))
+
+	UPROPERTY(EditAnywhere, Category="Limen", meta=(InlineEditConditionToggle))
+	bool bUseTotalAmount;
+	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="0", EditCondition=bUseTotalAmount))
 	int32 TotalAmount;
 	
-	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="1"))
+	UPROPERTY(EditAnywhere, Category="Limen", meta=(InlineEditConditionToggle))
+	bool bUseMaxAmountPerSpawner;
+	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="0", EditCondition=bUseMaxAmountPerSpawner))
 	int32 MaxAmountPerSpawner;
-	
-	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="0"))
+
+	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="0", EditCondition=bUseMinAmountPerSpawner))
 	int32 MinAmountPerSpawner;
+
+	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="0", EditCondition=bUseMinAmountPerSpawner))
+	bool bSnapToFloor;
 
 	FAtomicSpawnParameters();
 
@@ -45,10 +52,15 @@ class LIMENMANAGEDSPAWNS_API ALimenAtomicSpawnManager : public ALimenGameplayMan
 
 public:
 	ALimenAtomicSpawnManager();
-	
-	void SpawnItems(const TArray<FAtomicSpawnParameters>& ItemParameters);
 
-private:	
+	TArray<AActor*> SpawnItems(const TArray<FAtomicSpawnParameters>& ItemParameters);
+	TArray<AActor*> SpawnItems();
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category="Spawn Parameters")
+	TArray<FAtomicSpawnParameters> SpawnParameters;
+
+private:
 	TArray<ULimenAtomicSpawner*> GetItemSpawners(const FName& SpawnerTag) const;
 	static int32 GetAmountToSpawnForSingleSpawner(const FAtomicSpawnParameters& Params);
 	static int32 GetTargetItemCount(const TArray<FAtomicSpawnParameters>& Params);

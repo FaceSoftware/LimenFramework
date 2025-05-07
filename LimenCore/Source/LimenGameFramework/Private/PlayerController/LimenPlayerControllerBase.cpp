@@ -58,7 +58,7 @@ void ALimenPlayerControllerBase::BeginPlay()
 	MouseInputSensitivityComponent->OnSensitivityUpdated.AddUniqueDynamic(this, &ThisClass::SensitivityUpdated);
 	SensitivityUpdated(MouseInputSensitivityComponent.Get());
 
-	if (LimenBaseHUD.IsValid() && GetPawn() == nullptr)
+	if (HasAuthority() && LimenBaseHUD.IsValid() && GetPawn() == nullptr)
 	{
 		LimenBaseHUD->UpdateWidgets(this, GetPawn());
 		BindWidgetDelegates();
@@ -278,23 +278,30 @@ void ALimenPlayerControllerBase::LoadingScreenVisibilityChanged(const bool bIsVi
 
 void ALimenPlayerControllerBase::SetPawn(APawn* InPawn)
 {
-	const APawn* PrevPawn = GetPawn();
+	APawn* PrevPawn = GetPawn();
 
 	Super::SetPawn(InPawn);
 
-	UnbindPawnDelegates(GetPawn());
-	if (LimenBaseHUD.IsValid())
+	UnbindPawnDelegates(PrevPawn);
+
+	if (!InPawn) return;
+
+	BindPawnDelegates(InPawn);
+
+	if (!GetWorld()->bIsTearingDown && LimenBaseHUD.IsValid())
 	{
 		UnbindWidgetDelegates();
+		LimenBaseHUD->UpdateWidgets(this, InPawn);
+		BindWidgetDelegates();
 	}
 
-	if (InPawn && !InPawn->HasActorBegunPlay())
+	if (!InPawn->HasActorBegunPlay())
 	{
-		InPawn->OnPawnBeginPlay.AddUObject(this, &ThisClass::PawnBeginPlayInternal);
+		InPawn->OnPawnBeginPlay.AddUObject(this, &ThisClass::CurrentPawnReadyInternal);
 	}
 	else
 	{
-		PawnBeginPlayInternal(InPawn);
+		CurrentPawnReadyInternal(InPawn);
 	}
 }
 
@@ -305,6 +312,17 @@ void ALimenPlayerControllerBase::ClientSetHUD_Implementation(TSubclassOf<AHUD> N
 	LimenBaseHUD = Cast<ALimenBaseHUD>(GetHUD());
 }
 
+void ALimenPlayerControllerBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (!GetWorld()->bIsTearingDown && LimenBaseHUD.IsValid())
+	{
+		LimenBaseHUD->UpdateWidgets(this, GetPawn());
+		BindWidgetDelegates();
+	}
+}
+
 void ALimenPlayerControllerBase::BindWidgetDelegates()
 {
 }
@@ -313,14 +331,17 @@ void ALimenPlayerControllerBase::UnbindWidgetDelegates()
 {
 }
 
-void ALimenPlayerControllerBase::CurrentPawnBeginPlay()
+void ALimenPlayerControllerBase::CurrentPawnReady()
 {
-	BindPawnDelegates(GetPawn());
-
-	if (!GetWorld()->bIsTearingDown && LimenBaseHUD.IsValid())
+	if (HasAuthority())
 	{
-		LimenBaseHUD->UpdateWidgets(this, GetPawn());
-		BindWidgetDelegates();
+		BindPawnDelegates(GetPawn());
+
+		if (!GetWorld()->bIsTearingDown && LimenBaseHUD.IsValid())
+		{
+			LimenBaseHUD->UpdateWidgets(this, GetPawn());
+			BindWidgetDelegates();
+		}
 	}
 }
 
@@ -339,12 +360,12 @@ void ALimenPlayerControllerBase::SensitivityUpdated(ULimenMouseSensitivityCompon
 	}
 }
 
-void ALimenPlayerControllerBase::PawnBeginPlayInternal(APawn* InPawn)
+void ALimenPlayerControllerBase::CurrentPawnReadyInternal(APawn* InPawn)
 {
 	if (!IsValid(InPawn) || InPawn != GetPawn())
 	{
 		return;
 	}
 
-	CurrentPawnBeginPlay();
+	CurrentPawnReady();
 }

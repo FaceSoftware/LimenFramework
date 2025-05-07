@@ -14,12 +14,15 @@ USTRUCT()
 struct FItemRegistry
 {
 	GENERATED_BODY();
+
+	FItemRegistry() = default;
+	FItemRegistry(const FItemRegistry& Other) = default;
 	
 	UPROPERTY()
 	TSoftClassPtr<ALimenItemBase> ItemClass;
 
 	UPROPERTY()
-	TArray<ALimenItemBase*> ItemInstances;
+	TArray<TObjectPtr<ALimenItemBase>> ItemInstances;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, TSubclassOf<ALimenItemBase>, ItemClass);
@@ -170,11 +173,11 @@ public:
 	 * @return A pointer to the first item instance of the specified class, or nullptr if no such instance exists.
 	 */
 	template<typename T>
-	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass)
+	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass) const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
 		check(ItemClass != nullptr);
-		for (FItemRegistry& Registry : ItemRegistries)
+		for (const FItemRegistry& Registry : ItemRegistries)
 		{
 			if (Registry.ItemClass.LoadSynchronous() == ItemClass)
 			{
@@ -223,13 +226,13 @@ public:
 	 * @return An array with item instances of the specified type found in the registries.
 	 */
 	template<typename T>
-	TArray<T*> PeekItemInstances()
+	TArray<T*> PeekItemInstances() const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
 		
 		TArray<T*> Out;
 		Out.Reserve(ItemRegistries.Num());
-		for (FItemRegistry& Registry : ItemRegistries)
+		for (const FItemRegistry& Registry : ItemRegistries)
 		{
 			if (Registry.ItemInstances.IsEmpty() || !Registry.ItemClass->IsChildOf<T>() ||
 				Registry.ItemClass == T::StaticClass())
@@ -319,5 +322,6 @@ private:
 	FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass);
 	
 	bool IsFirstOfType(const TSubclassOf<ALimenItemBase>& ItemClass);
+	TArray<ALimenItemBase*> SpawnItemInstances(ALimenItemBase* InItem) const;
 	
 };

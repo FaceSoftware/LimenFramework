@@ -63,3 +63,8 @@ const TArray<TSubclassOf<ALimenMapTile>>& UProceduralTileMapParameters::GetCross
 {
 	return CrossIntersection;
 }
+
+void UProceduralTileMapParameters::SetNumberOfTiles(const int32 NewNumberOfTiles)
+{
+	NumberOfTiles = NewNumberOfTiles;
+}

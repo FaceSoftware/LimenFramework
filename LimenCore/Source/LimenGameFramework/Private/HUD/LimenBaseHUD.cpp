@@ -106,12 +106,7 @@ bool ALimenBaseHUD::CanSwitchWidgetVisibility(UWidget* InWidget) const
 
 void ALimenBaseHUD::ShowWidget_Internal(ULimenWidget* Widget)
 {
-	if (!Widget)
-	{
-		return;
-	}
-	
-	if (!CanSwitchWidgetVisibility(Widget))
+	if (!Widget || !CanSwitchWidgetVisibility(Widget) || GetWorld()->bIsTearingDown)
 	{
 		return;
 	}

@@ -11,8 +11,8 @@ class ULimenProceduralMap;
 class ALimenProceduralMapBuilder;
 class UProceduralMapParameters;
 
-UCLASS(Abstract)
-class PROCEDURALMAPS_API ALimenProceduralMapManager : public ALimenGameplayManager
+UCLASS()
+class PROCEDURALMAPS_API ALimenProceduralMapManager : public AInfo
 {
 	GENERATED_BODY()
 
@@ -30,7 +30,14 @@ public:
 	void NotifyMapComplete();
 
 	FMapComplete& GetMapCompleteDelegate();
-	ALimenProceduralMapBuilder* GetTileMapBuilder();
+	template<typename T = ALimenProceduralMapBuilder>
+	T* GetMapBuilder()
+	{
+		static_assert(TIsDerivedFrom<T, ALimenProceduralMapBuilder>::Value);
+		auto* Builder = ALimenGameplayManager::GetGameplayManager(
+			this, T::StaticClass());
+		return Cast<T>(Builder);
+	}
 
 
 protected:

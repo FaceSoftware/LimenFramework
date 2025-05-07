@@ -97,19 +97,17 @@ protected:
 	
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
 
-	virtual void BindPawnDelegates(APawn* NewPawn);
-	virtual void UnbindPawnDelegates(APawn* InPawn);
-
-	virtual void BindWidgetDelegates();
-	virtual void UnbindWidgetDelegates();
-
-	virtual void CurrentPawnBeginPlay();
-	
-	UFUNCTION()
-	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
-
 	virtual void SetPawn(APawn* InPawn) override;
 	virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
+	virtual void OnRep_PlayerState() override;
+
+	virtual void BindPawnDelegates(APawn* NewPawn);
+	virtual void UnbindPawnDelegates(APawn* InPawn);
+	virtual void BindWidgetDelegates();
+	virtual void UnbindWidgetDelegates();
+	virtual void CurrentPawnReady();
+	UFUNCTION()
+	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
 	
 private:
 	bool bPawnBeginPlayBound;
@@ -121,5 +119,5 @@ private:
 	UFUNCTION()
 	virtual void SensitivityUpdated(ULimenMouseSensitivityComponent* Component);
 
-	void PawnBeginPlayInternal(APawn* InPawn);
+	void CurrentPawnReadyInternal(APawn* InPawn);
 };

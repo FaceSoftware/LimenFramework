@@ -69,11 +69,6 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "LimenGameplayFramework",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "LimenGraphicSettings",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"

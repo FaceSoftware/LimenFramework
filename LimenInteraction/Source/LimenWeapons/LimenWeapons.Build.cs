@@ -25,7 +25,8 @@ public class LimenWeapons : ModuleRules
                 "SlateCore",
                 "AIModule",
                 
-                "LimenCore", 
+                "LimenCore",
+                "LimenSaveSystem",
             }
         );
     }

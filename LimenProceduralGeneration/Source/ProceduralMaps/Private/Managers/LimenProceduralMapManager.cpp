@@ -18,8 +18,3 @@ ALimenProceduralMapManager::FMapComplete& ALimenProceduralMapManager::GetMapComp
 {
 	return OnMapComplete;
 }
-
-ALimenProceduralMapBuilder* ALimenProceduralMapManager::GetTileMapBuilder()
-{
-	return GetGameplayManager<ALimenProceduralMapBuilder>(this);
-}

@@ -16,7 +16,6 @@
 #include "Widgets/LimenDeathScreen.h"
 #include "Widgets/LimenGameMenuWrapperWidget.h"
 #include "Widgets/LimenHudWidget.h"
-#include "Widgets/LimenItemSmithWrapperWidget.h"
 #include "Widgets/LimenPauseMenuWidget.h"
 
 
@@ -223,12 +222,6 @@ void ALimenPlayerController::UnbindWidgetDelegates()
 	{
 		LimenHUD->GetDeathScreenWidget()->OnLimenVisibilityChanged.RemoveAll(this);
 		LimenHUD->GetDeathScreenWidget()->OnLimenAnimationFinished.RemoveAll(this);
-	}
-
-	if (LimenHUD->GetItemSmithWidget())
-	{
-		LimenHUD->GetItemSmithWidget()->OnLimenVisibilityChanged.RemoveAll(this);
-		LimenHUD->GetItemSmithWidget()->OnLimenAnimationFinished.RemoveAll(this);
 	}
 }
 

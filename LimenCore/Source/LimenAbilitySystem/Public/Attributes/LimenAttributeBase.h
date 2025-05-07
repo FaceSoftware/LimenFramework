@@ -93,6 +93,9 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
 	void SetValue(const float Value);
+	
+	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
+	void SetMaxValue(const float NewMaxValue);
 
 	/**
 	 * @brief Modifies the current value by a specified amount.
@@ -218,7 +221,7 @@ protected:
 	 */
 	UPROPERTY(EditAnywhere, Category="Limen", Replicated)
 	float RechargeRate;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Replicated)
 	float MaxValue;
 	UPROPERTY(EditAnywhere)
 	float InitialValue;

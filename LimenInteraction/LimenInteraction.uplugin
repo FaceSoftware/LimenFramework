@@ -49,11 +49,6 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "LimenItemSmith",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "LimenArchives",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"

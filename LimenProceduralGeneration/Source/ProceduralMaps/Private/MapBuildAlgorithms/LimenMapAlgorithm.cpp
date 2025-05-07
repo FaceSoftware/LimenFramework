@@ -3,7 +3,9 @@
 
 #include "MapBuildAlgorithms/LimenMapAlgorithm.h"
 
+#include "Async/Async.h"
 #include "DataAssets/ProceduralMapParameters.h"
+#include "HAL/RunnableThread.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Maps/LimenProceduralMap.h"
 
@@ -16,7 +18,7 @@ void ULimenMapAlgorithm::CreateMap(const FGuid& MapId, const UProceduralMapParam
 	}
 
 	GeneratedMapParameters = MapParameters;
-	GeneratedMapId = &MapId;
+	GeneratedMapId = MapId;
 	OnAlgorithmFinished = &FinishCallback;
 	
 	if (GeneratedMap != nullptr)
@@ -45,7 +47,7 @@ bool ULimenMapAlgorithm::Init()
 {
 #if WITH_EDITOR
 
-	checkf(GeneratedMapId->IsValid(), TEXT("Map id is invalid!"));
+	checkf(GeneratedMapId.IsValid(), TEXT("Map id is invalid!"));
 	checkf(GeneratedMapParameters->ValidateParameters(), TEXT("Map parameters are invalid"));
 	return true;
 
@@ -77,7 +79,7 @@ void ULimenMapAlgorithm::Exit()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]
 	{
-		OnAlgorithmFinished->Execute(true, *GeneratedMapId, GeneratedMap.Get());
+		OnAlgorithmFinished->Execute(true, GeneratedMapId, GeneratedMap.Get());
 		LIMEN_LOG(LogLimen, Log, this, "Finished algorithm");
 	});
 }

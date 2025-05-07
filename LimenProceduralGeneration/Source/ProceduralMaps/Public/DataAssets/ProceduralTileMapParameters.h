@@ -33,6 +33,8 @@ public:
 	const TArray<TSubclassOf<ALimenMapTile>>& GetCurvedCorridorTiles() const;
 	const TArray<TSubclassOf<ALimenMapTile>>& GetTJunctionTiles() const;
 	const TArray<TSubclassOf<ALimenMapTile>>& GetCrossIntersectionTiles() const;
+
+	void SetNumberOfTiles(int32 NewNumberOfTiles);
 	
 protected:
 	UPROPERTY(EditAnywhere, Category = "Limen")

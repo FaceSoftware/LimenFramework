@@ -29,6 +29,8 @@ void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, RechargeRate,
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MaxValue,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 }
 
 bool ULimenAttributeBase::IsSupportedForNetworking() const
@@ -226,6 +228,11 @@ void ULimenAttributeBase::SetValue(const float Value)
 	{
 		SetCurrentValueAs(Value);
 	}
+}
+
+void ULimenAttributeBase::SetMaxValue(const float NewMaxValue)
+{
+	MaxValue = NewMaxValue;
 }
 
 void ULimenAttributeBase::ModifyValueBy(const float Value)

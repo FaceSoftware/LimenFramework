@@ -36,7 +36,17 @@ public:
 	int32 GetMapIndex(const FGuid& MapId) const;
 	ULimenMapAlgorithm* GetMapAlgorithm(const FGuid& MapId) const;
 	const UProceduralMapParameters* GetMapGenerationParameters(const FGuid& MapId) const;
+	template<typename T>
+	const T* GetMapGenerationParameters(const FGuid& MapId) const
+	{
+		return Cast<T>(GetMapGenerationParameters(MapId));
+	}
 	ULimenProceduralMap* GetMap(const FGuid& MapId) const;
+	template<typename T>
+	T* GetMap(const FGuid& MapId) const
+	{
+		return Cast<T>(GetMap(MapId));
+	}
 
 	const TMap<FGuid, ULimenProceduralMap*>& GetLoadedMaps() const;
 	const TMap<FGuid, ULimenProceduralMap*>& GetBuiltMaps() const;
@@ -56,7 +66,7 @@ protected:
 	typedef TFunction<void(bool, ULimenProceduralMap*)> FMapBuildCallback;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Maps")
-	TMap<FGuid, const UProceduralMapParameters*> Maps;
+	TMap<FGuid, const UProceduralMapParameters*> MapsParameters;
 
 	virtual void MapBeingLoad(const FGuid& MapId);
 	virtual void MapFinishLoad(const FGuid& MapId, ULimenProceduralMap* Map);
@@ -68,13 +78,13 @@ protected:
 	virtual void MapFinishUnload(const FGuid& MapId);
 	
 private:
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TMap<FGuid, ULimenMapAlgorithm*> MapAlgorithms;
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TMap<FGuid, ULimenProceduralMap*> LoadedMaps;
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TMap<FGuid, ULimenProceduralMap*> BuiltMaps;
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TMap<FGuid, ALimenProceduralMapManager*> MapManagers;
 
 	ULimenMapAlgorithm::FAlgorithmFinish AlgorithmFinishDelegate;

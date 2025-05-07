@@ -190,7 +190,7 @@ ULimenAttributeBase* ULimenAbilityComponent::GetAttribute(const TSubclassOf<ULim
 			continue;
 		}
 
-		if (Attribute->GetClass() == AttributeClass || Attribute->GetClass()->IsChildOf(AttributeClass))
+		if (Attribute->IsA(AttributeClass))
 		{
 			return *Attribute;
 		}

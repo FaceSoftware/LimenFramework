@@ -94,7 +94,7 @@ void ALimenMapTile::OnConstruction(const FTransform& Transform)
 #endif
 
 	FVector Origin, Extent;
-	GetActorBounds(false, Origin, Extent, true);
+	GetActorBounds(true, Origin, Extent, true);
 	BoundingBox->SetWorldLocation(Origin);
 	BoundingBox->SetBoxExtent(Extent);
 }
@@ -127,6 +127,7 @@ void ALimenMapTile::BeginDestroy()
 void ALimenMapTile::SetMapManager(ALimenProceduralMapManager* MapManager)
 {
 	BoundMapManager = MapManager;
+	MapManagerSet(MapManager);
 }
 
 bool ALimenMapTile::GetRelativeActorLocationAndRotation(AActor* InActor, FVector& OutLocation,
@@ -209,6 +210,10 @@ UTileInfo* ALimenMapTile::GetAssignedTileInfo() const
 ALimenProceduralMapManager* ALimenMapTile::GetMapManager() const
 {
 	return BoundMapManager.Get();
+}
+
+void ALimenMapTile::MapManagerSet(ALimenProceduralMapManager* MapManager)
+{
 }
 
 void ALimenMapTile::BoundingBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

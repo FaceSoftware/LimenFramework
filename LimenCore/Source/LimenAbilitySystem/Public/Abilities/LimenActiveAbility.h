@@ -57,11 +57,11 @@ protected:
 	/**
 	 * @brief The cooldown time that must pass before activating this ability again
 	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Ability Parameters", meta=(ClampMin="0"))
 	float AbilityCooldown;
-	UPROPERTY(EditDefaultsOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, Category="Ability Parameters", meta=(ClampMin="0"))
 	float AbilityActivationDelay;
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
+	UPROPERTY(EditDefaultsOnly, Category="Ability Parameters")
 	bool bIsOneShot;
 
 	void SetCooldownOver();

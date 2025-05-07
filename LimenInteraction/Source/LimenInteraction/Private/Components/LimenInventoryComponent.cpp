@@ -98,42 +98,21 @@ bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 	{
 		return false;
 	}
-
-	const bool bIsFirstOfType = IsFirstOfType(NewItem->GetClass());
-
-	FItemRegistry* Registry;
-	if (bIsFirstOfType)
+	
+	TArray<ALimenItemBase*> Instances = SpawnItemInstances(NewItem);
+	Instances.Push(NewItem);
+	if (IsFirstOfType(NewItem->GetClass()))
 	{
-		Registry = new FItemRegistry();
-		Registry->ItemClass = NewItem->GetClass();
-	}
-	else
-	{
-		Registry = FindItemRegistry(NewItem->GetClass());
-	}
-
-	FActorSpawnParameters SpawnParameters;
-	SpawnParameters.Template = NewItem;
-	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	SpawnParameters.Owner = NewItem->GetOwner();
-	for (int i = 1; i < NewItem->GetItemQuantity(); ++i)
-	{
-		ALimenItemBase* Item = GetWorld()->SpawnActor<ALimenItemBase>(NewItem->GetClass(), SpawnParameters);
-		Item->RemoveFromGameplay();
-		Registry->ItemInstances.Push(Item);
-	}
-	// Add the original item form the function args
-	Registry->ItemInstances.Push(NewItem);
-
-	if (bIsFirstOfType)
-	{
-		const FItemRegistry NewRegistry(*Registry);
-		ItemRegistries.Push(NewRegistry);
+		FItemRegistry Registry;
+		Registry.ItemClass = NewItem->GetClass();
+		Registry.ItemInstances.Append(MoveTemp(Instances));
+		ItemRegistries.Push(MoveTemp(Registry));
 		OnItemAdded.Broadcast(NewItem->GetClass());
-		delete Registry;
 	}
 	else
 	{
+		FItemRegistry* Registry = FindItemRegistry(NewItem->GetClass());
+		Registry->ItemInstances.Append(MoveTemp(Instances));
 		OnItemUpdated.Broadcast(NewItem->GetClass());
 	}
 
@@ -493,4 +472,21 @@ bool ULimenInventoryComponent::IsFirstOfType(const TSubclassOf<ALimenItemBase>& 
 	}
 
 	return Registry->ItemInstances.IsEmpty();
+}
+
+TArray<ALimenItemBase*> ULimenInventoryComponent::SpawnItemInstances(ALimenItemBase* InItem) const
+{
+	TArray<ALimenItemBase*> Result;
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Template = InItem;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	SpawnParameters.Owner = InItem->GetOwner();
+	for (int i = 1; i < InItem->GetItemQuantity(); ++i)
+	{
+		ALimenItemBase* Item = GetWorld()->SpawnActor<ALimenItemBase>(InItem->GetClass(), SpawnParameters);
+		Item->RemoveFromGameplay();
+		Result.Push(Item);
+	}
+
+	return Result;
 }

@@ -29,7 +29,6 @@ ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Supe
 	DamageType = ULimenDamageType::StaticClass();
 	BaseDamage = 0.f;
 	RoundsPerSecond = 0.f;
-	TimeBetweenShots = 0.f;
 	MagazineCapacity = 0;
 	InitialAmmo = 0;
 	bIsSilenced = false;
@@ -45,7 +44,6 @@ ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Supe
 	WeaponRange = 0;
 	ImpactDamageFalloffMultiplier = 0;
 	FireSoundRange = 5000;
-	RecoilCameraShakeScale = 1.f;
 	AINoiseEventLoudness = 0;
 	CurrentAmmo = 0;
 	ShotsInARow = 0;
@@ -55,13 +53,33 @@ void ALimenWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BaseDamage,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, RoundsPerSecond,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MagazineCapacity,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReloadTimeInSeconds,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsAutomatic,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, WeaponRange,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ImpactDamageFalloffMultiplier,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, FireSoundRange,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, AINoiseEventLoudness,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsSilenced,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, InfiniteAmmoType,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, FireMethodObject,
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentAmmo,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, TimeBetweenShots,
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsHoldingTrigger,
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
@@ -88,8 +106,7 @@ void ALimenWeapon::BeginPlay()
 
 		if (GetWorld()->IsGameWorld())
 		{
-			TimeBetweenShots = 1 / static_cast<float>(RoundsPerSecond);
-			ensureAlways(TimeBetweenShots > 0);
+			ensureAlways(1 / static_cast<float>(RoundsPerSecond) > 0);
 		}
 	}
 }
@@ -114,16 +131,19 @@ void ALimenWeapon::Tick(float DeltaSeconds)
 			if (!GetWorld()->GetTimerManager().IsTimerActive(FireRateTimer))
 			{
 				GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ThisClass::Fire,
-					TimeBetweenShots, bIsAutomatic, 0.f);
+					1 / static_cast<float>(RoundsPerSecond), bIsAutomatic, 0.f);
+
+				Multicast_StartWeaponFire();
 			}
 		}
 	}
 	else if (HasAuthority() && !bIsHoldingTrigger)
 	{
-		ShotsInARow = 0;
 		if (GetWorld()->GetTimerManager().IsTimerActive(FireRateTimer))
 		{
+			ShotsInARow = 0;
 			GetWorld()->GetTimerManager().ClearTimer(FireRateTimer);
+			Multicast_StopWeaponFire();
 		}
 	}
 }
@@ -201,7 +221,17 @@ bool ALimenWeapon::IsFiring() const
 
 float ALimenWeapon::GetSecondsPerShot() const
 {
-	return TimeBetweenShots;
+	return 1 / static_cast<float>(RoundsPerSecond);
+}
+
+float ALimenWeapon::GetFireRate() const
+{
+	return RoundsPerSecond;
+}
+
+void ALimenWeapon::SetFireRate(const float InFireRate)
+{
+	RoundsPerSecond = InFireRate;
 }
 
 float ALimenWeapon::GetReloadTime() const
@@ -229,6 +259,15 @@ bool ALimenWeapon::CanFire() const
 	if (!bIsAutomatic && !bIsFireRateCooldownOver)
 	{
 		return false;
+	}
+
+	switch (InfiniteAmmoType)
+	{
+	case EInfiniteAmmoType::InfiniteBullets:
+		return true;
+
+	default:
+		break;
 	}
 
 	return CurrentAmmo > 0;
@@ -336,14 +375,8 @@ void ALimenWeapon::ReloadCancelled(const float ReloadTimeSeconds)
 
 void ALimenWeapon::WeaponFired()
 {
-	if (const APawn* Pawn = GetOwner<APawn>(); Pawn && Pawn->IsPlayerControlled() && Pawn->IsLocallyControlled())
-	{
-		if (RecoilCameraShakeClass)
-		{
-			const APlayerController* PC = Pawn->GetController<APlayerController>();
-			PC->PlayerCameraManager->StartCameraShake(RecoilCameraShakeClass, RecoilCameraShakeScale);
-		}
-	}
+	StartFireCameraShake();
+	StopFireCameraShake();
 
 	if (HasAuthority() && !bIsSilenced)
 	{
@@ -361,6 +394,14 @@ void ALimenWeapon::WeaponFired()
 }
 
 void ALimenWeapon::WeaponFiredWithoutAmmo()
+{
+}
+
+void ALimenWeapon::StartWeaponFire()
+{
+}
+
+void ALimenWeapon::StopWeaponFire()
 {
 }
 
@@ -393,7 +434,7 @@ void ALimenWeapon::Fire()
 	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownTimer))
 	{
 		GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &ThisClass::HandleWeaponCooldown,
-			TimeBetweenShots, false);
+			1.f / RoundsPerSecond, false);
 	}
 }
 
@@ -480,6 +521,51 @@ void ALimenWeapon::ReloadInternal(ULimenInventoryComponent* PlayerInventory)
 	StopReloadTimer();
 }
 
+void ALimenWeapon::StartFireCameraShake()
+{
+	if (!RecoilCameraShakeClass)
+	{
+		return;
+	}
+
+	const APawn* Pawn = GetOwner<APawn>();
+	if (!Pawn || !Pawn->IsPlayerControlled() || !Pawn->IsLocallyControlled())
+	{
+		return;
+	}
+
+	const APlayerController* PC = Pawn->GetController<APlayerController>();
+	if (!PC)
+	{
+		return;
+	}
+
+	if (RecoilCameraShakePtr.IsValid() && RecoilCameraShakePtr->IsActive())
+	{
+		PC->PlayerCameraManager->StopCameraShake(RecoilCameraShakePtr.Get(), true);
+		RecoilCameraShakePtr.Reset();
+	}
+	
+	RecoilCameraShakePtr = PC->PlayerCameraManager->StartCameraShake(RecoilCameraShakeClass);
+}
+
+void ALimenWeapon::StopFireCameraShake()
+{
+	if (!RecoilCameraShakePtr.IsValid())
+	{
+		return;
+	}
+
+	if (const APawn* Pawn = GetOwner<APawn>(); Pawn && Pawn->IsPlayerControlled() && Pawn->IsLocallyControlled())
+	{
+		if (const APlayerController* PC = Pawn->GetController<APlayerController>();
+			PC && RecoilCameraShakePtr->IsActive())
+		{
+			PC->PlayerCameraManager->StopCameraShake(RecoilCameraShakePtr.Get(), false);
+		}
+	}
+}
+
 void ALimenWeapon::Multicast_ReloadCanceled_Implementation()
 {
 	ReloadCancelled(ReloadTimeInSeconds);
@@ -491,6 +577,16 @@ void ALimenWeapon::Multicast_ReloadStart_Implementation()
 {
 	ReloadStart(ReloadTimeInSeconds);
 	BP_ReloadStart(ReloadTimeInSeconds);
+}
+
+void ALimenWeapon::Multicast_StartWeaponFire_Implementation()
+{
+	StartWeaponFire();
+}
+
+void ALimenWeapon::Multicast_StopWeaponFire_Implementation()
+{
+	StopWeaponFire();
 }
 
 void ALimenWeapon::Multicast_WeaponFired_Implementation()
