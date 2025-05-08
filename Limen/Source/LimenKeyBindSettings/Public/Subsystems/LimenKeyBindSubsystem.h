@@ -51,8 +51,10 @@ public:
 private:
 	UPROPERTY()
 	TObjectPtr<const ULimenKeyBindDeveloperSettings> SubsystemSettings;
-	
+
+	UPROPERTY()
 	TMap<TSoftClassPtr<APlayerController>, UInputMappingContext*> PlayerMappingContexts;
+	UPROPERTY()
 	TMap<TSoftClassPtr<APawn>, UInputMappingContext*> PawnMappingContexts;
 	
 	TArray<TStrongObjectPtr<UInputMappingContext>> MappingContexts;

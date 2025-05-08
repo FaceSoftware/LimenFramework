@@ -37,9 +37,8 @@ TArray<AActor*> ULimenAtomicSpawner::SpawnItem(const TSubclassOf<AActor>& Class,
 		const FVector SpawnLocation = SpawnBounds.Origin + UKismetMathLibrary::RandomPointInBoundingBoxFromStream(RandomStream.Get(), FVector::ZeroVector, SpawnBounds.BoxExtent);
 		
 		AActor* SpawnedActor = GetWorld()->SpawnActor(Class, &SpawnLocation, &FRotator::ZeroRotator, SpawnParams);
-		Result.Push(SpawnedActor);
-
 		check(SpawnedActor != nullptr);
+		Result.Push(SpawnedActor);
 		SpawnedActors.Push(SpawnedActor);
 
 		if (bSnapToFloor) SnapToFloor(SpawnedActor);

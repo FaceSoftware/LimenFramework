@@ -53,7 +53,7 @@ bool ULimenMapAlgorithm::Init()
 
 #else
 
-	return GeneratedMapId->IsValid() && GeneratedMapParameters->ValidateParameters();
+	return GeneratedMapId.IsValid() && GeneratedMapParameters->ValidateParameters();
 
 #endif
 }

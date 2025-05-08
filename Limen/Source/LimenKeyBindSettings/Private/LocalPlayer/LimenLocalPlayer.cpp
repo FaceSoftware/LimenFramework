@@ -11,6 +11,9 @@
 
 void ULimenLocalPlayer::ReceivedPlayerController(APlayerController* NewController)
 {
+	OldPlayerController = CurrentPlayerController;
+	CurrentPlayerController = NewController;
+
 	Super::ReceivedPlayerController(NewController);
 
 	UpdateControllerBindings(NewController);
@@ -40,8 +43,14 @@ void ULimenLocalPlayer::UpdateControllerBindings(APlayerController* PC)
 		}
 	}
 
-	PC->OnPossessedPawnChanged.AddUniqueDynamic(this, &ThisClass::ControlledPawnChanged);
-	ControlledPawnChanged(nullptr, PC->GetPawn());
+	if (OldPlayerController.IsValid())
+	{
+		OldPlayerController->GetOnNewPawnNotifier().Remove(NewPawnDelegateHandle);
+		NewPawnDelegateHandle.Reset();
+	}
+
+	NewPawnDelegateHandle = PC->GetOnNewPawnNotifier().AddUObject(this, &ThisClass::NewPawnSet);
+	NewPawnSet(PC->GetPawn());
 }
 
 void ULimenLocalPlayer::InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping)
@@ -56,7 +65,7 @@ void ULimenLocalPlayer::InputBindUpdated(const FEnhancedActionKeyMapping& Action
 	InputSystem->RequestRebuildControlMappings(ContextOptions, EInputMappingRebuildType::RebuildWithFlush);
 }
 
-void ULimenLocalPlayer::ControlledPawnChanged(APawn* OldPawn, APawn* NewPawn)
+void ULimenLocalPlayer::NewPawnSet(APawn* NewPawn)
 {
 	if (!NewPawn)
 	{

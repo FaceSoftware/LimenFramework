@@ -21,8 +21,11 @@ protected:
 	virtual void ReceivedPlayerController(APlayerController* NewController) override;
 	
 private:
+	TWeakObjectPtr<APlayerController> OldPlayerController;
+	TWeakObjectPtr<APlayerController> CurrentPlayerController;
+	FDelegateHandle NewPawnDelegateHandle;
+	
 	void UpdateControllerBindings(APlayerController* PC);
 	void InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping);
-	UFUNCTION()
-	void ControlledPawnChanged(APawn* OldPawn, APawn* NewPawn);
+	void NewPawnSet(APawn* NewPawn);
 };
