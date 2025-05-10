@@ -3,16 +3,18 @@
 
 #include "Components/LimenMeshInstanceBuilder.h"
 
+#include "Engine/StaticMesh.h"
+
 
 ULimenMeshInstanceBuilder::ULimenMeshInstanceBuilder()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
-void ULimenMeshInstanceBuilder::OnComponentCreated()
+void ULimenMeshInstanceBuilder::BeginPlay()
 {
-	Super::OnComponentCreated();
 	StartSpawningInstances();
+	Super::BeginPlay();
 }
 
 void ULimenMeshInstanceBuilder::StartSpawningInstances()
@@ -23,7 +25,6 @@ void ULimenMeshInstanceBuilder::StartSpawningInstances()
 	}
 	
 	InstanceAreaBoundingBox = FBox(InstanceArea.Origin, InstanceArea.Length);
-	
 	SpawnInstances();
 }
 
@@ -78,11 +79,13 @@ void ULimenMeshInstanceBuilder::SpawnInstances()
 
 	TArray<FTransform> Transforms;
 	Transforms.Reserve(Points.Num());
-	for (const auto& Point : Points)
+	for (const FVector& Point : Points)
 	{
 		const FTransform InstanceTransform = FTransform(FRotator::ZeroRotator, Point, FVector::OneVector) * GetComponentTransform();
 		Transforms.Push(InstanceTransform);
 	}
-	
-	AddInstances(Transforms, false, true);
+
+	RemoveInstances(InstanceIndices);
+	InstanceIndices.Empty(Transforms.Num());
+	InstanceIndices = AddInstances(Transforms, true, true);
 }

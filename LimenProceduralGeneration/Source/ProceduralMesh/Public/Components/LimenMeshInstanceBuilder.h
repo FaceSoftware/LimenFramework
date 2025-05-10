@@ -30,9 +30,9 @@ class PROCEDURALMESH_API ULimenMeshInstanceBuilder : public UInstancedStaticMesh
 
 public:
 	ULimenMeshInstanceBuilder();
-	virtual void OnComponentCreated() override;
+	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Random Mesh Instance")
+	UFUNCTION(BlueprintCallable, Category="Limen|Random Mesh Instance", CallInEditor)
 	virtual void StartSpawningInstances();
 
 protected:
@@ -41,7 +41,9 @@ protected:
 	
 	FBox InstanceAreaBoundingBox;
 	
-private:	
+private:
+	TArray<int32> InstanceIndices;
+
 	virtual TArray<FVector> CalculatePoints() const;
 	virtual void SpawnInstances();
 };
