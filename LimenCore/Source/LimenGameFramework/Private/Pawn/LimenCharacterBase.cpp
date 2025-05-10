@@ -15,6 +15,7 @@
 #include "PlayerController/LimenPlayerControllerBase.h"
 #include "PlayerState/LimenPlayerStateBase.h"
 #include "Attributes/LimenHealthAttribute.h"
+#include "Components/CapsuleComponent.h"
 
 
 ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -25,8 +26,10 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 
+	GetCapsuleComponent()->SetCanEverAffectNavigation(true);
+	
 	GetCharacterMovement()->PrimaryComponentTick.bCanEverTick = true;
-	GetCharacterMovement()->PrimaryComponentTick.TickInterval = 0.0078125f;
+	GetCharacterMovement()->PrimaryComponentTick.TickInterval = 0.f;
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->bCanWalkOffLedges = true;
 	GetCharacterMovement()->bCanWalkOffLedgesWhenCrouching = true;

@@ -17,7 +17,6 @@ FAtomicSpawnParameters::FAtomicSpawnParameters()
 	SpawnedAmount = 0;
 
 	bUseMaxAmountPerSpawner = true;
-	bUseTotalAmount = true;
 	bSnapToFloor = false;
 }
 
@@ -107,13 +106,9 @@ TArray<ULimenAtomicSpawner*> ALimenAtomicSpawnManager::GetItemSpawners(const FNa
 
 int32 ALimenAtomicSpawnManager::GetAmountToSpawnForSingleSpawner(const FAtomicSpawnParameters& Params)
 {
-	if (Params.bUseTotalAmount && Params.SpawnedAmount >= Params.TotalAmount)
+	if (Params.SpawnedAmount >= Params.TotalAmount)
 	{
 		return 0;
-	}
-	if (!Params.bUseTotalAmount)
-	{
-		return TNumericLimits<int32>::Max();
 	}
 
 	check(Params.MaxAmountPerSpawner >= Params.MinAmountPerSpawner)
@@ -127,12 +122,7 @@ int32 ALimenAtomicSpawnManager::GetAmountToSpawnForSingleSpawner(const FAtomicSp
 		FMath::Max(MinAmount, MaxAmount), 
 		FMath::Min(MinAmount, MaxAmount));
 
-	if (Params.bUseTotalAmount)
-	{
-		return FMath::Min(RandomAmount, Params.TotalAmount - Params.SpawnedAmount);
-	}
-
-	return RandomAmount;
+	return FMath::Min(RandomAmount, Params.TotalAmount - Params.SpawnedAmount);
 }
 
 int32 ALimenAtomicSpawnManager::GetTargetItemCount(const TArray<FAtomicSpawnParameters>& Params)
@@ -152,12 +142,18 @@ bool ALimenAtomicSpawnManager::CanSpawnAllItems(const FAtomicSpawnParameters& Pa
 	{
 		return false;
 	}
-	if (Param.MinAmountPerSpawner > 0 && Spawners.Num() > Param.TotalAmount)
+	if (Param.MinAmountPerSpawner > 0)
 	{
 		return false;
 	}
 
 	const float TotalItemsFloat = static_cast<float>(Param.TotalAmount);
 	const float SpawnersCountFloat = static_cast<float>(Spawners.Num());
-	return FMath::CeilToInt(TotalItemsFloat / SpawnersCountFloat) <= Param.MaxAmountPerSpawner;
+	const int32 ItemsPerSpawner = FMath::CeilToInt(TotalItemsFloat / SpawnersCountFloat);
+	if (Param.bUseMaxAmountPerSpawner && ItemsPerSpawner > Param.MaxAmountPerSpawner)
+	{
+		return false;
+	}
+
+	return true;
 }

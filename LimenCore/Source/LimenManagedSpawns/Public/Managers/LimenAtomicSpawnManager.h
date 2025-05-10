@@ -21,8 +21,6 @@ struct LIMENMANAGEDSPAWNS_API FAtomicSpawnParameters
 	UPROPERTY(EditAnywhere, Category="Limen")
 	FName SpawnTag;
 
-	UPROPERTY(EditAnywhere, Category="Limen", meta=(InlineEditConditionToggle))
-	bool bUseTotalAmount;
 	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin="0", EditCondition=bUseTotalAmount))
 	int32 TotalAmount;
 	

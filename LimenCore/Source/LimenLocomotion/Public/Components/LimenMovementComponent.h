@@ -7,8 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "LimenMovementComponent.generated.h"
 
-class FThreadedFunction;
 class UCharacterMovementComponent;
+
 
 UENUM(BlueprintType)
 enum class ECustomMovementMode : uint8
@@ -30,28 +30,43 @@ class LIMENLOCOMOTION_API ULimenMovementComponent : public UCharacterMovementCom
 	GENERATED_BODY()
 
 public:
-	ULimenMovementComponent();
 	explicit ULimenMovementComponent(const FObjectInitializer& InObjectInitializer);
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
 
 	void SetFastMovement(const bool bEnabled);
 	bool IsFastMovementEnabled() const;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category="Fast Movement")
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Fast Movement")
 	float FastWalkSpeedMultiplier;
-	UPROPERTY(EditDefaultsOnly, Category="Fast Movement")
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Fast Movement")
 	float CrouchFastWalkSpeedMultiplier;
-	UPROPERTY(EditDefaultsOnly, Category="Fast Movement")
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Fast Movement")
 	bool bFastMovementEnabledByDefault;
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Air Strafing")
+	bool bEnableAirStrafing;
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Air Strafing")
+	float AirAcceleration;
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Air Strafing")
+	float MaxAirStrafeSpeed;
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Air Strafing")
+	bool bLogCurrentSpeed;
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Jumping / Falling")
+	bool bAllowJumpingWhileCrouched;
 
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
+	virtual void PhysFalling(float DeltaTime, int32 Iterations) override;
+	virtual void PhysAirStrafing(float DeltaTime);
+	virtual bool CanAttemptJump() const override;
 
 	virtual void OnFastMovementChanged();
 
 private:
 	bool bIsFastMovementEnabled;
+
+	void SetupAirStrafing();
 };
 
 class FSavedMove_Limen : public FSavedMove_Character

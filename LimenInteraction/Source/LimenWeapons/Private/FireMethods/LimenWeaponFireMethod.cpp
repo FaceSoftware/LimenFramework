@@ -140,17 +140,23 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 	Super::ProcessFire(Weapon);
 
 	check(Weapon->GetOwner() != nullptr) // If a weapon is firing, it should always have an owner
-	APawn* WeaponPawnOwner = Weapon->GetOwner<APawn>();
-
 	FVector Start;
 	FRotator Rotation;
-	WeaponPawnOwner->GetController()->GetPlayerViewPoint(Start, Rotation);
+	AActor* Owner = Weapon->GetOwner();
+	if (APawn* WeaponPawnOwner = Cast<APawn>(Owner))
+	{
+		WeaponPawnOwner->GetController()->GetPlayerViewPoint(Start, Rotation);
+	}
+	else
+	{
+		Weapon->GetOwner()->GetActorEyesViewPoint(Start,	Rotation);
+	}
 
 	const FVector End = Start + Rotation.Vector() * Weapon->GetWeaponRange();
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Weapon);
-	Params.AddIgnoredActor(WeaponPawnOwner);
+	Params.AddIgnoredActor(Owner);
 	Params.bTraceComplex = true;
 	Params.TraceTag = TEXT("Weapon bullet");
 	

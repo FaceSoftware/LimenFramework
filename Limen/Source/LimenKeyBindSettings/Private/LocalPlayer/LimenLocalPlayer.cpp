@@ -13,10 +13,9 @@ void ULimenLocalPlayer::ReceivedPlayerController(APlayerController* NewControlle
 {
 	OldPlayerController = CurrentPlayerController;
 	CurrentPlayerController = NewController;
+	UpdateControllerBindings(CurrentPlayerController.Get());
 
 	Super::ReceivedPlayerController(NewController);
-
-	UpdateControllerBindings(NewController);
 }
 
 void ULimenLocalPlayer::UpdateControllerBindings(APlayerController* PC)
