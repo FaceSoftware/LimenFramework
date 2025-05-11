@@ -37,8 +37,9 @@ void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTic
 		FDamageParameters NewDamageParameters = Info.DamageParameters;
 		NewDamageParameters.DamageValue = RawDamage;
 		const float PostProcessedDamage = DamageCalcFunc(NewDamageParameters, Info.DamageType.Get());
+		NewDamageParameters.DamageValue = PostProcessedDamage;
 
-		Multicast_BroadcastDamageReceived(Info, PostProcessedDamage);
+		Multicast_BroadcastDamageReceived(Info);
 
 		// Check if we should stop applying the damage
 		if (!Info.DamageType || Info.DamageType->ShouldStopApplyingDamage())
@@ -68,10 +69,9 @@ void ULimenDamageComponent::ApplyDamage(AController* Instigator, AActor* Causer,
 	ActiveDamageInfo.Push(Info);
 }
 
-void ULimenDamageComponent::Multicast_BroadcastDamageReceived_Implementation(const FDamageInfo& Info,
-	const float DamageValue)
+void ULimenDamageComponent::Multicast_BroadcastDamageReceived_Implementation(const FDamageInfo& Info)
 {
 	// Broadcast the damage received
 	OnDamageReceived.Broadcast(Info.Instigator.Get(), Info.Causer.Get(),
-							   Info.DamageTypeClass, DamageValue);
+							   Info.DamageTypeClass, Info);
 }

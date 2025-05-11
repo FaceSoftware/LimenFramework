@@ -9,16 +9,20 @@
 class UActorComponent;
 
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FDamageParameters
 {
 	GENERATED_BODY()
 
 	FDamageParameters() = default;
 
+	UPROPERTY(BlueprintReadOnly)
 	float DamageValue;
+	UPROPERTY(BlueprintReadOnly)
 	TWeakObjectPtr<UPrimitiveComponent> HitComponent;
+	UPROPERTY(BlueprintReadOnly)
 	FName HitBoneName;
+	UPROPERTY(BlueprintReadOnly)
 	FVector DamageDirection;
 };
 

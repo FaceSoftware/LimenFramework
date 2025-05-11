@@ -11,26 +11,26 @@ class ULimenDamageType;
 class AController;
 
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FDamageInfo
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TWeakObjectPtr<AController> Instigator;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TWeakObjectPtr<AActor> Causer;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TSubclassOf<ULimenDamageType> DamageTypeClass;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ULimenDamageType> DamageType;
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	FDamageParameters DamageParameters;
 };
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FLimenDamageEvent, AController*, Instigator,
-	AActor*, Causer, TSubclassOf<ULimenDamageType>, DamageType, const float, Damage);
+	AActor*, Causer, TSubclassOf<ULimenDamageType>, DamageType, const FDamageInfo&, Damage);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENWEAPONS_API ULimenDamageComponent : public UActorComponent
@@ -58,7 +58,7 @@ private:
 	TFunction<float(const FDamageParameters&, const ULimenDamageType*)> DamageCalcFunc;
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_BroadcastDamageReceived(const FDamageInfo& Info, const float DamageValue);
+	void Multicast_BroadcastDamageReceived(const FDamageInfo& Info);
 
 };
 
