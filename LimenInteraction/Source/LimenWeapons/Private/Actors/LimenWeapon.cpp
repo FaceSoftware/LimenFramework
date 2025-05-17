@@ -47,6 +47,8 @@ ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Supe
 	AINoiseEventLoudness = 0;
 	CurrentAmmo = 0;
 	ShotsInARow = 0;
+	FireAccumulator = 0.0;
+	SimulatingShotsCount = 0;
 }
 
 void ALimenWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -124,27 +126,40 @@ void ALimenWeapon::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (HasAuthority() && bIsHoldingTrigger)
-	{
-		if (bIsAutomatic || (!bIsAutomatic && ShotsInARow == 0))
-		{
-			if (!GetWorld()->GetTimerManager().IsTimerActive(FireRateTimer))
-			{
-				GetWorld()->GetTimerManager().SetTimer(FireRateTimer, this, &ThisClass::Fire,
-					1 / static_cast<float>(RoundsPerSecond), bIsAutomatic, 0.f);
+	if (!HasAuthority()) return;
 
-				Multicast_StartWeaponFire();
+	if (bIsHoldingTrigger)
+	{
+		if (bIsAutomatic)
+		{
+			FireAccumulator += RoundsPerSecond * DeltaSeconds;
+			SimulatingShotsCount = FMath::FloorToInt(FireAccumulator);
+			if (SimulatingShotsCount == 0 && ShotsInARow == 0)
+			{
+				SimulatingShotsCount = 1;
+				FireAccumulator = 0;
+			}
+			else
+			{
+				FireAccumulator -= SimulatingShotsCount;
+			}
+
+			if (SimulatingShotsCount > 0)
+			{
+				Fire();
 			}
 		}
-	}
-	else if (HasAuthority() && !bIsHoldingTrigger)
-	{
-		if (GetWorld()->GetTimerManager().IsTimerActive(FireRateTimer))
+		else
 		{
-			ShotsInARow = 0;
-			GetWorld()->GetTimerManager().ClearTimer(FireRateTimer);
-			Multicast_StopWeaponFire();
+			SimulatingShotsCount = 1;
+			Fire();
 		}
+	}
+	else
+	{
+		ShotsInARow = 0;
+		FireAccumulator = 0.f;
+		SimulatingShotsCount = 0;
 	}
 }
 
@@ -256,7 +271,7 @@ bool ALimenWeapon::CanFire() const
 		return false;
 	}
 
-	if (!bIsAutomatic && !bIsFireRateCooldownOver)
+	if (!bIsFireRateCooldownOver)
 	{
 		return false;
 	}
@@ -276,6 +291,11 @@ bool ALimenWeapon::CanFire() const
 float ALimenWeapon::GetBaseDamage() const
 {
 	return BaseDamage;
+}
+
+void ALimenWeapon::SetBaseDamage(const float InNewDamage)
+{
+	BaseDamage = InNewDamage;
 }
 
 float ALimenWeapon::GetWeaponRange() const
@@ -322,6 +342,11 @@ uint8 ALimenWeapon::GetAmmoCountUntilFull() const
 {
 	check(MagazineCapacity >= CurrentAmmo);
 	return MagazineCapacity - CurrentAmmo;
+}
+
+FVector ALimenWeapon::GetFiringLocation_Implementation() const
+{
+	return FVector::ZeroVector;
 }
 
 void ALimenWeapon::OnRep_IsDropped()
@@ -411,6 +436,11 @@ void ALimenWeapon::Fire()
 
 	if (!CanFire())
 	{
+		if (bIsFiring)
+		{
+			Multicast_StopWeaponFire();
+		}
+
 		bIsFiring = false;
 		if (CurrentAmmo <= 0)
 		{
@@ -420,12 +450,17 @@ void ALimenWeapon::Fire()
 	}
 	else
 	{
+		if (!bIsFiring)
+		{
+			Multicast_StartWeaponFire();
+		}
+
 		bIsFiring = true;
-		DecrementAmmo();
-		ShotsInARow++;
+		DecrementAmmo(SimulatingShotsCount);
+		ShotsInARow += SimulatingShotsCount;
 
 		check(FireMethodObject)
-		FireMethodObject->ProcessFire(this);
+		FireMethodObject->ProcessFire(this, SimulatingShotsCount);
 		Multicast_WeaponFired();
 
 		bIsFireRateCooldownOver = false;

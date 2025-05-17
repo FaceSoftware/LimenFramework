@@ -7,7 +7,19 @@
 #include "LimenLevelManagerSubsystem.generated.h"
 
 
+enum ETravelType : int;
 DECLARE_DYNAMIC_DELEGATE_OneParam(FLevelLoadedDelegate, UWorld*, LoadedLevel);
+
+UENUM(BlueprintType)
+enum class ELevelOpenContext : uint8
+{
+	// Local map, offline play
+	Local,
+	// Connect to a server
+	Connect,
+	// Server level change
+	Server,
+};
 
 /**
  * 
@@ -18,28 +30,27 @@ class LIMENLEVELS_API ULimenLevelManagerSubsystem : public UGameInstanceSubsyste
 	GENERATED_BODY()
 
 public:
+	static int32 GetIndexOfGameLevel(const UWorld* InLevel);
+
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	void OpenLocalLevelAsync(const TSoftObjectPtr<UWorld>& Level, FLevelLoadedDelegate& OnLevelLoaded);
-	void OpenLocalLevel(const TSoftObjectPtr<UWorld>& Level);
-	void OpenLocalLevel(const UWorld* Level);
-	void OpenLocalLevel(const TSoftObjectPtr<UWorld>& Level, bool bAbsolute, const FString& InOptions);
-
-	static int32 GetIndexOfGameLevel(const UWorld* InLevel);
-
+	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	bool OpenInitializationLevel();
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
-	void OpenMainMenu();
+	void OpenMainMenu(ELevelOpenContext Context = ELevelOpenContext::Local);
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void OpenGameEndLevel();
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
-	void OpenGameLevel(const int32 Index = 0);
+	void OpenGameLevel(ELevelOpenContext Context = ELevelOpenContext::Local, const int32 Index = 0);
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
-	void ResetCurrentLevel();
+	void ResetCurrentLevel(ELevelOpenContext Context = ELevelOpenContext::Local);
 
 	bool IsGameLevelIndexValid(const int32 Index) const;
 
 private:
+	void OpenServerLevel_Internal(const FString& LevelName);
+	void ConnectToServer_Internal(const FString& IPAddress);
+	void OpenOfflineLevel_Internal(const FString& LevelName);
 };

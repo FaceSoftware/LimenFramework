@@ -45,12 +45,12 @@ public:
 	{
 		static_assert(std::is_base_of_v<ULimenStorageItem, ItemType>);
 		
-		TArray<ULimenStorageItem*> CategorySettings;
+		TArray<ItemType*> CategorySettings;
 		for (ItemType* Setting : GetItems<ItemType>())
 		{
 			if (Setting->GetCategory().CompareTo(InCategory) == 0)
 			{
-				CategorySettings.Push(Setting);
+				CategorySettings.Push(Cast<ItemType>(Setting));
 			}
 		}
 		return CategorySettings;

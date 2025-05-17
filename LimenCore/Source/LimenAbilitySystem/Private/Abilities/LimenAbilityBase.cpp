@@ -148,11 +148,6 @@ bool ULimenAbilityBase::IsTickable() const
 	return !HasAnyFlags(RF_ClassDefaultObject);
 }
 
-bool ULimenAbilityBase::IsAllowedToTick() const
-{
-	return !bShouldForcefullyDeactivate;
-}
-
 TStatId ULimenAbilityBase::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(ULimenAbilityBase, STATGROUP_Tickables);

@@ -52,6 +52,7 @@ public:
 	const TMap<FGuid, ULimenProceduralMap*>& GetBuiltMaps() const;
 	
 	bool IsLastLevel(const FGuid& Test) const;
+	int32 GetMapsBuilt() const;
 
 	FOnMapUpdate& GetOnMapBeginBuild();
 	FOnMapUpdate& GetOnMapFinishBuild();
@@ -99,6 +100,9 @@ private:
 	FOnMapUpdate OnMapFinishUnload;
 	FOnMapUpdate OnMapBeginDestroy;
 	FOnMapUpdate OnMapFinishDestroy;
+
+	UPROPERTY(Transient)
+	int32 MapsBuilt;
 
 	void LoadMap_Internal(const FGuid& MapId);
 	void BuildMap_Internal(const FGuid& MapId);

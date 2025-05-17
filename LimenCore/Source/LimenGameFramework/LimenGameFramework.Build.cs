@@ -25,6 +25,9 @@ public class LimenGameFramework : ModuleRules
                 "EnhancedInput", 
                 "UMG",
                 "AIModule", 
+                "NetCore",
+                "OnlineSubsystem",
+                "OnlineSubsystemUtils",
                 
                 "LimenNotifications",
                 "LimenWidgets",

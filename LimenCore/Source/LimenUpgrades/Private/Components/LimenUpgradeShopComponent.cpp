@@ -4,6 +4,7 @@
 #include "Components/LimenUpgradeShopComponent.h"
 
 #include "Components/LimenCreditsComponent.h"
+#include "Net/UnrealNetwork.h"
 #include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 #include "Upgrades/LimenUpgrade.h"
 
@@ -16,25 +17,101 @@ ULimenUpgradeShopComponent::ULimenUpgradeShopComponent()
 
 	bOnlyAllowSpecificQuantity = true;
 	QuantityAvailable = 4;
+	RerollCost = 500;
+
+	Rerolls = 0;
 }
 
-const TArray<TSubclassOf<ULimenUpgrade>>& ULimenUpgradeShopComponent::GetAvailableUpgrades() const
+void ULimenUpgradeShopComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	if (!bOnlyAllowSpecificQuantity)
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReplicatedLimitedAvailableUpgrades,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Rerolls,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+}
+
+const TArray<TSubclassOf<ULimenUpgrade>>& ULimenUpgradeShopComponent::GenerateAvailableUpgrades()
+{
+	check(GetOwner()->HasAuthority())
+
+	UpdateShopInternal();
+	return LimitedAvailableUpgrades;
+}
+
+const TArray<TSubclassOf<ULimenUpgrade>>& ULimenUpgradeShopComponent::GetAllUpgrades() const
+{
+	return AllUpgrades;
+}
+
+bool ULimenUpgradeShopComponent::CanRerollShop(const ULimenCreditsComponent* CreditsComponent) const
+{
+	return CreditsComponent->GetCredits() >= RerollCost;
+}
+
+void ULimenUpgradeShopComponent::RerollShop(ULimenCreditsComponent* CreditsComponent)
+{
+	check(GetOwner()->HasAuthority())
+	check(CanRerollShop(CreditsComponent))
+	verify(CreditsComponent->WithdrawCredits(RerollCost))
+
+	UpdateShopInternal();
+	ShopUpdated();
+}
+
+int32 ULimenUpgradeShopComponent::GetRerollCost() const
+{
+	return RerollCost;
+}
+
+void ULimenUpgradeShopComponent::UpdateShop()
+{
+	check(GetOwner()->HasAuthority())
+	UpdateShopInternal();
+	ShopUpdated();
+}
+
+void ULimenUpgradeShopComponent::ShopUpdated()
+{
+	LimitedAvailableUpgrades.Empty(ReplicatedLimitedAvailableUpgrades.Items.Num());
+	for (auto& Upgrade : ReplicatedLimitedAvailableUpgrades.Items)
 	{
-		return AvailableUpgrades;
+		LimitedAvailableUpgrades.Push(Upgrade.Upgrade);
 	}
 	
-	LimitedAvailableUpgrades.Empty(QuantityAvailable);
-	const int32 MaxIndex = AvailableUpgrades.Num() - 1;
-	
+	OnShopUpdated.Broadcast(this, LimitedAvailableUpgrades);
+}
+
+void ULimenUpgradeShopComponent::UpdateShopInternal() const
+{
+	if (!bOnlyAllowSpecificQuantity || AllUpgrades.IsEmpty())
+	{
+		ReplicatedLimitedAvailableUpgrades.Items.Empty();
+		ReplicatedLimitedAvailableUpgrades.MarkArrayDirty();
+		return;
+	}
+
+	ReplicatedLimitedAvailableUpgrades.Items.Empty(QuantityAvailable);
+	ReplicatedLimitedAvailableUpgrades.MarkArrayDirty();
+
+	const int32 MaxIndex = AllUpgrades.Num() - 1;
+
 	TArray<int32> RandomIndexes = ULimenGlobalRandomStreamSubsystem::Get()->GenerateRandomUniqueNumbers(
 		MaxIndex, 0, QuantityAvailable);
 
 	for (const auto RandomIndex : RandomIndexes)
 	{
-		LimitedAvailableUpgrades.Push(AvailableUpgrades[RandomIndex]);
-	}
+		FLimenUpgradeArrayItem Item;
+		Item.Upgrade = AllUpgrades[RandomIndex];
+		const int32 Index = ReplicatedLimitedAvailableUpgrades.Items.Add(Item);
+		ReplicatedLimitedAvailableUpgrades.MarkItemDirty(ReplicatedLimitedAvailableUpgrades.Items[Index]);
 
-	return LimitedAvailableUpgrades;
+		LimitedAvailableUpgrades.Push(AllUpgrades[RandomIndex]);
+	}
+}
+
+void ULimenUpgradeShopComponent::OnRep_LimitedAvailableUpgrades()
+{
+	ShopUpdated();
 }

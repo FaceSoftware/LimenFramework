@@ -23,23 +23,24 @@ TArray<AActor*> ULimenAtomicSpawner::SpawnItem(const TSubclassOf<AActor>& Class,
 {
 	TArray<AActor*> Result;
 
-	if (!IsActive())
+	if (!IsActive() || !Class.Get())
 	{
 		return Result;
 	}
-	
+
+	const FRandomStreamRef RandomStream = ULimenGlobalRandomStreamSubsystem::Get()->GetGlobalRandomStream();
+	const FBoxSphereBounds SpawnBounds = GetLocalBounds().TransformBy(GetComponentTransform());
+
 	for (int i = 0; i < Amount; ++i)
 	{
-		const FBoxSphereBounds SpawnBounds = GetLocalBounds().TransformBy(GetComponentTransform());
-
-		FRandomStreamRef RandomStream = ULimenGlobalRandomStreamSubsystem::Get()->GetGlobalRandomStream();
-		
 		const FVector SpawnLocation = SpawnBounds.Origin + UKismetMathLibrary::RandomPointInBoundingBoxFromStream(RandomStream.Get(), FVector::ZeroVector, SpawnBounds.BoxExtent);
 		
-		AActor* SpawnedActor = GetWorld()->SpawnActor(Class, &SpawnLocation, &FRotator::ZeroRotator, SpawnParams);
-		check(SpawnedActor != nullptr);
-		Result.Push(SpawnedActor);
-		SpawnedActors.Push(SpawnedActor);
+		AActor* SpawnedActor = GetWorld()->SpawnActor(Class, &SpawnLocation, &FRotator::ZeroRotator);
+		if (IsValid(SpawnedActor))
+		{
+			Result.Push(SpawnedActor);
+			SpawnedActors.Push(SpawnedActor);
+		}
 
 		if (bSnapToFloor) SnapToFloor(SpawnedActor);
 	}

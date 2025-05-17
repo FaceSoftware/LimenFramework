@@ -3,10 +3,13 @@
 
 #include "Components/LimenMovementComponent.h"
 
+#include "Net/UnrealNetwork.h"
+#include "Serialization/MemoryReader.h"
+
 
 ULimenMovementComponent::ULimenMovementComponent(const FObjectInitializer& InObjectInitializer)
 	: Super(InObjectInitializer)
-{
+{	
 	FastWalkSpeedMultiplier = 2.5f;
 	CrouchFastWalkSpeedMultiplier = 2.5f;
 	bFastMovementEnabledByDefault = false;
@@ -16,6 +19,11 @@ ULimenMovementComponent::ULimenMovementComponent(const FObjectInitializer& InObj
 	MaxAirStrafeSpeed = 30.f;
 	bAllowJumpingWhileCrouched = true;
 	bLogCurrentSpeed = false;
+}
+
+void ULimenMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
 void ULimenMovementComponent::BeginPlay()
@@ -31,11 +39,10 @@ void ULimenMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-	if (bLogCurrentSpeed)
+	if (bLogCurrentSpeed && GetOwner()->HasAuthority())
 	{
 		GEngine->AddOnScreenDebugMessage(FName(TEXT("Speed")).ToUnstableInt(), 0.F, FColor::Green,
 			FString::Printf(TEXT("Speed: %f"), Velocity.Size2D()));
-		
 	}
 }
 
@@ -71,7 +78,7 @@ void ULimenMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 	Super::UpdateFromCompressedFlags(Flags);
 
 	const bool bFastMovementEnabled = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
-	SetFastMovement(bFastMovementEnabled); // Re-apply local state for prediction
+	SetFastMovement(bFastMovementEnabled);
 }
 
 void ULimenMovementComponent::PhysFalling(const float DeltaTime, const int32 Iterations)
@@ -84,9 +91,8 @@ void ULimenMovementComponent::PhysAirStrafing(const float DeltaTime)
 {
 	if (!bEnableAirStrafing) return;
 
-	const FVector WishVelocity = GetLastInputVector().GetSafeNormal();
-	const float WishSpeed =
-		FMath::Min((WishVelocity * MaxWalkSpeed).Length(), MaxAirStrafeSpeed);
+	const FVector WishVelocity = (IsNetMode(NM_Client) ? GetLastInputVector() : Acceleration).GetSafeNormal();
+	const float WishSpeed = FMath::Min((WishVelocity * MaxWalkSpeed).Length(), MaxAirStrafeSpeed);
 
 	const float CurrentSpeed = FVector::DotProduct(Velocity, WishVelocity);
 	const float AddSpeed = WishSpeed - CurrentSpeed;

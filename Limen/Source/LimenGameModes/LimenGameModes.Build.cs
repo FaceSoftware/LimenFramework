@@ -34,6 +34,7 @@ public class LimenGameModes : ModuleRules
                 "LimenGameSaves",
                 "LimenLevels",
                 "LimenModals",
+                "LimenUpgrades",
             }
         );
     }

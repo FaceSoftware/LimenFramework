@@ -181,6 +181,11 @@ bool ALimenProceduralMapBuilder::IsLastLevel(const FGuid& Test) const
 	return Ids[Ids.Num() - 1] == Test;
 }
 
+int32 ALimenProceduralMapBuilder::GetMapsBuilt() const
+{
+	return MapsBuilt;
+}
+
 ALimenProceduralMapBuilder::FOnMapUpdate& ALimenProceduralMapBuilder::GetOnMapBeginBuild()
 {
 	return OnMapBeginBuild;
@@ -240,6 +245,7 @@ void ALimenProceduralMapBuilder::MapBeginBuild(const FGuid& MapId, ULimenProcedu
 
 void ALimenProceduralMapBuilder::MapFinishBuild(const FGuid& MapId, ULimenProceduralMap* Map)
 {
+	MapsBuilt++;
 	BuiltMaps.Add(MapId, Map);
 
 	UClass* ManagerClass = MapsParameters[MapId]->GetManagerClass();
@@ -247,6 +253,7 @@ void ALimenProceduralMapBuilder::MapFinishBuild(const FGuid& MapId, ULimenProced
 	check(Manager != nullptr);
 	MapManagers.Add(MapId, Manager);
 	Manager->MapBuilt(Map);
+
 }
 
 void ALimenProceduralMapBuilder::MapBeginDestroy(const FGuid& MapId, ULimenProceduralMap* Map)

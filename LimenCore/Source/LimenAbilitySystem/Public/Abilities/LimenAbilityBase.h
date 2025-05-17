@@ -43,13 +43,12 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override final;
 	virtual bool IsTickable() const override final;
-	virtual bool IsAllowedToTick() const override final;
 	virtual TStatId GetStatId() const override final;
 	virtual bool IsTickableWhenPaused() const override final;
 	virtual bool IsTickableInEditor() const override final;
 	virtual UWorld* GetTickableGameObjectWorld() const override final;
 
-#pragma endregion FTickableGameObject Interface Start
+#pragma endregion
 	
 protected:	
 	ULimenAbilityComponent* GetOwnerAbilityComponent() const;	

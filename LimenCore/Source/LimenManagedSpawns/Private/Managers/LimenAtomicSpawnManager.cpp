@@ -55,11 +55,17 @@ TArray<AActor*> ALimenAtomicSpawnManager::SpawnItems(const TArray<FAtomicSpawnPa
 			for (ULimenAtomicSpawner* Spawner : ShuffledSpawners)
 			{
 				const int32 AmountToSpawn = GetAmountToSpawnForSingleSpawner(ItemParam);
-				Result.Append(Spawner->SpawnItem(ItemParam.ActorClass, AmountToSpawn, ItemParam.bSnapToFloor));
+				TArray<AActor*> TempSpawned = Spawner->SpawnItem(ItemParam.ActorClass, AmountToSpawn, ItemParam.bSnapToFloor);
 
-				ItemParam.SpawnedAmount += AmountToSpawn;
+				for (AActor* const& Spawned : TempSpawned)
+				{
+					if (Spawned)
+					{
+						ItemParam.SpawnedAmount++;
+						Result.Push(Spawned);	
+					}
+				}
 				check(ItemParam.SpawnedAmount <= ItemParam.TotalAmount)
-
 				if (ItemParam.SpawnedAmount == ItemParam.TotalAmount)
 				{
 					break;
@@ -115,7 +121,7 @@ int32 ALimenAtomicSpawnManager::GetAmountToSpawnForSingleSpawner(const FAtomicSp
 
 	const int32 MinAmount = Params.MinAmountPerSpawner;
 	const int32 MaxAmount = Params.bUseMaxAmountPerSpawner 
-		? Params.MaxAmountPerSpawner 
+		? Params.MaxAmountPerSpawner
 		: MinAmount + 1;
 
 	const int32 RandomAmount = ULimenGlobalRandomStreamSubsystem::Get()->RandomIntRange(

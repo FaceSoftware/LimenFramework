@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LimenCoreMath.generated.h"
 
 /**
  * 
@@ -108,9 +109,9 @@ private:
 	// The base radius
 	mutable TOptional<float> BaseRadius;
 
-	TOptional<FVector2D> LocalHypotenuseBasePoint;
+	mutable TOptional<FVector2D> LocalHypotenuseBasePoint;
 	
-	const FVector2D& GetLocalHypotenusePoint()
+	const FVector2D& GetLocalHypotenusePoint() const
 	{
 		if (!LocalHypotenuseBasePoint.IsSet())
 		{
@@ -118,10 +119,58 @@ private:
 			HypotenusePoint.Y = FMath::Tan(FMath::DegreesToRadians(GetAngle() / 2));
 			HypotenusePoint.X = Height;
 
-			TOptional<FVector2D>* NonConstHypotenusePoint = const_cast<TOptional<FVector2D>*>(&LocalHypotenuseBasePoint);
-			*NonConstHypotenusePoint = HypotenusePoint;
+			LocalHypotenuseBasePoint = HypotenusePoint;
 		}
 
 		return LocalHypotenuseBasePoint.GetValue();
 	}
-};;
+};
+
+
+
+USTRUCT(BlueprintType)
+struct FLimenStringNumber
+{
+	GENERATED_BODY()
+
+public:
+	FLimenStringNumber();
+	FLimenStringNumber(const FString& InStr);
+	FLimenStringNumber(const FLimenStringNumber& Other);
+
+	template<typename T, typename = typename TEnableIf<TIsArithmetic<T>::Value>::Type>
+	FLimenStringNumber(T InValue) { FromString(FString::Printf(TEXT("%.15g"), InValue)); }
+
+	// Arithmetic
+	FLimenStringNumber operator+(const FLimenStringNumber& Other) const;
+	FLimenStringNumber operator-(const FLimenStringNumber& Other) const;
+	FLimenStringNumber operator*(const FLimenStringNumber& Other) const;
+	FLimenStringNumber operator/(const FLimenStringNumber& Other) const;
+
+	// Comparison
+	bool operator==(const FLimenStringNumber& Other) const;
+	bool operator!=(const FLimenStringNumber& Other) const;
+	bool operator<(const FLimenStringNumber& Other) const;
+	bool operator>(const FLimenStringNumber& Other) const;
+
+	FString ToString() const;
+
+private:
+	FString IntegerPart = TEXT("0");
+	FString DecimalPart = TEXT("");
+	bool bIsNegative = false;
+
+	void FromString(const FString& InStr);
+	void Normalize();
+
+	// Internal utilities
+	static FString AddStrings(const FString& A, const FString& B);
+	static FString SubtractStrings(const FString& A, const FString& B);
+	static FString MultiplyStrings(const FString& A, const FString& B);
+	static FString DivideStrings(const FString& A, const FString& B, int32 Precision = 10);
+
+	static bool IsLessThan(const FString& A, const FString& B);
+	static void AlignDecimals(FString& ADec, FString& BDec);
+	static FString TrimLeadingZeros(const FString& Str);
+	static FString TrimTrailingZeros(const FString& Str);
+};

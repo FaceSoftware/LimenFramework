@@ -10,7 +10,6 @@
 #include "Engine/Engine.h"
 #include "GameFramework/Pawn.h"
 #include "LogMacros/LimenLogMacros.h"
-#include "Managers/LimenProceduralMapManager.h"
 
 
 ALimenMapTile* ALimenMapTile::GetTileOfClass(UObject* WorldContext, const TSubclassOf<ALimenMapTile> TileClass)
@@ -26,7 +25,7 @@ ALimenMapTile* ALimenMapTile::GetTileOfClass(UObject* WorldContext, const TSubcl
 	return nullptr;
 }
 
-ALimenMapTile::ALimenMapTile()
+ALimenMapTile::ALimenMapTile(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 1 / 8;
@@ -36,11 +35,13 @@ ALimenMapTile::ALimenMapTile()
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent->SetMobility(EComponentMobility::Static);
 
-	BoundingBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BoundingBox"));
-	check(BoundingBox)
-	BoundingBox->SetupAttachment(GetRootComponent());
-	BoundingBox->SetMobility(EComponentMobility::Movable);
-	BoundingBox->SetCollisionProfileName(TEXT("OverlapAll"));
+	BoundingBox = CreateOptionalDefaultSubobject<UBoxComponent>(TEXT("BoundingBox"));
+	if (BoundingBox)
+	{
+		BoundingBox->SetupAttachment(GetRootComponent());
+		BoundingBox->SetMobility(EComponentMobility::Movable);
+		BoundingBox->SetCollisionProfileName(TEXT("OverlapAll"));
+	}
 	
 	ScenarioComponentClass = USceneComponent::StaticClass();
 	ScenarioComponentKeyword = TEXT("Scenario");
@@ -93,10 +94,13 @@ void ALimenMapTile::OnConstruction(const FTransform& Transform)
 	}
 #endif
 
-	FVector Origin, Extent;
-	GetActorBounds(true, Origin, Extent, true);
-	BoundingBox->SetWorldLocation(Origin);
-	BoundingBox->SetBoxExtent(Extent);
+	if (BoundingBox)
+	{
+		FVector Origin, Extent;
+		GetActorBounds(true, Origin, Extent, true);
+		BoundingBox->SetWorldLocation(Origin);
+		BoundingBox->SetBoxExtent(Extent);
+	}
 }
 
 void ALimenMapTile::BeginPlay()
@@ -116,6 +120,11 @@ void ALimenMapTile::BeginPlay()
 	else if (bForceNoScenarios)
 	{
 		Scenarios.Empty();
+	}
+
+	if (BoundingBox)
+	{
+		BoundingBox->OnComponentBeginOverlap.AddDynamic(this, &ALimenMapTile::BoundingBoxBeginOverlap);
 	}
 }
 

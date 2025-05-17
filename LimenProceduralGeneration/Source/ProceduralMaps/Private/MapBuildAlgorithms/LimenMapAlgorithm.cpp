@@ -79,6 +79,8 @@ void ULimenMapAlgorithm::Exit()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]
 	{
+		if (!OnAlgorithmFinished) return;
+
 		OnAlgorithmFinished->Execute(true, GeneratedMapId, GeneratedMap.Get());
 		LIMEN_LOG(LogLimen, Log, this, "Finished algorithm");
 	});

@@ -31,18 +31,15 @@ void ULimenCreditsComponent::BeginPlay()
 	Super::BeginPlay();
 }
 
-void ULimenCreditsComponent::DepositCredits(const int32 NewCredits)
+void ULimenCreditsComponent::DepositCredits(const int64 NewCredits)
 {
-	check(NewCredits >= 0)
-	CurrentCredits += NewCredits;
+	CurrentCredits += static_cast<uint64>(NewCredits);
 	CreditsUpdated();
 }
 
-bool ULimenCreditsComponent::WithdrawCredits(const int32 OutCredits)
+bool ULimenCreditsComponent::WithdrawCredits(const int64 OutCredits)
 {
-	check(OutCredits >= 0)
-
-	if (!bAllowNegativeBalance && CurrentCredits < OutCredits)
+	if (!bAllowNegativeBalance && CurrentCredits < static_cast<uint64>(OutCredits))
 	{
 		return false;
 	}
@@ -52,7 +49,12 @@ bool ULimenCreditsComponent::WithdrawCredits(const int32 OutCredits)
 	return true;
 }
 
-int32 ULimenCreditsComponent::GetCredits() const
+FString ULimenCreditsComponent::GetCreditsString() const
+{
+	return FString::Printf(TEXT("%llu"), CurrentCredits);
+}
+
+int64 ULimenCreditsComponent::GetCredits() const
 {
 	return CurrentCredits;
 }
@@ -63,7 +65,7 @@ void ULimenCreditsComponent::SetStartingCredits(const int32 NewStartingCredits)
 }
 void ULimenCreditsComponent::CreditsUpdated()
 {
-	OnCreditsUpdated.Broadcast(this, CurrentCredits);
+	OnCreditsUpdated.Broadcast(this, GetCreditsString());
 }
 
 void ULimenCreditsComponent::OnRep_CurrentCredits()

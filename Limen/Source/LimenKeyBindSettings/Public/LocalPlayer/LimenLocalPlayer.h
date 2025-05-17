@@ -28,4 +28,6 @@ private:
 	void UpdateControllerBindings(APlayerController* PC);
 	void InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping);
 	void NewPawnSet(APawn* NewPawn);
+	UFUNCTION()
+	void PossessedPawnChanged(APawn* OldPawn, APawn* NewPawn);
 };

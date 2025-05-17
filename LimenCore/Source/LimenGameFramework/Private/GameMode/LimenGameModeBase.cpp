@@ -45,6 +45,38 @@ void ALimenGameModeBase::BeginPlay()
 	Super::BeginPlay();
 }
 
+void ALimenGameModeBase::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	if (GetLimenGameState())
+	{
+		LimenGameState->AddPlayerToPlayerList(NewPlayer->PlayerState.Get());
+	}
+}
+
+void ALimenGameModeBase::Logout(AController* Exiting)
+{
+	const APlayerController* PlayerController = Cast<APlayerController>(Exiting);
+	if (PlayerController && GetLimenGameState())
+	{
+		LimenGameState->RemovePlayerFromPlayerList(PlayerController->PlayerState.Get());
+	}
+	
+	Super::Logout(Exiting);
+}
+
+void ALimenGameModeBase::InitSeamlessTravelPlayer(AController* NewController)
+{
+	Super::InitSeamlessTravelPlayer(NewController);
+
+	const APlayerController* PlayerController = Cast<APlayerController>(NewController);
+	if (GetLimenGameState() && PlayerController)
+	{
+		LimenGameState->AddPlayerToPlayerList(PlayerController->PlayerState.Get());
+	}
+}
+
 ALimenGameStateBase* ALimenGameModeBase::GetLimenGameState()
 {
 	LimenGameState = GetGameState<ALimenGameStateBase>();

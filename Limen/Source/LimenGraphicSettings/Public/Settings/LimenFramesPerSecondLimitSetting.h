@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Settings/LimenSelectionSetting.h"
+#include "Settings/LimenValueSetting.h"
 #include "LimenFramesPerSecondLimitSetting.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class LIMENGRAPHICSETTINGS_API ULimenFramesPerSecondLimitSetting : public ULimenSelectionSetting
+class LIMENGRAPHICSETTINGS_API ULimenFramesPerSecondLimitSetting : public ULimenValueSetting
 {
 	GENERATED_BODY()
 

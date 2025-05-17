@@ -19,7 +19,7 @@ class ULimenSettingsSaveData;
  * It handles things like saving them, their lifetime and it should act as a wrapper for the settings.
  * It should not contain any specific information regarding a setting. 
  */
-UCLASS(Abstract)
+UCLASS(Abstract, BlueprintType)
 class LIMENMODULARSETTINGS_API ULimenModularSettingsSubsystem : public ULimenStorageSubsystem, public ILimenSaveObjectInterface
 {
 	GENERATED_BODY()

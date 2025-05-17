@@ -23,6 +23,7 @@ public class LimenUpgrades : ModuleRules
                 "Slate",
                 "SlateCore",
                 "UMG",
+                "NetCore",
 
                 "LimenCore",
             }

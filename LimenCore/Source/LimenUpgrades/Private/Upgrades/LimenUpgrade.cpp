@@ -13,6 +13,9 @@
 
 ULimenUpgrade::ULimenUpgrade()
 {
+	UpgradeCostMultiplier = 1.f;
+	UpgradeValueMultiplier = 1.f;
+	
 	UpgradeName = FText::FromString(TEXT("DefaultUpgradeName"));
 	UpgradeDescription = FText::FromString(TEXT("DefaultUpgradeDescription"));
 	MaxLevel = 0;
@@ -28,6 +31,10 @@ void ULimenUpgrade::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BoundController,
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BoundPawn,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, UpgradeCostMultiplier,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, UpgradeValueMultiplier,
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 }
 
@@ -169,12 +176,36 @@ int32 ULimenUpgrade::GetCurrentUpgradeLevel() const
 
 int32 ULimenUpgrade::GetCost(const int32 Level) const
 {
-	return CostFunction->GetFloatValue(Level);
+	const float Multiplier = Level == LastUpgradeCostMultiplierLevel.Key
+								    ? LastUpgradeCostMultiplierLevel.Value
+								    : UpgradeCostMultiplier;
+
+	return CostFunction->GetFloatValue(Level) * Multiplier;
+}
+
+void ULimenUpgrade::SetCostMultiplier(const float NewMultiplier)
+{
+	float CurrentMultiplierCopy = UpgradeCostMultiplier;
+	LastUpgradeCostMultiplierLevel = TPair<int32, float>(GetCurrentUpgradeLevel(), CurrentMultiplierCopy);
+	
+	UpgradeCostMultiplier = NewMultiplier;
 }
 
 float ULimenUpgrade::GetUpgradeValue(const int32 Level) const
 {
-	return UpgradeFunction->GetFloatValue(Level);
+	const float Multiplier = Level == LastUpgradeValueMultiplierLevel.Key
+						   			? LastUpgradeValueMultiplierLevel.Value
+						   			: UpgradeValueMultiplier;
+
+	return UpgradeFunction->GetFloatValue(Level) * Multiplier;
+}
+
+void ULimenUpgrade::SetValueMultiplier(const float NewMultiplier)
+{
+	float CurrentMultiplierCopy = UpgradeValueMultiplier;
+	LastUpgradeCostMultiplierLevel = TPair<int32, float>(GetCurrentUpgradeLevel(), CurrentMultiplierCopy);
+
+	UpgradeValueMultiplier = NewMultiplier;
 }
 
 void ULimenUpgrade::ProcessUpgradeInternal(AController* InController, APawn* InPawn, float NewUpgradeValue)

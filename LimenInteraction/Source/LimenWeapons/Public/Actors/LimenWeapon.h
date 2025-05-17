@@ -113,6 +113,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetBaseDamage() const;
 	UFUNCTION(BlueprintCallable)
+	void SetBaseDamage(const float InNewDamage);
+	UFUNCTION(BlueprintCallable)
 	float GetWeaponRange() const;
 	UFUNCTION(BlueprintCallable)
 	TSubclassOf<ULimenDamageType> GetDamageType() const;
@@ -124,7 +126,6 @@ public:
 	float GetFireSoundRange() const;
 	UFUNCTION(BlueprintCallable)
 	EInfiniteAmmoType GetInfiniteAmmoType() const;
-	
 
 	const TSubclassOf<ALimenAmmo>& GetCompatibleAmmo() const;
 
@@ -132,6 +133,10 @@ public:
 	uint8 GetCurrentAmmo() const;
 
 	uint8 GetAmmoCountUntilFull() const;
+
+	UFUNCTION(BlueprintNativeEvent)
+	FVector GetFiringLocation() const;
+	virtual FVector GetFiringLocation_Implementation() const;
 		
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters")
@@ -204,7 +209,6 @@ private:
 	bool bIsFireRateCooldownOver;
 	UPROPERTY(Replicated)
 	bool bIsFiring;
-	FTimerHandle FireRateTimer;
 	FTimerHandle CooldownTimer;
 	FTimerHandle ReloadTimer;
 	UPROPERTY(Replicated)
@@ -221,6 +225,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentAmmo, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
 	int32 CurrentAmmo;
+
+	double FireAccumulator;
+	uint64 SimulatingShotsCount;
 
 	void HandleWeaponCooldown();
 	void SetNextShotReady();

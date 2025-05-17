@@ -8,6 +8,8 @@
 #include "AISystem.h"
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Actors/LimenWeapon.h"
 #include "Components/DecalComponent.h"
 #include "Components/PrimitiveComponent.h"
@@ -23,10 +25,11 @@
 #include "Perception/AISense_Damage.h"
 
 
-void ULimenWeaponFireMethod::ProcessFire(ALimenWeapon* Weapon)
+void ULimenWeaponFireMethod::ProcessFire(ALimenWeapon* Weapon, const uint64 ShotsToSimulate)
 {
 	check(Weapon->HasAuthority())
 	check(Weapon != nullptr)
+	check(ShotsToSimulate > 0)
 }
 
 bool ULimenWeaponFireMethod::IsSupportedForNetworking() const
@@ -133,21 +136,25 @@ ULimenLineTraceFireMethod::ULimenLineTraceFireMethod()
 	TraceChannel = ECollisionChannel::ECC_Visibility;
 	DecalSize = FVector(5.f);
 	DecalLifetime = 10.f;
+	BulletTracerSpeed = 5000.f;
+	TracerLifetimeSeconds = 0.5f;
 }
 
-void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
+void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon, const uint64 ShotsToSimulate)
 {
-	Super::ProcessFire(Weapon);
+	Super::ProcessFire(Weapon, ShotsToSimulate);
+
+	if (!Weapon) return;
 
 	check(Weapon->GetOwner() != nullptr) // If a weapon is firing, it should always have an owner
 	FVector Start;
 	FRotator Rotation;
 	AActor* Owner = Weapon->GetOwner();
-	if (APawn* WeaponPawnOwner = Cast<APawn>(Owner))
+	if (APawn* WeaponPawnOwner = Cast<APawn>(Owner); WeaponPawnOwner && WeaponPawnOwner->GetController())
 	{
 		WeaponPawnOwner->GetController()->GetPlayerViewPoint(Start, Rotation);
 	}
-	else
+	else if (Weapon->GetOwner())
 	{
 		Weapon->GetOwner()->GetActorEyesViewPoint(Start,	Rotation);
 	}
@@ -155,14 +162,10 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 	const FVector End = Start + Rotation.Vector() * Weapon->GetWeaponRange();
 
 	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(Weapon);
-	Params.AddIgnoredActor(Owner);
+	Params.AddIgnoredSourceObject(Weapon);
+	Params.AddIgnoredSourceObject(Owner);
 	Params.bTraceComplex = true;
-	Params.TraceTag = TEXT("Weapon bullet");
-	
-#if !(UE_BUILD_TEST || UE_BUILD_SHIPPING)
-	Params.bDebugQuery = bDebugMode;
-#endif
+	Params.TraceTag = TEXT("WeaponBullet");
 
 	TArray<FHitResult> OutHits;
 	GetWorld()->LineTraceMultiByChannel(OutHits, Start, End, TraceChannel, Params);
@@ -184,20 +187,28 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 	for (int i = 0; i < OutHits.Num(); ++i)
 	{
 		// Prevent hitting the same actor twice
-		if (!OutHits[i].GetActor() || HitActors.Contains(OutHits[i].GetActor()))
+		AActor* ActorHit = OutHits[i].GetActor();
+		UPrimitiveComponent* ComponentHit = OutHits[i].GetComponent();
+		if (!ActorHit || HitActors.Contains(ActorHit)) continue;
+
+		ULimenDamageComponent* DamageComponent = ActorHit->GetComponentByClass<ULimenDamageComponent>();
+		if (!DamageComponent) continue;
+
+
+		float F = ImpactDamageFalloffMultiplier;
+		uint64 N = ShotsToSimulate;
+		if (F != 1.f)
 		{
-			continue;
+			DamageParams.DamageValue = Weapon->GetBaseDamage() * (1 - FMath::Pow(F, N)) / (1 - F);
 		}
-		ULimenDamageComponent* DamageComponent = OutHits[i].GetActor()->GetComponentByClass<ULimenDamageComponent>();
-		if (!DamageComponent)
+		else
 		{
-			continue;
+			DamageParams.DamageValue = Weapon->GetBaseDamage() * N;
 		}
 
-		DamageParams.DamageValue = CurrentDamageWithFalloff;
 		DamageParams.HitBoneName = OutHits[i].BoneName;
 		DamageParams.HitComponent = OutHits[i].Component;
-		DamageParams.DamageDirection = OutHits[i].ImpactPoint - Start;
+		DamageParams.DamageDirection = (Start - OutHits[i].ImpactPoint).Rotation();
 		DamageParams.DamageDirection.Normalize();
 
 		TSubclassOf<ULimenDamageType> DamageTypeClass = Weapon->GetDamageType();
@@ -211,38 +222,119 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon)
 		}
 
 
-		const FAIDamageEvent AIDamageEvent(OutHits[i].GetActor(), Weapon, CurrentDamageWithFalloff,
+		const FAIDamageEvent AIDamageEvent(ActorHit, Weapon, DamageParams.DamageValue,
 			OutHits[i].ImpactPoint);
 
 		if (AIPerceptionSystem) AIPerceptionSystem->OnEvent(AIDamageEvent);
 
 		CurrentDamageWithFalloff *= ImpactDamageFalloffMultiplier;
-		HitActors.Push(OutHits[i].GetActor());
+		HitActors.Push(ActorHit);
 		DamageCount++;
 	}
 
+	FVector FirstImpactPoint = End;
+	FVector LastImpactPoint = End;
+
 	if (!OutHits.IsEmpty())
 	{
-		if (const FHitResult& LastHit = OutHits[OutHits.Num() - 1];
-			LastHit.GetComponent()->IsA<UStaticMeshComponent>() && BulletHoleDecalMaterial)
-		{
-			const FVector ImpactPoint = LastHit.ImpactPoint;
-			const FRotator ImpactSurfaceOrientation = LastHit.ImpactNormal.Rotation();
-			Multicast_SpawnBulletDecal(ImpactPoint, ImpactSurfaceOrientation);
+		const FHitResult& LastHit = OutHits[OutHits.Num() - 1];
+		FirstImpactPoint = OutHits[0].ImpactPoint;
+		LastImpactPoint = LastHit.ImpactPoint;
 
-			// Decal->AttachToComponent(LastHit.GetComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		if (LastHit.GetComponent()->IsA<UStaticMeshComponent>() && BulletHoleDecalMaterial)
+		{
+			const FRotator ImpactSurfaceOrientation = LastHit.ImpactNormal.Rotation();
+			Multicast_SpawnBulletDecal(LastImpactPoint, ImpactSurfaceOrientation);
 		}
 	}
 
-	LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);
+	if (BulletTracer)
+	{
+		Multicast_SpawnBulletTracer(Weapon, FirstImpactPoint);
+	}
+
 
 	if (bDebugMode)
 	{
 		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.f);
+		LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);
 	}
 }
 
-void ULimenLineTraceFireMethod::Multicast_SpawnBulletDecal_Implementation(const FVector& Location, const FRotator& Orientation)
+void ULimenLineTraceFireMethod::Tick(const float DeltaTime)
+{
+	for (int32 i = Tracers.Num() - 1; i >= 0; --i)
+	{
+		auto& [Tracer, Lifetime, Direction] = Tracers[i];
+
+		if (Lifetime == 0.f)
+		{
+			Lifetime += DeltaTime;
+			continue;
+		}
+
+		const FVector NewLocation = Tracer->GetComponentLocation() + Direction * BulletTracerSpeed * DeltaTime;
+		Tracer->SetWorldLocation(NewLocation);
+    	
+		Lifetime += DeltaTime;
+		if (Lifetime >= TracerLifetimeSeconds)
+		{
+			Tracer->DestroyComponent();
+			Tracer = nullptr;
+			Tracers.RemoveAt(i, EAllowShrinking::No);
+		}
+	}
+}
+
+ETickableTickType ULimenLineTraceFireMethod::GetTickableTickType() const
+{
+	return ETickableTickType::Conditional;
+}
+
+bool ULimenLineTraceFireMethod::IsTickable() const
+{
+	return !HasAnyFlags(RF_ClassDefaultObject) || Tracers.IsEmpty();
+}
+
+TStatId ULimenLineTraceFireMethod::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(ULimenLineTraceFireMethod, STATGROUP_Tickables);
+}
+
+bool ULimenLineTraceFireMethod::IsTickableWhenPaused() const
+{
+	return false;
+}
+
+bool ULimenLineTraceFireMethod::IsTickableInEditor() const
+{
+	return false;
+}
+
+UWorld* ULimenLineTraceFireMethod::GetTickableGameObjectWorld() const
+{
+	return GetWorld();
+}
+
+void ULimenLineTraceFireMethod::Multicast_SpawnBulletTracer_Implementation(const ALimenWeapon* Weapon, const FVector& End)
+{
+	if (!BulletTracer) return;
+
+	const FVector Start = Weapon->GetFiringLocation();
+
+	FTracerData Data;
+	Data.Tracer = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(),BulletTracer.Get(),
+																			Start, FRotator::ZeroRotator,
+																			FVector::OneVector, false);
+	if (!Data.Tracer) return;
+
+	Data.Direction = (End - Start).GetSafeNormal();
+	Data.Tracer->SetWorldRotation(Data.Direction.Rotation());
+	Tracers.Push(Data);
+}
+
+void ULimenLineTraceFireMethod::Multicast_SpawnBulletDecal_Implementation(const FVector& Location,
+																		  const FRotator& Orientation)
 {
 	UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(),
 				BulletHoleDecalMaterial.Get(), DecalSize, Location, Orientation,

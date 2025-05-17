@@ -17,13 +17,13 @@ struct FDamageParameters
 	FDamageParameters() = default;
 
 	UPROPERTY(BlueprintReadOnly)
-	float DamageValue;
+	float DamageValue = 0;
 	UPROPERTY(BlueprintReadOnly)
 	TWeakObjectPtr<UPrimitiveComponent> HitComponent;
 	UPROPERTY(BlueprintReadOnly)
 	FName HitBoneName;
 	UPROPERTY(BlueprintReadOnly)
-	FVector DamageDirection;
+	FRotator DamageDirection = FRotator::ZeroRotator;
 };
 
 UCLASS()

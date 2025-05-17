@@ -20,6 +20,11 @@
 			"Name": "LimenCore",
 			"Enabled": true,
 			"Optional": false
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true,
+			"Optional": false
 		}
 	],
 	"Modules": [

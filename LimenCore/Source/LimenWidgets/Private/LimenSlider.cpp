@@ -214,11 +214,6 @@ FReply ULimenSlider::OnPressed(const FGeometry& InGeometry, const FPointerEvent&
 	{
 		bIsDragging = true;
 
-		if (!WorldTickDelegate.IsValid())
-		{
-			WorldTickDelegate = FWorldDelegates::OnWorldTickEnd.AddUObject(this, &ThisClass::WorldTick);
-		}
-
 		switch (SliderInputMethod)
 		{
 		case ELimenSliderInputMethod::MousePosition:
@@ -247,9 +242,6 @@ FReply ULimenSlider::OnReleased(const FGeometry& InGeometry, const FPointerEvent
 
 		if (!bIsHovering) SliderBackground->SetColorAndOpacity(FSlateColor(FLinearColor::Transparent));
 		if (bShouldRevertCursorIcon) SetCursor(PreviousMouseCursor);
-
-		verify(FWorldDelegates::OnWorldTickEnd.Remove(WorldTickDelegate));
-		WorldTickDelegate.Reset();
 
 		return FReply::Handled().ReleaseMouseCapture();
 	}
@@ -400,6 +392,11 @@ void ULimenSlider::SetValueInternal(const ELimenSliderInput InputType, const flo
 		check(InputType != ELimenSliderInput::Undefined)
 		LastInputType = InputType;
 		bBroadcastValueSetDelegate = true;
+
+		if (!WorldTickDelegate.IsValid())
+		{
+			WorldTickDelegate = FWorldDelegates::OnWorldTickEnd.AddUObject(this, &ThisClass::WorldTick);
+		}
 	}
 }
 
@@ -409,5 +406,8 @@ void ULimenSlider::WorldTick(UWorld* WorldPtr, const ELevelTick LevelTick, const
 	{
 		bBroadcastValueSetDelegate = false;
 		OnNewValueSet.Broadcast(LastInputType, GetValue());
+
+		verify(FWorldDelegates::OnWorldTickEnd.Remove(WorldTickDelegate));
+		WorldTickDelegate.Reset();
 	}
 }

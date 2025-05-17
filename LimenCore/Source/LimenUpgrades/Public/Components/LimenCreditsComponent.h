@@ -7,7 +7,7 @@
 #include "LimenCreditsComponent.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCreditsUpdate, class ULimenCreditsComponent*, CreditsComponent, const int32, NewCredits);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FCreditsUpdate, class ULimenCreditsComponent*, CreditsComponent, const FString, NewCreditsString);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENUPGRADES_API ULimenCreditsComponent : public UActorComponent
@@ -23,23 +23,25 @@ public:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable, Category="Credits")
-	void DepositCredits(const int32 NewCredits);
+	void DepositCredits(const int64 NewCredits);
 	UFUNCTION(BlueprintCallable, Category="Credits")
-	bool WithdrawCredits(const int32 OutCredits);
-	int32 GetCredits() const;
+	bool WithdrawCredits(const int64 OutCredits);
+	UFUNCTION(BlueprintCallable, Category="Credits")
+	FString GetCreditsString() const;
+	int64 GetCredits() const;
 	void SetStartingCredits(const int32 NewStartingCredits);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Credits", BlueprintReadOnly)
 	bool bAllowNegativeBalance;
-	UPROPERTY(EditDefaultsOnly, Category="Credits", BlueprintReadOnly)
-	int32 StartingCredits;
+	UPROPERTY(EditDefaultsOnly, Category="Credits")
+	uint64 StartingCredits;
 
 	virtual void CreditsUpdated();
 
 private:
-	UPROPERTY(ReplicatedUsing=OnRep_CurrentCredits, Transient, BlueprintReadOnly, meta=(AllowPrivateAccess=true))
-	int32 CurrentCredits;
+	UPROPERTY(ReplicatedUsing=OnRep_CurrentCredits, Transient)
+	uint64 CurrentCredits;
 
 	UFUNCTION()
 	void OnRep_CurrentCredits();

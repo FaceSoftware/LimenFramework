@@ -29,8 +29,11 @@ class LIMENLOCOMOTION_API ULimenMovementComponent : public UCharacterMovementCom
 {
 	GENERATED_BODY()
 
+	friend class FSavedMove_Limen;
+
 public:
 	explicit ULimenMovementComponent(const FObjectInitializer& InObjectInitializer);
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual FNetworkPredictionData_Client* GetPredictionData_Client() const override;
@@ -72,6 +75,8 @@ private:
 class FSavedMove_Limen : public FSavedMove_Character
 {
 public:
+	bool bSavedIsFastMovementEnabled;
+
 	FSavedMove_Limen()
 	{
 		bSavedIsFastMovementEnabled = false;
@@ -103,6 +108,7 @@ public:
 							FNetworkPredictionData_Client_Character& ClientData) override
 	{
 		FSavedMove_Character::SetMoveFor(C, InDeltaTime, NewAccel, ClientData);
+
 		if (const auto* Movement = Cast<ULimenMovementComponent>(C->GetCharacterMovement()))
 		{
 			bSavedIsFastMovementEnabled = Movement->IsFastMovementEnabled();
@@ -112,14 +118,12 @@ public:
 	virtual void PrepMoveFor(ACharacter* C) override
 	{
 		FSavedMove_Character::PrepMoveFor(C);
+
 		if (auto* Movement = Cast<ULimenMovementComponent>(C->GetCharacterMovement()))
 		{
 			Movement->SetFastMovement(bSavedIsFastMovementEnabled);
 		}
 	}
-
-private:
-	bool bSavedIsFastMovementEnabled;
 };
 
 
@@ -136,4 +140,3 @@ public:
 		return MakeShared<FSavedMove_Limen>();
 	}
 };
-

@@ -24,6 +24,7 @@ public class LimenWeapons : ModuleRules
                 "Slate",
                 "SlateCore",
                 "AIModule",
+                "Niagara",
                 
                 "LimenCore",
                 "LimenSaveSystem",

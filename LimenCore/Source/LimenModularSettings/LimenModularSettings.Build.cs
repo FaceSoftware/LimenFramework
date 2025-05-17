@@ -11,6 +11,7 @@ public class LimenModularSettings : ModuleRules
             {
                 "Core",
                 "DeveloperSettings",
+                "UMG",
                 
                 "LimenCore",
                 "LimenWidgets",

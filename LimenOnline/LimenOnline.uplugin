@@ -23,11 +23,31 @@
 			"Name": "LimenOnlineChat",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenOnlineManager",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [
 		{
 			"Name": "LimenCore",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "OnlineSubsystem",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "OnlineSubsystemUtils",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "OnlineSubsystemSteam",
 			"Enabled": true,
 			"Optional": false
 		}

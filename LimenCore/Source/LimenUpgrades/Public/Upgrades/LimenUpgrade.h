@@ -39,7 +39,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Upgrade")
 	virtual int32 GetCost(int32 Level) const;
 	UFUNCTION(BlueprintCallable, Category="Upgrade")
+	virtual void SetCostMultiplier(const float NewMultiplier);
+	UFUNCTION(BlueprintCallable, Category="Upgrade")
 	virtual float GetUpgradeValue(int32 Level) const;
+	UFUNCTION(BlueprintCallable, Category="Upgrade")
+	virtual void SetValueMultiplier(const float NewMultiplier);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Upgrade", BlueprintReadOnly)
@@ -63,6 +67,12 @@ private:
 	TWeakObjectPtr<AController> BoundController;
 	UPROPERTY(Replicated)
 	TWeakObjectPtr<APawn> BoundPawn;
+	UPROPERTY(Replicated)
+	float UpgradeCostMultiplier;
+	TPair<int32, float> LastUpgradeCostMultiplierLevel;
+	UPROPERTY(Replicated)
+	float UpgradeValueMultiplier;
+	TPair<int32, float> LastUpgradeValueMultiplierLevel;
 
 	UFUNCTION()
 	void OnRep_CurrentLevel();

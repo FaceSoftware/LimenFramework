@@ -52,6 +52,8 @@ bool ULimenResolutionSetting::CanEdit() const
 
 void ULimenResolutionSetting::Tick(float DeltaTime)
 {	
+	if (!ModalWidget.IsValid()) return;
+
 	CurrentTime -= DeltaTime;
 	if (bIsResolutionChangeConfirmed)
 	{		
@@ -121,7 +123,11 @@ void ULimenResolutionSetting::ApplyCurrentSetting(const bool bUserRequest)
 	ModalWidget = ModalsSubsystem->DisplayConfirmationModal({
 		ConfirmationModalTitle, FormatModalText(10)
 	});
-	ModalWidget->OnModalResponseReceived.AddUniqueDynamic(this, &ThisClass::ResolutionConfirmationReceived);
+
+	if (ModalWidget.IsValid())
+	{
+		ModalWidget->OnModalResponseReceived.AddUniqueDynamic(this, &ThisClass::ResolutionConfirmationReceived);
+	}
 
 	CurrentTime = ResolutionChangeTimeout;
 	bIsResolutionChangeConfirmed = false;

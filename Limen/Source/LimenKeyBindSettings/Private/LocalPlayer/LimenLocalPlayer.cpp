@@ -42,14 +42,33 @@ void ULimenLocalPlayer::UpdateControllerBindings(APlayerController* PC)
 		}
 	}
 
-	if (OldPlayerController.IsValid())
+	switch (PC->GetNetMode())
 	{
-		OldPlayerController->GetOnNewPawnNotifier().Remove(NewPawnDelegateHandle);
-		NewPawnDelegateHandle.Reset();
-	}
+	case NM_Client:
+		{
+			if (OldPlayerController.IsValid())
+			{
+				OldPlayerController->OnPossessedPawnChanged.RemoveDynamic(this, &ThisClass::PossessedPawnChanged);
+			}
 
-	NewPawnDelegateHandle = PC->GetOnNewPawnNotifier().AddUObject(this, &ThisClass::NewPawnSet);
-	NewPawnSet(PC->GetPawn());
+			PC->OnPossessedPawnChanged.AddUniqueDynamic(this, &ThisClass::PossessedPawnChanged);
+			NewPawnSet(PC->GetPawn());
+		}
+		break;
+
+	default:
+		{
+			if (OldPlayerController.IsValid())
+			{
+				OldPlayerController->GetOnNewPawnNotifier().Remove(NewPawnDelegateHandle);
+				NewPawnDelegateHandle.Reset();
+			}
+
+			NewPawnDelegateHandle = PC->GetOnNewPawnNotifier().AddUObject(this, &ThisClass::NewPawnSet);
+			NewPawnSet(PC->GetPawn());
+		}
+		break;
+	}
 }
 
 void ULimenLocalPlayer::InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping)
@@ -90,4 +109,9 @@ void ULimenLocalPlayer::NewPawnSet(APawn* NewPawn)
 			KeyBindSubsystem->OnKeyBindUpdate.AddUObject(this, &ThisClass::InputBindUpdated);
 		}
 	}
+}
+
+void ULimenLocalPlayer::PossessedPawnChanged(APawn* OldPawn, APawn* NewPawn)
+{
+	NewPawnSet(NewPawn);
 }

@@ -79,7 +79,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Procedural Maps|Tiles", meta=(WorldContext="WorldContext", DeterminesOutputType="TileClass"))
 	static ALimenMapTile* GetTileOfClass(UObject* WorldContext, TSubclassOf<ALimenMapTile> TileClass);
 	
-	ALimenMapTile();
+	explicit ALimenMapTile(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void OnConstruction(const FTransform& Transform) override;
 	virtual void BeginPlay() override;
 	virtual void BeginDestroy() override;
