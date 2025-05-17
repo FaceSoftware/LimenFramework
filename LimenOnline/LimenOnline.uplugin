@@ -50,6 +50,11 @@
 			"Name": "OnlineSubsystemSteam",
 			"Enabled": true,
 			"Optional": false
+		},
+		{
+			"Name": "SteamSockets",
+			"Enabled": true,
+			"Optional": false
 		}
 	]
 }
