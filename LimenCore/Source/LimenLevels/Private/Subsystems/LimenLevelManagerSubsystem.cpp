@@ -72,7 +72,7 @@ void ULimenLevelManagerSubsystem::OpenGameEndLevel()
 	OpenOfflineLevel_Internal(ULimenLevelsDeveloperSettings::GetGameEndLevel()->GetMapName());
 }
 
-void ULimenLevelManagerSubsystem::OpenGameLevel(ELevelOpenContext Context, const int32 Index)
+void ULimenLevelManagerSubsystem::OpenGameLevel(ELevelOpenContext Context, const int32 Index, FString Options)
 {
 	if (!IsGameLevelIndexValid(Index)) return;
 
@@ -83,13 +83,13 @@ void ULimenLevelManagerSubsystem::OpenGameLevel(ELevelOpenContext Context, const
 	switch (Context)
 	{
 	case ELevelOpenContext::Local:
-		OpenOfflineLevel_Internal(LevelPath);
+		OpenOfflineLevel_Internal(LevelPath, Options);
 		break;
 	case ELevelOpenContext::Connect:
-		ConnectToServer_Internal(LevelPath);
+		ConnectToServer_Internal(LevelPath, Options);
 		break;
 	case ELevelOpenContext::Server:
-		OpenServerLevel_Internal(LevelPath);
+		OpenServerLevel_Internal(LevelPath, Options);
 		break;
 	}
 }
@@ -117,17 +117,17 @@ bool ULimenLevelManagerSubsystem::IsGameLevelIndexValid(const int32 Index) const
 	return Settings->IsGameLevelIndexValid(Index);
 }
 
-void ULimenLevelManagerSubsystem::OpenServerLevel_Internal(const FString& LevelName)
+void ULimenLevelManagerSubsystem::OpenServerLevel_Internal(const FString& LevelName, const FString& Options)
 {
-	GetWorld()->ServerTravel(LevelName + "?listen", false);
+	GetWorld()->ServerTravel(LevelName + "?listen"+ Options , false, false);
 }
 
-void ULimenLevelManagerSubsystem::ConnectToServer_Internal(const FString& IPAddress)
+void ULimenLevelManagerSubsystem::ConnectToServer_Internal(const FString& IPAddress, const FString& Options)
 {
-	GetWorld()->GetFirstPlayerController()->ClientTravel(IPAddress, TRAVEL_Absolute, false);
+	GetWorld()->GetFirstPlayerController()->ClientTravel(IPAddress + Options, TRAVEL_Absolute, false);
 }
 
-void ULimenLevelManagerSubsystem::OpenOfflineLevel_Internal(const FString& LevelName)
+void ULimenLevelManagerSubsystem::OpenOfflineLevel_Internal(const FString& LevelName, const FString& Options)
 {
-	UGameplayStatics::OpenLevel(this, FName(LevelName));
+	GetWorld()->GetFirstPlayerController()->ClientTravel(LevelName + Options, TRAVEL_Absolute, true);
 }

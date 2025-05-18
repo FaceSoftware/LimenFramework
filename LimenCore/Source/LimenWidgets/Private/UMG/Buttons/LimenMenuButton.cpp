@@ -37,7 +37,8 @@ TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 				 .Text(Text)
 				 .ColorAndOpacity(TextColor)
 				 .Font(Font)
-				 .Justification(TextJustification);
+				 .Justification(TextJustification)
+				 .Visibility(EVisibility::SelfHitTestInvisible);
 
 	if (bUseIcon)
 	{
@@ -84,18 +85,17 @@ TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 	.HAlign(HAlign_Fill)
 	.VAlign(VAlign_Fill)
 	[
-		RetainerBox.ToSharedRef()
-	]
-	
-	+ SOverlay::Slot()
-	.HAlign(HAlign_Fill)
-	.VAlign(VAlign_Fill)
-	[
 		SNew(SButton)
 		.ButtonStyle(&ButtonStyle)
 		.OnClicked(BIND_UOBJECT_DELEGATE(FOnClicked, OnClicked))
 		.OnHovered(BIND_UOBJECT_DELEGATE(FSimpleDelegate, OnHovered))
 		.OnUnhovered(BIND_UOBJECT_DELEGATE(FSimpleDelegate, OnUnhovered))
+	] 
+	+ SOverlay::Slot()
+	.HAlign(HAlign_Fill)
+	.VAlign(VAlign_Fill)
+	[
+		RetainerBox.ToSharedRef()
 	];
 	
 	RetainerBox->SetTextureParameter(TextureParameter);
@@ -197,11 +197,6 @@ ETickableTickType ULimenMenuButton::GetTickableTickType() const
 }
 
 bool ULimenMenuButton::IsTickable() const
-{
-	return true;
-}
-
-bool ULimenMenuButton::IsAllowedToTick() const
 {
 	return true;
 }

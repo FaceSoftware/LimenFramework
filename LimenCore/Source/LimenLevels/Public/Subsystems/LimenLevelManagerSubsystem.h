@@ -43,14 +43,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void OpenGameEndLevel();
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
-	void OpenGameLevel(ELevelOpenContext Context = ELevelOpenContext::Local, const int32 Index = 0);
+	void OpenGameLevel(ELevelOpenContext Context = ELevelOpenContext::Local, const int32 Index = 0, FString Options = TEXT(""));
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void ResetCurrentLevel(ELevelOpenContext Context = ELevelOpenContext::Local);
 
 	bool IsGameLevelIndexValid(const int32 Index) const;
 
 private:
-	void OpenServerLevel_Internal(const FString& LevelName);
-	void ConnectToServer_Internal(const FString& IPAddress);
-	void OpenOfflineLevel_Internal(const FString& LevelName);
+	void OpenServerLevel_Internal(const FString& LevelName, const FString& Options = TEXT(""));
+	void ConnectToServer_Internal(const FString& IPAddress, const FString& Options = TEXT(""));
+	void OpenOfflineLevel_Internal(const FString& LevelName, const FString& Options = TEXT(""));
 };

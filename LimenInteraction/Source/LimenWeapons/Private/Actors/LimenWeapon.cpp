@@ -7,6 +7,7 @@
 #include "AISystem.h"
 #include "TimerManager.h"
 #include "Actors/LimenAmmo.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraShakeBase.h"
 #include "Components/LimenInventoryComponent.h"
@@ -132,26 +133,10 @@ void ALimenWeapon::Tick(float DeltaSeconds)
 	{
 		if (bIsAutomatic)
 		{
-			FireAccumulator += RoundsPerSecond * DeltaSeconds;
-			SimulatingShotsCount = FMath::FloorToInt(FireAccumulator);
-			if (SimulatingShotsCount == 0 && ShotsInARow == 0)
-			{
-				SimulatingShotsCount = 1;
-				FireAccumulator = 0;
-			}
-			else
-			{
-				FireAccumulator -= SimulatingShotsCount;
-			}
-
-			if (SimulatingShotsCount > 0)
-			{
-				Fire();
-			}
+			Fire();
 		}
 		else
 		{
-			SimulatingShotsCount = 1;
 			Fire();
 		}
 	}
@@ -267,6 +252,11 @@ bool ALimenWeapon::CanReload(const ULimenInventoryComponent* PlayerInventory) co
 bool ALimenWeapon::CanFire() const
 {
 	if (bIsReloading)
+	{
+		return false;
+	}
+
+	if (!bIsAutomatic && ShotsInARow > 0)
 	{
 		return false;
 	}
@@ -450,20 +440,34 @@ void ALimenWeapon::Fire()
 	}
 	else
 	{
-		if (!bIsFiring)
+		FireAccumulator += RoundsPerSecond * GetWorld()->GetDeltaSeconds();
+		SimulatingShotsCount = FMath::FloorToInt(FireAccumulator);\
+		if (SimulatingShotsCount == 0)
 		{
-			Multicast_StartWeaponFire();
+			SimulatingShotsCount = 1;
+		}
+		else
+		{
+			FireAccumulator -= SimulatingShotsCount;
 		}
 
-		bIsFiring = true;
-		DecrementAmmo(SimulatingShotsCount);
-		ShotsInARow += SimulatingShotsCount;
+		if (SimulatingShotsCount > 0)
+		{
+			if (!bIsFiring)
+			{
+				bIsFiring = true;
+				Multicast_StartWeaponFire();
+			}
 
-		check(FireMethodObject)
-		FireMethodObject->ProcessFire(this, SimulatingShotsCount);
-		Multicast_WeaponFired();
+			DecrementAmmo(SimulatingShotsCount);
+			ShotsInARow += SimulatingShotsCount;
 
-		bIsFireRateCooldownOver = false;
+			check(FireMethodObject)
+			FireMethodObject->ProcessFire(this, SimulatingShotsCount);
+			Multicast_WeaponFired();
+
+			bIsFireRateCooldownOver = false;
+		}
 	}
 
 	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownTimer))
