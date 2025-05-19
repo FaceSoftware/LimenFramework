@@ -14,7 +14,7 @@ struct FNotificationParams;
 class ULimenWidget;
 
 
-#define DECLARE_WIDGET_FUNC(Type, WidgetVarName) \
+#define DECLARE_WIDGET_ACCESSORS(Type, WidgetVarName) \
 	inline void Show##WidgetVarName() { ShowWidget_Internal(WidgetVarName.Get()); } \
 	inline void Hide##WidgetVarName() { HideWidget_Internal(WidgetVarName.Get()); } \
 	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName->IsShowing(); } \
