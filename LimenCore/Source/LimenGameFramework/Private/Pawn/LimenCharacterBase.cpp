@@ -18,7 +18,9 @@
 #include "Components/CapsuleComponent.h"
 
 
-ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
+ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectInitializer)
+	: Super(InObjectInitializer.
+		SetDefaultSubobjectClass<ULimenMovementComponent>(CharacterMovementComponentName))
 {
 	PrimaryActorTick.bCanEverTick = true;
 
