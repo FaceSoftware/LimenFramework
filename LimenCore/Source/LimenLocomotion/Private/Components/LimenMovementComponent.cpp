@@ -3,140 +3,135 @@
 
 #include "Components/LimenMovementComponent.h"
 
-#include "GameFramework/CharacterMovementComponent.h"
-#include "HAL/RunnableThread.h"
-#include "LimenCore/Public/LogMacros/LimenLogMacros.h"
+#include "Net/UnrealNetwork.h"
+#include "Serialization/MemoryReader.h"
 
 
-UDEPRECATED_LimenMovementComponent::UDEPRECATED_LimenMovementComponent()
-{
-
-	
-	bWantsToSprint = false;
-	MovementMode = MOVE_Walking;
-	CustomMovementMode = static_cast<uint8>(ECustomMovementMode::None);
+ULimenMovementComponent::ULimenMovementComponent(const FObjectInitializer& InObjectInitializer)
+	: Super(InObjectInitializer)
+{	
+	FastWalkSpeedMultiplier = 2.5f;
+	CrouchFastWalkSpeedMultiplier = 2.5f;
+	bFastMovementEnabledByDefault = false;
+	bIsFastMovementEnabled = false;
+	bEnableAirStrafing = true;
+	AirAcceleration = 10.f;
+	MaxAirStrafeSpeed = 30.f;
+	bAllowJumpingWhileCrouched = true;
+	bLogCurrentSpeed = false;
 }
 
-void UDEPRECATED_LimenMovementComponent::OnComponentCreated()
+void ULimenMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	Super::OnComponentCreated();
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
-void UDEPRECATED_LimenMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+void ULimenMovementComponent::BeginPlay()
+{
+	SetupAirStrafing();
+	SetFastMovement(bFastMovementEnabledByDefault);
+
+	Super::BeginPlay();
+}
+
+void ULimenMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	UpdateMovementMode();
+	
+	if (bLogCurrentSpeed && GetOwner()->HasAuthority())
+	{
+		GEngine->AddOnScreenDebugMessage(FName(TEXT("Speed")).ToUnstableInt(), 0.F, FColor::Green,
+			FString::Printf(TEXT("Speed: %f"), Velocity.Size2D()));
+	}
 }
 
-void UDEPRECATED_LimenMovementComponent::ToggleSprint()
+FNetworkPredictionData_Client* ULimenMovementComponent::GetPredictionData_Client() const
 {
-	if (CustomMovementMode == CustomMovementModeToByte(ECustomMovementMode::Sprinting))
+	if (!ClientPredictionData)
 	{
-		StopSprinting();
+		ULimenMovementComponent* MutableThis = const_cast<ULimenMovementComponent*>(this);
+		MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_Limen(*this);
+	}
+
+	return ClientPredictionData;
+}
+
+void ULimenMovementComponent::SetFastMovement(const bool bEnabled)
+{	
+	if (bEnabled == bIsFastMovementEnabled)
+	{
+		return;
+	}
+
+	bIsFastMovementEnabled = bEnabled;
+	OnFastMovementChanged();
+}
+
+bool ULimenMovementComponent::IsFastMovementEnabled() const
+{
+	return bIsFastMovementEnabled;
+}
+
+void ULimenMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
+{
+	Super::UpdateFromCompressedFlags(Flags);
+
+	const bool bFastMovementEnabled = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
+	SetFastMovement(bFastMovementEnabled);
+}
+
+void ULimenMovementComponent::PhysFalling(const float DeltaTime, const int32 Iterations)
+{
+	Super::PhysFalling(DeltaTime, Iterations);
+	PhysAirStrafing(DeltaTime);
+}
+
+void ULimenMovementComponent::PhysAirStrafing(const float DeltaTime)
+{
+	if (!bEnableAirStrafing) return;
+
+	const FVector WishVelocity = (IsNetMode(NM_Client) ? GetLastInputVector() : Acceleration).GetSafeNormal();
+	const float WishSpeed = FMath::Min((WishVelocity * MaxWalkSpeed).Length(), MaxAirStrafeSpeed);
+
+	const float CurrentSpeed = FVector::DotProduct(Velocity, WishVelocity);
+	const float AddSpeed = WishSpeed - CurrentSpeed;
+	if (AddSpeed <= 0.f) return;
+
+	float AccelSpeed = AirAcceleration * MaxWalkSpeed * DeltaTime;
+	AccelSpeed = FMath::Min(AccelSpeed, AddSpeed);
+
+	Velocity += AccelSpeed * WishVelocity;
+}
+
+bool ULimenMovementComponent::CanAttemptJump() const
+{
+	if (!bAllowJumpingWhileCrouched) return Super::CanAttemptJump();
+
+	// Falling included for double-jump and non-zero jump hold time,
+	// but validated by character.
+	return IsJumpAllowed() && (IsMovingOnGround() || IsFalling());
+}
+
+void ULimenMovementComponent::OnFastMovementChanged()
+{
+	if (bIsFastMovementEnabled)
+	{
+		MaxWalkSpeedCrouched *= CrouchFastWalkSpeedMultiplier;
+		MaxWalkSpeed *= FastWalkSpeedMultiplier;
 	}
 	else
 	{
-		StartSprinting();
+		MaxWalkSpeedCrouched /= CrouchFastWalkSpeedMultiplier;
+		MaxWalkSpeed /= FastWalkSpeedMultiplier;
 	}
 }
 
-void UDEPRECATED_LimenMovementComponent::StartSprinting()
+void ULimenMovementComponent::SetupAirStrafing()
 {
-	if (!WantsToSprint())
-	{
-		bWantsToSprint = true;
-	}
-}
-
-void UDEPRECATED_LimenMovementComponent::StopSprinting()
-{
-	if (WantsToSprint())
-	{
-		bWantsToSprint = false;
-	}
-}
-
-bool UDEPRECATED_LimenMovementComponent::IsSprinting() const
-{
-	return CustomMovementModeToByte(ECustomMovementMode::Sprinting) == CustomMovementMode;
-}
-
-bool UDEPRECATED_LimenMovementComponent::WantsToSprint() const
-{
-	return bWantsToSprint;
-}
-
-bool UDEPRECATED_LimenMovementComponent::IsStill() const
-{
-	return Velocity.Length() <= UE_KINDA_SMALL_NUMBER;
-}
-
-ECustomMovementMode UDEPRECATED_LimenMovementComponent::GetCustomMovementMode() const
-{
-	return static_cast<ECustomMovementMode>(CustomMovementMode);
-}
-
-void UDEPRECATED_LimenMovementComponent::SetMovementMode(EMovementMode NewMovementMode, uint8 NewCustomMode)
-{
-	Super::SetMovementMode(NewMovementMode, NewCustomMode);
-	
-	switch (static_cast<ECustomMovementMode>(NewCustomMode))
-	{
-	case ECustomMovementMode::None:
-		MaxCustomMovementSpeed = 0;
-		break;
-		
-	case ECustomMovementMode::CrouchWalking:
-		MaxCustomMovementSpeed = MaxCrouchWalkingSpeed;
-		break;
-		
-	case ECustomMovementMode::Sprinting:
-		MaxCustomMovementSpeed = MaxSprintSpeed;
-		break;
-		
-	case ECustomMovementMode::CrouchSprinting:
-		MaxCustomMovementSpeed = MaxCrouchSprintSpeed;
-		break;
-	}
-}
-
-void UDEPRECATED_LimenMovementComponent::UpdateMovementMode()
-{
-	if ((!CanSprint() && IsSprinting()) || (!bWantsToSprint && IsSprinting()))
-	{
-		if (IsCrouching())
-		{
-			OnMovementStatusUpdated.Broadcast();
-			LIMEN_LOG(LogLimenCore, Log, this, "Player is crouching and walking")
-			SetMovementMode(MOVE_Custom, CustomMovementModeToByte(ECustomMovementMode::CrouchWalking));
-		}
-		else
-		{
-			OnMovementStatusUpdated.Broadcast();
-			LIMEN_LOG(LogLimenCore, Log, this, "Player is walking")
-			SetMovementMode(MOVE_Walking, CustomMovementModeToByte(ECustomMovementMode::None));
-		}
-	}
-	else if (CanSprint() && !IsSprinting() && bWantsToSprint)
-	{
-		if (IsCrouching())
-		{
-			OnMovementStatusUpdated.Broadcast();
-			LIMEN_LOG(LogLimenCore, Log, this, "Player is crouch sprinting")
-			SetMovementMode(MOVE_Custom, CustomMovementModeToByte(ECustomMovementMode::CrouchSprinting));
-		}
-		else
-		{
-			OnMovementStatusUpdated.Broadcast();
-			LIMEN_LOG(LogLimenCore, Log, this, "Player is sprinting")
-			SetMovementMode(MOVE_Custom, CustomMovementModeToByte(ECustomMovementMode::Sprinting));
-		}
-	}
-}
-
-bool UDEPRECATED_LimenMovementComponent::CanSprint()
-{
-	return !IsFalling() && Velocity.Length() > UE_KINDA_SMALL_NUMBER;
+	if (!bEnableAirStrafing) return;
+	AirControl = 0.f;
+	AirControlBoostMultiplier = 0.f;
+	AirControlBoostVelocityThreshold = 0.f;
+	BrakingDecelerationFalling = 0.f;
 }

@@ -11,12 +11,14 @@ class ULimenProceduralMap;
 class ALimenProceduralMapBuilder;
 class UProceduralMapParameters;
 
-UCLASS(Abstract)
-class PROCEDURALMAPS_API ALimenProceduralMapManager : public ALimenGameplayManager
+UCLASS()
+class PROCEDURALMAPS_API ALimenProceduralMapManager : public AInfo
 {
 	GENERATED_BODY()
 
 public:
+	DECLARE_MULTICAST_DELEGATE(FMapComplete)
+
 	/**
 	 * @brief Called from the map builder class to notify the manager that the map has been built.
 	 * Do not call this directly!
@@ -24,8 +26,23 @@ public:
 	 */
 	virtual void MapBuilt(ULimenProceduralMap* Map);
 
+	UFUNCTION(BlueprintCallable)
+	void NotifyMapComplete();
+
+	FMapComplete& GetMapCompleteDelegate();
+	template<typename T = ALimenProceduralMapBuilder>
+	T* GetMapBuilder()
+	{
+		static_assert(TIsDerivedFrom<T, ALimenProceduralMapBuilder>::Value);
+		auto* Builder = ALimenGameplayManager::GetGameplayManager(
+			this, T::StaticClass());
+		return Cast<T>(Builder);
+	}
+
+
 protected:
 
 private:
+	FMapComplete OnMapComplete;
 	
 };

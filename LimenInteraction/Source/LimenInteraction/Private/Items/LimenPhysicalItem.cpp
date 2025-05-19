@@ -3,40 +3,18 @@
 
 #include "Items/LimenPhysicalItem.h"
 
-#include "Components/LimenUpgradeManager.h"
 #include "GameFramework/Controller.h"
 
 
-ALimenPhysicalItem::ALimenPhysicalItem()
+ALimenPhysicalItem::ALimenPhysicalItem(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bIsHolstered = true;
 	CurrentUpgrade = 0;
-
-	Upgrades = CreateDefaultSubobject<ULimenUpgradeManager>(TEXT("UpgradeManager"));
-	check(Upgrades);
+	AttachSocket = NAME_None;
 }
 
-ULimenUpgradeManager* ALimenPhysicalItem::GetUpgradeManager_Implementation() const
+const FName& ALimenPhysicalItem::GetAttachmentSocket() const
 {
-	return Upgrades.Get();	
-}
-
-const FText& ALimenPhysicalItem::GetDisplayName_Implementation() const
-{
-	return DisplayName;
-}
-
-const FText& ALimenPhysicalItem::GetDescription_Implementation() const
-{
-	return Description;
-}
-
-UTexture* ALimenPhysicalItem::GetItemImage_Implementation() const
-{
-	return ItemImage.Get();
-}
-
-void ALimenPhysicalItem::Upgrade_Implementation(int32 NewLevel, ULimenUpgradeDataAsset* Upgrade)
-{
+	return AttachSocket;
 }

@@ -5,7 +5,6 @@
 
 #include "EngineUtils.h"
 #include "Components/SphereComponent.h"
-#include "Interfaces/LimenInteractableComponent.h"
 
 
 const TArray<UPrimitiveComponent*>& ULimenProximityInteractionComponent::GetAllInteractablesInRange() const
@@ -53,7 +52,7 @@ void ULimenProximityInteractionComponent::SetupInteraction()
 void ULimenProximityInteractionComponent::UpdateInteraction(const float DeltaTime)
 {
 	FVector Start, End;
-	if (!GetOwnerLineOfSightStartAndEndVectors(Start, End))
+	if (!GetOwnerViewPoint(Start, End))
 	{
 		return;
 	}
@@ -78,7 +77,7 @@ void ULimenProximityInteractionComponent::UpdateInteraction(const float DeltaTim
 		ClosestDistance = CurrentDistance;
 	}
 
-	CurrentInteractableInterface = ClosestComponent;
+	SetCurrentInteractableInterface(ClosestComponent);
 
 	if (DebugMode())
 	{

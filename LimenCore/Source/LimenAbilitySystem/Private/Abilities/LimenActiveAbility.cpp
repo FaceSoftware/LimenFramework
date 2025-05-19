@@ -21,12 +21,23 @@ void ULimenActiveAbility::Initialize(AActor* InOwner)
 	Super::Initialize(InOwner);
 
 	bIsCooldownOver = true;
-	PawnMesh = InOwner->GetComponentByClass<USkeletalMeshComponent>();
+}
+
+void ULimenActiveAbility::ForceDeactivateAbility()
+{
+	Super::ForceDeactivateAbility();
+
+	bIsActive = false;
+	GetWorld()->GetTimerManager().ClearTimer(AbilityTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(AbilityCooldownTimer);
 }
 
 void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
 {
-	check(CanActivateAbility());
+	if (!CanActivateAbility())
+	{
+		return;
+	}
 	
 	bIsActive = true;
 	if (FMath::IsNearlyZero(AbilityActivationDelay))
@@ -46,6 +57,8 @@ void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
 void ULimenActiveAbility::CancelAbility(AController* Controller, APawn* Pawn)
 {
 	bIsActive = false;
+	GetWorld()->GetTimerManager().ClearTimer(AbilityTimerHandle);
+
 	AbilityCancelled(Controller, Pawn);
 
 	StartCooldownTimer();
@@ -104,6 +117,8 @@ void ULimenActiveAbility::AbilityActivated_Wrapper(AController* Controller, APaw
 	{
 		StartCooldownTimer();
 	}
+
+	Multicast_AbilityActivated(Controller, Pawn);
 }
 
 void ULimenActiveAbility::StartCooldownTimer()
@@ -115,4 +130,9 @@ void ULimenActiveAbility::StartCooldownTimer()
 	}
 	
 	GetWorld()->GetTimerManager().SetTimer(AbilityCooldownTimer, this, &ThisClass::SetCooldownOver, AbilityCooldown, false);
+}
+
+void ULimenActiveAbility::Multicast_AbilityActivated_Implementation(AController* Controller, APawn* Pawn)
+{
+	OnAbilityActivated.Broadcast(this);
 }

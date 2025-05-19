@@ -20,6 +20,10 @@ class LIMENABILITYSYSTEM_API ULimenAbilityBase : public ULimenStorageItem, publi
 
 public:
 	ULimenAbilityBase();
+	virtual bool IsSupportedForNetworking() const override;
+	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
+	virtual bool CallRemoteFunction(UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack) override;
+
 	
 	/**
 	 * @brief Called by the ability component after instancing this object
@@ -39,13 +43,12 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override final;
 	virtual bool IsTickable() const override final;
-	virtual bool IsAllowedToTick() const override final;
 	virtual TStatId GetStatId() const override final;
 	virtual bool IsTickableWhenPaused() const override final;
 	virtual bool IsTickableInEditor() const override final;
 	virtual UWorld* GetTickableGameObjectWorld() const override final;
 
-#pragma endregion FTickableGameObject Interface Start
+#pragma endregion
 	
 protected:	
 	ULimenAbilityComponent* GetOwnerAbilityComponent() const;	
@@ -56,7 +59,7 @@ protected:
 
 private:
 	UPROPERTY()
-	TObjectPtr<AActor> Owner;
+	TWeakObjectPtr<AActor> Owner;
 	UPROPERTY()
 	TObjectPtr<ULimenAbilityComponent> AbilityComponent;
 

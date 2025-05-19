@@ -34,6 +34,16 @@
 			"Name": "AutomationUtils",
 			"Enabled": true,
 			"Optional": false
+		},
+		{
+			"Name": "OnlineSubsystem",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "OnlineSubsystemUtils",
+			"Enabled": true,
+			"Optional": false
 		}
 	],
 	"Modules": [
@@ -139,6 +149,11 @@
 		},
 		{
 			"Name": "LimenCredits",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenUpgrades",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

@@ -4,16 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "HAL/Runnable.h"
 #include "LimenMapAlgorithm.generated.h"
-
 
 class ULimenProceduralMap;
 class UProceduralMapParameters;
 
+
 /**
  * 
  */
-UCLASS(Abstract, NotBlueprintable, NotBlueprintType)
+UCLASS(NotBlueprintable, NotBlueprintType)
 class PROCEDURALMAPS_API ULimenMapAlgorithm : public UObject, public FRunnable
 {
 	GENERATED_BODY()
@@ -47,7 +48,7 @@ private:
 
 	UPROPERTY()
 	TWeakObjectPtr<const UProceduralMapParameters> GeneratedMapParameters;
-	const FGuid* GeneratedMapId;
+	FGuid GeneratedMapId;
 	FAlgorithmFinish* OnAlgorithmFinished;
 	
 	TUniquePtr<FRunnableThread> MapGenerationThread;

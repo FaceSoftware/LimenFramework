@@ -21,7 +21,9 @@ public class LimenNotes : ModuleRules
                 "Slate",
                 "SlateCore",
                 "LimenCore",
-                "LimenInteraction"
+                "LimenInteraction",
+                
+                "LimenSaveSystem",
             }
         );
     }

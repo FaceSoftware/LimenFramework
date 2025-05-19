@@ -9,7 +9,6 @@
 
 class ALimenItemBase;
 class ULimenHintWidget;
-class ULimenItemSmithWrapperWidget;
 class ULimenDeathScreen;
 class ULimenPauseMenuWidget;
 class ULimenHudWidget;
@@ -60,14 +59,6 @@ public:
 	bool IsDeathScreenShowing() const;
 	ULimenDeathScreen* GetDeathScreenWidget() const;
 
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
-	virtual void ShowItemSmithWidget();
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
-	virtual void HideItemSmithWidget();
-	void ToggleItemSmithWidget();
-	bool IsItemSmithShowing() const;
-	ULimenItemSmithWrapperWidget* GetItemSmithWidget() const;
-
 	virtual void QueueNotification(const FNotificationParams& InParams) override;
 	
 protected:	
@@ -90,11 +81,6 @@ protected:
 	TSoftClassPtr<ULimenDeathScreen> DeathScreenWidgetClass;
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ULimenDeathScreen> DeathScreenWidget;
-
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")
-	TSoftClassPtr<ULimenItemSmithWrapperWidget> ItemSmithWrapperWidgetClass;
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<ULimenItemSmithWrapperWidget> ItemSmithWrapperWidget;
 
 	UFUNCTION()
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);

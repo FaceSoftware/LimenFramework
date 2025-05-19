@@ -8,18 +8,15 @@
 #include "LimenPlayerStateBase.generated.h"
 
 
-class ALimenTool;
-class ALimenWeapon;
-
-/**
- * 
- */
 UCLASS()
 class LIMENGAMEFRAMEWORK_API ALimenPlayerStateBase : public APlayerState
 {
 	GENERATED_BODY()
 
 public:
+	explicit ALimenPlayerStateBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	UFUNCTION(BlueprintCallable)
+	bool IsLocalPlayerState() const;
 
 private:
 };

@@ -37,4 +37,7 @@ public:
 
 	UFUNCTION(Exec)
 	void ForceHideHud(const bool bHide);
+
+	UFUNCTION(Exec)
+	void GiveCredits(const int32 NewCredits);
 };

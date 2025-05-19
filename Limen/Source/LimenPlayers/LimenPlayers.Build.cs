@@ -37,7 +37,7 @@ public class LimenPlayers : ModuleRules
                 "LimenWidgets",
                 "LimenTools",
                 "LimenDoors",
-                "LimenItemSmith",
+                "LimenUpgrades",
                 "Limen", 
                 "LimenLevelTransitions",
                 "LimenStorage",

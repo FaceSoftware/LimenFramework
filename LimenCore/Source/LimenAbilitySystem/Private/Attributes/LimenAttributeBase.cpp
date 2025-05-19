@@ -4,7 +4,11 @@
 #include "Attributes/LimenAttributeBase.h"
 
 #include "Components/LimenAbilityComponent.h"
+#include "Engine/NetDriver.h"
+#include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "Iris/ReplicationSystem/ReplicationSystem.h"
+#include "Net/UnrealNetwork.h"
 
 
 ULimenAttributeBase::ULimenAttributeBase() : Super()
@@ -15,6 +19,124 @@ ULimenAttributeBase::ULimenAttributeBase() : Super()
 	CurrentValue = 0.f;
 	bIsInitialized = false;
 	bIsFrozen = false;
+}
+
+void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentValue,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, RechargeRate,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MaxValue,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+}
+
+bool ULimenAttributeBase::IsSupportedForNetworking() const
+{
+	// Super::IsSupportedForNetworking();
+	return true;
+}
+
+int32 ULimenAttributeBase::GetFunctionCallspace(UFunction* Function, FFrame* Stack)
+{
+	// return Super::GetFunctionCallspace(Function, Stack);
+
+	if (Function->FunctionFlags & FUNC_Static || !(Function->FunctionFlags & FUNC_Net))
+	{
+		return FunctionCallspace::Local;
+	}
+
+	bool bIsOnServer = false;
+	if (Owner.IsValid())
+	{
+		if (const UNetDriver* NetDriver = Owner->GetNetDriver())
+		{
+			bIsOnServer = NetDriver->IsServer();
+		}
+	}
+
+	// get the top most function
+	while (Function->GetSuperFunction() != nullptr)
+	{
+		Function = Function->GetSuperFunction();
+	}
+
+	// Multicast RPCs
+	if ((Function->FunctionFlags & FUNC_NetMulticast))
+	{
+		if (bIsOnServer)
+		{
+			// Server should execute locally and call remotely
+			return (FunctionCallspace::Local | FunctionCallspace::Remote);
+		}
+		else
+		{
+			return FunctionCallspace::Local;
+		}
+	}
+
+	// if we are the authority
+	if (bIsOnServer)
+	{
+		if (Function->FunctionFlags & FUNC_NetClient)
+		{
+			return FunctionCallspace::Remote;
+		}
+		else
+		{
+			return FunctionCallspace::Local;
+		}
+
+	}
+	// if we are not the authority
+	else
+	{
+		if (Function->FunctionFlags & FUNC_NetServer)
+		{
+			return FunctionCallspace::Remote;
+		}
+		else
+		{
+			// don't replicate
+			return FunctionCallspace::Local;
+		}
+	}
+}
+
+bool ULimenAttributeBase::CallRemoteFunction(UFunction* Function, void* Parameters, FOutParmRec* OutParms,
+	FFrame* Stack)
+{
+	// return Super::CallRemoteFunction(Function, Parameters, OutParms, Stack);
+
+	if (!Function || !GetOwner())
+	{
+		return false;
+	}
+
+	if (!Owner.IsValid())
+	{
+		return false;
+	}
+
+	UNetDriver* NetDriver = Owner->GetNetDriver();
+	if (!NetDriver)
+	{
+		return false;
+	}
+
+	NetDriver->ProcessRemoteFunction(Owner.Get(), Function, Parameters, OutParms, Stack, this);
+	return true;
+}
+
+bool ULimenAttributeBase::HasAuthority() const
+{
+	if (Owner.IsValid()) return Owner->HasAuthority();
+
+	if (GetWorld() && GetWorld()->IsGameWorld() && GetWorld()->GetAuthGameMode() != nullptr) return true;
+
+	return false;
 }
 
 void ULimenAttributeBase::Initialize(AActor* InOwner)
@@ -43,9 +165,12 @@ bool ULimenAttributeBase::IsInitialized() const
 
 void ULimenAttributeBase::Tick(float DeltaTime)
 {
-	if (!FMath::IsNearlyZero(RechargeRate))
+	if (HasAuthority())
 	{
-		ModifyValueBy(RechargeRate * DeltaTime);
+		if (!FMath::IsNearlyZero(RechargeRate))
+		{
+			ModifyValueBy(RechargeRate * DeltaTime);
+		}
 	}
 }
 
@@ -56,12 +181,12 @@ ETickableTickType ULimenAttributeBase::GetTickableTickType() const
 
 bool ULimenAttributeBase::IsTickable() const
 {
-	return !HasAnyFlags(RF_ClassDefaultObject);
+	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
 }
 
 bool ULimenAttributeBase::IsAllowedToTick() const
 {
-	return true;
+	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
 }
 
 TStatId ULimenAttributeBase::GetStatId() const
@@ -103,6 +228,11 @@ void ULimenAttributeBase::SetValue(const float Value)
 	{
 		SetCurrentValueAs(Value);
 	}
+}
+
+void ULimenAttributeBase::SetMaxValue(const float NewMaxValue)
+{
+	MaxValue = NewMaxValue;
 }
 
 void ULimenAttributeBase::ModifyValueBy(const float Value)
@@ -251,7 +381,7 @@ void ULimenAttributeBase::SetCurrentValueAsMax()
 	SetCurrentValueAs(MaxValue);
 	check(CurrentValue == MaxValue);
 	AttributeFull();
-	OnAttributeFull.Broadcast(CurrentValue);
+	OnAttributeFull.Broadcast(this, CurrentValue);
 }
 
 void ULimenAttributeBase::SetCurrentValueAsMin()
@@ -264,7 +394,7 @@ void ULimenAttributeBase::SetCurrentValueAsMin()
 	SetCurrentValueAs(MinValue);
 	check(CurrentValue == MinValue);
 	AttributeEmpty();
-	OnAttributeEmpty.Broadcast(CurrentValue);
+	OnAttributeEmpty.Broadcast(this, CurrentValue);
 }
 
 void ULimenAttributeBase::SetCurrentValueAs(const float Value)
@@ -276,7 +406,7 @@ void ULimenAttributeBase::SetCurrentValueAs(const float Value)
 	
 	CurrentValue = Value;
 	AttributeUpdated();
-	OnAttributeChanged.Broadcast(CurrentValue);
+	OnAttributeChanged.Broadcast(this, CurrentValue);
 }
 
 ULimenAbilityComponent* ULimenAttributeBase::GetOwnerAbilityComponent() const
@@ -299,3 +429,31 @@ bool ULimenAttributeBase::IsFrozen() const
 	return bIsFrozen;
 }
 
+void ULimenAttributeBase::AttributeEmpty()
+{
+}
+
+void ULimenAttributeBase::AttributeFull()
+{
+}
+
+void ULimenAttributeBase::AttributeUpdated()
+{
+}
+
+void ULimenAttributeBase::OnRep_CurrentValue()
+{
+	if (CurrentValue <= MinValue)
+	{
+		AttributeEmpty();
+		OnAttributeEmpty.Broadcast(this, CurrentValue);
+	}
+	else if (CurrentValue >= MaxValue)
+	{
+		AttributeFull();
+		OnAttributeFull.Broadcast(this, CurrentValue);
+	}
+
+	AttributeUpdated();
+	OnAttributeChanged.Broadcast(this, CurrentValue);
+}

@@ -8,6 +8,8 @@
 #include "LimenActiveAbility.generated.h"
 
 class AController;
+
+
 /**
  * 
  */
@@ -19,9 +21,13 @@ class LIMENABILITYSYSTEM_API ULimenActiveAbility : public ULimenAbilityBase
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityActivationDelegate, ULimenActiveAbility*, Ability);
 
 public:
+	UPROPERTY(BlueprintAssignable, Category="Ability Events")
+	FAbilityActivationDelegate OnAbilityActivated;
+
 	ULimenActiveAbility();
 
 	virtual void Initialize(AActor* InOwner) override;
+	virtual void ForceDeactivateAbility() override;
 	
 	/**
 	 * @brief Called to activate an ability (e.g. jumping).
@@ -57,11 +63,11 @@ protected:
 	/**
 	 * @brief The cooldown time that must pass before activating this ability again
 	 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Ability Parameters", meta=(ClampMin="0"))
 	float AbilityCooldown;
-	UPROPERTY(EditDefaultsOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, Category="Ability Parameters", meta=(ClampMin="0"))
 	float AbilityActivationDelay;
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
+	UPROPERTY(EditDefaultsOnly, Category="Ability Parameters")
 	bool bIsOneShot;
 
 	void SetCooldownOver();
@@ -71,15 +77,13 @@ protected:
 
 private:	
 	FTimerHandle AbilityCooldownTimer;
+	FTimerHandle AbilityTimerHandle;
 	bool bIsCooldownOver;
 	bool bIsActive;
-	
-	UPROPERTY()
-	TWeakObjectPtr<USkeletalMeshComponent> PawnMesh;
-	FTimerHandle AnimationTimerHandle;
-	
-	FTimerHandle AbilityTimerHandle;
 
 	void AbilityActivated_Wrapper(AController* Controller, APawn* Pawn);
 	void StartCooldownTimer();
+
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_AbilityActivated(AController* Controller, APawn* Pawn);
 };

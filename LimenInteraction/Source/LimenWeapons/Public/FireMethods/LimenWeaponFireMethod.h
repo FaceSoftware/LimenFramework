@@ -3,29 +3,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Tickable.h"
 #include "UObject/Object.h"
 #include "LimenWeaponFireMethod.generated.h"
 
+struct FVector_NetQuantize100;
+class UNiagaraComponent;
+class UNiagaraSystem;
 class UMaterialInterface;
 enum ECollisionChannel : int;
 class ALimenWeapon;
 
 
 /**
- * ULimenWeaponFireMethod
- *
- * A base class that defines a method for handling weapon firing in the LimenWeapons system.
- * Acts as an abstract representation for managing weapon fire mechanics.
- *
- * Inherits from:
- *   - UObject: The base class for all UE objects.
- *
- * Intended Usage:
- *   This class is designed to be extended to implement specific weapon fire behaviors
- *   and mechanisms. It serves as the foundation for weapon fire-related logic.
- *
- * Module:
- *   - LIMENWEAPONS_API: Provides API access to this class for the LimenWeapons module.
+ * Blueprintable and network-aware base class for weapon fire methods in the LimenWeapons system.
+ * This class provides a blueprint for implementing various weapon firing behaviors and supports
+ * customization and extension for specific use cases.
  */
 UCLASS(Blueprintable, BlueprintType)
 class LIMENWEAPONS_API ULimenWeaponFireMethod : public UObject
@@ -33,18 +26,34 @@ class LIMENWEAPONS_API ULimenWeaponFireMethod : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual void ProcessFire(ALimenWeapon* Weapon);
+	virtual void ProcessFire(ALimenWeapon* Weapon, const uint64 ShotsToSimulate);
+	virtual bool IsSupportedForNetworking() const override;
+	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
+	virtual bool CallRemoteFunction(UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack) override;
 };
 
 
 UCLASS()
-class ULimenLineTraceFireMethod : public ULimenWeaponFireMethod
+class ULimenLineTraceFireMethod : public ULimenWeaponFireMethod, public FTickableGameObject
 {
 	GENERATED_BODY()
 
 public:
 	ULimenLineTraceFireMethod();
-	virtual void ProcessFire(ALimenWeapon* Weapon) override;
+
+	virtual void ProcessFire(ALimenWeapon* Weapon, const uint64 ShotsToSimulate) override;
+
+#pragma region FTickableGameObject
+
+	virtual void Tick(float DeltaTime) override;
+	virtual ETickableTickType GetTickableTickType() const override;
+	virtual bool IsTickable() const override;
+	virtual TStatId GetStatId() const override;
+	virtual bool IsTickableWhenPaused() const override;
+	virtual bool IsTickableInEditor() const override;
+	virtual UWorld* GetTickableGameObjectWorld() const override;
+
+#pragma endregion
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Debug")
@@ -56,8 +65,28 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="VFX")
 	TObjectPtr<UMaterialInterface> BulletHoleDecalMaterial;
 	UPROPERTY(EditDefaultsOnly, Category="VFX")
+	TObjectPtr<UNiagaraSystem> BulletTracer;
+	UPROPERTY(EditDefaultsOnly, Category="VFX")
+	float BulletTracerSpeed;
+	UPROPERTY(EditDefaultsOnly, Category="VFX")
+	float TracerLifetimeSeconds;
+	UPROPERTY(EditDefaultsOnly, Category="VFX")
 	FVector DecalSize;
 	UPROPERTY(EditDefaultsOnly, Category="VFX", meta=(Units=seconds))
 	float DecalLifetime;
+
+private:
+	struct FTracerData
+	{
+		UNiagaraComponent* Tracer = nullptr;
+		float Lifetime = 0.f;
+		FVector Direction = FVector::ZeroVector;
+	};
 	
+	TArray<FTracerData> Tracers;
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_SpawnBulletTracer(const ALimenWeapon* Weapon, const FVector& End);
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_SpawnBulletDecal(const FVector& Location, const FRotator& Orientation);
 };

@@ -22,7 +22,7 @@ void ULimenRandomMeshInstance::StartSpawningInstances()
 		return;
 	}
 	
-	GlobalRandomStream = ULimenGlobalRandomStreamSubsystem::Get();
+	auto* GlobalRandomStream = ULimenGlobalRandomStreamSubsystem::Get();
 	check(GlobalRandomStream)
 	
 	const uint32 RandomIndex = GlobalRandomStream->GetGlobalRandomStream()->RandRange(0, StaticMeshes.Num() - 1);
@@ -38,7 +38,10 @@ TArray<FVector> ULimenRandomMeshInstance::CalculatePoints() const
 {
 	TArray<FVector> OutPoints;
 	OutPoints.SetNum(NumberOfInstances);
-	
+
+	auto* GlobalRandomStream = ULimenGlobalRandomStreamSubsystem::Get();
+	check(GlobalRandomStream)
+
 	for (int i = 0; i < NumberOfInstances; ++i)
 	{
 		const FVector Point = GlobalRandomStream->GetGlobalRandomStream()->RandPointInBox(InstanceAreaBoundingBox);
@@ -55,12 +58,16 @@ void ULimenRandomMeshInstance::SpawnInstances()
 
 	TArray<FTransform> Transforms;
 	Transforms.Reserve(Points.Num());
+
+	auto* GlobalRandomStream = ULimenGlobalRandomStreamSubsystem::Get();
+	check(GlobalRandomStream)
+
 	for (const auto& Point : Points)
 	{
 		FRotator Rotation = FRotator(
-			GlobalRandomStream->GetGlobalRandomStream()->FRandRange(0, 360),
-			GlobalRandomStream->GetGlobalRandomStream()->FRandRange(0, 360),
-			GlobalRandomStream->GetGlobalRandomStream()->FRandRange(0, 360)
+			GlobalRandomStream->GetGlobalRandomStream()->FRandRange(MinRotation.Pitch, MaxRotation.Pitch),
+			GlobalRandomStream->GetGlobalRandomStream()->FRandRange(MinRotation.Yaw, MaxRotation.Yaw),
+			GlobalRandomStream->GetGlobalRandomStream()->FRandRange(MinRotation.Roll, MaxRotation.Roll)
 			);		
 
 		const float ScaleMultiplier = GlobalRandomStream->GetGlobalRandomStream()->FRandRange(MinScale, MaxScale);

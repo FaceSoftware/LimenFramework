@@ -12,7 +12,9 @@
 #include "HUD/LimenBaseHUD.h"
 #include "HUDs/LimenHUD.h"
 #include "LimenAbilitySystem/Public/Components/LimenAbilityComponent.h"
+#include "LimenUpgrades/Public/Components/LimenCreditsComponent.h"
 #include "LogMacros/LimenLogMacros.h"
+#include "PlayerStates/LimenPlayerState.h"
 #include "Subsystems/LimenGameSaveSubsystem.h"
 
 class ALimenProceduralTileMapBuilder;
@@ -140,4 +142,13 @@ void ULimenCheatManager::ForceHideHud(const bool bHide)
 			HUD->ShowCharacterHudWidget();
 		}  
 	}
+}
+
+void ULimenCheatManager::GiveCredits(const int32 NewCredits)
+{
+	auto* PlayerState = GetPlayerController()->GetPlayerState<APlayerState>();
+	auto* Credits = PlayerState->GetComponentByClass<ULimenCreditsComponent>();
+	if (!Credits) return;
+
+	Credits->DepositCredits(NewCredits);
 }

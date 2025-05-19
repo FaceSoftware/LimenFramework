@@ -35,7 +35,7 @@ void ULimenSensitivitySetting::ApplyCurrentSetting(bool bUserRequest)
 	const APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	if (PlayerController == nullptr)
 	{
-		// Player controller should never be null, this means it was not initialized yet
+		// Player controller should never be null. This means it was not initialized yet
 		GetWorld()->GetTimerManager().SetTimerForNextTick([this, bUserRequest]
 		{
 			ApplyCurrentSetting(bUserRequest);

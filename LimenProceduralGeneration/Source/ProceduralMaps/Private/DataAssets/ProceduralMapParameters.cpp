@@ -3,21 +3,21 @@
 
 #include "DataAssets/ProceduralMapParameters.h"
 
+#include "Managers/LimenProceduralMapManager.h"
+#include "MapBuildAlgorithms/LimenMapAlgorithm.h"
+
 
 TSubclassOf<ALimenProceduralMapManager> UProceduralMapParameters::GetManagerClass() const
 {
-	PURE_VIRTUAL(UProceduralMapParameters::GetMapManagerClass)
-	return nullptr;
+	return ALimenProceduralMapManager::StaticClass();
 }
 
 TSubclassOf<ULimenMapAlgorithm> UProceduralMapParameters::GetGenerationAlgorithm() const
 {
-	PURE_VIRTUAL(UProceduralMapParameters::GetMapBuildAlgorithm)
-	return nullptr;
+	return ULimenMapAlgorithm::StaticClass();
 }
 
 bool UProceduralMapParameters::ValidateParameters() const
 {
-	PURE_VIRTUAL(UProceduralMapParameters::ValidateParameters)
-	return false;
+	return true;
 }

@@ -35,7 +35,7 @@ void ALimenMenuGameMode::StartNewGame(APlayerController* Player)
 	ULimenLevelManagerSubsystem* LevelManager = GetWorld()->GetGameInstance()->GetSubsystem<ULimenLevelManagerSubsystem>();
 	check(LevelManager != nullptr);
 	
-	LevelManager->OpenGameLevel(0);
+	LevelManager->OpenGameLevel(ELevelOpenContext::Local, 0);
 }
 
 void ALimenMenuGameMode::StartLoadingGame(APlayerController* Player, const ULimenSaveData* SaveGame)
@@ -53,7 +53,7 @@ void ALimenMenuGameMode::StartLoadingGame(APlayerController* Player, const ULime
 	if (LevelManager->IsGameLevelIndexValid(GameSaveData->GameLevelIndex))
 	{
 		GameSaveSubsystem->ScheduleGameLoadOnMapChange();
-		LevelManager->OpenGameLevel(GameSaveData->GameLevelIndex);
+		LevelManager->OpenGameLevel(ELevelOpenContext::Local, GameSaveData->GameLevelIndex);
 		return;
 	}
 

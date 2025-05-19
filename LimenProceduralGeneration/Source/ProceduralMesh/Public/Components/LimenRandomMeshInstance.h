@@ -22,19 +22,18 @@ public:
 	virtual void StartSpawningInstances() override;
 	
 protected:	
-	UPROPERTY(EditAnywhere,  Category="Limen|Params", meta=(ClampMin="0", EditCondition="bRandomize"))
+	UPROPERTY(EditAnywhere,  Category="Limen|Params", meta=(ClampMin="0"))
 	uint16 NumberOfInstances;
-	
+	UPROPERTY(EditAnywhere,  Category="Limen|Params")
+	FRotator MaxRotation;
+	UPROPERTY(EditAnywhere,  Category="Limen|Params")
+	FRotator MinRotation;
 	UPROPERTY(EditAnywhere,  Category="Limen|Params", meta=(ClampMin="0"))
 	float MaxScale;
-	
 	UPROPERTY(EditAnywhere,  Category="Limen|Params", meta=(ClampMin="0"))
 	float MinScale;
-
 	UPROPERTY(EditAnywhere,  Category="Limen|Params")
 	TArray<TSoftObjectPtr<UStaticMesh>> StaticMeshes;
-	
-	TObjectPtr<ULimenGlobalRandomStreamSubsystem> GlobalRandomStream;
 
 private:
 	virtual TArray<FVector> CalculatePoints() const override;

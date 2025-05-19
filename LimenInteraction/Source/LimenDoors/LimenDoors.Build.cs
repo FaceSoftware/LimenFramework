@@ -26,6 +26,7 @@ public class LimenDoors : ModuleRules
                 
                 "LimenCore",
                 "LimenNotifications",
+                "LimenSaveSystem",
             }
         );
     }

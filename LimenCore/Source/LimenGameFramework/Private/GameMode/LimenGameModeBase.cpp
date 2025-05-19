@@ -4,6 +4,7 @@
 #include "GameMode/LimenGameModeBase.h"
 
 #include "Actors/LimenGameplayManager.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "GameState/LimenGameStateBase.h"
 #include "HUD/LimenBaseHUD.h"
 #include "Pawn/LimenCharacterBase.h"
@@ -11,7 +12,7 @@
 #include "PlayerState/LimenPlayerStateBase.h"
 
 
-ALimenGameModeBase::ALimenGameModeBase()
+ALimenGameModeBase::ALimenGameModeBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
 
@@ -28,11 +29,52 @@ void ALimenGameModeBase::InitGame(const FString& MapName, const FString& Options
 	Super::InitGame(MapName, Options, ErrorMessage);
 	SpawnManagers();
 	// OverrideLimenClasses();
+
+	if (!ErrorMessage.IsEmpty())
+	{
+		ULimenCoreStatics::LimenLog(this, ErrorMessage, ELogType::Error);
+	}
+	else
+	{
+		ULimenCoreStatics::LimenLog(this, TEXT("Game initialized successfully"), ELogType::Log, false);
+	}
 }
 
 void ALimenGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void ALimenGameModeBase::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	if (GetLimenGameState())
+	{
+		LimenGameState->AddPlayerToPlayerList(NewPlayer->PlayerState.Get());
+	}
+}
+
+void ALimenGameModeBase::Logout(AController* Exiting)
+{
+	const APlayerController* PlayerController = Cast<APlayerController>(Exiting);
+	if (PlayerController && GetLimenGameState())
+	{
+		LimenGameState->RemovePlayerFromPlayerList(PlayerController->PlayerState.Get());
+	}
+	
+	Super::Logout(Exiting);
+}
+
+void ALimenGameModeBase::InitSeamlessTravelPlayer(AController* NewController)
+{
+	Super::InitSeamlessTravelPlayer(NewController);
+
+	const APlayerController* PlayerController = Cast<APlayerController>(NewController);
+	if (GetLimenGameState() && PlayerController)
+	{
+		LimenGameState->AddPlayerToPlayerList(PlayerController->PlayerState.Get());
+	}
 }
 
 ALimenGameStateBase* ALimenGameModeBase::GetLimenGameState()

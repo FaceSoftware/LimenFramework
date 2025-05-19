@@ -9,7 +9,6 @@
 #include "Widgets/LimenDeathScreen.h"
 #include "Widgets/LimenGameMenuWrapperWidget.h"
 #include "Widgets/LimenHudWidget.h"
-#include "Widgets/LimenItemSmithWrapperWidget.h"
 #include "Widgets/LimenPauseMenuWidget.h"
 
 
@@ -159,37 +158,6 @@ ULimenDeathScreen* ALimenHUD::GetDeathScreenWidget() const
 	return DeathScreenWidget.Get();
 }
 
-void ALimenHUD::ShowItemSmithWidget()
-{
-	if (ItemSmithWrapperWidget)
-	{
-		ShowWidget_Internal(ItemSmithWrapperWidget.Get());
-	}
-}
-
-void ALimenHUD::HideItemSmithWidget()
-{
-	if (ItemSmithWrapperWidget)
-	{
-		HideWidget_Internal(ItemSmithWrapperWidget.Get());
-	}
-}
-
-void ALimenHUD::ToggleItemSmithWidget()
-{
-	IsItemSmithShowing() ? HideItemSmithWidget() : ShowItemSmithWidget();
-}
-
-bool ALimenHUD::IsItemSmithShowing() const
-{
-	return ItemSmithWrapperWidget->IsShowing();
-}
-
-ULimenItemSmithWrapperWidget* ALimenHUD::GetItemSmithWidget() const
-{
-	return ItemSmithWrapperWidget.Get();
-}
-
 void ALimenHUD::QueueNotification(const FNotificationParams& InParams)
 {
 	Super::QueueNotification(InParams);
@@ -234,7 +202,7 @@ void ALimenHUD::InitializeWidgets()
 		CharacterHudWidget = ULimenWidget::IsWidgetValid<ULimenHudWidget>(
 			CharacterHudWidget.Get(), GetOwningPlayerController(), CharacterHudWidgetClass.LoadSynchronous(), true);
 		
-		CharacterHudWidget->BindPawn(GetOwningPlayerController()->GetPawn());
+		CharacterHudWidget->BindPlayerController(GetOwningPlayerController());
 		CharacterHudWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::CharacterHudVisibilityChanged);
 	}
 
@@ -253,15 +221,6 @@ void ALimenHUD::InitializeWidgets()
 			DeathScreenWidget.Get(), GetOwningPlayerController(), DeathScreenWidgetClass.LoadSynchronous(), true);
 
 		DeathScreenWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::DeathScreenVisibilityChanged);
-	}
-
-	if (!ItemSmithWrapperWidgetClass.IsNull())
-	{
-		ItemSmithWrapperWidget = ULimenWidget::IsWidgetValid<ULimenItemSmithWrapperWidget>(
-			ItemSmithWrapperWidget.Get(), GetOwningPlayerController(), ItemSmithWrapperWidgetClass.LoadSynchronous(), true);
-
-		ItemSmithWrapperWidget->BindPlayerController(GetOwningPlayerController());
-		ItemSmithWrapperWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::UpgradeShopVisibilityChanged);
 	}
 }
 
@@ -287,11 +246,6 @@ void ALimenHUD::HudInitialized(APlayerController* PlayerController)
 	if (DeathScreenWidget)
 	{
 		WidgetsList.Push(DeathScreenWidget.Get());
-	}
-
-	if (ItemSmithWrapperWidget)
-	{
-		WidgetsList.Push(ItemSmithWrapperWidget.Get());
 	}
 }
 

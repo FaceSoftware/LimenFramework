@@ -7,6 +7,8 @@
 #include "LimenGameplayCharacter.generated.h"
 
 
+struct FDamageInfo;
+class ULimenAttributeBase;
 struct FDamageParameters;
 class ULimenDamageType;
 class ULimenDamageComponent;
@@ -59,10 +61,10 @@ protected:
 	
 	UFUNCTION()
 	virtual void DamageReceived(AController* InInstigator, AActor* InCauser,
-								const ULimenDamageType* DamageType, const float Damage);
+								 TSubclassOf<ULimenDamageType> DamageType, const FDamageInfo& Info);
 
 	UFUNCTION()
-	virtual void HealthAttributeEmpty(const float NewValue);
+	virtual void HealthAttributeEmpty(ULimenAttributeBase* Attribute, const float NewValue);
 	
 private:
 	TWeakObjectPtr<ULimenHealthAttribute> HealthAttribute;

@@ -3,29 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ReplicatedInventoryData.h"
+#include "Async/Async.h"
 #include "Items/LimenItemBase.h"
 #include "LimenInventoryComponent.generated.h"
 
-
 class ULimenInventoryComponent;
 
-
-UENUM()
-enum class EInventoryFeedback : uint8
-{
-	Unknown,
-	Full,
-	Success
-};
 USTRUCT()
 struct FItemRegistry
 {
 	GENERATED_BODY();
+
+	FItemRegistry() = default;
+	FItemRegistry(const FItemRegistry& Other) = default;
 	
+	UPROPERTY()
 	TSoftClassPtr<ALimenItemBase> ItemClass;
 
 	UPROPERTY()
-	TArray<ALimenItemBase*> ItemInstances;
+	TArray<TObjectPtr<ALimenItemBase>> ItemInstances;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, TSubclassOf<ALimenItemBase>, ItemClass);
@@ -35,6 +32,8 @@ UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENINTERACTION_API ULimenInventoryComponent : public UActorComponent
 {
 	GENERATED_BODY()
+
+	friend FReplicatedItemRegistryArray;
 
 public:
 	UPROPERTY(BlueprintAssignable)
@@ -51,6 +50,8 @@ public:
 	FInventoryItemUpdate OnItemUpdated;
 	
 	ULimenInventoryComponent();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void BeginPlay() override;
 
 	/**
 	 * @brief Loads the specified inventory items into the component.
@@ -71,6 +72,13 @@ public:
 	 */
 	virtual bool AddItem(ALimenItemBase* NewItem);
 	virtual bool CanAddItem(ALimenItemBase* NewItem) const;
+
+	/**
+	 * @brief Removes a specific item instance from the inventory.
+	 * @param Instance The item instance to be removed from the inventory.
+	 */
+	void RemoveItemInstance(ALimenItemBase* Instance);
+
 	/**
 	 * @brief Retrieves an item of the specified type from the inventory.
 	 * @tparam T The type of the item to retrieve. Must derive from ALimenItemBase.
@@ -83,6 +91,7 @@ public:
 		const TSubclassOf<ALimenItemBase> Class = T::StaticClass();
 		return Cast<T>(GetItem(Class));
 	}
+
 
 	/**
 	 * @brief Retrieves an item of the specified type from the inventory.
@@ -164,11 +173,11 @@ public:
 	 * @return A pointer to the first item instance of the specified class, or nullptr if no such instance exists.
 	 */
 	template<typename T>
-	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass)
+	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass) const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
 		check(ItemClass != nullptr);
-		for (FItemRegistry& Registry : ItemRegistries)
+		for (const FItemRegistry& Registry : ItemRegistries)
 		{
 			if (Registry.ItemClass.LoadSynchronous() == ItemClass)
 			{
@@ -217,13 +226,13 @@ public:
 	 * @return An array with item instances of the specified type found in the registries.
 	 */
 	template<typename T>
-	TArray<T*> PeekItemInstances()
+	TArray<T*> PeekItemInstances() const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
 		
 		TArray<T*> Out;
 		Out.Reserve(ItemRegistries.Num());
-		for (FItemRegistry& Registry : ItemRegistries)
+		for (const FItemRegistry& Registry : ItemRegistries)
 		{
 			if (Registry.ItemInstances.IsEmpty() || !Registry.ItemClass->IsChildOf<T>() ||
 				Registry.ItemClass == T::StaticClass())
@@ -292,13 +301,20 @@ protected:
 	bool bUseStaticSize;
 
 	virtual void ItemAdded(ALimenItemBase* NewItem);
-	virtual void ItemRemoved(ALimenItemBase* NewItem);
+	virtual void ItemRemoved(ALimenItemBase* Item);
+
+	void ReplicateAddItem(ALimenItemBase* NewItem);
+	void ReplicateRemoveItem(ALimenItemBase* NewItem);
 	
 private:
 	uint16 CurrentInventoryLoad;
+	UPROPERTY(Replicated)
+	uint16 CurrentInventorySize;
 
 	UPROPERTY()
 	TArray<FItemRegistry> ItemRegistries;
+	UPROPERTY(Replicated)
+	FReplicatedItemRegistryArray ReplicatedItemRegistries;
 	
 	void AddItemToRegistry(ALimenItemBase* NewItem);
 	void RemoveItemsFromRegistry(const TSubclassOf<ALimenItemBase>& ItemToRemove, const int32 Count);
@@ -306,5 +322,6 @@ private:
 	FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass);
 	
 	bool IsFirstOfType(const TSubclassOf<ALimenItemBase>& ItemClass);
+	TArray<ALimenItemBase*> SpawnItemInstances(ALimenItemBase* InItem) const;
 	
 };

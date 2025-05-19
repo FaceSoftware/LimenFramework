@@ -8,3 +8,13 @@ void ALimenProceduralMapManager::MapBuilt(ULimenProceduralMap* Map)
 {
 	check(Map != nullptr);
 }
+
+void ALimenProceduralMapManager::NotifyMapComplete()
+{
+	OnMapComplete.Broadcast();
+}
+
+ALimenProceduralMapManager::FMapComplete& ALimenProceduralMapManager::GetMapCompleteDelegate()
+{
+	return OnMapComplete;
+}

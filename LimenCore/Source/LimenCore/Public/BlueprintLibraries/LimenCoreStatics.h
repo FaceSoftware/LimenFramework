@@ -61,6 +61,7 @@ enum class EMinimalWorldTypes : uint8
 	Inactive
 };
 
+
 /**
  * 
  */
@@ -131,6 +132,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game Config", BlueprintPure)
 	static FString GetCopyrightNotice();
+
+	UFUNCTION(BlueprintCallable, Category = "Network")
+	static void GetPacketLoss(APlayerController* PC, float& InLoss, float& OutLoss);
 };
 
 template <typename T>
@@ -153,3 +157,10 @@ TArray<T> ULimenCoreStatics::ShuffleArray(const TArray<T>& In)
 
 	return Out;
 }
+
+static void LimenLog(const UObject* Caller, const FString& LogText, const ELogType Verbosity = ELogType::Log,
+					 const bool bPrintToScreen = true)
+{
+	ULimenCoreStatics::LimenLog(Caller, LogText, Verbosity, bPrintToScreen);
+}
+

@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "LimenStartTileInterface.generated.h"
 
+class AController;
 // This class does not need to be modified.
 UINTERFACE()
 class PROCEDURALMAPS_API ULimenStartTileInterface : public UInterface

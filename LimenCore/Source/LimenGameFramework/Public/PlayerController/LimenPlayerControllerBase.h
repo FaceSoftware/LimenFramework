@@ -58,8 +58,6 @@ public:
 	explicit ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
-	virtual void OnPossess(APawn* InPawn) override;
-	virtual void OnUnPossess() override;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Controller")
 	void RequestPause(const EPauseReason Reason);
@@ -99,17 +97,20 @@ protected:
 	
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
 
+	virtual void SetPawn(APawn* InPawn) override;
+	virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
+	virtual void OnRep_PlayerState() override;
+
 	virtual void BindPawnDelegates(APawn* NewPawn);
 	virtual void UnbindPawnDelegates(APawn* InPawn);
-	
-	virtual bool CreateHudReference();
 	virtual void BindWidgetDelegates();
 	virtual void UnbindWidgetDelegates();
-	
+	virtual void CurrentPawnReady();
 	UFUNCTION()
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
 	
 private:
+	bool bPawnBeginPlayBound;
 	ELimenInputMode CurrentInputMode;
 
 	float MouseYawMultiplier;
@@ -117,4 +118,6 @@ private:
 
 	UFUNCTION()
 	virtual void SensitivityUpdated(ULimenMouseSensitivityComponent* Component);
+
+	void CurrentPawnReadyInternal(APawn* InPawn);
 };

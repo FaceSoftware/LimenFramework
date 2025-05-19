@@ -16,7 +16,6 @@
 #include "Widgets/LimenDeathScreen.h"
 #include "Widgets/LimenGameMenuWrapperWidget.h"
 #include "Widgets/LimenHudWidget.h"
-#include "Widgets/LimenItemSmithWrapperWidget.h"
 #include "Widgets/LimenPauseMenuWidget.h"
 
 
@@ -88,6 +87,12 @@ void ALimenPlayerController::HandleItemActionRequest(ULimenItemAction* ActionReq
 	GetLimenCharacter()->HandleItemActionRequests(ActionRequested);
 }
 
+void ALimenPlayerController::ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass)
+{
+	Super::ClientSetHUD_Implementation(NewHUDClass);
+	LimenHUD = Cast<ALimenHUD>(GetHUD());
+}
+
 void ALimenPlayerController::InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping)
 {
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
@@ -98,7 +103,7 @@ void ALimenPlayerController::PauseInput(const FInputActionInstance& Instance)
 {	
 	if (Instance.GetValue().Get<bool>())
 	{
-		verify(CreateHudReference())
+		verify(LimenHUD.IsValid())
 
 		if (LimenHUD->IsCharacterHudShowing() || LimenHUD->GetActiveWidget() == nullptr)
 		{
@@ -111,20 +116,7 @@ void ALimenPlayerController::PauseInput(const FInputActionInstance& Instance)
 	}
 }
 
-bool ALimenPlayerController::CreateHudReference()
-{
-	Super::CreateHudReference();
-
-	if (LimenHUD != nullptr)
-	{
-		return true;
-	}
-	
-	LimenHUD = Cast<ALimenHUD>(GetHUD());
-	return LimenHUD != nullptr;
-}
-
-void ALimenPlayerController::OnPawnDeath(const float Health)
+void ALimenPlayerController::OnPawnDeath(ULimenAttributeBase* Attribute, const float Health)
 {	
 	if (LimenHUD.IsValid() && LimenHUD->GetDeathScreenWidget())
 	{
@@ -230,12 +222,6 @@ void ALimenPlayerController::UnbindWidgetDelegates()
 	{
 		LimenHUD->GetDeathScreenWidget()->OnLimenVisibilityChanged.RemoveAll(this);
 		LimenHUD->GetDeathScreenWidget()->OnLimenAnimationFinished.RemoveAll(this);
-	}
-
-	if (LimenHUD->GetItemSmithWidget())
-	{
-		LimenHUD->GetItemSmithWidget()->OnLimenVisibilityChanged.RemoveAll(this);
-		LimenHUD->GetItemSmithWidget()->OnLimenAnimationFinished.RemoveAll(this);
 	}
 }
 

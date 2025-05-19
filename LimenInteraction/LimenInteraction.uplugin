@@ -20,6 +20,11 @@
 			"Name": "LimenCore",
 			"Enabled": true,
 			"Optional": false
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true,
+			"Optional": false
 		}
 	],
 	"Modules": [
@@ -45,11 +50,6 @@
 		},
 		{
 			"Name": "LimenNotes",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenItemSmith",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		},

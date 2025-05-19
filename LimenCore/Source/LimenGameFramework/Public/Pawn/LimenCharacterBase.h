@@ -23,12 +23,13 @@ DECLARE_MULTICAST_DELEGATE(FInputDelegate);
  * and is able to queue notifications if the controller class is the LimenPlayerController.
  */
 UCLASS(Blueprintable)
-class LIMENGAMEFRAMEWORK_API ALimenCharacterBase : public ACharacter
+class LIMENGAMEFRAMEWORK_API			ALimenCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
 public:	
 	explicit ALimenCharacterBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
+	virtual void BeginPlay() override;
 
 	virtual void EnableInput(APlayerController* InPlayerController) override;
 	virtual void DisableInput(APlayerController* InPlayerController) override;
@@ -57,6 +58,10 @@ protected:
 	virtual void PossessedBy(AController* NewController) override;
 
 	ALimenPlayerStateBase* GetLimenBasePlayerState() const;
+
+	
+	UFUNCTION()
+	virtual void SetupAbilityComponent(ULimenAbilityComponent* InAbilityComponent);
 	
 private:
 	UPROPERTY()
@@ -65,4 +70,6 @@ private:
 	TWeakObjectPtr<ALimenPlayerStateBase> LimenBasePlayerState;
 	UPROPERTY()
 	TWeakObjectPtr<APlayerController> PlayerController;
+
+	void SetupAbilityComponentInternal(ULimenAbilityComponent* InAbilityComponent);
 };

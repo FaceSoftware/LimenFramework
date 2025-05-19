@@ -36,12 +36,13 @@ public:
 	static FColor GetRenderTargetBackgroundColor(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass);
 
 	explicit ALimenItemBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Limen|Items", BlueprintPure)
-	UStaticMesh* GetItemMesh() const;
-	virtual UStaticMesh* GetItemMesh_Implementation() const;
+	UStaticMeshComponent* GetItemMesh() const;
+	virtual UStaticMeshComponent* GetItemMesh_Implementation() const;
 	
 	UTexture* GetItemImage() const;
 	const FText& GetDisplayName() const;
@@ -61,6 +62,7 @@ public:
 	
 	virtual void PickUp(AController* InController, APawn* InPawn);
 	virtual void Drop(AController* InController, APawn* InPawn);
+	bool IsDropped() const;
 
 	int32 GetItemQuantity() const;
 	void SetItemQuantity(const int32 InItemQuantity);
@@ -93,6 +95,9 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic)
 	void InteractAnimation(const float AnimationTime);
+
+	UFUNCTION()
+	virtual void OnRep_IsDropped();
 	
 private:
 	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
@@ -101,4 +106,7 @@ private:
 	TStrongObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
 
 	FTimerHandle InteractAnimationTimerHandle;
+
+	UPROPERTY(ReplicatedUsing=OnRep_IsDropped)
+	bool bIsDropped;
 };

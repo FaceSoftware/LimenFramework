@@ -7,6 +7,7 @@
 #include "LimenTool.generated.h"
 
 
+class ULimenAttributeBase;
 class ULimenAbilityComponent;
 class ULimenBatteryAttribute;
 class FThreadedFunction;
@@ -99,7 +100,7 @@ private:
 	void RechargeFinished();
 
 	UFUNCTION()
-	void CurrentBatteryCapacityChanged(const float NewValue);
+	void CurrentBatteryCapacityChanged(ULimenAttributeBase* Attribute, const float NewValue);
 	UFUNCTION()
-	void BatteryEmpty(const float NewValue);
+	void BatteryEmpty(ULimenAttributeBase* Attribute, const float NewValue);
 };

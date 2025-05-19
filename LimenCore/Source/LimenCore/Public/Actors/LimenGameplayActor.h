@@ -10,6 +10,15 @@ class ULimenObjectiveComponent;
 class ULimenCollectableComponent;
 
 
+UENUM(BlueprintType)
+enum class ELimenGameplayActorState : uint8
+{
+	Undefined,
+	InGameplay,
+	InGameplayWithCollisionDisabled,
+	OutOfGameplay,
+};
+
 /**
  * @brief Represents a specialized actor used in the gameplay layer.
  *
@@ -58,7 +67,7 @@ public:
 	 * The method has no effect if the actor is already active in gameplay.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay Actor")
-	virtual void AddToGameplay();
+	virtual void AddToGameplay(const bool bEnableCollision = true);
 	/**
 	 * @brief Checks whether the actor is marked as removed from gameplay.
 	 *
@@ -73,9 +82,9 @@ public:
 protected:
 	
 private:
-	UPROPERTY(ReplicatedUsing=OnRep_IsRemovedFromGameplay)
-	bool bIsRemovedFromGameplay;
+	UPROPERTY(ReplicatedUsing=OnRep_GameplayState)
+	ELimenGameplayActorState GameplayState;
 
 	UFUNCTION()
-	void OnRep_IsRemovedFromGameplay();
+	void OnRep_GameplayState();
 };

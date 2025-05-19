@@ -11,7 +11,9 @@
 ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
-	bIsRemovedFromGameplay = false;
+	GameplayState = ELimenGameplayActorState::Undefined;
+	bReplicates = true;
+	bAlwaysRelevant = true;
 }
 
 void ALimenGameplayActor:: BeginPlay()
@@ -23,55 +25,67 @@ void ALimenGameplayActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	FDoRepLifetimeParams Params;
-	Params.bIsPushBased = true;
-	Params.Condition = ELifetimeCondition::COND_None;
-	Params.RepNotifyCondition = ELifetimeRepNotifyCondition::REPNOTIFY_OnChanged;
-
-	DOREPLIFETIME_WITH_PARAMS_FAST(ALimenGameplayActor, bIsRemovedFromGameplay, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ALimenGameplayActor, GameplayState, FDoRepLifetimeParams(
+		COND_None, REPNOTIFY_OnChanged, true));
 }
 
 void ALimenGameplayActor::RemoveFromGameplay()
 {
 	check(HasAuthority())
-	if (bIsRemovedFromGameplay)
+	if (IsRemovedFromGameplay())
 	{
 		return;
 	}
+
+	GameplayState = ELimenGameplayActorState::OutOfGameplay;
 	
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
-	bIsRemovedFromGameplay = true;
-	SetReplicates(false);
 }
 
-void ALimenGameplayActor::AddToGameplay()
+void ALimenGameplayActor::AddToGameplay(const bool bEnableCollision)
 {
 	check(HasAuthority())
-	if (!bIsRemovedFromGameplay)
+	if (bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplay ||
+	   !bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplayWithCollisionDisabled)
 	{
 		return;
 	}
+
+	GameplayState = bEnableCollision ? ELimenGameplayActorState::InGameplay : ELimenGameplayActorState::InGameplayWithCollisionDisabled;
 	
 	SetActorHiddenInGame(false);
-	SetActorEnableCollision(true);
-	bIsRemovedFromGameplay = false;
-	SetReplicates(true);
+	SetActorEnableCollision(bEnableCollision);
 }
 
 bool ALimenGameplayActor::IsRemovedFromGameplay() const
 {
-	return bIsRemovedFromGameplay;
+	return GameplayState == ELimenGameplayActorState::OutOfGameplay;
 }
 
-void ALimenGameplayActor::OnRep_IsRemovedFromGameplay()
+void ALimenGameplayActor::OnRep_GameplayState()
 {
-	if (bIsRemovedFromGameplay)
+	switch (GameplayState)
 	{
-		RemoveFromGameplay();
-	}
-	else
-	{
-		AddToGameplay();
+	case ELimenGameplayActorState::InGameplay:
+		{
+			SetActorHiddenInGame(false);
+			SetActorEnableCollision(true);	
+		}
+		break;
+	case ELimenGameplayActorState::InGameplayWithCollisionDisabled:
+		{
+			SetActorHiddenInGame(false);
+			SetActorEnableCollision(false);
+		}
+		break;
+	case ELimenGameplayActorState::OutOfGameplay:
+		{
+			SetActorHiddenInGame(true);
+			SetActorEnableCollision(false);
+		}
+		break;
+	default:
+		break;
 	}
 }

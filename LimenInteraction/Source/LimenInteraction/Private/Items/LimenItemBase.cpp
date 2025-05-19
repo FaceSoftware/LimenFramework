@@ -14,6 +14,7 @@
 #include "GameFramework/Pawn.h"
 #include "ItemActions/LimenItemAction.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 
 UTexture* ALimenItemBase::GetItemImage(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
@@ -90,6 +91,16 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 	}
 }
 
+void ALimenItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsDropped, Params);
+}
+
 void ALimenItemBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -133,7 +144,7 @@ void ALimenItemBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-UStaticMesh* ALimenItemBase::GetItemMesh_Implementation() const
+UStaticMeshComponent* ALimenItemBase::GetItemMesh_Implementation() const
 {
 	return nullptr;
 }
@@ -205,11 +216,14 @@ void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
 		InteractAnimation(InteractAnimationTime);
 		GetWorld()->GetTimerManager().SetTimer(InteractAnimationTimerHandle, this, &ThisClass::RemoveFromGameplay, InteractAnimationTime, false);
 	}
+
+	bIsDropped = false;
 }
 
 void ALimenItemBase::Drop(AController* InController, APawn* InPawn)
 {
 	check(HasAuthority())
+
 	SetOwner(nullptr);
 
 	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
@@ -218,6 +232,13 @@ void ALimenItemBase::Drop(AController* InController, APawn* InPawn)
 	}
 
 	AddToGameplay();
+
+	bIsDropped = true;
+}
+
+bool ALimenItemBase::IsDropped() const
+{
+	return bIsDropped;
 }
 
 int32 ALimenItemBase::GetItemQuantity() const
@@ -257,4 +278,12 @@ void ALimenItemBase::InteractionStopped(AController* InController, APawn* InPawn
 	
 	// Hardcoded: Marked final because items should only need one interaction.
 	// Remove the finality of this function in case that functionality is needed.
+}
+
+void ALimenItemBase::OnRep_IsDropped()
+{
+	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
+	{
+		InteractableComponent->Activate(bIsDropped);
+	}
 }

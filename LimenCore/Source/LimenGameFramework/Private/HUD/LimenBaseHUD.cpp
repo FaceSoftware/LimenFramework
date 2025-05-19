@@ -80,6 +80,10 @@ void ALimenBaseHUD::InitializeWidgets()
 {
 }
 
+void ALimenBaseHUD::HudInitialized(APlayerController* PlayerController)
+{
+}
+
 void ALimenBaseHUD::QueueNotification(const FNotificationParams& InParams)
 {	
 	NotificationComponent->QueueNotification(MakeShared<FLimenNotification>(InParams));
@@ -102,9 +106,7 @@ bool ALimenBaseHUD::CanSwitchWidgetVisibility(UWidget* InWidget) const
 
 void ALimenBaseHUD::ShowWidget_Internal(ULimenWidget* Widget)
 {
-	check(Widget != nullptr)
-	
-	if (!CanSwitchWidgetVisibility(Widget))
+	if (!Widget || !CanSwitchWidgetVisibility(Widget) || GetWorld()->bIsTearingDown)
 	{
 		return;
 	}
@@ -119,7 +121,10 @@ void ALimenBaseHUD::ShowWidget_Internal(ULimenWidget* Widget)
 
 void ALimenBaseHUD::HideWidget_Internal(ULimenWidget* Widget)
 {
-	check(Widget != nullptr)
+	if (!Widget)
+	{
+		return;
+	}
 	
 	if (!CanSwitchWidgetVisibility(Widget))
 	{

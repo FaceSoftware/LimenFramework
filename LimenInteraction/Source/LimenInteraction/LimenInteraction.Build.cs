@@ -27,7 +27,6 @@ public class LimenInteraction : ModuleRules
 			{
 				"Core", 
 				"LimenCore",
-				"LimenItemSmith",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -43,6 +42,7 @@ public class LimenInteraction : ModuleRules
 				"UMG",
 				"LimenWidgets",
 				"LimenSaveSystem",
+				"NetCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

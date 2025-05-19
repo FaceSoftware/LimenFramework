@@ -3,15 +3,27 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ChildActorComponent.h"
+#include "Components/ActorComponent.h"
 #include "LimenPhysicalItemHoldComponent.generated.h"
 
 class ALimenPhysicalItem;
 
+
+USTRUCT()
+struct FLimenPhysicalItemHoldComponent_WeaponData
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<ALimenPhysicalItem> PhysicalItem;
+	UPROPERTY()
+	TObjectPtr<ALimenPhysicalItem> PreviousPhysicalItem;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPhysicalItemChange, ALimenPhysicalItem*, Old, ALimenPhysicalItem*, New);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LIMENINTERACTION_API ULimenPhysicalItemHoldComponent : public USceneComponent
+class LIMENINTERACTION_API ULimenPhysicalItemHoldComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -27,9 +39,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	void StopHolding();
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
-	void Drop();
-	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	bool IsHoldingSomething() const;
+	template<typename T>
+	bool IsHoldingSomething() const
+	{
+		return Cast<T>(GetPhysicalItem()) != nullptr;
+	}
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	ALimenPhysicalItem* GetPhysicalItem() const;
@@ -42,11 +57,9 @@ public:
 	}
 
 private:
-	bool bIsHoldingSomething;
-
-	UPROPERTY(ReplicatedUsing=OnRep_PhysicalItem)
-	TObjectPtr<ALimenPhysicalItem> PhysicalItem;
+	UPROPERTY(ReplicatedUsing=OnRep_WeaponData)
+	FLimenPhysicalItemHoldComponent_WeaponData WeaponData;
 
 	UFUNCTION()
-	void OnRep_PhysicalItem();
+	void OnRep_WeaponData();
 };

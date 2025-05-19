@@ -30,7 +30,7 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HUDs/LimenHUD.h"
-#include "Interfaces/LimenUpgradable.h"
+#include "ItemActions/LimenItemAction.h"
 #include "MappableKeySettings/LimenPlayerMappableKeySettings.h"
 #include "Subsystems/LimenKeyBindSubsystem.h"
 
@@ -59,15 +59,11 @@ ALimenPlayerCharacter::ALimenPlayerCharacter(const FObjectInitializer& ObjectIni
 
 	PlayerCamera = CreateDefaultSubobject<ULimenCameraComponent>(PlayerCameraComponentName);
 	PlayerCamera->SetupAttachment(SpringArm.Get());
-	
-	WeaponHold = CreateDefaultSubobject<ULimenPhysicalItemHoldComponent>(WeaponHoldComponentName);
-	WeaponHold->SetupAttachment(PlayerCamera.Get());
-	
-	ToolHold = CreateDefaultSubobject<ULimenPhysicalItemHoldComponent>(ToolHoldComponentName);
-	ToolHold->SetupAttachment(PlayerCamera.Get());
 
 	PlayerCredits = CreateDefaultSubobject<ULimenCreditsComponent>(CreditsComponentName);
 
+	WeaponHold = CreateDefaultSubobject<ULimenPhysicalItemHoldComponent>(WeaponHoldComponentName);
+	ToolHold = CreateDefaultSubobject<ULimenPhysicalItemHoldComponent>(ToolHoldComponentName);
 	DynamicDepthOfFieldComponent = CreateDefaultSubobject<ULimenDynamicDepthOfFieldComponent>(DynamicDepthOfFieldComponentName);
 
 	bWasFallingLastUpdate = false;
@@ -85,7 +81,6 @@ void ALimenPlayerCharacter::BeginPlay()
 
 	CharacterInventory->OnItemAdded.AddUniqueDynamic(this, &ThisClass::ItemAdded);
 	CharacterInventory->OnItemFailedToAdd.AddUniqueDynamic(this, &ThisClass::ItemCouldNotBeAdded);
-	CharacterInventory->OnItemUpdated.AddUniqueDynamic(this, &ThisClass::ItemUpdated);
 
 	CharacterObjectives->OnNewObjectiveAdded.AddUniqueDynamic(this, &ThisClass::ObjectiveAdded);
 	CharacterObjectives->OnObjectiveUpdated.AddUniqueDynamic(this, &ThisClass::ObjectiveUpdated);
@@ -333,21 +328,6 @@ void ALimenPlayerCharacter::GiveStartingItems(const TArray<TSubclassOf<ALimenIte
 		CharacterInventory->AddItem(Item);
 		Item->PickUp(GetController(), this);
 	}
-}
-
-TArray<TScriptInterface<ILimenUpgradable>> ALimenPlayerCharacter::GetUpgradables() const
-{
-	TArray<ALimenItemBase*> Items = CharacterInventory->PeekItemInstancesByInterface<ULimenUpgradable>();
-
-	TArray<TScriptInterface<ILimenUpgradable>> Output;
-	Output.Reserve(Items.Num());
-	
-	for (auto* Item : Items)
-	{
-		Output.Push(TScriptInterface<ILimenUpgradable>(Item));
-	}
-
-	return Output;
 }
 
 void ALimenPlayerCharacter::SetActorHiddenInGame(const bool bNewHidden)
@@ -753,17 +733,6 @@ void ALimenPlayerCharacter::ItemCouldNotBeAdded(TSubclassOf<ALimenItemBase> NewI
 	FNotificationParams Params;
 	Params.NotificationTitle = FText::FromString(FString::Printf(TEXT("Failed to pickup item")));
 	Params.NotificationMessage = FText::FromString(FString(TEXT("Inventory full")));
-	QueueNotification(Params);
-}
-
-void ALimenPlayerCharacter::ItemUpdated(TSubclassOf<ALimenItemBase> NewItem)
-{
-	check(NewItem != nullptr)
-	LIMEN_LOG(LogLimen, Warning, this, "Received 'item updated' notification")
-
-	FNotificationParams Params;
-	Params.NotificationTitle = FText::FromString(TEXT("New item"));
-	Params.NotificationMessage = FText::FromString(FString::Printf(TEXT("Picked up %s"), *NewItem->GetDefaultObject<ALimenItemBase>()->GetDisplayName().ToString()));
 	QueueNotification(Params);
 }
 

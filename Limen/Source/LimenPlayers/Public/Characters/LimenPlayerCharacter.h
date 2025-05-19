@@ -233,8 +233,6 @@ protected:
 	virtual void ItemAdded(TSubclassOf<ALimenItemBase> NewItem);
 	UFUNCTION()
 	virtual void ItemCouldNotBeAdded(TSubclassOf<ALimenItemBase> NewItem);
-	UFUNCTION()
-	virtual void ItemUpdated(TSubclassOf<ALimenItemBase> NewItem);
 
 	UFUNCTION()
 	virtual void ObjectiveAdded(ALimenObjective* NewObjective);

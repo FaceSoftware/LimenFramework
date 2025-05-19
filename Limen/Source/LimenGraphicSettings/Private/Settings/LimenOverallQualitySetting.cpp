@@ -25,8 +25,11 @@ void ULimenOverallQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 
 void ULimenOverallQualitySetting::SetDefaults()
 {
+	PossibleSelections.Push(Low);
+	PossibleSelections.Push(Medium);
 	PossibleSelections.Push(High);
 	PossibleSelections.Push(Epic);
+	// PossibleSelections.Push(Cinematic);
 	DefaultSelection = High;
 }
 
@@ -34,11 +37,20 @@ FString ULimenOverallQualitySetting::FormatReflectionSetting(const int32 Method)
 {
 	switch (Method)
 	{
+	case 0:
+		return Low;
+
+	case 1:
+		return Medium;
+
 	case 2:
 		return High;
 
 	case 3:
 		return Epic;
+		
+	case 4:
+		return Cinematic;
 		
 	default:
 		checkNoEntry();
@@ -49,6 +61,14 @@ FString ULimenOverallQualitySetting::FormatReflectionSetting(const int32 Method)
 
 int32 ULimenOverallQualitySetting::UnFormatReflectionSetting(const FString& Selection)
 {
+	if (Selection.Compare(Low) == 0)
+	{
+		return 0;
+	}
+	if (Selection.Compare(Medium) == 0)
+	{
+		return 1;
+	}
 	if (Selection.Compare(High) == 0)
 	{
 		return 2;

@@ -18,6 +18,14 @@ void ALimenMenuPlayerController::SetupInputComponent()
 	SetUIInput();
 }
 
+void ALimenMenuPlayerController::ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass)
+{
+	Super::ClientSetHUD_Implementation(NewHUDClass);
+
+	
+	MenuHud = Cast<ALimenMenuHUD>(GetHUD());
+}
+
 void ALimenMenuPlayerController::BindWidgetDelegates()
 {
 	if (MenuHud->GetMainMenuWidget())
@@ -49,19 +57,6 @@ void ALimenMenuPlayerController::LoadingScreenVisibilityChanged(const bool bIsVi
 	{
 		SetUIInput();
 	}
-}
-
-bool ALimenMenuPlayerController::CreateHudReference()
-{
-	Super::CreateHudReference();
-
-	if (MenuHud.IsValid())
-	{
-		return true;
-	}
-
-	MenuHud = Cast<ALimenMenuHUD>(GetHUD());
-	return MenuHud.IsValid();
 }
 
 void ALimenMenuPlayerController::RequestNewGame(APlayerController* InPlayerController)

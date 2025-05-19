@@ -6,6 +6,8 @@
 
 ULimenDamageComponent::ULimenDamageComponent()
 {
+	SetIsReplicatedByDefault(true);
+	SetIsReplicatedByDefault(true);
 	PrimaryComponentTick.bCanEverTick = true;
 	bAutoActivate = true;
 }
@@ -34,11 +36,14 @@ void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTic
 		// Create new parameters with the processed damage type
 		FDamageParameters NewDamageParameters = Info.DamageParameters;
 		NewDamageParameters.DamageValue = RawDamage;
-		const float PostProcessedDamage = DamageCalcFunc(NewDamageParameters, Info.DamageType.Get());
+		
+		const float PostProcessedDamage = DamageCalcFunc
+			? DamageCalcFunc(NewDamageParameters, Info.DamageType.Get())
+			: RawDamage;
 
-		// Broadcast the damage received
-		OnDamageReceived.Broadcast(Info.Instigator.Get(), Info.Causer.Get(),
-								   Info.DamageType.Get(), PostProcessedDamage);
+		NewDamageParameters.DamageValue = PostProcessedDamage;
+
+		Multicast_BroadcastDamageReceived(Info);
 
 		// Check if we should stop applying the damage
 		if (!Info.DamageType || Info.DamageType->ShouldStopApplyingDamage())
@@ -61,8 +66,16 @@ void ULimenDamageComponent::ApplyDamage(AController* Instigator, AActor* Causer,
 	FDamageInfo Info;
 	Info.Instigator = Instigator;
 	Info.Causer = Causer;
-	Info.DamageType = TStrongObjectPtr(DamageTypeInstance);
+	Info.DamageTypeClass = DamageTypeInstance->GetClass();
+	Info.DamageType = DamageTypeInstance;
 	Info.DamageParameters = DamageParams;
 
 	ActiveDamageInfo.Push(Info);
+}
+
+void ULimenDamageComponent::Multicast_BroadcastDamageReceived_Implementation(const FDamageInfo& Info)
+{
+	// Broadcast the damage received
+	OnDamageReceived.Broadcast(Info.Instigator.Get(), Info.Causer.Get(),
+							   Info.DamageTypeClass, Info);
 }
