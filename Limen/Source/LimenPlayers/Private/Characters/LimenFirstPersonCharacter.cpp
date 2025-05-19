@@ -4,14 +4,12 @@
 #include "Characters/LimenFirstPersonCharacter.h"
 
 #include "Camera/CameraComponent.h"
-#include "Components/LimenCameraTiltComponent.h"
-#include "Components/LimenCameraShakeComponent.h"
+#include "Components/LimenCameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Interaction/LimenLineTraceInteractionComponent.h"
 
 
 const FName ALimenFirstPersonCharacter::InteractionComponentName = TEXT("InteractionComponent");
-// const FName ALimenFirstPersonCharacter::CameraShakeComponentName = TEXT("CameraShakeComponent");
 
 ALimenFirstPersonCharacter::ALimenFirstPersonCharacter(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
