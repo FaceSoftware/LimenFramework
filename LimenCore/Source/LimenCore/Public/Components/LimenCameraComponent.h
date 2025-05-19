@@ -25,21 +25,23 @@ class LIMENCORE_API ULimenCameraComponent : public UCameraComponent
 public:
 	ULimenCameraComponent();
 	virtual void BeginPlay() override;
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView) override;
 
 	void SetTiltEnabled(const bool bEnabled);
 	void NotifyYawInput(const float InputValue);
 	
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(EditCondition="bEnableTilt"))
 	ETiltFunction TiltFunction;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(ClampMin="0", EditCondition="bEnableTilt"))
 	float MaxCameraTilt;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen", meta=(ClampMin="0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(ClampMin="0", EditCondition="bEnableTilt"))
+	float TiltStrength;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(ClampMin="0", EditCondition="bEnableTilt"))
 	float CameraTiltRecoverSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(EditCondition="bEnableTilt"))
 	bool bInvertTilt;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt")
 	bool bEnableTilt;
 	
 private:
@@ -50,10 +52,10 @@ private:
 	bool bIsTiltEnabled;
 
 	bool bOriginalUsePawnControlRotation;
-	TFunction<void(float)> TiltFunctionPtr;
+	TFunction<float(float)> TiltFunctionPtr;
 
 	void SetTiltFunctionPtr();
 
-	void CalculateLinearTilt(const float Target = 0.f);
-	void CalculateEaseInTilt(const float Target = 0.f);
+	float CalculateLinearTilt(const float Target = 0.f);
+	float CalculateEaseInTilt(const float Target = 0.f);
 };
