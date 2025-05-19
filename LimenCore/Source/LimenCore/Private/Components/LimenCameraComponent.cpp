@@ -1,12 +1,12 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
-#include "Components/LimenCameraTiltComponent.h"
+#include "Components/LimenCameraComponent.h"
 
 #include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Engine/World.h"
 
-ULimenCameraTiltComponent::ULimenCameraTiltComponent()
+ULimenCameraComponent::ULimenCameraComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickInterval = 1.f / 30.f;
@@ -26,7 +26,7 @@ ULimenCameraTiltComponent::ULimenCameraTiltComponent()
 	bOriginalUsePawnControlRotation = false;
 }
 
-void ULimenCameraTiltComponent::BeginPlay()
+void ULimenCameraComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -41,7 +41,7 @@ void ULimenCameraTiltComponent::BeginPlay()
 	SetTiltFunctionPtr();
 }
 
-void ULimenCameraTiltComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+void ULimenCameraComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 											  FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -67,7 +67,7 @@ void ULimenCameraTiltComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 	SetRelativeRotation(NewRotation);
 }
 
-void ULimenCameraTiltComponent::SetTiltEnabled(const bool bEnabled)
+void ULimenCameraComponent::SetTiltEnabled(const bool bEnabled)
 {
 	bIsTiltEnabled = bEnabled;
 	if (bIsTiltEnabled)
@@ -80,12 +80,12 @@ void ULimenCameraTiltComponent::SetTiltEnabled(const bool bEnabled)
 	}
 }
 
-void ULimenCameraTiltComponent::NotifyYawInput(const float InputValue)
+void ULimenCameraComponent::NotifyYawInput(const float InputValue)
 {
 	TiltFunctionPtr(bInvertTilt ? -InputValue : InputValue);
 }
 
-void ULimenCameraTiltComponent::SetTiltFunctionPtr()
+void ULimenCameraComponent::SetTiltFunctionPtr()
 {
 	switch (TiltFunction)
 	{
@@ -98,12 +98,12 @@ void ULimenCameraTiltComponent::SetTiltFunctionPtr()
 	}
 }
 
-void ULimenCameraTiltComponent::CalculateLinearTilt(const float Target)
+void ULimenCameraComponent::CalculateLinearTilt(const float Target)
 {
 	CurrentTilt = FMath::FInterpConstantTo(CurrentTilt, Target, GetWorld()->GetDeltaSeconds(), CameraTiltRecoverSpeed);
 }
 
-void ULimenCameraTiltComponent::CalculateEaseInTilt(const float Target)
+void ULimenCameraComponent::CalculateEaseInTilt(const float Target)
 {
 	CurrentTilt = FMath::FInterpTo(CurrentTilt, Target, GetWorld()->GetDeltaSeconds(), CameraTiltRecoverSpeed);
 }

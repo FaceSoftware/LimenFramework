@@ -12,7 +12,7 @@ class ADecalActor;
 class ULimenWeaponFireMethod;
 class ULimenDamageType;
 class UCameraShakeBase;
-class ULimenCameraTiltComponent;
+class ULimenCameraComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UAIPerceptionSystem;

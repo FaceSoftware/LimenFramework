@@ -12,7 +12,7 @@
 #include "Items/LimenItemBase.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/LimenAbilityComponent.h"
-#include "Components/LimenCameraTiltComponent.h"
+#include "Components/LimenCameraComponent.h"
 #include "Components/LimenObjectiveComponent.h"
 #include "Components/LimenPhysicalItemHoldComponent.h"
 #include "Components/LimenInventoryComponent.h"
@@ -57,7 +57,7 @@ ALimenPlayerCharacter::ALimenPlayerCharacter(const FObjectInitializer& ObjectIni
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(SpringArmComponentName);
 	SpringArm->SetupAttachment(GetCapsuleComponent());
 
-	PlayerCamera = CreateDefaultSubobject<ULimenCameraTiltComponent>(PlayerCameraComponentName);
+	PlayerCamera = CreateDefaultSubobject<ULimenCameraComponent>(PlayerCameraComponentName);
 	PlayerCamera->SetupAttachment(SpringArm.Get());
 	
 	WeaponHold = CreateDefaultSubobject<ULimenPhysicalItemHoldComponent>(WeaponHoldComponentName);

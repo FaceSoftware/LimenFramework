@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Camera/CameraComponent.h"
-#include "LimenCameraTiltComponent.generated.h"
+#include "LimenCameraComponent.generated.h"
 
 
 UENUM(BlueprintType)
@@ -18,12 +18,12 @@ enum class ETiltFunction : uint8
  * 
  */
 UCLASS()
-class LIMENCORE_API ULimenCameraTiltComponent : public UCameraComponent
+class LIMENCORE_API ULimenCameraComponent : public UCameraComponent
 {
 	GENERATED_BODY()
 
 public:
-	ULimenCameraTiltComponent();
+	ULimenCameraComponent();
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 

@@ -24,7 +24,7 @@ class ULimenCreditsComponent;
 class USpringArmComponent;
 class ULimenObjectiveComponent;
 class ULimenInventoryComponent;
-class ULimenCameraTiltComponent;
+class ULimenCameraComponent;
 class ALimenWeapon;
 class ALimenTool;
 class ULimenItemAction;
@@ -158,7 +158,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
 	TObjectPtr<ULimenDynamicDepthOfFieldComponent> DynamicDepthOfFieldComponent;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
-	TObjectPtr<ULimenCameraTiltComponent> PlayerCamera;
+	TObjectPtr<ULimenCameraComponent> PlayerCamera;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
 	TObjectPtr<ULimenPhysicalItemHoldComponent> WeaponHold;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Components")
