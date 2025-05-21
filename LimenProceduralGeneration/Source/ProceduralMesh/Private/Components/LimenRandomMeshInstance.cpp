@@ -28,7 +28,7 @@ void ULimenRandomMeshInstance::StartSpawningInstances()
 	const uint32 RandomIndex = GlobalRandomStream->GetGlobalRandomStream()->RandRange(0, StaticMeshes.Num() - 1);
 	SetStaticMesh(StaticMeshes[RandomIndex].LoadSynchronous());
 
-	InstanceAreaBoundingBox = FBox(InstanceArea.Origin, InstanceArea.Length);
+	InstanceAreaBoundingBox = FBox(GenerationParams.Origin, GenerationParams.Length);
 	
 	ClearInstances();
 	SpawnInstances();
