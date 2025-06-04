@@ -271,8 +271,7 @@ float ULimenAttributeBase::SafeModifyValueBy(const float Value)
 		SetCurrentValueAs(Test);
 	}
 
-	FMath::Abs(Out);
-	return Out;
+	return FMath::Abs(Out);
 }
 
 void ULimenAttributeBase::ModifyValuePercentageBy(const float Percent)
