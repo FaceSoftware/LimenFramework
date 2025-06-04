@@ -5,6 +5,7 @@
 
 #include "TimerManager.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
 #include "Widgets/LimenBaseHudWidget.h"
 
@@ -53,19 +54,17 @@ void ALimenCinematicActor::BeginPlay()
 
 void ALimenCinematicActor::StartCinematic(APlayerController* InPlayerController)
 {
-	check(InPlayerController != nullptr);
 	
 	CinematicContextPlayerController = InPlayerController;
 	OriginalViewTarget = OriginalViewTarget == nullptr ? CinematicContextPlayerController->GetViewTarget()
 													   : OriginalViewTarget;
 
+	CinematicContextPlayerController->SetCinematicMode(true, true, true);
 	CinematicContextPlayerController->SetViewTarget(this, ViewTargetInTransitionParams);
-
-	DisableMainPostProcessSettings();
 	
 	bIsCinematicPlaying = true;
 	
-	if (FMath::IsNearlyEqual(ViewTargetInTransitionParams.BlendTime, 0.f))
+	if (ViewTargetInTransitionParams.BlendTime <= 0.f)
 	{
 		OnViewTargetSetToSelf_Internal();
 	}
@@ -98,10 +97,10 @@ void ALimenCinematicActor::StopCinematic()
 }
 
 void ALimenCinematicActor::CancelCinematic()
-{
-	EnableMainPostProcessSettings();
-	
+{	
 	OriginalViewTarget.Reset();
+
+	CinematicContextPlayerController->SetCinematicMode(false, true, true);
 	CinematicContextPlayerController.Reset();
 
 	bIsCinematicPlaying = false;
@@ -128,42 +127,35 @@ void ALimenCinematicActor::SetPostProcessSettings(const FPostProcessSettings& Ne
 }
 
 void ALimenCinematicActor::OnViewTargetSetToSelf()
-{ 
+{
+	if (APawn* Pawn = CinematicContextPlayerController->GetPawn())
+	{
+		Pawn->DisableInput(CinematicContextPlayerController.Get());
+	}
 }
 
 void ALimenCinematicActor::OnViewTargetRestored()
 {
+	if (APawn* Pawn = CinematicContextPlayerController->GetPawn())
+	{
+		Pawn->DisableInput(CinematicContextPlayerController.Get());
+	}
+	
 	OriginalViewTarget.Reset();
+	CinematicContextPlayerController->SetCinematicMode(false, true, true);
 	CinematicContextPlayerController.Reset();
-}
-
-void ALimenCinematicActor::SetOriginalViewTarget(AActor* NewViewTarget)
-{
-	OriginalViewTarget = NewViewTarget;
-}
-
-void ALimenCinematicActor::EnableMainPostProcessSettings()
-{
-}
-
-void ALimenCinematicActor::DisableMainPostProcessSettings()
-{
 }
 
 void ALimenCinematicActor::OnViewTargetSetToSelf_Internal()
 {
 	GetWorld()->GetTimerManager().ClearTimer(ViewTargetTransitionTimerHandle);
 	OnViewTargetSetToSelf();
-	
 	CinematicStart();
 }
 
 void ALimenCinematicActor::OnViewTargetRestored_Internal()
 {
 	GetWorld()->GetTimerManager().ClearTimer(ViewTargetTransitionTimerHandle);
-	EnableMainPostProcessSettings();
-	
 	bIsCinematicPlaying = false;
-	
 	OnViewTargetRestored();
 }

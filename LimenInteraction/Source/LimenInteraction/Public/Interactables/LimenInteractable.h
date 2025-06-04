@@ -10,7 +10,7 @@
 
 class ULimenInteractableComponent;
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FInteractableDelegate, AController* /* Controller */, APawn* /* Pawn */)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInteractableDelegate, AController*, Controller, APawn*, Pawn);
 
 UCLASS(BlueprintType, Blueprintable)
 class LIMENINTERACTION_API ALimenInteractable : public ALimenGameplayActor
@@ -18,7 +18,9 @@ class LIMENINTERACTION_API ALimenInteractable : public ALimenGameplayActor
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable, DisplayName="On Interact", Category="Interactable")
 	FInteractableDelegate OnInteract;
+	UPROPERTY(BlueprintAssignable, DisplayName="On Interaction Stopped", Category="Interactable")
 	FInteractableDelegate OnInteractionStopped;
 	
 	explicit ALimenInteractable(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());

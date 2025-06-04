@@ -17,7 +17,7 @@ class ULimenWidget;
 #define DECLARE_WIDGET_ACCESSORS(Type, WidgetVarName) \
 	inline void Show##WidgetVarName() { ShowWidget_Internal(WidgetVarName.Get()); } \
 	inline void Hide##WidgetVarName() { HideWidget_Internal(WidgetVarName.Get()); } \
-	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName->IsShowing(); } \
+	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName && WidgetVarName->IsShowing(); } \
 	inline Type Get##WidgetVarName() const { return WidgetVarName.Get(); } \
 	
 /**

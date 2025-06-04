@@ -77,6 +77,22 @@ void ALimenGameModeBase::InitSeamlessTravelPlayer(AController* NewController)
 	}
 }
 
+bool ALimenGameModeBase::SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate)
+{
+	if (!Super::SetPause(PC, CanUnpauseDelegate)) return false;
+
+	OnGamePauseStateChanged.Broadcast(true);
+	return true;
+}
+
+bool ALimenGameModeBase::ClearPause()
+{
+	if (!Super::ClearPause()) return false;
+
+	OnGamePauseStateChanged.Broadcast(false);
+	return true;
+}
+
 ALimenGameStateBase* ALimenGameModeBase::GetLimenGameState()
 {
 	LimenGameState = GetGameState<ALimenGameStateBase>();

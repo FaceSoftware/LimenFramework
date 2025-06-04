@@ -31,8 +31,10 @@ public:
 	
 	ALimenTool();
 	virtual void BeginPlay() override;
-	
+
+	UFUNCTION(BlueprintCallable)
 	bool ActivateTool();
+	UFUNCTION(BlueprintCallable)
 	void DeactivateTool();
 
 	UFUNCTION(BlueprintCallable)

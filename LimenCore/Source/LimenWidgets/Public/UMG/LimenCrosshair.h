@@ -19,6 +19,7 @@ struct FCrosshairParameters
 		CrosshairLength = 100.0f;
 		CrosshairGap = 10.0f;
 		CrosshairThickness = 8.0f;
+		bCenterDot = false;
 	}
 
 	UPROPERTY(EditAnywhere, Category="Parameters")
@@ -29,6 +30,8 @@ struct FCrosshairParameters
 	float CrosshairGap;
 	UPROPERTY(EditAnywhere, Category="Parameters")
 	float CrosshairThickness;
+	UPROPERTY(EditAnywhere, Category="Parameters")
+	bool bCenterDot;
 };
 
 /**
@@ -51,10 +54,12 @@ protected:
 
 private:
 	static const FSlateBrush CrosshairBrush;
+	static const FSlateBrush CenterDotBrush;
 	
 	TSharedPtr<SImage> TopLine;
 	TSharedPtr<SImage> RightLine;
 	TSharedPtr<SImage> BottomLine;
 	TSharedPtr<SImage> LeftLine;
+	TSharedPtr<SImage> CenterDot;
 
 };

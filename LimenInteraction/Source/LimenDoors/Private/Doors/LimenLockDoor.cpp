@@ -8,6 +8,8 @@
 #include "Components/LimenNotificationComponent.h"
 #include "CppClasses/LimenNotification.h"
 #include "GameFramework/HUD.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 #include "Keys/LimenKey.h"
 
 
@@ -102,11 +104,8 @@ void ALimenLockDoor::InteractOutsideHandle(AController* InController, APawn* InP
 
 ALimenKey* ALimenLockDoor::GetKeyFromPlayer(ULimenLock* LockContext, AController* InController, APawn* InPawn) const
 {
-	ULimenInventoryComponent* Inventory = InPawn->GetComponentByClass<ULimenInventoryComponent>();
-	if (Inventory == nullptr)
-	{
-		return nullptr;
-	}
+	const ULimenInventoryComponent* Inventory = InPawn->GetComponentByClass<ULimenInventoryComponent>();
+	if (!Inventory) return nullptr;
 	
 	for (ALimenKey* Key : Inventory->PeekItemInstances<ALimenKey>())
 	{

@@ -50,7 +50,8 @@ public:
 	const FMouseParameters& GetMouseParameters() const;
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, Category="Mouse")
+	FMouseParameters MouseParameters;
 
 private:
-	FMouseParameters MouseParameters;
 };

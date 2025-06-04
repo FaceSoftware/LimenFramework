@@ -55,11 +55,6 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void CinematicStart();
 
-	void SetOriginalViewTarget(AActor* NewViewTarget);
-
-	virtual void EnableMainPostProcessSettings();
-	virtual void DisableMainPostProcessSettings();
-
 private:
 	TWeakObjectPtr<AActor> OriginalViewTarget;
 	TWeakObjectPtr<APlayerController> CinematicContextPlayerController;
@@ -67,6 +62,7 @@ private:
 	FTimerHandle ViewTargetTransitionTimerHandle;
 	bool bIsCinematicPlaying;
 
+	UPROPERTY()
 	TArray<UCameraComponent*> CinematicCameras;
 	
 	void OnViewTargetSetToSelf_Internal();

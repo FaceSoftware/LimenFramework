@@ -11,18 +11,26 @@
 class ALimenGameplayManager;
 class ALimenGameStateBase;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGamePauseDelegate, bool, bIsPaused);
+
 UCLASS(Blueprintable)
 class LIMENGAMEFRAMEWORK_API ALimenGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FGamePauseDelegate OnGamePauseStateChanged;
+
 	explicit ALimenGameModeBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
 	virtual void InitSeamlessTravelPlayer(AController* NewController) override;
+	virtual bool SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate = FCanUnpause()) override;
+	virtual bool ClearPause() override;
+	
 
 	ALimenGameStateBase* GetLimenGameState();
 	template<typename T>
