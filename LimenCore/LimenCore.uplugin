@@ -156,6 +156,11 @@
 			"Name": "LimenUpgrades",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenMirrors",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"SupportURL": ""

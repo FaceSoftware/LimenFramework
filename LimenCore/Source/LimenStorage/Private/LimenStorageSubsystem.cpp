@@ -32,6 +32,8 @@ void ULimenStorageSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void ULimenStorageSubsystem::Deinitialize()
 {
 	Save_Internal();
+	CurrentSaveData.Reset();
+
 	Super::Deinitialize();
 }
 

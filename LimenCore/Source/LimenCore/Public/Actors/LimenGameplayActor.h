@@ -32,7 +32,7 @@ enum class ELimenGameplayActorState : uint8
  * Additionally, it supports systems like collision management, game event handling, and network-related functionality,
  * making it a suitable base class for a wide variety of gameplay-related actors.
  */
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Abstract, Blueprintable, BlueprintType)
 class LIMENCORE_API ALimenGameplayActor : public AActor
 {
 	GENERATED_BODY()
