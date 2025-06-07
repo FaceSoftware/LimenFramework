@@ -43,7 +43,37 @@ void ULimenDialogueSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData)
+void ULimenDialogueSubsystem::RegisterSpeaker(const FName SpeakerId, const TScriptInterface<ILimenDialogueSpeaker>& Speaker)
+{
+#if WITH_EDITOR
+
+	if (!Speaker.GetObject())
+	{
+		return;
+	}
+
+	const TScriptInterface<ILimenDialogueSpeaker>* Value = SpeakersMap.Find(SpeakerId);
+	if (!ensureAlwaysMsgf(!Value, TEXT("Duplicated speaker id!")))
+	{
+		return;
+	}
+
+#endif // WITH_EDITOR
+	
+	SpeakersMap.Add(SpeakerId, Speaker);
+}
+
+TScriptInterface<ILimenDialogueSpeaker> ULimenDialogueSubsystem::GetSpeaker(const FName SpeakerId) const
+{
+	if (SpeakersMap.Find(SpeakerId))
+	{
+		return SpeakersMap[SpeakerId];
+	}
+
+	return nullptr;
+}
+
+void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, FDialogueEndEvent OnFinished)
 {
 	if (InDialogueData == nullptr || !InDialogueData->RowStruct->IsChildOf(FLimenDialogueCue::StaticStruct()))
 	{
@@ -55,6 +85,8 @@ void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData)
 	{
 		return;
 	}
+
+	DialogueEndCallbacks.Add(TWeakObjectPtr(InDialogueData), OnFinished);
 
 	if (FMath::IsNearlyZero(DialogueDelay))
 	{
@@ -101,7 +133,12 @@ void ULimenDialogueSubsystem::DialogueFinished(UDialoguePlayerBase* DialoguePlay
 
 	if (DialoguePlayers.IsValidIndex(Index))
 	{
+		const UDataTable* Data = DialoguePlayers[Index]->GetDialogueData();
 		DialoguePlayers.RemoveAt(Index);
+
+		OnDialogueEnd.Broadcast(Data);
+		const FDialogueEndEvent& Callback = DialogueEndCallbacks.FindChecked(TWeakObjectPtr(Data));
+		Callback.ExecuteIfBound();
 	}
 }
 

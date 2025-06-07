@@ -33,7 +33,10 @@ public:
 		OnDialogueFinished.AddUObject(Object, InFunc);
 	}
 
+	const UDataTable* GetDialogueData() const;
+
 private:
+	TWeakObjectPtr<const UDataTable> DialogueData;
 	FDialogueEvent OnDialogueFinished;
 	TOptional<bool> bHasFinished;
 };

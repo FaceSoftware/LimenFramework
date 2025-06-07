@@ -21,10 +21,16 @@ void UDialoguePlayerBase::BeginDestroy()
 void UDialoguePlayerBase::PlayDialogue(const UDataTable* InDialogueData)
 {
 	bHasFinished = false;
+	DialogueData = InDialogueData;
 }
 
 void UDialoguePlayerBase::FinishPlayDialogue()
 {
 	bHasFinished = true;
 	OnDialogueFinished.Broadcast(this);
+}
+
+const UDataTable* UDialoguePlayerBase::GetDialogueData() const
+{
+	return DialogueData.Get();
 }

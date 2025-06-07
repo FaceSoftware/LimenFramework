@@ -62,6 +62,11 @@ void ULimenSubtitle::StartDisplayingSubtitles()
 	}
 }
 
+void ULimenSubtitle::ShowWidgetMethod()
+{
+	SetVisibility(GetDefaultVisibleState());
+}
+
 void ULimenSubtitle::ShowCurrentSubtitle()
 {
 	const FLimenDialogueCue* CurrentCue = SubtitleRows[SubtitleIndex];

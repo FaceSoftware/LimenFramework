@@ -31,10 +31,11 @@ public:
 	void StartDisplayingSubtitles();
 
 protected:
+	TStrongObjectPtr<const UDataTable> SubtitleData;
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void SubtitleCueSet(const FLimenDialogueCue& InSubtitleCue);
-	
-	TStrongObjectPtr<const UDataTable> SubtitleData;
+	virtual void ShowWidgetMethod() override;
 
 private:
 	FTimerHandle CurrentCueTimerHandle;

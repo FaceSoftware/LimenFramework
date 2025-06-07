@@ -8,12 +8,17 @@
 #include "LimenDialogueSubsystem.generated.h"
 
 
+class ILimenDialogueSpeaker;
 class UDialoguePlayerBase;
 class UDataTable;
 struct FDataTableRowHandle;
 class ULimenSubtitle;
 class ULimenSubtitleDisplay;
 struct FLimenDialogueCue;
+
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDialogueEventData, const UDataTable*, DialogueData);
+DECLARE_DYNAMIC_DELEGATE(FDialogueEndEvent);
 
 /**
  * 
@@ -24,13 +29,21 @@ class LIMENSUBTITLES_API ULimenDialogueSubsystem : public UWorldSubsystem
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FDialogueEventData OnDialogueEnd;
+
 	ULimenDialogueSubsystem();
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable)
-	virtual void PlayDialogue(const UDataTable* InDialogueData);
+	void RegisterSpeaker(const FName SpeakerId, const TScriptInterface<ILimenDialogueSpeaker>& Speaker);
+	UFUNCTION(BlueprintCallable)
+	TScriptInterface<ILimenDialogueSpeaker> GetSpeaker(const FName SpeakerId) const;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void PlayDialogue(const UDataTable* InDialogueData, FDialogueEndEvent OnFinished);
 
 protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
@@ -47,6 +60,9 @@ private:
 	
 	UPROPERTY()
 	TObjectPtr<ULimenSubtitleDisplay> SubtitleDisplayWidget;
+
+	TMap<FName, TScriptInterface<ILimenDialogueSpeaker>> SpeakersMap;
+	TMap<TWeakObjectPtr<const UDataTable>, FDialogueEndEvent> DialogueEndCallbacks;
 
 	void DialogueFinished(UDialoguePlayerBase* DialoguePlayer);
 
