@@ -8,7 +8,6 @@
 #include "LimenDialogueSubsystem.generated.h"
 
 
-class ILimenDialogueSpeaker;
 class UDialoguePlayerBase;
 class UDataTable;
 struct FDataTableRowHandle;
@@ -38,12 +37,21 @@ public:
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable)
-	void RegisterSpeaker(const FName SpeakerId, const TScriptInterface<ILimenDialogueSpeaker>& Speaker);
+	void RegisterSpeaker(const FName SpeakerId, UActorComponent* SpeakerComponent);
 	UFUNCTION(BlueprintCallable)
-	TScriptInterface<ILimenDialogueSpeaker> GetSpeaker(const FName SpeakerId) const;
+	UActorComponent* GetSpeakerComponent(const FName SpeakerId) const;
+	template<typename T>
+	T* GetSpeakerComponent(const FName& SpeakerId) const
+	{
+		return CastChecked<T>(GetSpeakerComponent(SpeakerId), ECastCheckedType::NullAllowed);
+	}
 
 	UFUNCTION(BlueprintCallable)
 	virtual void PlayDialogue(const UDataTable* InDialogueData, FDialogueEndEvent OnFinished);
+	UFUNCTION(BlueprintCallable)
+	void UnregisterSpeaker(const FName SpeakerId);
+	UFUNCTION(BlueprintCallable)
+	void UnregisterAllSpeakers();
 
 protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
@@ -61,7 +69,7 @@ private:
 	UPROPERTY()
 	TObjectPtr<ULimenSubtitleDisplay> SubtitleDisplayWidget;
 
-	TMap<FName, TScriptInterface<ILimenDialogueSpeaker>> SpeakersMap;
+	TMap<FName, TWeakObjectPtr<UActorComponent>> SpeakersMap;
 	TMap<TWeakObjectPtr<const UDataTable>, FDialogueEndEvent> DialogueEndCallbacks;
 
 	void DialogueFinished(UDialoguePlayerBase* DialoguePlayer);

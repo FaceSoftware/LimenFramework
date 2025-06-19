@@ -43,37 +43,30 @@ void ULimenDialogueSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void ULimenDialogueSubsystem::RegisterSpeaker(const FName SpeakerId, const TScriptInterface<ILimenDialogueSpeaker>& Speaker)
+void ULimenDialogueSubsystem::RegisterSpeaker(const FName SpeakerId, UActorComponent* SpeakerComponent)
 {
+	if (!SpeakerComponent) return;
+
 #if WITH_EDITOR
 
-	if (!Speaker.GetObject())
-	{
-		return;
-	}
-
-	const TScriptInterface<ILimenDialogueSpeaker>* Value = SpeakersMap.Find(SpeakerId);
-	if (!ensureAlwaysMsgf(!Value, TEXT("Duplicated speaker id!")))
-	{
-		return;
-	}
+	if (!ensureAlwaysMsgf(!SpeakersMap.Find(SpeakerId), TEXT("Duplicated speaker id!"))) return;
 
 #endif // WITH_EDITOR
 	
-	SpeakersMap.Add(SpeakerId, Speaker);
+	SpeakersMap.Add(SpeakerId, TWeakObjectPtr(SpeakerComponent));
 }
 
-TScriptInterface<ILimenDialogueSpeaker> ULimenDialogueSubsystem::GetSpeaker(const FName SpeakerId) const
+UActorComponent* ULimenDialogueSubsystem::GetSpeakerComponent(const FName SpeakerId) const
 {
 	if (SpeakersMap.Find(SpeakerId))
 	{
-		return SpeakersMap[SpeakerId];
+		return SpeakersMap[SpeakerId].Get();
 	}
 
 	return nullptr;
 }
 
-void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, FDialogueEndEvent OnFinished)
+void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished)
 {
 	if (InDialogueData == nullptr || !InDialogueData->RowStruct->IsChildOf(FLimenDialogueCue::StaticStruct()))
 	{
@@ -110,6 +103,16 @@ void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, FDi
 		FTimerHandle TempHandle;
 		GetWorldRef().GetTimerManager().SetTimer(TempHandle, Delegate, SubtitlesDelay, true);
 	}
+}
+
+void ULimenDialogueSubsystem::UnregisterSpeaker(const FName SpeakerId)
+{
+	SpeakersMap.Remove(SpeakerId);
+}
+
+void ULimenDialogueSubsystem::UnregisterAllSpeakers()
+{
+	SpeakersMap.Empty();
 }
 
 void ULimenDialogueSubsystem::OnWorldBeginPlay(UWorld& InWorld)

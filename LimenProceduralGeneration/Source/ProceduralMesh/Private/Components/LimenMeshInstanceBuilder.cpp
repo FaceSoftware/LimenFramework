@@ -13,7 +13,7 @@ ULimenMeshInstanceBuilder::ULimenMeshInstanceBuilder()
 
 void ULimenMeshInstanceBuilder::BeginPlay()
 {
-	StartSpawningInstances();
+	// StartSpawningInstances();
 	Super::BeginPlay();
 }
 

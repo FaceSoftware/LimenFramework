@@ -190,7 +190,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Limen|Tiles|Collision")
 	TArray<USceneComponent*> GetScenarios() const;
 	
-private:	
+private:
 	UPROPERTY()
 	TObjectPtr<UTileInfo> AssignedTileInfo;
 	
