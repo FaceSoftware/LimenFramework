@@ -14,14 +14,18 @@ struct LIMENCORE_API FLimenPolymorphicData
 public:
 	FLimenPolymorphicData();
 	~FLimenPolymorphicData();
+	FLimenPolymorphicData(FLimenPolymorphicData&& Other);
+	FLimenPolymorphicData(const FLimenPolymorphicData& Other);
 
 	template<class T>
 	FLimenPolymorphicData& operator=(const T& InData)
 	{
-		SetDataInternal(InData);
+		if (*this != &InData)
+		{
+			SetDataInternal(InData);
+		}
 		return *this;
 	}
-
 	FLimenPolymorphicData& operator=(const FLimenPolymorphicData& InData);
 
 	template<class T>
@@ -32,6 +36,12 @@ public:
 	
 	template<class T>
 	operator T() const
+	{
+		return As<T>();
+	}
+
+	template<class T>
+	T* As()
 	{
 		static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable");
 		check(ContainsDataType<T>());

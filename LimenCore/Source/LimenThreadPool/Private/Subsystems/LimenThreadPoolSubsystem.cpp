@@ -4,6 +4,7 @@
 #include "Subsystems/LimenThreadPoolSubsystem.h"
 
 #include "Async/Async.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Developer/LimenThreadPoolDeveloperSettings.h"
 #include "HAL/Event.h"
 #include "HAL/RunnableThread.h"
@@ -31,7 +32,7 @@ bool ULimenThreadPoolSubsystem::FPoolWorker::Init()
 
 uint32 ULimenThreadPoolSubsystem::FPoolWorker::Run()
 {
-	while (true)
+	while (!bShouldStop.load())
 	{
 		// Wait until there are jobs in the queue
 		while (QueuedJobs.IsEmpty() && !bShouldStop)
@@ -40,23 +41,18 @@ uint32 ULimenThreadPoolSubsystem::FPoolWorker::Run()
 			QueueCondition->Wait();
 		}
 
-		if (bShouldStop)
-		{
-			break;
-		}
-
 		TFunction<void()> CurrentJob = nullptr;
 		if (QueuedJobs.Dequeue(CurrentJob))
 		{
 			QueuedJobsCount.store(QueuedJobsCount.load() - 1);
 			check(CurrentJob != nullptr);
 			CurrentJob();
+
+			AsyncTask(ENamedThreads::GameThread, [this]
+			{
+				UE_LOG(LogLimen, Log, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run: Thread %s completed job. In queue: %d"), *ThreadName, QueuedJobsCount.load());
+			});	
 		}
-		
-		AsyncTask(ENamedThreads::GameThread, [this]
-		{
-			UE_LOG(LogLimen, Log, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run: Thread %s completed job. In queue: %d"), *ThreadName, QueuedJobsCount.load());
-		});
 	}
 
 	return 0;
@@ -70,11 +66,10 @@ void ULimenThreadPoolSubsystem::FPoolWorker::Stop()
 
 void ULimenThreadPoolSubsystem::FPoolWorker::QueueJob(const TFunction<void()>& Function)
 {
-	check(Function);
 	Function.CheckCallable();
 	QueuedJobs.Enqueue(Function);
+	++QueuedJobsCount;
 	QueueCondition->Trigger();
-	QueuedJobsCount.store(QueuedJobsCount.load() + 1);
 }
 
 int32 ULimenThreadPoolSubsystem::FPoolWorker::GetQueuedJobsCount() const
@@ -117,9 +112,9 @@ void ULimenThreadPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void ULimenThreadPoolSubsystem::Deinitialize()
 {
-	Super::Deinitialize();
-
 	DestroyThreads();
+	
+	Super::Deinitialize();
 }
 
 void ULimenThreadPoolSubsystem::AddJob(const TFunction<void()>& Function) const
@@ -159,7 +154,7 @@ void ULimenThreadPoolSubsystem::DestroyThreads()
 	}
 	ThreadPool.Empty();
 
-	LIMEN_LOG(LogLimen, Log, this, "Threads destroyed.", ThreadPool.Num());
+	LIMEN_LOG(LogLimen, Log, this, "Threads destroyed.");
 }
 
 TSharedRef<ULimenThreadPoolSubsystem::FPoolWorker, ESPMode::NotThreadSafe> ULimenThreadPoolSubsystem::GetAvailableThread() const

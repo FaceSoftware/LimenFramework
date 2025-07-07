@@ -10,6 +10,7 @@ ULimenThreadPoolDeveloperSettings::ULimenThreadPoolDeveloperSettings()
 	bAutoDetermineThreadCount = true;
 	NumThreadsToUse = 0;
 	MemoryPerThreadInBytes = 512;
+	bUseSubsystem = false;
 }
 
 int32 ULimenThreadPoolDeveloperSettings::GetThreadCount() const

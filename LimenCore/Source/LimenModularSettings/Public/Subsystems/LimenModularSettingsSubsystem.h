@@ -25,6 +25,9 @@ class LIMENMODULARSETTINGS_API ULimenModularSettingsSubsystem : public ULimenSto
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FSettingUpdated OnSettingUpdated; 
+
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
@@ -75,7 +78,7 @@ protected:
 	virtual void LoadDefaultSettingsList();
 
 	UFUNCTION()
-	virtual void OnSettingUpdated(const ULimenSetting* UpdatedSetting);
+	virtual void SettingUpdated(const ULimenSetting* UpdatedSetting);
 	
 	virtual void WorldInitializedActors(const FActorsInitializedParams& InitParams);
 	

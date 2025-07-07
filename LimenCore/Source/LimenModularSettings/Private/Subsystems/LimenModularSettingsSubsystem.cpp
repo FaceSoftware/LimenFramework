@@ -12,7 +12,7 @@ void ULimenModularSettingsSubsystem::Initialize(FSubsystemCollectionBase& Collec
 	for (auto* Setting : GetItems<ULimenSetting>())
 	{
 		check(Setting != nullptr);
-		Setting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::OnSettingUpdated);
+		Setting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::SettingUpdated);
 		Setting->SubsystemInitialized(this);
 	}
 	FWorldDelegates::OnWorldInitializedActors.AddUObject(this, &ThisClass::WorldInitializedActors);
@@ -103,9 +103,10 @@ void ULimenModularSettingsSubsystem::LoadDefaultSettingsList()
 {
 }
 
-void ULimenModularSettingsSubsystem::OnSettingUpdated(const ULimenSetting* UpdatedSetting)
+void ULimenModularSettingsSubsystem::SettingUpdated(const ULimenSetting* UpdatedSetting)
 {
 	Save();
+	OnSettingUpdated.Broadcast(UpdatedSetting);
 }
 
 void ULimenModularSettingsSubsystem::WorldInitializedActors(const FActorsInitializedParams& InitParams)

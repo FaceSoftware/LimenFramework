@@ -40,7 +40,7 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 		void DiscardWaitEvent() const;
 		
 	private:
-		bool bShouldStop;
+		std::atomic<bool> bShouldStop;
 		FSharedEventRef QueueCondition;
 		TSpscQueue<TFunction<void()>> QueuedJobs;
 		std::atomic_int32_t QueuedJobsCount;

@@ -11,6 +11,8 @@
 class ULimenModularSettingsSubsystem;
 class ULimenRecurrentAction;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingUpdated, const ULimenSetting*, UpdatedSetting);
+
 /**
  * Abstract base class for a setting.
  * A setting can be anything the user can change like Resolution, WindowMode, etc.
@@ -20,7 +22,6 @@ class LIMENMODULARSETTINGS_API ULimenSetting : public ULimenStorageItem
 {
 	GENERATED_BODY()
 	
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSettingUpdated, const ULimenSetting*, UpdatedSetting);
 
 public:
 	static const EConsoleVariableFlags ConsoleVariableUserSettingFlag; 

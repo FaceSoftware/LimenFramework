@@ -26,7 +26,7 @@ public:
 	explicit ULimenSubtitle(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void NativeConstruct() override;
 	virtual void BeginDestroy() override;
-	
+
 	void SetSubtitleData(const UDataTable* InSubtitleData);
 	void StartDisplayingSubtitles();
 

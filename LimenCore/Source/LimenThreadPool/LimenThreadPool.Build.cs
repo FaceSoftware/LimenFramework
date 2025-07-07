@@ -21,8 +21,9 @@ public class LimenThreadPool : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
+                "AutomationTest", 
                 
-                "AutomationTest",
+                "LimenCore",
             }
         );
 
