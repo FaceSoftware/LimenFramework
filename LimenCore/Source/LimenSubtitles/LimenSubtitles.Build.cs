@@ -24,8 +24,9 @@ public class LimenSubtitles : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
+                "UMG", 
                 
-                "UMG",
+                "LimenCore",
             }
         );
     }

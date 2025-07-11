@@ -62,8 +62,8 @@ bool ULimenLock::ChangeLockedState(AController* Controller, APawn* Pawn, ALimenK
 	}
 	
 	bIsLocked = bLock;
-	bIsLocked ? OnDoorLocked.Broadcast(Controller, Pawn, Test)
-			  : OnDoorUnlocked.Broadcast(Controller, Pawn, Test);
+	bIsLocked ? OnLocked.Broadcast(Controller, Pawn, Test)
+			  : OnUnlocked.Broadcast(Controller, Pawn, Test);
 
 	return true;
 }

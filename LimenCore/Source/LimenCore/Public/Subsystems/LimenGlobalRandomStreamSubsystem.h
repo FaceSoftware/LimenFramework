@@ -41,6 +41,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int RandomIntRange(const int Max, const int Min);
+	template<int32 Max, int32 Min>
+	int RandomIntRange()
+	{
+		static_assert(Max >= Min, "Max must be greater than Min");
+		return RandomIntRange(Max, Min);
+	}
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float RandomFloatRange(const float Max, const float Min);
 	

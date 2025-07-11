@@ -41,6 +41,16 @@ void ULimenInteractableAreaComponent::Deactivate()
 	SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 }
 
+void ULimenInteractableAreaComponent::NotifyHover(AController* Controller, APawn* Pawn)
+{
+	BP_OnHoverInteract.Broadcast(Controller, Pawn);
+}
+
+void ULimenInteractableAreaComponent::NotifyUnHover(AController* Controller, APawn* Pawn)
+{
+	BP_OnUnHoverInteract.Broadcast(Controller, Pawn);
+}
+
 FInteractableComponentDelegate* ULimenInteractableAreaComponent::GetInteractionDelegate()
 {
 	return &OnInteract;

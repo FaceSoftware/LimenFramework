@@ -7,6 +7,7 @@
 #include "LimenLock.generated.h"
 
 
+class AController;
 class ALimenKey;
 
 UCLASS(BlueprintType, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -18,9 +19,9 @@ public:
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FLimenLockEvent, AController*, Controller, APawn*, Pawn, ALimenKey*, key);
 
 	UPROPERTY(BlueprintAssignable)
-	FLimenLockEvent OnDoorUnlocked;
+	FLimenLockEvent OnUnlocked;
 	UPROPERTY(BlueprintAssignable)
-	FLimenLockEvent OnDoorLocked;
+	FLimenLockEvent OnLocked;
 	
 	explicit ULimenLock(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;

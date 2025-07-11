@@ -4,9 +4,10 @@
 #include "Subsystems/LimenDialogueSubsystem.h"
 
 #include "TimerManager.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Developer/LimenSubtitlesDeveloperSettings.h"
 #include "DialoguePlayer/DialoguePlayerBase.h"
-#include "LimenCore/Public/LogMacros/LimenLogMacros.h"
+#include "LogMacros/LimenLogMacros.h"
 #include "UMG/LimenSubtitle.h"
 #include "UMG/LimenSubtitleDisplay.h"
 
@@ -43,17 +44,18 @@ void ULimenDialogueSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void ULimenDialogueSubsystem::RegisterSpeaker(const FName SpeakerId, UActorComponent* SpeakerComponent)
+bool ULimenDialogueSubsystem::RegisterSpeaker(const FName SpeakerId, UActorComponent* SpeakerComponent)
 {
-	if (!SpeakerComponent) return;
+	if (!SpeakerComponent) return false;
 
-#if WITH_EDITOR
-
-	if (!ensureAlwaysMsgf(!SpeakersMap.Find(SpeakerId), TEXT("Duplicated speaker id!"))) return;
-
-#endif // WITH_EDITOR
+	const bool bIsUnique = !SpeakersMap.Find(SpeakerId);
+	check(bIsUnique)
+	if (!bIsUnique) return false;
 	
 	SpeakersMap.Add(SpeakerId, TWeakObjectPtr(SpeakerComponent));
+	LimenLog(this, FString::Printf(TEXT("Registered new speaker with id: %s"), *SpeakerId.ToString()), ELogType::Log, false);
+
+	return true;
 }
 
 UActorComponent* ULimenDialogueSubsystem::GetSpeakerComponent(const FName SpeakerId) const

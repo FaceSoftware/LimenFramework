@@ -37,7 +37,7 @@ public:
 	virtual void Deinitialize() override;
 
 	UFUNCTION(BlueprintCallable)
-	void RegisterSpeaker(const FName SpeakerId, UActorComponent* SpeakerComponent);
+	bool RegisterSpeaker(const FName SpeakerId, UActorComponent* SpeakerComponent);
 	UFUNCTION(BlueprintCallable)
 	UActorComponent* GetSpeakerComponent(const FName SpeakerId) const;
 	template<typename T>
@@ -47,7 +47,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable)
-	virtual void PlayDialogue(const UDataTable* InDialogueData, FDialogueEndEvent OnFinished);
+	virtual void PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished);
 	UFUNCTION(BlueprintCallable)
 	void UnregisterSpeaker(const FName SpeakerId);
 	UFUNCTION(BlueprintCallable)
