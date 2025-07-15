@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Templates/SubclassOf.h"
+#include "Utils/TAtomicArray.h"
 #include "LimenDialogueSubsystem.generated.h"
 
 
@@ -46,8 +47,9 @@ public:
 		return CastChecked<T>(GetSpeakerComponent(SpeakerId), ECastCheckedType::NullAllowed);
 	}
 
-	UFUNCTION(BlueprintCallable)
-	virtual void PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished);
+	UFUNCTION(BlueprintCallable, DisplayName="Play Dialogue")
+	virtual void BP_PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished);
+	virtual void PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished = TFunction<void()>());
 	UFUNCTION(BlueprintCallable)
 	void UnregisterSpeaker(const FName SpeakerId);
 	UFUNCTION(BlueprintCallable)
@@ -57,6 +59,38 @@ protected:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 private:
+	struct FDialogueCallbacks
+	{
+		FDialogueCallbacks() = default;
+		~FDialogueCallbacks() = default;
+
+		explicit FDialogueCallbacks(const UDataTable* InDialogueData)
+		{
+			DialogueData = InDialogueData;
+		}
+
+		void FireCallbacks()
+		{
+			for (TFunction<void()>& Callback : Callbacks)
+			{
+				Callback();
+			}
+		}
+
+		bool operator==(const UDataTable* Test) const
+		{
+			return Test == DialogueData;
+		}
+		
+		bool operator!=(const UDataTable* Test) const
+		{
+			return Test != DialogueData;
+		}
+
+		mutable const UDataTable* DialogueData;
+		TArray<TFunction<void()>> Callbacks;
+	};
+	
 	TSoftClassPtr<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass;
 	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass;
 
@@ -70,7 +104,7 @@ private:
 	TObjectPtr<ULimenSubtitleDisplay> SubtitleDisplayWidget;
 
 	TMap<FName, TWeakObjectPtr<UActorComponent>> SpeakersMap;
-	TMap<TWeakObjectPtr<const UDataTable>, FDialogueEndEvent> DialogueEndCallbacks;
+	TAtomicArray<FDialogueCallbacks> DialogueEndCallbacks;
 
 	void DialogueFinished(UDialoguePlayerBase* DialoguePlayer);
 

@@ -7,7 +7,9 @@
 #include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Developer/LimenSubtitlesDeveloperSettings.h"
 #include "DialoguePlayer/DialoguePlayerBase.h"
+#include "Engine/GameInstance.h"
 #include "LogMacros/LimenLogMacros.h"
+#include "Subsystems/LimenThreadPoolSubsystem.h"
 #include "UMG/LimenSubtitle.h"
 #include "UMG/LimenSubtitleDisplay.h"
 
@@ -68,7 +70,12 @@ UActorComponent* ULimenDialogueSubsystem::GetSpeakerComponent(const FName Speake
 	return nullptr;
 }
 
-void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished)
+void ULimenDialogueSubsystem::BP_PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished)
+{
+	PlayDialogue(InDialogueData, [OnFinished] { OnFinished.ExecuteIfBound(); });
+}
+
+void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished)
 {
 	if (InDialogueData == nullptr || !InDialogueData->RowStruct->IsChildOf(FLimenDialogueCue::StaticStruct()))
 	{
@@ -81,7 +88,9 @@ void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, con
 		return;
 	}
 
-	DialogueEndCallbacks.Add(TWeakObjectPtr(InDialogueData), OnFinished);
+	FDialogueCallbacks CallbackData(InDialogueData);
+	CallbackData.Callbacks.Push(OnFinished);
+	DialogueEndCallbacks.Insert(CallbackData);
 
 	if (FMath::IsNearlyZero(DialogueDelay))
 	{
@@ -142,8 +151,34 @@ void ULimenDialogueSubsystem::DialogueFinished(UDialoguePlayerBase* DialoguePlay
 		DialoguePlayers.RemoveAt(Index);
 
 		OnDialogueEnd.Broadcast(Data);
-		const FDialogueEndEvent& Callback = DialogueEndCallbacks.FindChecked(TWeakObjectPtr(Data));
-		Callback.ExecuteIfBound();
+
+		int32 CallbackDataIndex;
+		{
+			const TArray<FDialogueCallbacks> CallbacksCopy = DialogueEndCallbacks.Copy();
+			CallbackDataIndex = CallbacksCopy.IndexOfByKey(Data);
+			if (CallbackDataIndex == INDEX_NONE) return;
+		}
+
+		FDialogueCallbacks CallbackData = DialogueEndCallbacks.PopAt(CallbackDataIndex);
+		CallbackData.FireCallbacks();
+		
+		TWeakObjectPtr WeakThis(this);
+		const TFunction<void()> RemoveCallbackData = [WeakThis]
+		{
+			if (WeakThis.IsValid())
+			{
+				WeakThis->DialogueEndCallbacks.RemoveInvalid();
+			}
+		};
+
+		if (auto* ThreadPool = GetWorld()->GetGameInstance()->GetSubsystem<ULimenThreadPoolSubsystem>())
+		{
+			ThreadPool->AddJob(RemoveCallbackData);
+		}
+		else
+		{
+			RemoveCallbackData();
+		}
 	}
 }
 

@@ -60,7 +60,7 @@ void ULimenDialogueSpeakerComponent::PlayDialogue(const UDataTable* InDialogueDa
 	auto* DialogueSubsystem = GetWorld()->GetSubsystem<ULimenDialogueSubsystem>();
 	if (!DialogueSubsystem) return;
 
-	DialogueSubsystem->PlayDialogue(InDialogueData, OnDialogueEnd);
+	DialogueSubsystem->BP_PlayDialogue(InDialogueData, OnDialogueEnd);
 }
 
 void ULimenDialogueSpeakerComponent::RegisterSpeaker()

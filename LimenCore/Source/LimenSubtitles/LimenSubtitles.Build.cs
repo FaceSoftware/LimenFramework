@@ -13,6 +13,7 @@ public class LimenSubtitles : ModuleRules
                 "Engine",
                 "DeveloperSettings",
                 
+                "LimenCore",
                 "LimenWidgets",
             }
         );
@@ -26,7 +27,7 @@ public class LimenSubtitles : ModuleRules
                 "SlateCore",
                 "UMG", 
                 
-                "LimenCore",
+                "LimenThreadPool",
             }
         );
     }
