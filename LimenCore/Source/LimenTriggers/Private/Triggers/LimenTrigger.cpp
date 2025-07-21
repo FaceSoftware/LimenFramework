@@ -3,7 +3,9 @@
 
 #include "Triggers/LimenTrigger.h"
 
+#include "TimerManager.h"
 #include "Components/BoxComponent.h"
+#include "Engine/World.h"
 #include "LogMacros/LimenLogMacros.h"
 
 
@@ -38,21 +40,21 @@ void ALimenTrigger::ComponentBeginOverlap(UPrimitiveComponent* OverlappedCompone
                                           UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
                                           const FHitResult& SweepResult)
 {
-	LIMEN_LOG(LogLimenCore, Log, this, "Triggered: OnBeginOverlap")
+	LIMEN_LOG(LogLimenCore, Log, this, TEXT("Triggered: OnBeginOverlap"))
 	SetDestroyTimer();
 }
 
 void ALimenTrigger::ComponentEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	LIMEN_LOG(LogLimenCore, Log, this, "Triggered: OnEndOverlap")
+	LIMEN_LOG(LogLimenCore, Log, this, TEXT("Triggered: OnEndOverlap"))
 	SetDestroyTimer();
 }
 
 void ALimenTrigger::ComponentHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                                  FVector NormalImpulse, const FHitResult& Hit)
 {
-	LIMEN_LOG(LogLimenCore, Log, this, "Triggered: OnHit")
+	LIMEN_LOG(LogLimenCore, Log, this, TEXT("Triggered: OnHit"))
 	SetDestroyTimer();
 }
 

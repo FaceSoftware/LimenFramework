@@ -49,7 +49,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, DisplayName="Play Dialogue")
 	virtual void BP_PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished);
-	virtual void PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished = TFunction<void()>());
+	virtual void PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished);
+	virtual void PlayDialogue(const UDataTable* InDialogueData);
 	UFUNCTION(BlueprintCallable)
 	void UnregisterSpeaker(const FName SpeakerId);
 	UFUNCTION(BlueprintCallable)
@@ -73,7 +74,7 @@ private:
 		{
 			for (TFunction<void()>& Callback : Callbacks)
 			{
-				Callback();
+				if (Callback.IsSet()) Callback();
 			}
 		}
 

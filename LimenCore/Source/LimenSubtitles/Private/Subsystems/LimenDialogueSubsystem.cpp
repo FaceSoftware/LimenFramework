@@ -77,9 +77,21 @@ void ULimenDialogueSubsystem::BP_PlayDialogue(const UDataTable* InDialogueData, 
 
 void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished)
 {
+	if (OnFinished.IsSet())
+	{
+		FDialogueCallbacks CallbackData(InDialogueData);
+		CallbackData.Callbacks.Push(OnFinished);
+		DialogueEndCallbacks.Insert(CallbackData);
+	}
+
+	PlayDialogue(InDialogueData);
+}
+
+void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData)
+{
 	if (InDialogueData == nullptr || !InDialogueData->RowStruct->IsChildOf(FLimenDialogueCue::StaticStruct()))
 	{
-		LIMEN_LOG(LogLimen, Error, this, "Invalid subtitle struct.");
+		LIMEN_LOG(LogLimen, Error, this, TEXT("Invalid subtitle struct."));
 		return;
 	}
 	
@@ -88,9 +100,6 @@ void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, con
 		return;
 	}
 
-	FDialogueCallbacks CallbackData(InDialogueData);
-	CallbackData.Callbacks.Push(OnFinished);
-	DialogueEndCallbacks.Insert(CallbackData);
 
 	if (FMath::IsNearlyZero(DialogueDelay))
 	{
@@ -207,6 +216,6 @@ void ULimenDialogueSubsystem::DisplayDialogue(const UDataTable* InDialogueData)
 		DialoguePlayers.Push(DialoguePlayer);
 	}
 
-	LIMEN_LOG(LogLimen, Log, this, "Instanced new dialogue player. Currently there are %d active instances.", DialoguePlayers.Num())
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Instanced new dialogue player. Currently there are %d active instances."), DialoguePlayers.Num())
 }
 

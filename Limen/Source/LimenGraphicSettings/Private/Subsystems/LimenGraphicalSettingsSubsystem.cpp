@@ -41,7 +41,7 @@ void ULimenGraphicalSettingsSubsystem::LoadDefaultSettingsList()
 			continue;
 		}
 
-		LIMEN_LOG(LogLimen, Log, this, "Loading setting: %s", *SettingClass.ToSoftObjectPath().ToString());
+		LIMEN_LOG(LogLimen, Log, this, TEXT("Loading setting: %s"), *SettingClass.ToSoftObjectPath().ToString());
 		
 		ULimenSetting* NewSetting = NewObject<ULimenSetting>(this, SettingClass.LoadSynchronous());
 		check(NewSetting != nullptr);

@@ -15,10 +15,10 @@ inline DEFINE_LOG_CATEGORY(LogLimen);
 	UE_LOG(CategoryName, Verbosity, TEXT("Instance %s(%s): %s"), \
 	*CallingObject->GetName(), \
 	*CallingObject->GetClass()->GetName(), \
-	*FString::Printf(TEXT(FormatString), ##__VA_ARGS__ ) ) \
+	*FString::Printf(FormatString, ##__VA_ARGS__ ) ) \
 
 
 #define STATIC_LIMEN_LOG(CategoryName, Verbosity, CallingFunctionString, FormatString , ...) \
 	UE_LOG(CategoryName, Verbosity, TEXT("Static Log (%s): %s"), \
 	*CallingFunctionString, \
-	*FString::Printf(TEXT(FormatString), ##__VA_ARGS__ ) ) \
+	*FString::Printf(FormatString, ##__VA_ARGS__ ) ) \

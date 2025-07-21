@@ -84,14 +84,14 @@ bool ALimenCharacterBase::QueueNotification(const FNotificationParams& InParams)
 {
 	if (Controller->IsA<AAIController>())
 	{
-		LIMEN_LOG(LogLimen, Error, this, "Cannot queue notifications to AI controlled characters")
+		LIMEN_LOG(LogLimen, Error, this, TEXT("Cannot queue notifications to AI controlled characters"))
 		return false;
 	}
 
 	ULimenNotificationComponent* NotificationComponent = PlayerController->GetHUD()->GetComponentByClass<ULimenNotificationComponent>();
 	if (NotificationComponent == nullptr)
 	{
-		LIMEN_LOG(LogLimen, Error, this, "Could not find a notification component in the player's HUD class")
+		LIMEN_LOG(LogLimen, Error, this, TEXT("Could not find a notification component in the player's HUD class"))
 		return false;
 	}
 

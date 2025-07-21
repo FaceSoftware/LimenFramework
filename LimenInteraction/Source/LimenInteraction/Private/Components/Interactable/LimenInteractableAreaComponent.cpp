@@ -43,12 +43,12 @@ void ULimenInteractableAreaComponent::Deactivate()
 
 void ULimenInteractableAreaComponent::NotifyHover(AController* Controller, APawn* Pawn)
 {
-	BP_OnHoverInteract.Broadcast(Controller, Pawn);
+	BP_OnHoverStart.Broadcast(Controller, Pawn);
 }
 
 void ULimenInteractableAreaComponent::NotifyUnHover(AController* Controller, APawn* Pawn)
 {
-	BP_OnUnHoverInteract.Broadcast(Controller, Pawn);
+	BP_OnHoverEnd.Broadcast(Controller, Pawn);
 }
 
 FInteractableComponentDelegate* ULimenInteractableAreaComponent::GetInteractionDelegate()

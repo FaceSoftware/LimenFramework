@@ -257,7 +257,7 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon, const uint64 S
 	if (bDebugMode)
 	{
 		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 3.f);
-		LIMEN_LOG(LogLimen, Log, this, "Hit detected: Hit %d objects, %d of them could take damage", OutHits.Num(), DamageCount);
+		LIMEN_LOG(LogLimen, Log, this, TEXT("Hit detected: Hit %d objects, %d of them could take damage"), OutHits.Num(), DamageCount);
 	}
 }
 

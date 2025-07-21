@@ -39,6 +39,10 @@ public:
 		StrongPtr = TStrongObjectPtr(SoftPtr.LoadSynchronous());
 		return Cast<T>(StrongPtr.Get());
 	}
+	void LoadSynchronous()
+	{
+		StrongPtr = TStrongObjectPtr(SoftPtr.LoadSynchronous());
+	}
 	void ReleaseHardRef()
 	{
 		StrongPtr.Reset();

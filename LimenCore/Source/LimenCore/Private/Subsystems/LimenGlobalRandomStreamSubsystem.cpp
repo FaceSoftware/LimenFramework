@@ -48,45 +48,47 @@ float ULimenGlobalRandomStreamSubsystem::RandomFloat()
 	return GlobalRandomStream->FRand();
 }
 
-int ULimenGlobalRandomStreamSubsystem::RandomIntRange(const int32 Max, const int32 Min)
+int32 ULimenGlobalRandomStreamSubsystem::RandomIntRange(const int32 RangeStart, const int32 RangeEnd)
 {
-	check(Max >= Min);
 	FScopeLock Lock(&RandomStreamSection);
-	return GlobalRandomStream->RandRange(Min, Max);
+
+	const TRange Range(RangeStart, RangeEnd); 
+	return GlobalRandomStream->RandRange(Range.Min, Range.Max);
 }
 
-float ULimenGlobalRandomStreamSubsystem::RandomFloatRange(const float Max, const float Min)
+float ULimenGlobalRandomStreamSubsystem::RandomFloatRange(const float RangeStart, const float RangeEnd)
 {
-	check(Max >= Min);
 	FScopeLock Lock(&RandomStreamSection);
-	return GlobalRandomStream->FRandRange(Min, Max);
+
+	const TRange Range(RangeStart, RangeEnd); 
+	return GlobalRandomStream->FRandRange(Range.Min, Range.Max);
 }
 
-TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateRandomUniqueNumbers(const int32 Max, const int32 Min, const int32 Count)
+TArray<int32> ULimenGlobalRandomStreamSubsystem::GenerateRandomUniqueNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count)
 {
-	check(Max >= Min);
-	return GenerateValidRandomUniqueNumbers(Max, Min, Count);
+	const TRange Range(RangeStart, RangeEnd); 
+	return GenerateValidRandomUniqueNumbers(Range.Min, Range.Max, Count);
 }
 
-TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateRandomNumbers(const int32 Max, const int32 Min, const int32 Count)
+TArray<int32> ULimenGlobalRandomStreamSubsystem::GenerateRandomNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count)
 {
-	check(Max >= Min);
-	return GenerateValidRandomNumbers(Max, Min, Count);
+	const TRange Range(RangeStart, RangeEnd);
+	return GenerateValidRandomNumbers(Range.Min, Range.Max, Count);
 }
 
-TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomUniqueNumbers(const int32 Max, const int32 Min, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid)
+TArray<int32> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomUniqueNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid)
 {
-	check(Max >= Min);
-	checkf(Count <= FMath::Abs(Max - Min) + 1, TEXT("Requested number count too big for the given range"));
+	const TRange Range(RangeStart, RangeEnd);
+	checkf(Count <= FMath::Abs(Range.Max - Range.Min) + 1, TEXT("Requested number count too big for the given range"));
 
 	TArray<int> OutIndexes;
 	OutIndexes.Reserve(Count);
 	
-	if (Max == Min)
+	if (Range.Max == Range.Min)
 	{
-		if (IsNumberValid(Max))
+		if (IsNumberValid(Range.Max))
 		{
-			OutIndexes.Push(Max);
+			OutIndexes.Push(Range.Max);
 		}
 		
 		return OutIndexes;
@@ -95,7 +97,7 @@ TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomUniqueNumbers(
 	for (int i = 0; i < Count; i++)
 	{
 		bool bIsDuplicateIndex = false;
-		const uint64 TempIndex = GlobalRandomStream->RandRange(Min, Max);
+		const uint64 TempIndex = GlobalRandomStream->RandRange(Range.Min, Range.Max);
 
 		for (const auto& Index : OutIndexes)
 		{
@@ -118,34 +120,16 @@ TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomUniqueNumbers(
 	return OutIndexes;
 }
 
-TArray<int> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomNumbers(const int32 Max, const int32 Min, const int32 Count, const TFunction<bool(const int32)>& IsIndexValid)
+TArray<int32> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid)
 {
-	check(Max >= Min);
-
-	TArray<int> OutIndexes;
-	OutIndexes.Reserve(Count);
-	
-	if (Max == Min)
-	{
-		if (IsIndexValid(Max))
-		{
-			OutIndexes.Push(Max);
-		}
-		
-		return OutIndexes;
-	}
+	TArray<int> OutNumbers;
+	OutNumbers.Reserve(Count);
 	
 	for (int i = 0; i < Count; i++)
 	{
-		const uint64 TempIndex = GlobalRandomStream->RandRange(Min, Max);		
-		if (!IsIndexValid(TempIndex))
-		{
-			i--;
-			continue;
-		}
-
-		OutIndexes.Push(TempIndex);
+		const TArray<int32> Number = GenerateValidRandomUniqueNumbers(RangeStart, RangeEnd, Count, IsNumberValid);
+		if (!Number.IsEmpty()) OutNumbers.Push(Number[i]);
 	}
 
-	return OutIndexes;
+	return OutNumbers;
 }

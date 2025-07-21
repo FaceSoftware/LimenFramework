@@ -73,7 +73,7 @@ void ULimenSubtitle::ShowCurrentSubtitle()
 	if (CurrentCue == nullptr)
 	{
 		const FName RowName = SubtitleData->GetRowNames()[SubtitleIndex];
-		LIMEN_LOG(LogLimen, Error, this, "Unable to get subtitle data table row with name \"%p\"", &RowName);
+		LIMEN_LOG(LogLimen, Error, this, TEXT("Unable to get subtitle data table row with name \"%p\""), &RowName);
 	}
 	else
 	{

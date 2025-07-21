@@ -38,12 +38,12 @@ void ULimenNotificationComponent::QueueNotification(const TSharedRef<const FLime
 	
 	if (bIgnoreDuplicate && IsNotificationDuplicate(InNotification))
 	{
-		LIMEN_LOG(LogLimenCore, Warning, this, "Ignoring duplicated notification. In queue: %d", PendingNotifications.Num())
+		LIMEN_LOG(LogLimenCore, Warning, this, TEXT("Ignoring duplicated notification. In queue: %d"), PendingNotifications.Num())
 		return;
 	}
 
 	PendingNotifications.Push(InNotification);
-	LIMEN_LOG(LogLimenCore, Log, this, "Queued new notification. Total queued (including this one): %d", PendingNotifications.Num())
+	LIMEN_LOG(LogLimenCore, Log, this, TEXT("Queued new notification. Total queued (including this one): %d"), PendingNotifications.Num())
 
 	if (ActiveNotifications.Num() < MaxConsecutiveNotifications)
 	{
@@ -60,7 +60,7 @@ void ULimenNotificationComponent::TryAssignPlayerController()
 	if (!BoundPlayerController)
 	{
 		LIMEN_LOG(LogLimenCore, Error, this,
-		  "Attempted to get player controller but could not find one. Notifications won't be displayed.");
+		  TEXT("Attempted to get player controller but could not find one. Notifications won't be displayed."))
 	}
 }
 

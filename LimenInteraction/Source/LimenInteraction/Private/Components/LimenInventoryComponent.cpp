@@ -136,13 +136,10 @@ bool ULimenInventoryComponent::CanAddItem(ALimenItemBase* NewItem) const
 	return true;
 }
 
-void ULimenInventoryComponent::RemoveItemInstance(ALimenItemBase* Instance)
+bool ULimenInventoryComponent::RemoveItemInstance(ALimenItemBase* Instance)
 {
 	FItemRegistry* Registry = FindItemRegistry(Instance->GetClass());
-	if (Registry == nullptr)
-	{
-		return;
-	}
+	if (Registry == nullptr) return false;
 
 	bool bFound = false;
 	for (int i = 0; i < Registry->ItemInstances.Num(); ++i)
@@ -156,10 +153,7 @@ void ULimenInventoryComponent::RemoveItemInstance(ALimenItemBase* Instance)
 		}
 	}
 
-	if (bFound == false)
-	{
-		return;
-	}
+	if (!bFound) return false;
 
 	if (Registry->ItemInstances.IsEmpty())
 	{
@@ -176,9 +170,10 @@ void ULimenInventoryComponent::RemoveItemInstance(ALimenItemBase* Instance)
 	}
 	
 	OnInventoryUpdated.Broadcast(this);
+	return true;
 }
 
-TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALimenItemBase>& Class, const int32 Count)
+TArray<ALimenItemBase*> ULimenInventoryComponent::GetItems(TSubclassOf<ALimenItemBase> Class, const int32 Count)
 {
 	check(Class != nullptr && Count > 0);
 
@@ -215,9 +210,9 @@ TArray<ALimenItemBase*> ULimenInventoryComponent::GetItem(const TSubclassOf<ALim
 	return OutItems;
 }
 
-ALimenItemBase* ULimenInventoryComponent::GetItem(const TSubclassOf<ALimenItemBase>& Class)
+ALimenItemBase* ULimenInventoryComponent::GetItem(TSubclassOf<ALimenItemBase> Class)
 {
-	TArray<ALimenItemBase*> Instances = GetItem(Class, 1);
+	TArray<ALimenItemBase*> Instances = GetItems(Class, 1);
 	if (!Instances.IsValidIndex(0))
 	{
 		return nullptr;

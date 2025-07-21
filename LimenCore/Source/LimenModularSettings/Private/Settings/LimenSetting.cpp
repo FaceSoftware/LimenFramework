@@ -28,7 +28,7 @@ void ULimenSetting::ApplySetting(const bool bUserRequest)
 	ApplyCurrentSetting(bUserRequest);
 	OnSettingApplied.Broadcast(this);
 
-	LIMEN_LOG(LogLimen, Log, this, "Applying setting %s", *GetDevelopmentName().ToString());
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Applying setting %s"), *GetDevelopmentName().ToString());
 }
 
 void ULimenSetting::SetDefaultValue()
@@ -53,7 +53,7 @@ void ULimenSetting::InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSub
 	bHasInitialized = true;
 	bShouldLoadData = true;
 
-	LIMEN_LOG(LogLimen, Log, this, "Initialized setting %s", *GetDevelopmentName().ToString());
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Initialized setting %s"), *GetDevelopmentName().ToString());
 }
 
 void ULimenSetting::SubsystemInitialized(ULimenModularSettingsSubsystem* ModularSettingsSubsystem)

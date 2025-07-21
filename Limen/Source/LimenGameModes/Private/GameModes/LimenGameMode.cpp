@@ -74,7 +74,7 @@ bool ALimenGameMode::ClearPause()
 void ALimenGameMode::HandlePauseRequest(ALimenPlayerControllerBase* Player, const EPauseReason PauseReason)
 {
 	check(Player)
-	LIMEN_LOG(LogLimen, Log, this, "Pause request recieved")
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Pause request recieved"))
 
 	CurrentPauseReason = PauseReason;
 	switch (CurrentPauseReason)

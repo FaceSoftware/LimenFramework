@@ -76,7 +76,6 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 {
 	bHasBeenLoaded = false;
 	RenderTargetBackgroundColor = FColor::Transparent;
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	ItemQuantity = 1;
 
 	ItemImageSceneCapture = CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(TEXT("ItemImageSceneCapture"));
@@ -84,6 +83,7 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 	if (bUseSceneCaptureForImage)
 	{
 		ItemImageSceneCapture->SetupAttachment(GetRootComponent());
+		ItemImageSceneCapture->SetMobility(EComponentMobility::Movable);
 		ItemImageSceneCapture->bCaptureEveryFrame = false;
 		ItemImageSceneCapture->bCaptureOnMovement = false;
 		ItemImageSceneCapture->CaptureSource = ESceneCaptureSource::SCS_BaseColor;
@@ -117,7 +117,7 @@ void ALimenItemBase::BeginPlay()
 		ItemActions.Push(TStrongObjectPtr(Action));
 	}
 
-	if (bUseSceneCaptureForImage)
+	if (bUseSceneCaptureForImage && ItemImageSceneCapture)
 	{
 		ItemImageRenderTarget2D = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>());
 		ItemImageRenderTarget2D->InitCustomFormat(1024, 1024, EPixelFormat::PF_FloatRGBA, true);
@@ -258,7 +258,7 @@ const FColor& ALimenItemBase::GetRenderTargetBackgroundColor() const
 
 void ALimenItemBase::CaptureItemImage()
 {
-	if (bUseSceneCaptureForImage)
+	if (bUseSceneCaptureForImage && ItemImageSceneCapture)
 	{
 		const bool bShouldHide = IsHidden();
 		SetActorHiddenInGame(false);

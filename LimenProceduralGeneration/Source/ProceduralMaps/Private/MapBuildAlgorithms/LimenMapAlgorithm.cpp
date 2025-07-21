@@ -62,7 +62,7 @@ uint32 ULimenMapAlgorithm::Run()
 {
 	AsyncTask(ENamedThreads::Type::GameThread, [this]
 	{
-		LIMEN_LOG(LogLimen, Log, this, "Started algorithm...");
+		LIMEN_LOG(LogLimen, Log, this, TEXT("Started algorithm..."));
 	});
 
 	ULimenProceduralMap* Map = GeneratedMap.Get();
@@ -82,6 +82,6 @@ void ULimenMapAlgorithm::Exit()
 		if (!OnAlgorithmFinished) return;
 
 		OnAlgorithmFinished->Execute(true, GeneratedMapId, GeneratedMap.Get());
-		LIMEN_LOG(LogLimen, Log, this, "Finished algorithm");
+		LIMEN_LOG(LogLimen, Log, this, TEXT("Finished algorithm"));
 	});
 }

@@ -34,7 +34,7 @@ void ULimenWidget::ShowWidget()
 	if (!IsInViewport() && !GetParent())
 	{
 		ShowWidgetMethod();
-		LIMEN_LOG(LogLimenCore, Log, this, "Widget added to viewport with ZOrder = %d", WidgetLevel);
+		LIMEN_LOG(LogLimenCore, Log, this, TEXT("Widget added to viewport with ZOrder = %d"), WidgetLevel);
 	}
 	else if (IsShowing())
 	{
