@@ -77,6 +77,8 @@ void ULimenDialogueSubsystem::BP_PlayDialogue(const UDataTable* InDialogueData, 
 
 void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished)
 {
+	if (!InDialogueData) return;
+	
 	if (OnFinished.IsSet())
 	{
 		FDialogueCallbacks CallbackData(InDialogueData);

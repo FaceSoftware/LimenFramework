@@ -16,7 +16,7 @@ class LIMENDOORS_API ULimenLock : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FLimenLockEvent, AController*, Controller, APawn*, Pawn, ALimenKey*, key);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FLimenLockEvent, AController*, Controller, APawn*, Pawn, ALimenKey*, Key);
 
 	UPROPERTY(BlueprintAssignable)
 	FLimenLockEvent OnUnlocked;

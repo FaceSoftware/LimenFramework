@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "LimenToggle.generated.h"
 
+class AController;
 // This class does not need to be modified.
 UINTERFACE(BlueprintType, Blueprintable)
 class LIMENCORE_API ULimenToggle : public UInterface
