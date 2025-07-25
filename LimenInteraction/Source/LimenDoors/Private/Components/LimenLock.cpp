@@ -44,7 +44,7 @@ void ULimenLock::SetLockedState(const bool bLocked)
 	bIsLocked = bLocked;
 }
 
-bool ULimenLock::ChangeLockedState(AController* Controller, APawn* Pawn, ALimenKey* Test, const bool bLock)
+bool ULimenLock::ChangeLockedState(AController* Controller, APawn* Pawn, FName Test, const bool bLock)
 {	
 	if (bLock == bIsLocked)
 	{
@@ -56,41 +56,28 @@ bool ULimenLock::ChangeLockedState(AController* Controller, APawn* Pawn, ALimenK
 		return false;
 	}
 	
-	if (!Keyword.IsNone() && (Test == nullptr || Test->GetKeyword() != Keyword))
-	{
-		return false;
-	}
+	if (!TryKeyword(Test)) return false;
 	
 	bIsLocked = bLock;
-	bIsLocked ? OnLocked.Broadcast(Controller, Pawn, Test)
-			  : OnUnlocked.Broadcast(Controller, Pawn, Test);
+	bIsLocked ? OnLocked.Broadcast(Controller, Pawn)
+			  : OnUnlocked.Broadcast(Controller, Pawn);
 
 	return true;
 }
 
-bool ULimenLock::ChangeLockedStateWithKeys(AController* Controller, APawn* Pawn, TArray<ALimenKey*> Test,
-	const bool bLock)
+bool ULimenLock::ChangeLockedState(AController* Controller, APawn* Pawn, const TArray<const FName>& Keywords,
+								   const bool bLock)
 {
-	for (ALimenKey* Key : Test)
+	for (const FName& Test : Keywords)
 	{
-		check(Key != nullptr);
-		if (!ChangeLockedState(Controller, Pawn, Key, bLock))
-		{
-			continue;
-		}
-
+		if (!ChangeLockedState(Controller, Pawn, Test, bLock)) continue;
 		return true;
 	}
 
 	return false;
 }
 
-bool ULimenLock::TryKey(ALimenKey* Test) const
+bool ULimenLock::TryKeyword(const FName& Test) const
 {	
-	if (!Keyword.IsNone() && (Test == nullptr || Test->GetKeyword() != Keyword))
-	{
-		return false;
-	}
-	
-	return Test->GetKeyword() == Keyword;
+	return Test == Keyword;
 }

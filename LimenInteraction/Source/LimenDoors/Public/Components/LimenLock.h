@@ -16,7 +16,7 @@ class LIMENDOORS_API ULimenLock : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FLimenLockEvent, AController*, Controller, APawn*, Pawn, ALimenKey*, Key);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLimenLockEvent, AController*, Controller, APawn*, Pawn);
 
 	UPROPERTY(BlueprintAssignable)
 	FLimenLockEvent OnUnlocked;
@@ -37,11 +37,10 @@ public:
 	virtual void SetLockedState(const bool bLocked);
 
 	UFUNCTION(BlueprintCallable)
-	bool ChangeLockedState(AController* Controller, APawn* Pawn, ALimenKey* Test, const bool bLock);
+	bool ChangeLockedState(AController* Controller, APawn* Pawn, FName Test, const bool bLock);
+	bool ChangeLockedState(AController* Controller, APawn* Pawn, const TArray<const FName>& Test, const bool bLock);
 	UFUNCTION(BlueprintCallable)
-	bool ChangeLockedStateWithKeys(AController* Controller, APawn* Pawn, TArray<ALimenKey*> Test, const bool bLock);
-	UFUNCTION(BlueprintCallable)
-	bool TryKey(ALimenKey* Test) const;
+	bool TryKeyword(const FName& Test) const;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen")
