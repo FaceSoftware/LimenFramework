@@ -8,6 +8,7 @@
 #include "LimenMenuButton.generated.h"
 
 
+class SButton;
 class SImage;
 class SWidget;
 class SRetainerWidget;
@@ -49,6 +50,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects|Click")
 	TObjectPtr<USoundBase> ClickSound;
+
+	TSharedPtr<SButton> ButtonWidget;
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 

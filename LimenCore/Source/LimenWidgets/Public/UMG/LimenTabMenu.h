@@ -20,6 +20,8 @@ struct FTabData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText TabTitle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<ULimenSelectableMenuButton> TabButtonClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UWidget> TabMenuClass;
 };
 
@@ -42,8 +44,6 @@ public:
 	FButtonSelectedDelegate OnButtonUnselected;
 
 protected:
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<ULimenSelectableMenuButton> MenuButton;
 	UPROPERTY(EditAnywhere)
 	TArray<FTabData> Tabs;
 
