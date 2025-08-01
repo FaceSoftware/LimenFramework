@@ -19,12 +19,13 @@ class ULimenSelectionSetting;
 class ULimenModularSettingsSubsystem;
 
 
-UCLASS(Abstract, NotBlueprintable)
-class ULimenSettingWidget : public ULimenWidget
+UCLASS(Abstract, Blueprintable)
+class LIMENMODULARSETTINGS_API ULimenSettingWidget : public ULimenWidget
 {
 	GENERATED_BODY()
 
 public:
+	virtual void NativeConstruct() override;
 	virtual void BindSetting(ULimenSetting* InSetting);
 
 protected:
@@ -34,20 +35,22 @@ protected:
 	void SettingApplied(const ULimenSetting* Setting);
 	UFUNCTION(BlueprintImplementableEvent)
 	void SettingEditableStateChanged(const ULimenSetting* Setting);
+	UFUNCTION(BlueprintImplementableEvent)
+	void SettingBound(const ULimenSetting* Setting);
+
+private:
+	TWeakObjectPtr<ULimenSetting> SettingPtr;
 };
 
 UCLASS(Blueprintable)
-class ULimenValueSettingWidget : public ULimenSettingWidget
+class LIMENMODULARSETTINGS_API ULimenValueSettingWidget : public ULimenSettingWidget
 {
 	GENERATED_BODY()
 
 public:
-	virtual void NativeConstruct() override;
 	virtual void BindSetting(ULimenSetting* InSetting) override;
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
-	void SettingBound(ULimenValueSetting* Setting);
 
 private:
 	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
@@ -56,17 +59,14 @@ private:
 
 
 UCLASS(Blueprintable)
-class ULimenSelectionSettingWidget : public ULimenSettingWidget
+class LIMENMODULARSETTINGS_API ULimenSelectionSettingWidget : public ULimenSettingWidget
 {
 	GENERATED_BODY()
 
 public:
-	virtual void NativeConstruct() override;
 	virtual void BindSetting(ULimenSetting* InSetting) override;
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
-	void SettingBound(ULimenSelectionSetting* Setting);
 
 private:
 	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
@@ -75,17 +75,14 @@ private:
 
 
 UCLASS(Blueprintable)
-class ULimenToggleSettingWidget : public ULimenSettingWidget
+class LIMENMODULARSETTINGS_API ULimenToggleSettingWidget : public ULimenSettingWidget
 {
 	GENERATED_BODY()
 
 public:
-	virtual void NativeConstruct() override;
 	virtual void BindSetting(ULimenSetting* InSetting) override;
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
-	void SettingBound(ULimenToggleSetting* Setting);
 
 private:
 	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
@@ -105,12 +102,8 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, Category="Settings Subsystem")
 	TSubclassOf<ULimenModularSettingsSubsystem> ModularSettingsSubsystem;
-	UPROPERTY(EditAnywhere, Category="Settings")
-	TSubclassOf<ULimenValueSettingWidget> ValueSettingWidgetClass;
-	UPROPERTY(EditAnywhere, Category="Settings")
-	TSubclassOf<ULimenSelectionSettingWidget> SelectionSettingWidgetClass;
-	UPROPERTY(EditAnywhere, Category="Settings")
-	TSubclassOf<ULimenToggleSettingWidget> ToggleSettingWidgetClass;
+	UPROPERTY(EditAnywhere, Category="Settings Display", meta=(AllowAbstract="true"))
+	TMap<TSubclassOf<ULimenSetting>, TSubclassOf<ULimenSettingWidget>> SettingWidgetClasses;
 	UPROPERTY(EditAnywhere, Category="Settings")
 	TEnumAsByte<EVerticalAlignment> SettingVerticalAlignment;
 	UPROPERTY(EditAnywhere, Category="Settings")
@@ -137,4 +130,5 @@ private:
 	UPROPERTY()
 	TWeakObjectPtr<ULimenModularSettingsSubsystem> Subsystem;
 
+	TSubclassOf<ULimenSettingWidget> GetSettingWidget(const ULimenSetting* Setting);
 };

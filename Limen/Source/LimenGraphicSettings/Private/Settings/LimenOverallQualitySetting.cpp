@@ -23,19 +23,20 @@ void ULimenOverallQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 
 	Scalability::FQualityLevels QualityLevels = Scalability::GetQualityLevels();
 
-	QualityLevels.ViewDistanceQuality = Level;
-	QualityLevels.AntiAliasingQuality = Level;
-	QualityLevels.ShadowQuality = Level;
-	QualityLevels.GlobalIlluminationQuality = Level;
+	QualityLevels.ViewDistanceQuality = FMath::Min(1, Level);
+	QualityLevels.AntiAliasingQuality = FMath::Max(2, Level);
+	QualityLevels.ShadowQuality = FMath::Max(1, Level == 2 ? 1 : Level); // Too many artifacts at "high"
+	QualityLevels.GlobalIlluminationQuality = 3;
 	QualityLevels.ReflectionQuality = Level;
-	QualityLevels.PostProcessQuality = Level;
+	QualityLevels.PostProcessQuality = FMath::Max(2, Level);
 	QualityLevels.TextureQuality = Level;
 	QualityLevels.EffectsQuality = Level;
 	QualityLevels.FoliageQuality = Level;
 	QualityLevels.ShadingQuality = Level;
 	QualityLevels.LandscapeQuality = Level;
 
-	Scalability::SetQualityLevels(QualityLevels);
+	GEngine->GetGameUserSettings()->ScalabilityQuality = QualityLevels;
+	GEngine->GetGameUserSettings()->ApplySettings(true);
 }
 
 void ULimenOverallQualitySetting::SetDefaults()
@@ -44,8 +45,8 @@ void ULimenOverallQualitySetting::SetDefaults()
 	PossibleSelections.Push(Medium);
 	PossibleSelections.Push(High);
 	PossibleSelections.Push(Epic);
-	// PossibleSelections.Push(Cinematic);
-	DefaultSelection = High;
+	// PossibleSelections.Push(Cinematic); Not recommended for games
+	DefaultSelection = Epic;
 }
 
 FString ULimenOverallQualitySetting::FormatReflectionSetting(const int32 Method)

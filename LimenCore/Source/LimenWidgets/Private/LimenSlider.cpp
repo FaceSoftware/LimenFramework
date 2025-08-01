@@ -104,40 +104,47 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 		.Image(&BackgroundHoveredBrush)
 		.ColorAndOpacity(FSlateColor(FColor::Transparent));
 
-	const TSharedRef<SHorizontalBox> HorizontalBox = SNew(SHorizontalBox)
+	const TSharedRef<SHorizontalBox> HorizontalBox = SNew(SHorizontalBox).Clipping(EWidgetClipping::ClipToBounds)
 	+SHorizontalBox::Slot()
 	.SizeParam(FStretch())
 	.HAlign(HAlign_Fill)
 	.VAlign(VAlign_Fill)
 	[
-		SNew(SBorder)
-		.Padding(BorderPadding)
-		.BorderImage(&BorderBrush)
+		SNew(SOverlay).Clipping(EWidgetClipping::ClipToBounds)
+		+SOverlay::Slot()
 		.HAlign(HAlign_Fill)
 		.VAlign(VAlign_Fill)
+		.Padding(0.f)
 		[
-			SNew(SOverlay)
-			+SOverlay::Slot()
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-			.Padding(0.f)
-			[
-				SliderBackground.ToSharedRef()
-			]
-			+SOverlay::Slot()
-			.Padding(SliderPadding)
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-			[					
-				SliderImage.ToSharedRef()
-			]
-			+SOverlay::Slot()
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-			[
-				InputDetector.ToSharedRef()
-			]
+			SliderBackground.ToSharedRef()
 		]
+		+SOverlay::Slot()
+		.HAlign(HAlign_Fill)
+		.VAlign(VAlign_Fill)
+		.Padding(BorderPadding)
+		[
+			SNew(SBorder)
+			.BorderImage(&BorderBrush)
+			.HAlign(HAlign_Fill)
+			.VAlign(VAlign_Fill)
+			.PixelSnappingMethod(EWidgetPixelSnapping::Disabled)
+			.Clipping(EWidgetClipping::ClipToBounds)
+		]
+		+SOverlay::Slot()
+		.Padding(SliderPadding)
+		.HAlign(HAlign_Fill)
+		.VAlign(VAlign_Fill)
+		[					
+			SliderImage.ToSharedRef()
+		]
+		+SOverlay::Slot()
+		.HAlign(HAlign_Fill)
+		.VAlign(VAlign_Fill)
+		.Padding(0.f)
+		[
+			InputDetector.ToSharedRef()
+		]
+	
 	];
 
 	if (bUseValueText)

@@ -49,10 +49,7 @@ void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
 		for (int i = 0; i < MappingContext->GetMappings().Num(); ++i)
 		{
 			FEnhancedActionKeyMapping& MappingRef = MappingContext->GetMapping(i);
-			if (!MappingRef.IsPlayerMappable())
-			{
-				continue;
-			}
+			if (!MappingRef.IsPlayerMappable()) continue;
 			
 			ULimenKeyBind* KeyBindSetting = NewObject<ULimenKeyBind>(this);
 			KeyBindSetting->InitializeSetting(this, &MappingRef);

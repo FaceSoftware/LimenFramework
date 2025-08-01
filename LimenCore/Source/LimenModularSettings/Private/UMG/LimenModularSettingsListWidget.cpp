@@ -12,57 +12,42 @@
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
-#include "Widgets/Layout/SSpacer.h"
 #include "Widgets/Text/STextBlock.h"
 
+
+void ULimenSettingWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+	if (SettingPtr.IsValid()) SettingBound(SettingPtr.Get());
+}
 
 void ULimenSettingWidget::BindSetting(ULimenSetting* InSetting)
 {
 	if (!InSetting) return;
 
+	SettingPtr = InSetting;
 	InSetting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::SettingUpdated);
 	InSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
 	InSetting->OnSettingEditableStateChanged.AddUniqueDynamic(this, &ThisClass::SettingEditableStateChanged);
-}
-
-void ULimenValueSettingWidget::NativeConstruct()
-{
-	Super::NativeConstruct();
-	if (BoundSetting.IsValid()) SettingBound(BoundSetting.Get());
+	if (IsConstructed()) SettingBound(InSetting);
 }
 
 void ULimenValueSettingWidget::BindSetting(ULimenSetting* InSetting)
 {
-	Super::BindSetting(InSetting);
-
 	BoundSetting = CastChecked<ULimenValueSetting>(InSetting, ECastCheckedType::NullAllowed);
-	if (IsConstructed()) SettingBound(BoundSetting.Get());
-}
-
-void ULimenSelectionSettingWidget::NativeConstruct()
-{
-	Super::NativeConstruct();
-	if (BoundSetting.IsValid()) SettingBound(BoundSetting.Get());
+	Super::BindSetting(InSetting);
 }
 
 void ULimenSelectionSettingWidget::BindSetting(ULimenSetting* InSetting)
 {
-	Super::BindSetting(InSetting);
-
 	BoundSetting = CastChecked<ULimenSelectionSetting>(InSetting, ECastCheckedType::NullAllowed);
-	if (IsConstructed()) SettingBound(BoundSetting.Get());
-}
-
-void ULimenToggleSettingWidget::NativeConstruct()
-{
-	Super::NativeConstruct();
-	if (BoundSetting.IsValid()) SettingBound(BoundSetting.Get());
+	Super::BindSetting(InSetting);
 }
 
 void ULimenToggleSettingWidget::BindSetting(ULimenSetting* InSetting)
 {
 	BoundSetting = CastChecked<ULimenToggleSetting>(InSetting, ECastCheckedType::NullAllowed);
-	if (IsConstructed()) SettingBound(BoundSetting.Get());
+	Super::BindSetting(InSetting);
 }
 
 ULimenSettingsListWidget::ULimenSettingsListWidget()
@@ -100,16 +85,9 @@ TSharedRef<SWidget> ULimenSettingsListWidget::RebuildWidget()
 
 		for (auto* Setting : Subsystem->GetAllItemsOfCategory<ULimenSetting>(Category))
 		{
-			UClass* WidgetClass = nullptr;
-			auto* ValueTest = Cast<ULimenValueSetting>(Setting);
-			auto* SelectionTest = Cast<ULimenSelectionSetting>(Setting);
-			auto* ToggleSTest = Cast<ULimenToggleSetting>(Setting);
-
-			if (ValueTest) WidgetClass = ValueSettingWidgetClass;
-			else if (SelectionTest) WidgetClass = SelectionSettingWidgetClass;
-			else if (ToggleSTest) WidgetClass = ToggleSettingWidgetClass;
-
+			TSubclassOf<ULimenSettingWidget> WidgetClass = GetSettingWidget(Setting);
 			if (!WidgetClass) continue;
+
 			auto* TempWidget = NewObject<ULimenSettingWidget>(this, WidgetClass);
 
 			// Since this does not have a widget tree,
@@ -120,9 +98,7 @@ TSharedRef<SWidget> ULimenSettingsListWidget::RebuildWidget()
 			}
 			TempWidget->Initialize();
 
-			if (ValueTest) TempWidget->BindSetting(ValueTest);
-			else if (SelectionTest) TempWidget->BindSetting(SelectionTest);
-			else if (ToggleSTest) TempWidget->BindSetting(ToggleSTest);
+			TempWidget->BindSetting(Setting);
 
 			CategoryContainer->AddSlot()
 				.VAlign(SettingVerticalAlignment)
@@ -143,9 +119,7 @@ TSharedRef<SWidget> ULimenSettingsListWidget::RebuildWidget()
 
 bool ULimenSettingsListWidget::AreParamsValid() const
 {
-	return ValueSettingWidgetClass		!= nullptr &&
-		   SelectionSettingWidgetClass	!= nullptr &&
-		   Subsystem.IsValid();
+	return Subsystem.IsValid();
 }
 
 void ULimenSettingsListWidget::ResolveSubsystem()
@@ -156,4 +130,14 @@ void ULimenSettingsListWidget::ResolveSubsystem()
 
 	const auto SubsystemBasePtr = GetWorld()->GetGameInstance()->GetSubsystemBase(ModularSettingsSubsystem);
 	Subsystem = CastChecked<ULimenModularSettingsSubsystem>(SubsystemBasePtr, ECastCheckedType::NullAllowed);
+}
+
+TSubclassOf<ULimenSettingWidget> ULimenSettingsListWidget::GetSettingWidget(const ULimenSetting* Setting)
+{
+	for (auto& SettingWidgetClass : SettingWidgetClasses)
+	{
+		if (Setting->IsA(SettingWidgetClass.Key)) return SettingWidgetClass.Value;
+	}
+
+	return nullptr;
 }

@@ -61,7 +61,7 @@ void ULimenKeyBind::InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSub
 	DisplayName = InActionKeyMapping->GetDisplayName();
 	Category = InActionKeyMapping->GetDisplayCategory();
 	Description = MappableKeySettings != nullptr ? MappableKeySettings->Description : FText::FromString(TEXT(""));
-	bCanEdit = true;
+	bCanEdit = MappableKeySettings->bEditableInGame;
 	if (MappableKeySettings->bCanOverrideActionHandlingType)
 	{
 		SavedInputHandlingType = MappableKeySettings->InputHandlingType;
