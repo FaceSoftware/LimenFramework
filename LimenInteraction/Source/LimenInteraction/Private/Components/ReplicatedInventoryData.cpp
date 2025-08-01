@@ -30,7 +30,7 @@ void FReplicatedItemRegistry::PreReplicatedRemove(const FReplicatedItemRegistryA
 
 		if (!InArraySerializer.Owner->GetOwner()->HasAuthority())
 		{
-			InArraySerializer.Owner->RemoveItemInstance(ItemInstance.Get());
+			InArraySerializer.Owner->GetItemInstance(ItemInstance.Get());
 		}
 	});
 }

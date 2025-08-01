@@ -62,6 +62,12 @@ void ULimenSubtitle::StartDisplayingSubtitles()
 	}
 }
 
+void ULimenSubtitle::StopDisplayingSubtitles()
+{
+	GetWorld()->GetTimerManager().ClearTimer(CurrentCueTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(NextCueTimerHandle);
+}
+
 void ULimenSubtitle::ShowWidgetMethod()
 {
 	SetVisibility(GetDefaultVisibleState());

@@ -91,11 +91,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void RemoveAnchor(ULimenSnapAnchorComponent* InRequestor, bool bDetachFromAnchor = true);
 
+	UFUNCTION(BlueprintCallable)
+	bool HasAnyAnchoredComponents() const;
 	const FName& GetAnchorId() const;
 	const TArray<ULimenSnapAnchorComponent*>& GetAnchoredComponents() const;
 
 protected:
-	UPROPERTY(EditAnywhere, Category = "Anchor")
+	UPROPERTY(EditAnywhere, Category = "Anchor", BlueprintReadOnly)
 	FName AnchorId;
 
 private:

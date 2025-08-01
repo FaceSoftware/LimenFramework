@@ -110,9 +110,6 @@ void ULimenAnchorPointComponent::Anchor(ULimenSnapAnchorComponent* InRequestor, 
 	const FVector DeltaLoc = TargetTransform.GetLocation() - RequestorAnchorTransform.GetLocation();
 	const FRotator DeltaRot = TargetTransform.Rotator() - RequestorAnchorTransform.Rotator();
 
-	if (DeltaLoc.SizeSquared() < KINDA_SMALL_NUMBER && DeltaRot.IsNearlyZero())
-		return;
-
 	const FTransform SnapOffset = RequestorAnchorTransform.GetRelativeTransform(InRequestor->GetOwner()->GetActorTransform());
 	const FTransform FinalTransform = UKismetMathLibrary::ComposeTransforms(SnapOffset.Inverse(), TargetTransform);
 
@@ -141,6 +138,11 @@ void ULimenAnchorPointComponent::RemoveAnchor(ULimenSnapAnchorComponent* InReque
 		AnchoredComponents.RemoveAt(Index);
 		OnActorAnchorRemoved.Broadcast(InRequestor);
 	}
+}
+
+bool ULimenAnchorPointComponent::HasAnyAnchoredComponents() const
+{
+	return !AnchoredComponents.IsEmpty();
 }
 
 

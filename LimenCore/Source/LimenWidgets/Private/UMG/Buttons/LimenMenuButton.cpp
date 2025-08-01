@@ -24,6 +24,15 @@ ULimenMenuButton::ULimenMenuButton() : Super(), bUseIcon(true)
 	bIsPlayingDistortionEffect = false;
 }
 
+void ULimenMenuButton::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+
+	Icon.Reset();
+	TextBlock.Reset();
+	RetainerBox.Reset();
+}
+
 TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 {
 	if (bUseIcon)
@@ -104,15 +113,6 @@ TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 	StopDistortionEffect();
 	
 	return Root;
-}
-
-void ULimenMenuButton::ReleaseSlateResources(bool bReleaseChildren)
-{
-	Super::ReleaseSlateResources(bReleaseChildren);
-
-	Icon.Reset();
-	TextBlock.Reset();
-	RetainerBox.Reset();
 }
 
 FReply ULimenMenuButton::OnClicked()

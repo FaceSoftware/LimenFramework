@@ -15,6 +15,7 @@ void ULimenGameMenuWidget::BindPlayerController(APlayerController* InPlayerContr
 
 	Super::BindPlayerController(InPlayerController);
 
+	BoundPlayerController = GetBoundPlayerController();
 	if (BoundPlayerController.IsValid())
 	{
 		BoundPlayerController->OnPossessedPawnChanged.AddUniqueDynamic(this, &ThisClass::PossessedPawnChanged);

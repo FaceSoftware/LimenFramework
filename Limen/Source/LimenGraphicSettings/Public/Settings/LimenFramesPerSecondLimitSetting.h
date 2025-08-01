@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Settings/LimenSelectionSetting.h"
 #include "Settings/LimenValueSetting.h"
 #include "LimenFramesPerSecondLimitSetting.generated.h"
 

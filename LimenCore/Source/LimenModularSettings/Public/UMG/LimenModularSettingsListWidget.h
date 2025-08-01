@@ -25,7 +25,15 @@ class ULimenSettingWidget : public ULimenWidget
 	GENERATED_BODY()
 
 public:
-	virtual void BindSetting(ULimenSetting* InSetting) {}
+	virtual void BindSetting(ULimenSetting* InSetting);
+
+protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void SettingUpdated(const ULimenSetting* Setting);
+	UFUNCTION(BlueprintImplementableEvent)
+	void SettingApplied(const ULimenSetting* Setting);
+	UFUNCTION(BlueprintImplementableEvent)
+	void SettingEditableStateChanged(const ULimenSetting* Setting);
 };
 
 UCLASS(Blueprintable)

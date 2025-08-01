@@ -65,6 +65,8 @@ public:
 	 */
 	TArray<ALimenItemBase*> SaveInventory() const;
 
+	UFUNCTION(BlueprintCallable)
+	bool IsEmpty() const;
 	/**
 	 * @brief Adds a new item to the inventory.
 	 * @param NewItem The item to add to the inventory. Must not be null.
@@ -80,7 +82,7 @@ public:
 	 * @param Instance The item instance to be removed from the inventory.
 	 */
 	UFUNCTION(BlueprintCallable)
-	bool RemoveItemInstance(ALimenItemBase* Instance);
+	bool GetItemInstance(ALimenItemBase* Instance);
 
 	/**
 	 * @brief Retrieves an item of the specified type from the inventory.
@@ -119,12 +121,26 @@ public:
 	UFUNCTION(BlueprintCallable, meta=(DeterminesOutputType="Class"))
 	TArray<ALimenItemBase*> GetItems(TSubclassOf<ALimenItemBase> Class, const int32 Count);
 	/**
-	 * @brief Retrieves an item instance of the specified class from the inventory.w
+	 * @brief Retrieves an item instance of the specified class from the inventory.
 	 * @param Class The class type of the item to retrieve from the inventory.
 	 * @return A pointer to the item instance of the specified class. Returns nullptr if the item is not found.
 	 */
 	UFUNCTION(BlueprintCallable, meta=(DeterminesOutputType="Class"))
 	ALimenItemBase* GetItem(TSubclassOf<ALimenItemBase> Class);
+	/**
+	 * @brief Checks whether this inventory contains an item of the specified class.
+	 * @param Class The class type of the item to check.
+	 * @return True if an item of the class exists in the inventory, false otherwise or if class is invalid.
+	 */
+	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
+	bool ContainsItem(const TSubclassOf<ALimenItemBase>& Class) const;
+	/**
+	 * @brief Checks whether this inventory contains the specified instance of an item.
+	 * @param Instance Item instance to check.
+	 * @return True if the instance is in the inventory, false otherwise.
+	 */
+	UFUNCTION(BlueprintCallable, Category="Limen|Inventory")
+	bool ContainsInstance(const ALimenItemBase* Instance) const;
 	/**
 	 * @brief Retrieves a summary of inventory items currently stored in the component without modifying the inventory.
 	 * @return A map where the keys represent item classes and the values indicate the respective quantities of
@@ -177,7 +193,7 @@ public:
 	 * @param ItemClass The class type of the item to be retrieved.
 	 * @return A pointer to the first item instance of the specified class, or nullptr if no such instance exists.
 	 */
-	template<typename T>
+	template<typename T = ALimenItemBase>
 	T* PeekItemInstance(const TSubclassOf<ALimenItemBase>& ItemClass) const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
@@ -325,6 +341,7 @@ private:
 	void RemoveItemsFromRegistry(const TSubclassOf<ALimenItemBase>& ItemToRemove, const int32 Count);
 	void UpdateInventoryLoad();
 	FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass);
+	const FItemRegistry* FindItemRegistry(const TSubclassOf<ALimenItemBase>& ItemClass) const;
 	
 	bool IsFirstOfType(const TSubclassOf<ALimenItemBase>& ItemClass);
 	TArray<ALimenItemBase*> SpawnItemInstances(ALimenItemBase* InItem) const;

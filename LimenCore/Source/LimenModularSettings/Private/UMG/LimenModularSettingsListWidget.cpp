@@ -10,10 +10,20 @@
 #include "Settings/LimenValueSetting.h"
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
+#include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSpacer.h"
 #include "Widgets/Text/STextBlock.h"
 
+
+void ULimenSettingWidget::BindSetting(ULimenSetting* InSetting)
+{
+	if (!InSetting) return;
+
+	InSetting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::SettingUpdated);
+	InSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
+	InSetting->OnSettingEditableStateChanged.AddUniqueDynamic(this, &ThisClass::SettingEditableStateChanged);
+}
 
 void ULimenValueSettingWidget::NativeConstruct()
 {
@@ -23,6 +33,8 @@ void ULimenValueSettingWidget::NativeConstruct()
 
 void ULimenValueSettingWidget::BindSetting(ULimenSetting* InSetting)
 {
+	Super::BindSetting(InSetting);
+
 	BoundSetting = CastChecked<ULimenValueSetting>(InSetting, ECastCheckedType::NullAllowed);
 	if (IsConstructed()) SettingBound(BoundSetting.Get());
 }
@@ -35,6 +47,8 @@ void ULimenSelectionSettingWidget::NativeConstruct()
 
 void ULimenSelectionSettingWidget::BindSetting(ULimenSetting* InSetting)
 {
+	Super::BindSetting(InSetting);
+
 	BoundSetting = CastChecked<ULimenSelectionSetting>(InSetting, ECastCheckedType::NullAllowed);
 	if (IsConstructed()) SettingBound(BoundSetting.Get());
 }
@@ -65,7 +79,7 @@ TSharedRef<SWidget> ULimenSettingsListWidget::RebuildWidget()
 	ResolveSubsystem();
 	
 	const TSharedRef<SScrollBox> SettingsContainer = SNew(SScrollBox)
-		.Clipping(EWidgetClipping::ClipToBounds)
+		.Clipping(EWidgetClipping::Inherit)
 		.Orientation(Orient_Vertical);
 
 	if (!AreParamsValid()) return SettingsContainer;
@@ -95,9 +109,8 @@ TSharedRef<SWidget> ULimenSettingsListWidget::RebuildWidget()
 			else if (SelectionTest) WidgetClass = SelectionSettingWidgetClass;
 			else if (ToggleSTest) WidgetClass = ToggleSettingWidgetClass;
 
-			check(WidgetClass != nullptr)
+			if (!WidgetClass) continue;
 			auto* TempWidget = NewObject<ULimenSettingWidget>(this, WidgetClass);
-			if (!TempWidget) continue;
 
 			// Since this does not have a widget tree,
 			// we have to manually initialize the user widget

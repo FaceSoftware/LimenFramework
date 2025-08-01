@@ -30,9 +30,11 @@ class LIMENGAMEFRAMEWORK_API ALimenCharacterBase : public ACharacter
 public:	
 	explicit ALimenCharacterBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
-
+	virtual void PossessedBy(AController* NewController) override;
 	virtual void EnableInput(APlayerController* InPlayerController) override;
 	virtual void DisableInput(APlayerController* InPlayerController) override;
+
+	virtual void SetCinematicMode(bool bInCinematicMode, bool bHidePlayer, bool bAffectsHUD, bool bAffectsMovement, bool bAffectsTurning);
 	
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Limen|Notifications")
 	virtual bool QueueNotification(const FNotificationParams& InParams);
@@ -55,13 +57,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Limen")
 	TObjectPtr<ULimenAbilityComponent> AbilityComponent;
 
-	virtual void PossessedBy(AController* NewController) override;
-
 	ALimenPlayerStateBase* GetLimenBasePlayerState() const;
-
-	
 	UFUNCTION()
 	virtual void SetupAbilityComponent(ULimenAbilityComponent* InAbilityComponent);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_SetCinematicMode(bool bInCinematicMode, bool bAffectsHUD, bool bAffectsMovement, bool bAffectsTurning);
 	
 private:
 	UPROPERTY()

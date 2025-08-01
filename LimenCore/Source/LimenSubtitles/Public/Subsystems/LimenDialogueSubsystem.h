@@ -47,10 +47,12 @@ public:
 		return CastChecked<T>(GetSpeakerComponent(SpeakerId), ECastCheckedType::NullAllowed);
 	}
 
+	UFUNCTION(BlueprintCallable)
+	void StopDialogue(const FGuid& DialogueId);
 	UFUNCTION(BlueprintCallable, DisplayName="Play Dialogue")
-	virtual void BP_PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished);
-	virtual void PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished);
-	virtual void PlayDialogue(const UDataTable* InDialogueData);
+	UPARAM(DisplayName="Dialogue Id") FGuid BP_PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished);
+	FGuid PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished);
+	FGuid PlayDialogue(const UDataTable* InDialogueData);
 	UFUNCTION(BlueprintCallable)
 	void UnregisterSpeaker(const FName SpeakerId);
 	UFUNCTION(BlueprintCallable)
@@ -91,12 +93,18 @@ private:
 		mutable const UDataTable* DialogueData;
 		TArray<TFunction<void()>> Callbacks;
 	};
+	struct FCompleteDialogueData
+	{
+		TWeakObjectPtr<ULimenSubtitle> Subtitle;
+		TWeakObjectPtr<UDialoguePlayerBase> DialoguePlayer;
+	};
 	
 	TSoftClassPtr<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass;
 	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass;
 
 	TSubclassOf<UDialoguePlayerBase> DialoguePlayerClass;
 	TArray<TStrongObjectPtr<UDialoguePlayerBase>> DialoguePlayers;
+	TArray<FCompleteDialogueData> CompleteDialogueData;
 
 	float SubtitlesDelay;
 	float DialogueDelay;
@@ -109,6 +117,6 @@ private:
 
 	void DialogueFinished(UDialoguePlayerBase* DialoguePlayer);
 
-	void DisplaySubtitles(const UDataTable* InDialogueData);
-	void DisplayDialogue(const UDataTable* InDialogueData);
+	void DisplaySubtitles(ULimenSubtitle* Subtitle);
+	void DisplayDialogue(UDialoguePlayerBase* DialoguePlayer, const UDataTable* InDialogueData);
 };

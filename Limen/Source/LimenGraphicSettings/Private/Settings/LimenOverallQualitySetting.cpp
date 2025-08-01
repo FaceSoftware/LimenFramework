@@ -19,8 +19,23 @@ void ULimenOverallQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting();
 
-	GEngine->GetGameUserSettings()->SetOverallScalabilityLevel(UnFormatReflectionSetting(GetCurrentValue()));
-	GEngine->GetGameUserSettings()->ApplySettings(false);
+	const int32 Level = UnFormatReflectionSetting(GetCurrentValue());
+
+	Scalability::FQualityLevels QualityLevels = Scalability::GetQualityLevels();
+
+	QualityLevels.ViewDistanceQuality = Level;
+	QualityLevels.AntiAliasingQuality = Level;
+	QualityLevels.ShadowQuality = Level;
+	QualityLevels.GlobalIlluminationQuality = Level;
+	QualityLevels.ReflectionQuality = Level;
+	QualityLevels.PostProcessQuality = Level;
+	QualityLevels.TextureQuality = Level;
+	QualityLevels.EffectsQuality = Level;
+	QualityLevels.FoliageQuality = Level;
+	QualityLevels.ShadingQuality = Level;
+	QualityLevels.LandscapeQuality = Level;
+
+	Scalability::SetQualityLevels(QualityLevels);
 }
 
 void ULimenOverallQualitySetting::SetDefaults()

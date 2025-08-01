@@ -22,6 +22,7 @@ class LIMENWIDGETS_API ULimenMenuButton : public ULimenStandardButton, public FT
 
 public:
 	ULimenMenuButton();
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Icon")
@@ -50,7 +51,6 @@ protected:
 	TObjectPtr<USoundBase> ClickSound;
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
-	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 	virtual FReply OnClicked() override;
 	virtual void OnHovered() override;

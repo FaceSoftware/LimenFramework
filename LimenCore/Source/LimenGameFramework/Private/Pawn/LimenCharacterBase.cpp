@@ -58,6 +58,15 @@ void ALimenCharacterBase::BeginPlay()
 	SetupAbilityComponentInternal(AbilityComponent.Get());
 }
 
+void ALimenCharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	PlayerController = Cast<APlayerController>(NewController);
+	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(NewController);
+	LimenBasePlayerState = NewController->GetPlayerState<ALimenPlayerStateBase>();
+}
+
 void ALimenCharacterBase::EnableInput(APlayerController* InPlayerController)
 {
 	Super::EnableInput(InPlayerController);
@@ -78,6 +87,14 @@ void ALimenCharacterBase::DisableInput(APlayerController* InPlayerController)
 	{
 		GetComponentByClass<UEnhancedInputComponent>()->Deactivate();
 	}
+}
+
+void ALimenCharacterBase::SetCinematicMode(bool bInCinematicMode, bool bHidePlayer, bool bAffectsHUD,
+	bool bAffectsMovement, bool bAffectsTurning)
+{
+	check(HasAuthority())
+
+	Multicast_SetCinematicMode(bInCinematicMode, bAffectsHUD, bAffectsMovement, bAffectsTurning);
 }
 
 bool ALimenCharacterBase::QueueNotification(const FNotificationParams& InParams)
@@ -137,21 +154,17 @@ FVector ALimenCharacterBase::GetLookTarget(const float MaxDistance) const
 	return Hit.Location;
 }
 
-void ALimenCharacterBase::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	PlayerController = Cast<APlayerController>(NewController);
-	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(NewController);
-	LimenBasePlayerState = NewController->GetPlayerState<ALimenPlayerStateBase>();
-}
-
 ALimenPlayerStateBase* ALimenCharacterBase::GetLimenBasePlayerState() const
 {
 	return LimenBasePlayerState.Get();
 }
 
 void ALimenCharacterBase::SetupAbilityComponent(ULimenAbilityComponent* InAbilityComponent)
+{
+}
+
+void ALimenCharacterBase::Multicast_SetCinematicMode_Implementation(bool bInCinematicMode, bool bAffectsHUD,
+	bool bAffectsMovement, bool bAffectsTurning)
 {
 }
 

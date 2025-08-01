@@ -1,7 +1,7 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
- #include "Items/LimenItemBase.h"
+#include "Items/LimenItemBase.h"
 
 #include "TextureResource.h"
 #include "TimerManager.h"
@@ -9,7 +9,6 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/Interactable/LimenInteractableAreaComponent.h"
 #include "Engine/Engine.h"
-#include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/Pawn.h"
 #include "ItemActions/LimenItemAction.h"
@@ -19,7 +18,7 @@
 
 UTexture* ALimenItemBase::GetItemImage(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
 {
-	check(ItemClass != nullptr);
+	if (ItemClass == nullptr) return nullptr;
 
 	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
 	if (Actor == nullptr)
@@ -34,7 +33,7 @@ UTexture* ALimenItemBase::GetItemImage(UObject* WorldContextObject, const TSubcl
 
 FText ALimenItemBase::GetDisplayName(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
 {
-	check(ItemClass != nullptr);
+	if (ItemClass == nullptr) return FText();
 
 	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
 	if (Actor == nullptr)
@@ -47,7 +46,7 @@ FText ALimenItemBase::GetDisplayName(UObject* WorldContextObject, const TSubclas
 
 FText ALimenItemBase::GetDescription(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
 {
-	check(ItemClass != nullptr);
+	if (ItemClass == nullptr) return FText();
 
 	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
 	if (Actor == nullptr)

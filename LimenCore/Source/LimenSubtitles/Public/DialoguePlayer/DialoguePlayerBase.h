@@ -26,6 +26,7 @@ public:
 
 	virtual void PlayDialogue(const UDataTable* InDialogueData);
 	virtual void FinishPlayDialogue();
+	virtual void StopDialogue();
 
 	template<typename UserClass>
 	FORCEINLINE void SubscribeToFinishEvent(UserClass* Object, typename TMemFunPtrType<false, UserClass, void(UDialoguePlayerBase*)>::Type InFunc)
@@ -34,9 +35,11 @@ public:
 	}
 
 	const UDataTable* GetDialogueData() const;
+	FGuid GetPlayerId() const;
 
 private:
 	TWeakObjectPtr<const UDataTable> DialogueData;
 	FDialogueEvent OnDialogueFinished;
 	TOptional<bool> bHasFinished;
+	FGuid PlayerId;
 };

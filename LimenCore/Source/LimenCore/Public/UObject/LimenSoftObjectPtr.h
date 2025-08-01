@@ -67,6 +67,11 @@ public:
 		return SoftPtr.IsNull();
 	}
 
+	TSoftObjectPtr<UObject> SoftObjectPtr() const
+	{
+		return SoftPtr;
+	}
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSoftObjectPtr<UObject> SoftPtr;

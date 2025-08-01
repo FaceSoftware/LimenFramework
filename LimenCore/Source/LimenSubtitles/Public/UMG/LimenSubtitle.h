@@ -29,6 +29,7 @@ public:
 
 	void SetSubtitleData(const UDataTable* InSubtitleData);
 	void StartDisplayingSubtitles();
+	void StopDisplayingSubtitles();
 
 protected:
 	TStrongObjectPtr<const UDataTable> SubtitleData;

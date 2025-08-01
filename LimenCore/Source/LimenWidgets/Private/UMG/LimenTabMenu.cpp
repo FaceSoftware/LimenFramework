@@ -10,52 +10,54 @@
 #include "Widgets/Layout/SWidgetSwitcher.h"
 
 
-TArray<UWidget*> ULimenTabMenu::GetMenus() const
-{
-	return Menus;
-}
-
 TSharedRef<SWidget> ULimenTabMenu::RebuildWidget()
 {
-	if (MenuClasses.Num() != Titles.Num() || MenuClasses.IsEmpty() || Titles.IsEmpty())
+	if (Tabs.IsEmpty())
 	{
 		return SNew(SSpacer);
 	}
 
+	TabSwitcher = SNew(SWidgetSwitcher);
 	const TSharedRef<SHorizontalBox> ButtonsContainer = SNew(SHorizontalBox);
-	for (const FText& Title : Titles)
+	for (const auto& [Id, TabTitle, TabMenuClass] : Tabs)
 	{
 		auto* TempButton = NewObject<ULimenSelectableMenuButton>(this, MenuButton.Get());
-		TempButton->SetButtonText(Title);
+		TempButton->SetClipping(EWidgetClipping::ClipToBounds);
+		TempButton->SetButtonText(TabTitle);
 		TempButton->OnButtonClickedEvent.AddDynamic(this, &ULimenTabMenu::ButtonClicked);
 		TempButton->OnButtonSelected.AddDynamic(this, &ULimenTabMenu::ButtonSelected);
 		TempButton->OnButtonUnselected.AddDynamic(this, &ULimenTabMenu::ButtonUnselected);
-
 		auto ButtonSlot = ButtonsContainer->AddSlot();
 		ButtonSlot.AttachWidget(TempButton->TakeWidget());
 		ButtonSlot.HAlign(HAlign_Fill);
 		ButtonSlot.VAlign(VAlign_Fill);
 		ButtonSlot.SizeParam(FStretchContent());
 
-		Buttons.Push(TempButton);
+		UWidget* TempMenu = nullptr;
+		if (TabMenuClass)
+		{
+			TempMenu = NewObject<UWidget>(this, TabMenuClass.Get());
+			TempMenu->SetClipping(EWidgetClipping::ClipToBounds);
+			auto MenuSlot = TabSwitcher->AddSlot();
+			MenuSlot.AttachWidget(TempMenu->TakeWidget());
+			MenuSlot.HAlign(HAlign_Fill);
+			MenuSlot.VAlign(VAlign_Fill);
+		}
+		
+		TabInstanceData.Push(FTabInstanceData(TempButton, TempMenu, Id));
 	}
-	Buttons[0]->SetButtonSelectedState(true);
-
-	TabSwitcher = SNew(SWidgetSwitcher);
-	for (auto& MenuClass : MenuClasses)
+	
+	int32 Index = 0;
+	for (auto& Data : TabInstanceData)
 	{
-		if (!MenuClass) continue;
-
-		UWidget* TempMenu = NewObject<UWidget>(this, MenuClass.Get());
-
-		auto MenuSlot = TabSwitcher->AddSlot();
-		MenuSlot.AttachWidget(TempMenu->TakeWidget());
-		MenuSlot.HAlign(HAlign_Fill);
-		MenuSlot.VAlign(VAlign_Fill);
-
-		Menus.Push(TempMenu);
+		if (Data.TabInstance.IsValid())
+		{
+			TabInstanceData[Index].TabButtonInstance->SetButtonSelectedState(true);
+			TabSwitcher->SetActiveWidgetIndex(0);
+			break;
+		}
+		Index++;
 	}
-	TabSwitcher->SetActiveWidgetIndex(0);
 
 	TSharedRef<SVerticalBox> Root = SNew(SVerticalBox)
 		.Clipping(EWidgetClipping::ClipToBounds)
@@ -81,28 +83,36 @@ void ULimenTabMenu::ReleaseSlateResources(const bool bReleaseChildren)
 {
 	Super::ReleaseSlateResources(bReleaseChildren);
 
-	for (ULimenSelectableMenuButton*& Button : Buttons)
+	for (auto& InstanceData : TabInstanceData)
 	{
-		if (!Button) continue;
-		CastChecked<UWidget>(Button)->ReleaseSlateResources(bReleaseChildren);
+		if (InstanceData.TabButtonInstance.IsValid())
+		{
+			InstanceData.TabButtonInstance->ReleaseSlateResources(bReleaseChildren);
+			InstanceData.TabButtonInstance.Reset();
+		}
+		if (InstanceData.TabInstance.IsValid())
+		{
+			InstanceData.TabInstance->ReleaseSlateResources(bReleaseChildren);
+			InstanceData.TabInstance.Reset();
+		}
 	}
-	for (UWidget*& Menu : Menus)
-	{
-		if (!Menu) continue;
-		Menu->ReleaseSlateResources(bReleaseChildren);
-	}
+
 	TabSwitcher.Reset();
 }
 
 void ULimenTabMenu::ButtonClicked(ULimenStandardButton* Button)
 {
-	const int32 Index = Buttons.Find(CastChecked<ULimenSelectableMenuButton>(Button));
-	for (int i = 0; i < Buttons.Num(); ++i)
+	const int32 Index = TabInstanceData.IndexOfByKey(Button);
+	if (TabInstanceData[Index].TabInstance.IsValid())
 	{
-		Buttons[i]->SetButtonSelectedState(i == Index);
+		for (int i = 0; i < TabInstanceData.Num(); ++i)
+		{
+			TabInstanceData[i].TabButtonInstance->SetButtonSelectedState(i == Index);
+		}
+		if (TabSwitcher->GetActiveWidgetIndex() != Index) TabSwitcher->SetActiveWidgetIndex(Index);
 	}
 
-	TabSwitcher->SetActiveWidgetIndex(Index);
+	OnButtonClicked.Broadcast(TabInstanceData[Index].Id);
 }
 
 void ULimenTabMenu::ButtonSelected(ULimenSelectableMenuButton* Button)
