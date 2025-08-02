@@ -29,10 +29,8 @@ ULimenSnapAnchorComponent* ULimenSnapAnchorComponent::GetAnchorByTargetId(const 
 ULimenSnapAnchorComponent::ULimenSnapAnchorComponent() : Super()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-#if WITH_EDITORONLY_DATA
 	TargetAnchorId = NAME_None;
 	bAttach = true;
-#endif
 
 	Mobility = EComponentMobility::Movable;
 }
@@ -71,7 +69,10 @@ const FName& ULimenSnapAnchorComponent::GetTargetAnchorId() const
 	return TargetAnchorId;
 }
 
-#if WITH_EDITORONLY_DATA
+ULimenAnchorPointComponent* ULimenSnapAnchorComponent::GetCurrentAnchor() const
+{
+	return CurrentAnchor.Get();
+}
 
 void ULimenSnapAnchorComponent::DEBUG_AnchorToTarget()
 {
@@ -83,16 +84,9 @@ void ULimenSnapAnchorComponent::DEBUG_RemoveAnchor()
 	RemoveCurrentAnchor(true);
 }
 
-ULimenAnchorPointComponent* ULimenSnapAnchorComponent::GetCurrentAnchor() const
-{
-	return CurrentAnchor.Get();
-}
-
-#endif
-
-
+///
 /// ULimenAnchorPointComponent
-
+///
 
 ULimenAnchorPointComponent::ULimenAnchorPointComponent()
 {
@@ -106,9 +100,6 @@ void ULimenAnchorPointComponent::Anchor(ULimenSnapAnchorComponent* InRequestor, 
 
 	const FTransform TargetTransform = GetComponentTransform();
 	const FTransform RequestorAnchorTransform = InRequestor->GetComponentTransform();
-
-	const FVector DeltaLoc = TargetTransform.GetLocation() - RequestorAnchorTransform.GetLocation();
-	const FRotator DeltaRot = TargetTransform.Rotator() - RequestorAnchorTransform.Rotator();
 
 	const FTransform SnapOffset = RequestorAnchorTransform.GetRelativeTransform(InRequestor->GetOwner()->GetActorTransform());
 	const FTransform FinalTransform = UKismetMathLibrary::ComposeTransforms(SnapOffset.Inverse(), TargetTransform);

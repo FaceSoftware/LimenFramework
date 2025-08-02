@@ -40,27 +40,19 @@ public:
 
 	ULimenAnchorPointComponent* GetCurrentAnchor() const;
 
-#if WITH_EDITORONLY_DATA
-
 	UFUNCTION(CallInEditor, Category = "Debug", DisplayName="Anchor To Target")
 	void DEBUG_AnchorToTarget();
 	UFUNCTION(CallInEditor, Category = "Debug", DisplayName="Remove Anchor")
 	void DEBUG_RemoveAnchor();
 
-#endif
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anchor")
 	FName TargetAnchorId;
-
-#if WITH_EDITORONLY_DATA
 
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	TWeakObjectPtr<AActor> AnchorTargetActor;
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	bool bAttach;
-
-#endif
 
 private:
 	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess=true))
