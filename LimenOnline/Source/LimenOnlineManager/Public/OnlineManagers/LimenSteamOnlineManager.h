@@ -65,13 +65,13 @@ private:
 	bool bIsLobbyHost;
 
 	FCriticalSection CallbackDataSection;
-	STEAM_CALLBACK(ThisClass, LobbyCreated, LobbyCreated_t);
-	STEAM_CALLBACK(ThisClass, LobbyJoined, LobbyEnter_t);
-	STEAM_CALLBACK(ThisClass, LobbyInviteAccepted, GameLobbyJoinRequested_t);
-	STEAM_CALLBACK(ThisClass, LobbyMemberUpdated, LobbyChatUpdate_t);
-	STEAM_CALLBACK(ThisClass, MemberDataUpdated, PersonaStateChange_t);
-	STEAM_CALLBACK(ThisClass, FriendAvatarImageLoaded, AvatarImageLoaded_t);
-	STEAM_CALLBACK(ThisClass, LobbyGameServerSet, LobbyGameCreated_t);
+	STEAM_CALLBACK_MANUAL(ThisClass, LobbyCreated, LobbyCreated_t, LobbyCreatedCallback);
+	STEAM_CALLBACK_MANUAL(ThisClass, LobbyJoined, LobbyEnter_t, LobbyEnterCallback);
+	STEAM_CALLBACK_MANUAL(ThisClass, LobbyInviteAccepted, GameLobbyJoinRequested_t, LobbyInviteAcceptedCallback);
+	STEAM_CALLBACK_MANUAL(ThisClass, LobbyMemberUpdated, LobbyChatUpdate_t, LobbyMemberUpdatedCallback);
+	STEAM_CALLBACK_MANUAL(ThisClass, MemberDataUpdated, PersonaStateChange_t, MemberDataUpdatedCallback);
+	STEAM_CALLBACK_MANUAL(ThisClass, FriendAvatarImageLoaded, AvatarImageLoaded_t, FriendAvatarImageLoadedCallback);
+	STEAM_CALLBACK_MANUAL(ThisClass, LobbyGameServerSet, LobbyGameCreated_t, LobbyGameServerSetCallback);
 	
 	static UTexture2D* CreateTextureFromRGBA(const uint8* ImageData, int32 Width, int32 Height);
 };
