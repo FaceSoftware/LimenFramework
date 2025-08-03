@@ -25,8 +25,8 @@ void ULimenOverallQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 
 	QualityLevels.ViewDistanceQuality = FMath::Min(1, Level);
 	QualityLevels.AntiAliasingQuality = FMath::Max(2, Level);
-	QualityLevels.ShadowQuality = FMath::Max(1, Level == 2 ? 1 : Level); // Too many artifacts at "high"
-	QualityLevels.GlobalIlluminationQuality = 3;
+	QualityLevels.ShadowQuality = FMath::Max(2, Level);
+	QualityLevels.GlobalIlluminationQuality = FMath::Max(2, Level);
 	QualityLevels.ReflectionQuality = Level;
 	QualityLevels.PostProcessQuality = FMath::Max(2, Level);
 	QualityLevels.TextureQuality = Level;

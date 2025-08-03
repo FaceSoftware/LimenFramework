@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EnhancedInputSubsystemInterface.h"
 #include "Engine/LocalPlayer.h"
 #include "LimenLocalPlayer.generated.h"
 
+struct FModifyContextOptions;
+class UInputMappingContext;
 struct FEnhancedActionKeyMapping;
 
 
@@ -17,7 +20,15 @@ class LIMENKEYBINDSETTINGS_API ULimenLocalPlayer : public ULocalPlayer
 {
 	GENERATED_BODY()
 
+public:
+	ULimenLocalPlayer();
+	void AddPawnMappingContext();
+	void RemovePawnMappingContext();
+
 protected:
+	int32 PawnMappingContextPriority;
+	int32 PlayerControllerMappingContextPriority;
+
 	virtual void ReceivedPlayerController(APlayerController* NewController) override;
 	
 private:
@@ -27,7 +38,7 @@ private:
 	
 	void UpdateControllerBindings(APlayerController* PC);
 	void InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping);
-	void NewPawnSet(APawn* NewPawn);
+
 	UFUNCTION()
 	void PossessedPawnChanged(APawn* OldPawn, APawn* NewPawn);
 };

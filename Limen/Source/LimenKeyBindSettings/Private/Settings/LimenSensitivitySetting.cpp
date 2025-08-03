@@ -45,10 +45,6 @@ void ULimenSensitivitySetting::ApplyCurrentSetting(bool bUserRequest)
 	}
 
 	auto* MouseSensitivityComponent = PlayerController->GetComponentByClass<ULimenMouseSensitivityComponent>();
-	if (!ensure(MouseSensitivityComponent != nullptr))
-	{
-		return;
-	}
-
+	if (!MouseSensitivityComponent) return;
 	MouseSensitivityComponent->SetSensitivity(GetCurrentValue());
 }
