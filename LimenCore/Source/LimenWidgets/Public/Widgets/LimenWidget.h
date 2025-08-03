@@ -53,9 +53,9 @@ public:
 	virtual void NativeConstruct() override;
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
-	void ShowWidget();
+	bool ShowWidget();
 	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
-	void HideWidget();
+	bool HideWidget();
 	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
 	void HideWidgetWithCallback(FLimenBlueprintWidgetHidden OnWidgetHidden);
 	void HideWidget(const FLimenWidgetHidden& OnWidgetHidden);

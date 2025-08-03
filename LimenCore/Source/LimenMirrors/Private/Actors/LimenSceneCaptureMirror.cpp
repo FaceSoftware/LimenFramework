@@ -98,9 +98,4 @@ void ALimenSceneCaptureMirror::Tick(const float DeltaTime)
 
 		SceneCapture->SetRelativeLocationAndRotation(SceneCaptureLocation, SceneCaptureRotation);
 	}
-
-	if (!SceneCapture->bCaptureEveryFrame)
-	{
-		SceneCapture->CaptureScene();
-	}
 }

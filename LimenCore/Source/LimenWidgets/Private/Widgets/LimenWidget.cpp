@@ -24,12 +24,9 @@ void ULimenWidget::NativeConstruct()
 	OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::WidgetVisibilityChanged_Internal);
 }
 
-void ULimenWidget::ShowWidget()
+bool ULimenWidget::ShowWidget()
 {
-	if (bIsAnimating)
-	{
-		return;
-	}
+	if (bIsAnimating) return false;
 	
 	if (!IsInViewport() && !GetParent())
 	{
@@ -38,7 +35,7 @@ void ULimenWidget::ShowWidget()
 	}
 	else if (IsShowing())
 	{
-		return;
+		return false;
 	}
 	
 	SetVisibility(DefaultVisibleState);
@@ -55,19 +52,13 @@ void ULimenWidget::ShowWidget()
 	{
 		NotifyAnimationFinished(true);
 	}
+
+	return true;
 }
 
-void ULimenWidget::HideWidget()
+bool ULimenWidget::HideWidget()
 {
-	if (bIsAnimating)
-	{
-		return;
-	}
-	
-	if (IsHiding())
-	{
-		return;
-	}
+	if (bIsAnimating || IsHiding()) return false;
 
 	OnLimenVisibilityChanged.Broadcast(false);
 	
@@ -80,6 +71,8 @@ void ULimenWidget::HideWidget()
 	{
 		NotifyAnimationFinished(false);
 	}
+
+	return true;
 }
 
 void ULimenWidget::HideWidgetWithCallback(FLimenBlueprintWidgetHidden OnWidgetHidden)

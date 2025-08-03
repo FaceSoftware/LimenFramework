@@ -49,6 +49,7 @@ protected:
 
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(const bool bReleaseChildren) override;
+	virtual void BeginDestroy() override;
 
 	UFUNCTION()
 	virtual void ButtonClicked(ULimenStandardButton* Button);
@@ -59,22 +60,23 @@ private:
 		FTabInstanceData(ULimenSelectableMenuButton* Button, UWidget* TabInstance, const FName& Id)
 			: TabButtonInstance(Button), TabInstance(TabInstance), Id(Id) {}
 
-		TWeakObjectPtr<ULimenSelectableMenuButton> TabButtonInstance;
-		TWeakObjectPtr<UWidget> TabInstance;
+		TStrongObjectPtr<ULimenSelectableMenuButton> TabButtonInstance;
+		TStrongObjectPtr<UWidget> TabInstance;
 		FName Id;
 
 		bool operator==(const ULimenStandardButton* Button) const
 		{
-			return Button == TabButtonInstance;
+			return Button == TabButtonInstance.Get();
 		}
 		bool operator==(const UWidget* Tab) const
 		{
-			return Tab == TabInstance;
+			return Tab == TabInstance.Get();
 		}
 	};
 
 	TArray<FTabInstanceData> TabInstanceData;
 	TSharedPtr<SWidgetSwitcher> TabSwitcher;
+	TWeakPtr<SWidget> ActiveTabWidget;
 
 	UFUNCTION()
 	void ButtonSelected(ULimenSelectableMenuButton* Button);

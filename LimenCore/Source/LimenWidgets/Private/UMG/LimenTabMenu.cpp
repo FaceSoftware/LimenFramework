@@ -83,6 +83,8 @@ TSharedRef<SWidget> ULimenTabMenu::RebuildWidget()
 void ULimenTabMenu::ReleaseSlateResources(const bool bReleaseChildren)
 {
 	Super::ReleaseSlateResources(bReleaseChildren);
+	
+	TabSwitcher.Reset();
 
 	for (auto& InstanceData : TabInstanceData)
 	{
@@ -97,20 +99,28 @@ void ULimenTabMenu::ReleaseSlateResources(const bool bReleaseChildren)
 			InstanceData.TabInstance.Reset();
 		}
 	}
+}
 
-	TabSwitcher.Reset();
+void ULimenTabMenu::BeginDestroy()
+{
+	TabInstanceData.Empty();
+	Super::BeginDestroy();
 }
 
 void ULimenTabMenu::ButtonClicked(ULimenStandardButton* Button)
 {
 	const int32 Index = TabInstanceData.IndexOfByKey(Button);
-	if (TabInstanceData[Index].TabInstance.IsValid())
+	if (Index == INDEX_NONE) return;
+
+	if (TabInstanceData[Index].TabInstance.IsValid() && TabInstanceData[Index].TabInstance->TakeWidget() != ActiveTabWidget)
 	{
+		ActiveTabWidget = TabInstanceData[Index].TabInstance->TakeWidget();	
+		TabSwitcher->SetActiveWidget(ActiveTabWidget.Pin().ToSharedRef()); 
+
 		for (int i = 0; i < TabInstanceData.Num(); ++i)
 		{
 			TabInstanceData[i].TabButtonInstance->SetButtonSelectedState(i == Index);
 		}
-		if (TabSwitcher->GetActiveWidget() != TabInstanceData[Index].TabInstance->TakeWidget()) TabSwitcher->SetActiveWidget(TabInstanceData[Index].TabInstance->TakeWidget());
 	}
 
 	OnButtonClicked.Broadcast(TabInstanceData[Index].Id);

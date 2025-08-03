@@ -106,34 +106,12 @@ bool ALimenBaseHUD::CanSwitchWidgetVisibility(UWidget* InWidget) const
 
 void ALimenBaseHUD::ShowWidget_Internal(ULimenWidget* Widget)
 {
-	if (!Widget || !CanSwitchWidgetVisibility(Widget) || GetWorld()->bIsTearingDown)
-	{
-		return;
-	}
-
-	if (!Widget->IsShowing())
-	{
-		Widget->ShowWidget();	
-	}
-
-	ActiveWidget = Widget;
+	if (!Widget || !CanSwitchWidgetVisibility(Widget) || GetWorld()->bIsTearingDown) return;
+	if (!Widget->IsShowing() && Widget->ShowWidget()) ActiveWidget = Widget;
 }
 
 void ALimenBaseHUD::HideWidget_Internal(ULimenWidget* Widget)
 {
-	if (!Widget)
-	{
-		return;
-	}
-	
-	if (!CanSwitchWidgetVisibility(Widget))
-	{
-		return;
-	}
-
-	ActiveWidget = nullptr;
-	if (Widget->IsShowing())
-	{
-		Widget->HideWidget();
-	}
+	if (!Widget || !CanSwitchWidgetVisibility(Widget)) return;
+	if (Widget->IsShowing() && Widget->HideWidget()) ActiveWidget = nullptr;
 }
