@@ -76,6 +76,9 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 	bHasBeenLoaded = false;
 	RenderTargetBackgroundColor = FColor::Transparent;
 	ItemQuantity = 1;
+	RenderTargetResolution = { 512, 512 };
+	RenderTargetPixelFormat = EPixelFormat::PF_R8G8B8A8;
+	bForceRenderTargetLinearGamma = false;
 
 	ItemImageSceneCapture = CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(TEXT("ItemImageSceneCapture"));
 	bUseSceneCaptureForImage = ItemImageSceneCapture != nullptr;
@@ -119,7 +122,7 @@ void ALimenItemBase::BeginPlay()
 	if (bUseSceneCaptureForImage && ItemImageSceneCapture)
 	{
 		ItemImageRenderTarget2D = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>());
-		ItemImageRenderTarget2D->InitCustomFormat(1024, 1024, EPixelFormat::PF_FloatRGBA, true);
+		ItemImageRenderTarget2D->InitCustomFormat(RenderTargetResolution.X, RenderTargetResolution.Y, RenderTargetPixelFormat, bForceRenderTargetLinearGamma);
 		ItemImageRenderTarget2D->ClearColor = RenderTargetBackgroundColor;
 
 		if (!ItemImageSceneCapture->ShowOnlyActors.Contains(TObjectPtr<AActor>(this)))
