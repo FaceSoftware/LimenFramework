@@ -355,6 +355,11 @@ float ULimenAttributeBase::GetCurrentValueAsPercentage() const
 	return CurrentValue * 100 / MaxValue;
 }
 
+float ULimenAttributeBase::GetCurrentValueNormalized() const
+{
+	return CurrentValue / MaxValue;
+}
+
 bool ULimenAttributeBase::IsEmpty() const
 {
 	return FMath::IsNearlyEqual(CurrentValue, MinValue);

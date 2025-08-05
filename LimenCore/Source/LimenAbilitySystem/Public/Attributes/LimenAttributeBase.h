@@ -173,6 +173,12 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
 	float GetCurrentValueAsPercentage() const;
+	/**
+	 * @brief Gets the current value of this attribute but in a [0, 1] range.
+	 * @return The normalized value of this attribute.
+	 */
+	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
+	float GetCurrentValueNormalized() const;
 
 	/**
 	 * @brief Checks if thi attribute is empty.

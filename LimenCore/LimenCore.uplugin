@@ -10,40 +10,34 @@
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
-	"CanContainContent": false,
+	"CanContainContent": true,
 	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Plugins": [
 		{
 			"Name": "EnhancedInput",
-			"Enabled": true,
-			"Optional": false
+			"Enabled": true
 		},
 		{
 			"Name": "GameplayCameras",
-			"Enabled": true,
-			"Optional": false
+			"Enabled": true
 		},
 		{
 			"Name": "EngineCameras",
-			"Enabled": true,
-			"Optional": false
+			"Enabled": true
 		},
 		{
 			"Name": "AutomationUtils",
-			"Enabled": true,
-			"Optional": false
+			"Enabled": true
 		},
 		{
 			"Name": "OnlineSubsystem",
-			"Enabled": true,
-			"Optional": false
+			"Enabled": true
 		},
 		{
 			"Name": "OnlineSubsystemUtils",
-			"Enabled": true,
-			"Optional": false
+			"Enabled": true
 		}
 	],
 	"Modules": [
