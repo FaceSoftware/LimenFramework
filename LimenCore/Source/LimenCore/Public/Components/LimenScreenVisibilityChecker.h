@@ -3,14 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "RenderGraphBuilder.h"
 #include "Components/ActorComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "LimenScreenVisibilityChecker.generated.h"
 
 
+class FRHIGPUTextureReadback;
 class UTextureRenderTarget2D;
 class USceneCaptureComponent2D;
 class UCameraComponent;
+
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVisibilityUpdate, bool, bIsVisible);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -29,7 +33,7 @@ public:
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Render")
-	FIntPoint RenderTargetSize;
+	float RenderTargetSizeScale;
 	UPROPERTY(EditDefaultsOnly, Category="Material")
 	TSoftObjectPtr<UMaterialInterface> StencilCheckerMaterial;
 	UPROPERTY(EditDefaultsOnly, Category="Material")
@@ -45,4 +49,12 @@ private:
 	TStrongObjectPtr<UTextureRenderTarget2D> RenderTarget;
 	TWeakObjectPtr<UCameraComponent> OwnerCamera;
 	bool bPreviousVisibleState;
+	
+	TUniquePtr<FRHIGPUTextureReadback> Readback;
+
+	void CheckVisibility(UTextureRenderTarget2D* InRenderTarget);
+	void AddReadbackStep(FRDGBuilder& GraphBuilder, FRDGTextureRef ResultTexture, ULimenScreenVisibilityChecker* Checker);
+	void PollReadback();
+
+	FVector2D GetViewportSize();
 };

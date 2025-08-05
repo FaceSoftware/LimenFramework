@@ -44,7 +44,7 @@
 		{
 			"Name": "LimenCore",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "PostConfigInit"
 		},
 		{
 			"Name": "LimenNotifications",

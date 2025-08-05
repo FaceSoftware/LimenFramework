@@ -3,13 +3,18 @@
 
 #include "Components/LimenScreenVisibilityChecker.h"
 
+#include "RenderGraphUtils.h"
+#include "RHIGPUReadback.h"
+#include "RHIStaticStates.h"
 #include "TextureResource.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Engine/Engine.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "Shaders/DownsamplerCS.h"
 
 
 ULimenScreenVisibilityChecker::ULimenScreenVisibilityChecker()
@@ -18,7 +23,7 @@ ULimenScreenVisibilityChecker::ULimenScreenVisibilityChecker()
 	PrimaryComponentTick.TickInterval = 1 / 16.f;
 	PrimaryComponentTick.bRunOnAnyThread = false;
 
-	RenderTargetSize = FIntPoint(1280, 720);
+	RenderTargetSizeScale = .5f;
 	StencilCheckerMaterial = FSoftObjectPath(TEXT("/LimenCore/Materials/PostProcess/M_StencilCheck.M_StencilCheck"));
 	MaskParameter = TEXT("Mask");
 	RenderTargetParameter = TEXT("RenderTarget");
@@ -30,6 +35,11 @@ ULimenScreenVisibilityChecker::ULimenScreenVisibilityChecker()
 void ULimenScreenVisibilityChecker::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (RenderTargetSizeScale <= 0.f)
+	{
+		RenderTargetSizeScale = 0.1f;
+	}
 
 	auto* Inst = UMaterialInstanceDynamic::Create(StencilCheckerMaterial.LoadSynchronous(), this, TEXT("StencilChecker"));
 	StencilCheckerInst = TStrongObjectPtr(Inst);
@@ -44,7 +54,10 @@ void ULimenScreenVisibilityChecker::BeginPlay()
 	RenderTarget = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>(this));
 	RenderTarget->RenderTargetFormat = RTF_RGBA8;
 	RenderTarget->ClearColor = FLinearColor::Transparent;
-	RenderTarget->InitAutoFormat(RenderTargetSize.X, RenderTargetSize.Y);
+	if (const FVector2D RenderTargetSize = GetViewportSize() * RenderTargetSizeScale; RenderTargetSize.X > 0.f && RenderTargetSize.Y > 0.f)
+	{
+		RenderTarget->InitAutoFormat(RenderTargetSize.X, RenderTargetSize.Y);
+	}
 	RenderTarget->UpdateResourceImmediate(true);
 	RenderTarget->bAutoGenerateMips = true;
 	RenderTarget->MipGenSettings = TMGS_FromTextureGroup;
@@ -80,12 +93,25 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!SceneCapture || !StencilCheckerInst.IsValid()) return;
+	if (!SceneCapture || !StencilCheckerInst.IsValid() || !RenderTarget.IsValid()) return;
+
+	const FVector2D NewRenderTargetSize = GetViewportSize() * RenderTargetSizeScale;
+	if (NewRenderTargetSize != FVector2D(RenderTarget->SizeX, RenderTarget->SizeY) &&
+		NewRenderTargetSize.X > 0.f && NewRenderTargetSize.Y > 0.f)
+	{
+		RenderTarget->ResizeTarget(NewRenderTargetSize.X, NewRenderTargetSize.Y);
+		RenderTarget->UpdateResourceWithParams(UTexture::EUpdateResourceFlags::ForceRebuild);
+		RenderTarget->BlockOnAnyAsyncBuild();
+	}
+
 	SceneCapture->CaptureScene();
 	StencilCheckerInst->UpdateCachedData();
-	FTextureRenderTargetResource* RTResource = SceneCapture->TextureTarget->GameThread_GetRenderTargetResource();
 
-	// Todo: It sucks to do it in the GPU but man, I cannot find a way to offload the work. Use a small render target res I guess...
+	CheckVisibility(RenderTarget.Get());
+	PollReadback();
+
+	// Todo: It sucks to do it in the CPU but man, I cannot find a way to offload the work. Use a small render target res I guess...
+	/*
 	TArray<FColor> OutPixels;
 	RTResource->ReadPixels(OutPixels);
 
@@ -107,4 +133,99 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 		OnActorVisibilityUpdated.Broadcast(bIsVisible);
 		bPreviousVisibleState = bIsVisible;
 	}
+	*/
+}
+
+void ULimenScreenVisibilityChecker::CheckVisibility(UTextureRenderTarget2D* InRenderTarget)
+{
+	ENQUEUE_RENDER_COMMAND(CheckStencilVisibilityGPU)(
+		[this, InRenderTarget](FRHICommandListImmediate& RHICmdList)
+		{
+			FRDGBuilder GraphBuilder(RHICmdList);
+
+			// 1. Register external texture (SceneCapture output)
+			FRDGTextureRef MaskTextureRDG = RegisterExternalTexture(GraphBuilder, InRenderTarget->GetRenderTargetResource()->GetRenderTargetTexture(), TEXT("StencilMaskTexture"));
+
+			// 2. Create 1x1 float texture to store result
+			FRDGTextureDesc ResultDesc = FRDGTextureDesc::Create2D(FIntPoint(1, 1), PF_R32_FLOAT, FClearValueBinding::Black, TexCreate_UAV | TexCreate_ShaderResource);
+			FRDGTextureRef ResultTexture = GraphBuilder.CreateTexture(ResultDesc, TEXT("VisibilityResult"));
+
+			// 3. Dispatch compute shader
+			{
+				TShaderMapRef<FDownsamplerCS> Shader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+				auto* Params = GraphBuilder.AllocParameters<FDownsamplerCS::FParameters>();
+				Params->Input = MaskTextureRDG;
+				Params->InputSampler = TStaticSamplerState<SF_Point>::GetRHI();
+				Params->Result = GraphBuilder.CreateUAV(ResultTexture);
+
+				FIntPoint Size = { InRenderTarget->SizeX, InRenderTarget->SizeY };
+				FComputeShaderUtils::AddPass(
+					GraphBuilder,
+					RDG_EVENT_NAME("GPUStencilVisibilityReduce"),
+					Shader,
+					Params,
+					FIntVector(FMath::DivideAndRoundUp(Size.X, 8), FMath::DivideAndRoundUp(Size.Y, 8), 1)
+				);
+			}
+
+			// 4. Read the result pixel
+			AddReadbackStep(GraphBuilder, ResultTexture, this);
+
+			GraphBuilder.Execute();
+		});
+}
+
+void ULimenScreenVisibilityChecker::AddReadbackStep(FRDGBuilder& GraphBuilder, FRDGTextureRef ResultTexture, ULimenScreenVisibilityChecker* Checker)
+{
+	if (!Checker->Readback.IsValid())
+	{
+		Checker->Readback = MakeUnique<FRHIGPUTextureReadback>(TEXT("VisibilityCheckerReadback"));
+	}
+    
+	AddEnqueueCopyPass(
+		GraphBuilder,
+		Checker->Readback.Get(),
+		ResultTexture,
+		FResolveRect()
+	);
+}
+
+void ULimenScreenVisibilityChecker::PollReadback()
+{
+	if (!Readback.IsValid()) return;
+	if (!Readback->IsReady()) return;
+
+	int32 Width = 0;
+	int32 Height = 0;
+	void* DataPtr = Readback->Lock(Width, &Height);
+	if (Width == 0 || Height == 0) return;
+	if (!DataPtr) return;
+
+	// Validation
+	check(Width != 0);
+	check(Height != 0);
+
+	// Read your pixel data here, e.g.:
+	float* PixelData = static_cast<float*>(DataPtr);
+	bool bIsVisible = PixelData[0] > 0.5f;
+
+	if (bIsVisible != bPreviousVisibleState)
+	{
+		OnActorVisibilityUpdated.Broadcast(bIsVisible);
+		bPreviousVisibleState = bIsVisible;
+	}
+
+	Readback->Unlock();
+}
+
+FVector2D ULimenScreenVisibilityChecker::GetViewportSize()
+{
+	if (GEngine && GEngine->GameViewport)
+	{
+		FVector2D ViewportSize;
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+		return ViewportSize;
+	}
+
+	return FVector2D(0, 0); // fallback if no viewport
 }
