@@ -86,6 +86,12 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
 	void SetRechargeRate(const float Value);
+	/**
+	 * @brief Getter for the attribute recharge rate.
+	 * @returns The recharge rate.
+	 */
+	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
+	float GetRechargeRate() const;
 	
 	/**
 	 * @brief Sets the attribute to a new value.

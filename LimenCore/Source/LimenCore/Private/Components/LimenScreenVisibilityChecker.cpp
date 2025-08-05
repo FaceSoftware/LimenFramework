@@ -136,6 +136,16 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 	*/
 }
 
+int32 ULimenScreenVisibilityChecker::GetStencilMask() const
+{
+	return MaskToCheck;
+}
+
+bool ULimenScreenVisibilityChecker::IsVisible() const
+{
+	return bPreviousVisibleState;
+}
+
 void ULimenScreenVisibilityChecker::CheckVisibility(UTextureRenderTarget2D* InRenderTarget)
 {
 	ENQUEUE_RENDER_COMMAND(CheckStencilVisibilityGPU)(

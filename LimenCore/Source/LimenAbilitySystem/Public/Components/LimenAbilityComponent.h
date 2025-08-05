@@ -229,12 +229,14 @@ public:
 	 *
 	 * @param Owner The owner actor to which the abilities are associated. This will be used during the initialization of each ability.
 	 */
+	UFUNCTION(BlueprintCallable)
 	void LoadAbilities(AActor* Owner);
 	/**
 	 * Loads and initializes attributes for the specified owner from the defined AttributeClasses array.
 	 *
 	 * @param Owner The owner actor to which the attributes are associated. This will be used during the initialization of each attribute.
 	 */
+	UFUNCTION(BlueprintCallable)
 	void LoadAttributes(AActor* Owner);
 	/**
 	 * Adds a new ability to the component and initializes it.

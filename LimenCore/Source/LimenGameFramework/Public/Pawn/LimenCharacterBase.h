@@ -54,7 +54,7 @@ public:
 	FVector GetLookTarget(const float MaxDistance) const;
 
 protected:
-	UPROPERTY(EditAnywhere, Category="Limen")
+	UPROPERTY(EditAnywhere, Category="Limen", BlueprintReadOnly)
 	TObjectPtr<ULimenAbilityComponent> AbilityComponent;
 
 	ALimenPlayerStateBase* GetLimenBasePlayerState() const;

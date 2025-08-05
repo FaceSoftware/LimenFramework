@@ -31,6 +31,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 							   FActorComponentTickFunction* ThisTickFunction) override;
 
+	int32 GetStencilMask() const;
+	bool IsVisible() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Render")
 	float RenderTargetSizeScale;
