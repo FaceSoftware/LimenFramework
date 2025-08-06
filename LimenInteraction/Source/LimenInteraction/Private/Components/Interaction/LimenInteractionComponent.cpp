@@ -55,6 +55,7 @@ void ULimenInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	if (GetOwner() && GetOwner()->HasAuthority())
 	{
 		UpdateInteraction(DeltaTime);
+
 		if (CurrentInteractableInterface != PreviousInteractableInterface)
 		{
 			AActor* TempOwner = nullptr;
@@ -64,16 +65,27 @@ void ULimenInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickT
 				check(TempOwner);
 			}
 
+			APawn* Pawn = Cast<APawn>(GetOwner());
+			AController* Controller = Pawn->GetController();
+
 			if (bIsInteracting)
 			{
-				APawn* Pawn = Cast<APawn>(GetOwner());
-				AController* Controller = Pawn->GetController();
 				StopInteraction(Controller, Pawn);
 			}
 
 			Client_InteractableComponentHoveredChanged(CurrentInteractableInterface
 				? CurrentInteractableInterface->GetPrimitiveComponent()
 				: nullptr);
+
+
+			if (CurrentInteractableInterface)
+			{
+				CurrentInteractableInterface->NotifyHover(Controller, Pawn);
+			}
+			if (PreviousInteractableInterface)
+			{
+				PreviousInteractableInterface->NotifyUnHover(Controller, Pawn);
+			}
 
 			OnInteractableHover.Broadcast(TempOwner, CurrentInteractableInterface);
 		}
@@ -102,10 +114,12 @@ bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPa
 		
 		Multicast_Interacted(CurrentInteractableInterface->GetPrimitiveComponent());
 
-		LIMEN_LOG(LogLimenInteraction, Log, this, "Interacted with: %s", *ComponentOwner->GetName());
+		LIMEN_LOG(LogLimenInteraction, Log, this, TEXT("Interacted with: %s"), *ComponentOwner->GetName());
 		return true;
 	}
-	
+
+	// Todo: Will need cooldown on network
+	Multicast_Interacted(nullptr);
 	return false;
 }
 
@@ -121,7 +135,7 @@ bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPa
 	TArray<UActorComponent*> Components = SpecificInteractable->GetComponentsByInterface(ULimenInteractableComponent::StaticClass());
 	if (!ensureAlways(!Components.IsEmpty()))
 	{
-		LIMEN_LOG(LogLimenInteraction, Error, this, "Cannot interact with %s because it does not have an interactable component", *SpecificInteractable->GetName());
+		LIMEN_LOG(LogLimenInteraction, Error, this, TEXT("Cannot interact with %s because it does not have an interactable component"), *SpecificInteractable->GetName());
 		return false;
 	}
 
@@ -144,7 +158,7 @@ bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPa
 	
 	if (!ensureAlways(SpecificInteractableComponent->Implements<ULimenInteractionComponent>()))
 	{
-		LIMEN_LOG(LogLimenInteraction, Error, this, "Cannot interact with %s because it does not have an interactable component", *SpecificInteractableComponent->GetOwner()->GetName());
+		LIMEN_LOG(LogLimenInteraction, Error, this, TEXT("Cannot interact with %s because it does not have an interactable component"), *SpecificInteractableComponent->GetOwner()->GetName());
 		return false;
 	}
 

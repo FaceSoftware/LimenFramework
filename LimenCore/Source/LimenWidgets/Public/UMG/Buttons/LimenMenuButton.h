@@ -8,6 +8,7 @@
 #include "LimenMenuButton.generated.h"
 
 
+class SButton;
 class SImage;
 class SWidget;
 class SRetainerWidget;
@@ -22,6 +23,7 @@ class LIMENWIDGETS_API ULimenMenuButton : public ULimenStandardButton, public FT
 
 public:
 	ULimenMenuButton();
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Icon")
@@ -48,9 +50,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects|Click")
 	TObjectPtr<USoundBase> ClickSound;
+
+	TSharedPtr<SButton> ButtonWidget;
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
-	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 	virtual FReply OnClicked() override;
 	virtual void OnHovered() override;

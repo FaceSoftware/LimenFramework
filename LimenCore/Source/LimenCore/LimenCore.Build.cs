@@ -1,4 +1,5 @@
-﻿using UnrealBuildTool;
+﻿using System.IO;
+using UnrealBuildTool;
 
 public class LimenCore : ModuleRules
 {
@@ -27,5 +28,9 @@ public class LimenCore : ModuleRules
 				"RHI",
 			}
 		);
+		
+		var ShaderDirectory = Path.Combine(PluginDirectory, "Shaders");
+		RuntimeDependencies.Add(Path.Combine(ShaderDirectory, "*.*"));
+		AdditionalPropertiesForReceipt.Add("ShaderDirectory", ShaderDirectory);
 	}
 }

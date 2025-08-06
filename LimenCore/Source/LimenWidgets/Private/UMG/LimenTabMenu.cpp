@@ -10,52 +10,55 @@
 #include "Widgets/Layout/SWidgetSwitcher.h"
 
 
-TArray<UWidget*> ULimenTabMenu::GetMenus() const
-{
-	return Menus;
-}
-
 TSharedRef<SWidget> ULimenTabMenu::RebuildWidget()
 {
-	if (MenuClasses.Num() != Titles.Num() || MenuClasses.IsEmpty() || Titles.IsEmpty())
+	if (Tabs.IsEmpty())
 	{
 		return SNew(SSpacer);
 	}
 
+	TabSwitcher = SNew(SWidgetSwitcher);
 	const TSharedRef<SHorizontalBox> ButtonsContainer = SNew(SHorizontalBox);
-	for (const FText& Title : Titles)
+	for (const auto& [Id, TabTitle, TabButtonClass, TabMenuClass] : Tabs)
 	{
-		auto* TempButton = NewObject<ULimenSelectableMenuButton>(this, MenuButton.Get());
-		TempButton->SetButtonText(Title);
+		if (!TabButtonClass) continue;
+		auto* TempButton = NewObject<ULimenSelectableMenuButton>(this, TabButtonClass.Get());
+		TempButton->SetClipping(EWidgetClipping::ClipToBounds);
+		TempButton->SetButtonText(TabTitle);
 		TempButton->OnButtonClickedEvent.AddDynamic(this, &ULimenTabMenu::ButtonClicked);
 		TempButton->OnButtonSelected.AddDynamic(this, &ULimenTabMenu::ButtonSelected);
 		TempButton->OnButtonUnselected.AddDynamic(this, &ULimenTabMenu::ButtonUnselected);
-
 		auto ButtonSlot = ButtonsContainer->AddSlot();
 		ButtonSlot.AttachWidget(TempButton->TakeWidget());
 		ButtonSlot.HAlign(HAlign_Fill);
 		ButtonSlot.VAlign(VAlign_Fill);
 		ButtonSlot.SizeParam(FStretchContent());
 
-		Buttons.Push(TempButton);
+		UWidget* TempMenu = nullptr;
+		if (TabMenuClass)
+		{
+			TempMenu = NewObject<UWidget>(this, TabMenuClass.Get());
+			TempMenu->SetClipping(EWidgetClipping::ClipToBounds);
+			auto MenuSlot = TabSwitcher->AddSlot(0);
+			MenuSlot.AttachWidget(TempMenu->TakeWidget());
+			MenuSlot.HAlign(HAlign_Fill);
+			MenuSlot.VAlign(VAlign_Fill);
+		}
+		
+		TabInstanceData.Push(FTabInstanceData(TempButton, TempMenu, Id));
 	}
-	Buttons[0]->SetButtonSelectedState(true);
-
-	TabSwitcher = SNew(SWidgetSwitcher);
-	for (auto& MenuClass : MenuClasses)
+	
+	int32 Index = 0;
+	for (auto& Data : TabInstanceData)
 	{
-		if (!MenuClass) continue;
-
-		UWidget* TempMenu = NewObject<UWidget>(this, MenuClass.Get());
-
-		auto MenuSlot = TabSwitcher->AddSlot();
-		MenuSlot.AttachWidget(TempMenu->TakeWidget());
-		MenuSlot.HAlign(HAlign_Fill);
-		MenuSlot.VAlign(VAlign_Fill);
-
-		Menus.Push(TempMenu);
+		if (Data.TabInstance.IsValid())
+		{
+			TabInstanceData[Index].TabButtonInstance->SetButtonSelectedState(true);
+			TabSwitcher->SetActiveWidget(TabInstanceData[Index].TabInstance->TakeWidget());
+			break;
+		}
+		Index++;
 	}
-	TabSwitcher->SetActiveWidgetIndex(0);
 
 	TSharedRef<SVerticalBox> Root = SNew(SVerticalBox)
 		.Clipping(EWidgetClipping::ClipToBounds)
@@ -80,29 +83,47 @@ TSharedRef<SWidget> ULimenTabMenu::RebuildWidget()
 void ULimenTabMenu::ReleaseSlateResources(const bool bReleaseChildren)
 {
 	Super::ReleaseSlateResources(bReleaseChildren);
-
-	for (ULimenSelectableMenuButton*& Button : Buttons)
-	{
-		if (!Button) continue;
-		CastChecked<UWidget>(Button)->ReleaseSlateResources(bReleaseChildren);
-	}
-	for (UWidget*& Menu : Menus)
-	{
-		if (!Menu) continue;
-		Menu->ReleaseSlateResources(bReleaseChildren);
-	}
+	
 	TabSwitcher.Reset();
+
+	for (auto& InstanceData : TabInstanceData)
+	{
+		if (InstanceData.TabButtonInstance.IsValid())
+		{
+			InstanceData.TabButtonInstance->ReleaseSlateResources(bReleaseChildren);
+			InstanceData.TabButtonInstance.Reset();
+		}
+		if (InstanceData.TabInstance.IsValid())
+		{
+			InstanceData.TabInstance->ReleaseSlateResources(bReleaseChildren);
+			InstanceData.TabInstance.Reset();
+		}
+	}
+}
+
+void ULimenTabMenu::BeginDestroy()
+{
+	TabInstanceData.Empty();
+	Super::BeginDestroy();
 }
 
 void ULimenTabMenu::ButtonClicked(ULimenStandardButton* Button)
 {
-	const int32 Index = Buttons.Find(CastChecked<ULimenSelectableMenuButton>(Button));
-	for (int i = 0; i < Buttons.Num(); ++i)
+	const int32 Index = TabInstanceData.IndexOfByKey(Button);
+	if (Index == INDEX_NONE) return;
+
+	if (TabInstanceData[Index].TabInstance.IsValid() && TabInstanceData[Index].TabInstance->TakeWidget() != ActiveTabWidget)
 	{
-		Buttons[i]->SetButtonSelectedState(i == Index);
+		ActiveTabWidget = TabInstanceData[Index].TabInstance->TakeWidget();	
+		TabSwitcher->SetActiveWidget(ActiveTabWidget.Pin().ToSharedRef()); 
+
+		for (int i = 0; i < TabInstanceData.Num(); ++i)
+		{
+			TabInstanceData[i].TabButtonInstance->SetButtonSelectedState(i == Index);
+		}
 	}
 
-	TabSwitcher->SetActiveWidgetIndex(Index);
+	OnButtonClicked.Broadcast(TabInstanceData[Index].Id);
 }
 
 void ULimenTabMenu::ButtonSelected(ULimenSelectableMenuButton* Button)

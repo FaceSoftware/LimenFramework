@@ -24,6 +24,15 @@ ULimenMenuButton::ULimenMenuButton() : Super(), bUseIcon(true)
 	bIsPlayingDistortionEffect = false;
 }
 
+void ULimenMenuButton::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+
+	Icon.Reset();
+	TextBlock.Reset();
+	RetainerBox.Reset();
+}
+
 TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 {
 	if (bUseIcon)
@@ -79,18 +88,21 @@ TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 			]
 		];
 	}
+
+	
+	ButtonWidget = SNew(SButton)
+		.ButtonStyle(&ButtonStyle)
+		.OnClicked(BIND_UOBJECT_DELEGATE(FOnClicked, OnClicked))
+		.OnHovered(BIND_UOBJECT_DELEGATE(FSimpleDelegate, OnHovered))
+		.OnUnhovered(BIND_UOBJECT_DELEGATE(FSimpleDelegate, OnUnhovered));
 	
 	TSharedRef<SWidget> Root = SNew(SOverlay)
 	+ SOverlay::Slot()
 	.HAlign(HAlign_Fill)
 	.VAlign(VAlign_Fill)
 	[
-		SNew(SButton)
-		.ButtonStyle(&ButtonStyle)
-		.OnClicked(BIND_UOBJECT_DELEGATE(FOnClicked, OnClicked))
-		.OnHovered(BIND_UOBJECT_DELEGATE(FSimpleDelegate, OnHovered))
-		.OnUnhovered(BIND_UOBJECT_DELEGATE(FSimpleDelegate, OnUnhovered))
-	] 
+		ButtonWidget.ToSharedRef()
+	]
 	+ SOverlay::Slot()
 	.HAlign(HAlign_Fill)
 	.VAlign(VAlign_Fill)
@@ -104,15 +116,6 @@ TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 	StopDistortionEffect();
 	
 	return Root;
-}
-
-void ULimenMenuButton::ReleaseSlateResources(bool bReleaseChildren)
-{
-	Super::ReleaseSlateResources(bReleaseChildren);
-
-	Icon.Reset();
-	TextBlock.Reset();
-	RetainerBox.Reset();
 }
 
 FReply ULimenMenuButton::OnClicked()

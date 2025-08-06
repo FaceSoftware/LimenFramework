@@ -58,6 +58,15 @@ void ALimenCharacterBase::BeginPlay()
 	SetupAbilityComponentInternal(AbilityComponent.Get());
 }
 
+void ALimenCharacterBase::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	PlayerController = Cast<APlayerController>(NewController);
+	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(NewController);
+	LimenBasePlayerState = NewController->GetPlayerState<ALimenPlayerStateBase>();
+}
+
 void ALimenCharacterBase::EnableInput(APlayerController* InPlayerController)
 {
 	Super::EnableInput(InPlayerController);
@@ -80,18 +89,26 @@ void ALimenCharacterBase::DisableInput(APlayerController* InPlayerController)
 	}
 }
 
+void ALimenCharacterBase::SetCinematicMode(bool bInCinematicMode, bool bHidePlayer, bool bAffectsHUD,
+	bool bAffectsMovement, bool bAffectsTurning)
+{
+	check(HasAuthority())
+
+	Multicast_SetCinematicMode(bInCinematicMode, bAffectsHUD, bAffectsMovement, bAffectsTurning);
+}
+
 bool ALimenCharacterBase::QueueNotification(const FNotificationParams& InParams)
 {
 	if (Controller->IsA<AAIController>())
 	{
-		LIMEN_LOG(LogLimen, Error, this, "Cannot queue notifications to AI controlled characters")
+		LIMEN_LOG(LogLimen, Error, this, TEXT("Cannot queue notifications to AI controlled characters"))
 		return false;
 	}
 
 	ULimenNotificationComponent* NotificationComponent = PlayerController->GetHUD()->GetComponentByClass<ULimenNotificationComponent>();
 	if (NotificationComponent == nullptr)
 	{
-		LIMEN_LOG(LogLimen, Error, this, "Could not find a notification component in the player's HUD class")
+		LIMEN_LOG(LogLimen, Error, this, TEXT("Could not find a notification component in the player's HUD class"))
 		return false;
 	}
 
@@ -137,21 +154,17 @@ FVector ALimenCharacterBase::GetLookTarget(const float MaxDistance) const
 	return Hit.Location;
 }
 
-void ALimenCharacterBase::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
-
-	PlayerController = Cast<APlayerController>(NewController);
-	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(NewController);
-	LimenBasePlayerState = NewController->GetPlayerState<ALimenPlayerStateBase>();
-}
-
 ALimenPlayerStateBase* ALimenCharacterBase::GetLimenBasePlayerState() const
 {
 	return LimenBasePlayerState.Get();
 }
 
 void ALimenCharacterBase::SetupAbilityComponent(ULimenAbilityComponent* InAbilityComponent)
+{
+}
+
+void ALimenCharacterBase::Multicast_SetCinematicMode_Implementation(bool bInCinematicMode, bool bAffectsHUD,
+	bool bAffectsMovement, bool bAffectsTurning)
 {
 }
 

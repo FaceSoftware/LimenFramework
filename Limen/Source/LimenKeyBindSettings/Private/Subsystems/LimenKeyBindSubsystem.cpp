@@ -49,10 +49,7 @@ void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
 		for (int i = 0; i < MappingContext->GetMappings().Num(); ++i)
 		{
 			FEnhancedActionKeyMapping& MappingRef = MappingContext->GetMapping(i);
-			if (!MappingRef.IsPlayerMappable())
-			{
-				continue;
-			}
+			if (!MappingRef.IsPlayerMappable()) continue;
 			
 			ULimenKeyBind* KeyBindSetting = NewObject<ULimenKeyBind>(this);
 			KeyBindSetting->InitializeSetting(this, &MappingRef);
@@ -108,11 +105,13 @@ void ULimenKeyBindSubsystem::Deinitialize()
 UInputMappingContext* ULimenKeyBindSubsystem::GetPlayerInputMappingContext(
 	const APlayerController* PlayerController) const
 {
+	if (!PlayerController) return nullptr;
 	return GetPlayerInputMappingContext(PlayerController->GetClass());
 }
 
 UInputMappingContext* ULimenKeyBindSubsystem::GetPawnInputMappingContext(const APawn* Pawn) const
 {
+	if (!Pawn) return nullptr;
 	return GetPawnInputMappingContext(Pawn->GetClass());
 }
 
@@ -130,13 +129,18 @@ UInputMappingContext* ULimenKeyBindSubsystem::GetPlayerInputMappingContext(
 
 UInputMappingContext* ULimenKeyBindSubsystem::GetPawnInputMappingContext(const TSubclassOf<APawn>& Pawn) const
 {
-	UInputMappingContext* const* Mapping = PawnMappingContexts.Find(Pawn.Get());
-	if (Mapping == nullptr)
+	if (!Pawn) return nullptr;
+
+	UInputMappingContext* Mapping = nullptr;
+	for (auto& Context : PawnMappingContexts)
 	{
-		return nullptr;
+		if (Pawn->GetDefaultObject()->IsA(Context.Key.LoadSynchronous()))
+		{
+			Mapping = Context.Value;
+		}
 	}
 
-	return *Mapping;
+	return Mapping;
 }
 
 UInputMappingContext* ULimenKeyBindSubsystem::GetInputMappingByAction(const UInputAction* Action) const

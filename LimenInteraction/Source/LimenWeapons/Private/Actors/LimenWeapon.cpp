@@ -497,12 +497,12 @@ void ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
 
 			if (InventoryAmmo >= AmmoMissingInMagazine)
 			{
-				PlayerInventory->GetItem(CompatibleAmmo, AmmoMissingInMagazine);
+				PlayerInventory->GetItems(CompatibleAmmo, AmmoMissingInMagazine);
 				CurrentAmmo = MagazineCapacity;
 			}
 			else if (InventoryAmmo < AmmoMissingInMagazine)
 			{
-				PlayerInventory->GetItem(CompatibleAmmo, InventoryAmmo);
+				PlayerInventory->GetItems(CompatibleAmmo, InventoryAmmo);
 				CurrentAmmo += InventoryAmmo;
 			}
 

@@ -52,7 +52,7 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	void AddJob(const TFunction<void()>& Function) const;
+	void AddJob(const TFunction<void()>& Function);
 
 protected:
 	void CreateThreads();
@@ -61,5 +61,6 @@ protected:
 
 private:
 	TMap<TSharedRef<FPoolWorker, ESPMode::NotThreadSafe>, TSharedRef<FRunnableThread, ESPMode::NotThreadSafe>> ThreadPool;
+	int32 ThreadCount;
 };
 

@@ -33,6 +33,7 @@ void ULimenStorageSubsystem::Deinitialize()
 {
 	Save_Internal();
 	CurrentSaveData.Reset();
+	StorageItems.Empty();
 
 	Super::Deinitialize();
 }

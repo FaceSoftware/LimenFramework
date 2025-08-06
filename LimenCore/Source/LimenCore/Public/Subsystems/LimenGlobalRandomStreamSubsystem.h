@@ -40,24 +40,39 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	int RandomIntRange(const int Max, const int Min);
+	int32 RandomIntRange(const int32 RangeStart, const int32 RangeEnd);
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	float RandomFloatRange(const float Max, const float Min);
+	float RandomFloatRange(const float RangeStart, const float RangeEnd);
 	
 	UFUNCTION(BlueprintCallable)
-	TArray<int> GenerateRandomUniqueNumbers(const int32 Max, const int32 Min, const int32 Count);
+	TArray<int32> GenerateRandomUniqueNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count);
 
 	UFUNCTION(BlueprintCallable)
-	TArray<int> GenerateRandomNumbers(const int32 Max, const int32 Min, const int32 Count);
+	TArray<int32> GenerateRandomNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count);
 	
-	TArray<int> GenerateValidRandomUniqueNumbers(const int32 Max, const int32 Min, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid = [] (const int32) { return true; });
+	TArray<int32> GenerateValidRandomUniqueNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid = [] (const int32) { return true; });
 
-	TArray<int> GenerateValidRandomNumbers(const int32 Max, const int32 Min, const int32 Count, const TFunction<bool(const int32)>& IsIndexValid = [] (const int32) { return true; });
+	TArray<int32> GenerateValidRandomNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid = [] (const int32) { return true; });
 	
 protected:
 	
 private:
 	FRandomStreamPtr GlobalRandomStream;
-
 	FCriticalSection RandomStreamSection;
+
+
+	template <typename T>
+	struct  TRange
+	{
+		static_assert(TIsArithmetic<T>::Value, "T must be an arithmetic type");
+		
+		TRange(T RangeStart, T RangeEnd)
+		{
+			Min = FMath::Min(RangeStart, RangeEnd);
+			Max = FMath::Max(RangeStart, RangeEnd);
+		}
+
+		T Min;
+		T Max;
+	};
 };

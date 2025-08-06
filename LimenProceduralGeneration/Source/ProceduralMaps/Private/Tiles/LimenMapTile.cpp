@@ -181,7 +181,7 @@ void ALimenMapTile::TeleportActorToRelativeLocationAndRotation(AActor* InActor, 
 	InActor->SetActorLocation(Location, false, nullptr, ETeleportType::TeleportPhysics);
 	InActor->SetActorRotation(Rotation, ETeleportType::TeleportPhysics);
 	
-	LIMEN_LOG(LogLimen, Log, this, "Actor teleported with diff: Location: %s; Rotation: %s", *Location.ToString(), *Rotation.ToString());
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Actor teleported with diff: Location: %s; Rotation: %s"), *Location.ToString(), *Rotation.ToString());
 }
 
 bool ALimenMapTile::TeleportPawnToRelativeLocationAndRotation(AController* InController,

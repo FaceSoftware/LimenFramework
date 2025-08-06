@@ -16,16 +16,20 @@ class LIMENINTERACTION_API ULimenInteractableAreaComponent : public UBoxComponen
 public:
 	UPROPERTY(BlueprintAssignable, DisplayName="On Interact", Category="Limen")
 	FBPInteractableComponentDelegate BP_OnInteract;
+	UPROPERTY(BlueprintAssignable, DisplayName="On Hover Start", Category="Limen")
+	FBPInteractableComponentDelegate BP_OnHoverStart;
 	FInteractableComponentDelegate OnInteract;
 	UPROPERTY(BlueprintAssignable, DisplayName="On Interaction Stopped", Category="Limen")
 	FBPInteractableComponentDelegate BP_OnInteractionStopped;
+	UPROPERTY(BlueprintAssignable, DisplayName="On Hover End", Category="Limen")
+	FBPInteractableComponentDelegate BP_OnHoverEnd;
 	FInteractableComponentDelegate OnInteractionStopped;
 	
 	ULimenInteractableAreaComponent();
 	virtual void OnComponentCreated() override;
-
 	virtual void Activate(bool bReset) override;
 	virtual void Deactivate() override;
+
 
 #pragma region ILimenInteractableComponent
 
@@ -36,6 +40,8 @@ public:
 	virtual UPrimitiveComponent* GetPrimitiveComponent() override;
 	virtual void Interact(AController* InController, APawn* InPawn) override;
 	virtual void StopInteraction(AController* InController, APawn* InPawn) override;
+	virtual void NotifyHover(AController* Controller, APawn* Pawn) override;
+	virtual void NotifyUnHover(AController* Controller, APawn* Pawn) override;
 
 	#pragma endregion ILimenInteractableComponent
 protected:

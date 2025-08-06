@@ -214,6 +214,11 @@ void ULimenAttributeBase::SetRechargeRate(const float Value)
 	RechargeRate = Value;
 }
 
+float ULimenAttributeBase::GetRechargeRate() const
+{
+	return RechargeRate;
+}
+
 void ULimenAttributeBase::SetValue(const float Value)
 {
 	if (Value > MaxValue)
@@ -353,6 +358,11 @@ float ULimenAttributeBase::GetCurrentValue() const
 float ULimenAttributeBase::GetCurrentValueAsPercentage() const
 {
 	return CurrentValue * 100 / MaxValue;
+}
+
+float ULimenAttributeBase::GetCurrentValueNormalized() const
+{
+	return CurrentValue / MaxValue;
 }
 
 bool ULimenAttributeBase::IsEmpty() const

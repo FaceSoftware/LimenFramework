@@ -26,6 +26,8 @@ void FLimenPSOCompiler::StartBatching(const EContext InContext)
 
 	switch (InContext)
 	{
+	case EContext::InGame: { FShaderPipelineCache::PauseBatching(); } return;
+
 	case EContext::LoadingScreen:
 		{
 			BatchMode = FShaderPipelineCache::BatchMode::Fast;
@@ -37,12 +39,6 @@ void FLimenPSOCompiler::StartBatching(const EContext InContext)
 			BatchMode = FShaderPipelineCache::BatchMode::Background;
 		}
 		break;
-
-	case EContext::InGame:
-		{
-			FShaderPipelineCache::PauseBatching();
-		}
-		return;
 	}
 
 	

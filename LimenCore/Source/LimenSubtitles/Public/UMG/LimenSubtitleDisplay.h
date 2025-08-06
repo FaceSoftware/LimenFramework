@@ -23,6 +23,7 @@ class LIMENSUBTITLES_API ULimenSubtitleDisplay : public ULimenWidget
 public:
 	virtual void BeginDestroy() override;
 	void AddSubtitle(ULimenSubtitle* InSubtitle);
+	void RemoveSubtitle(ULimenSubtitle* InSubtitle);
 
 protected:
 	virtual void SubtitleDismissed(ULimenSubtitle* Subtitle);

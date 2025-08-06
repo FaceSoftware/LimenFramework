@@ -4,9 +4,12 @@
 #include "Subsystems/LimenDialogueSubsystem.h"
 
 #include "TimerManager.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Developer/LimenSubtitlesDeveloperSettings.h"
 #include "DialoguePlayer/DialoguePlayerBase.h"
-#include "LimenCore/Public/LogMacros/LimenLogMacros.h"
+#include "Engine/GameInstance.h"
+#include "LogMacros/LimenLogMacros.h"
+#include "Subsystems/LimenThreadPoolSubsystem.h"
 #include "UMG/LimenSubtitle.h"
 #include "UMG/LimenSubtitleDisplay.h"
 
@@ -43,17 +46,18 @@ void ULimenDialogueSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void ULimenDialogueSubsystem::RegisterSpeaker(const FName SpeakerId, UActorComponent* SpeakerComponent)
+bool ULimenDialogueSubsystem::RegisterSpeaker(const FName SpeakerId, UActorComponent* SpeakerComponent)
 {
-	if (!SpeakerComponent) return;
+	if (!SpeakerComponent) return false;
 
-#if WITH_EDITOR
-
-	if (!ensureAlwaysMsgf(!SpeakersMap.Find(SpeakerId), TEXT("Duplicated speaker id!"))) return;
-
-#endif // WITH_EDITOR
+	const bool bIsUnique = !SpeakersMap.Find(SpeakerId);
+	check(bIsUnique)
+	if (!bIsUnique) return false;
 	
 	SpeakersMap.Add(SpeakerId, TWeakObjectPtr(SpeakerComponent));
+	LimenLog(this, FString::Printf(TEXT("Registered new speaker with id: %s"), *SpeakerId.ToString()), ELogType::Log, false);
+
+	return true;
 }
 
 UActorComponent* ULimenDialogueSubsystem::GetSpeakerComponent(const FName SpeakerId) const
@@ -66,28 +70,76 @@ UActorComponent* ULimenDialogueSubsystem::GetSpeakerComponent(const FName Speake
 	return nullptr;
 }
 
-void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished)
+void ULimenDialogueSubsystem::StopDialogue(const FGuid& DialogueId)
+{
+	const int32 DialoguePlayerIndex = DialoguePlayers.IndexOfByPredicate([this, &DialogueId] (const TStrongObjectPtr<UDialoguePlayerBase>& Test)
+	{
+		return Test->GetPlayerId() == DialogueId;
+	});
+	if (DialoguePlayerIndex == INDEX_NONE) return;
+
+	DialoguePlayers[DialoguePlayerIndex]->StopDialogue();
+
+
+	const int32 CompleteDataIndex = CompleteDialogueData.IndexOfByPredicate([this, &DialoguePlayerIndex] (const FCompleteDialogueData& Test)
+	{
+		return Test.DialoguePlayer.Get() == DialoguePlayers[DialoguePlayerIndex].Get();
+	});
+	if (DialoguePlayerIndex != INDEX_NONE)
+	{
+		SubtitleDisplayWidget->RemoveSubtitle(CompleteDialogueData[CompleteDataIndex].Subtitle.Get());
+		CompleteDialogueData.RemoveAt(CompleteDataIndex);
+	}
+
+	DialoguePlayers.RemoveAt(DialoguePlayerIndex);
+}
+
+FGuid ULimenDialogueSubsystem::BP_PlayDialogue(const UDataTable* InDialogueData, const FDialogueEndEvent OnFinished)
+{
+	return PlayDialogue(InDialogueData, [OnFinished] { OnFinished.ExecuteIfBound(); });
+}
+
+FGuid ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, const TFunction<void()>& OnFinished)
+{
+	const FGuid DialogueId = PlayDialogue(InDialogueData);
+	
+	if (DialogueId.IsValid() && OnFinished.IsSet())
+	{
+		FDialogueCallbacks CallbackData(InDialogueData);
+		CallbackData.Callbacks.Push(OnFinished);
+		DialogueEndCallbacks.Insert(CallbackData);
+	}
+
+	return DialogueId;
+}
+
+FGuid ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData)
 {
 	if (InDialogueData == nullptr || !InDialogueData->RowStruct->IsChildOf(FLimenDialogueCue::StaticStruct()))
 	{
-		LIMEN_LOG(LogLimen, Error, this, "Invalid subtitle struct.");
-		return;
+		LIMEN_LOG(LogLimen, Error, this, TEXT("Invalid subtitle struct."));
+		return FGuid();
 	}
 	
-	if (InDialogueData == nullptr)
-	{
-		return;
-	}
+	if (InDialogueData == nullptr) return FGuid();
 
-	DialogueEndCallbacks.Add(TWeakObjectPtr(InDialogueData), OnFinished);
+	auto* DialoguePlayer = NewObject<UDialoguePlayerBase>(this, DialoguePlayerClass);
+	DialoguePlayer->SubscribeToFinishEvent(this, &ThisClass::DialogueFinished);
+	DialoguePlayers.Push(TStrongObjectPtr(DialoguePlayer));
 
+	ULimenSubtitle* TempSubtitleWidget = SubtitleWidgetClass ? CreateWidget<ULimenSubtitle>(GetWorld(), SubtitleWidgetClass) : nullptr;
+	if (SubtitleWidgetClass) TempSubtitleWidget->SetSubtitleData(InDialogueData);
+
+
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Instanced new dialogue player. Currently there are %d total instances."), DialoguePlayers.Num())
+	
 	if (FMath::IsNearlyZero(DialogueDelay))
 	{
-		DisplayDialogue(InDialogueData);
+		DisplayDialogue(DialoguePlayer, InDialogueData);
 	}
 	else
 	{
-		const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::DisplayDialogue, InDialogueData);
+		const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::DisplayDialogue, DialoguePlayer, InDialogueData);
 		FTimerHandle TempHandle;
 		GetWorldRef().GetTimerManager().SetTimer(TempHandle, Delegate, SubtitlesDelay, true);
 	}
@@ -95,14 +147,23 @@ void ULimenDialogueSubsystem::PlayDialogue(const UDataTable* InDialogueData, con
 	
 	if (FMath::IsNearlyZero(SubtitlesDelay))
 	{
-		DisplaySubtitles(InDialogueData);
+		DisplaySubtitles(TempSubtitleWidget);
 	}
 	else
 	{
-		const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::DisplaySubtitles, InDialogueData);
+		const FTimerDelegate Delegate = FTimerDelegate::CreateUObject(this, &ThisClass::DisplaySubtitles, TempSubtitleWidget);
 		FTimerHandle TempHandle;
 		GetWorldRef().GetTimerManager().SetTimer(TempHandle, Delegate, SubtitlesDelay, true);
 	}
+
+	{
+		FCompleteDialogueData NewData;
+		NewData.DialoguePlayer = DialoguePlayer;
+		NewData.Subtitle = TempSubtitleWidget;
+		CompleteDialogueData.Push(MoveTemp(NewData));
+	}
+
+	return DialoguePlayer->GetPlayerId();
 }
 
 void ULimenDialogueSubsystem::UnregisterSpeaker(const FName SpeakerId)
@@ -140,36 +201,44 @@ void ULimenDialogueSubsystem::DialogueFinished(UDialoguePlayerBase* DialoguePlay
 		DialoguePlayers.RemoveAt(Index);
 
 		OnDialogueEnd.Broadcast(Data);
-		const FDialogueEndEvent& Callback = DialogueEndCallbacks.FindChecked(TWeakObjectPtr(Data));
-		Callback.ExecuteIfBound();
-	}
-}
 
-void ULimenDialogueSubsystem::DisplaySubtitles(const UDataTable* InDialogueData)
-{
-	if (SubtitleWidgetClass != nullptr)
-	{
-		ULimenSubtitle* TempSubtitleWidget = CreateWidget<ULimenSubtitle>(GetWorld(), SubtitleWidgetClass);
-		TempSubtitleWidget->SetSubtitleData(InDialogueData);
-
-		if (SubtitleDisplayWidget != nullptr)
+		int32 CallbackDataIndex;
 		{
-			SubtitleDisplayWidget->AddSubtitle(TempSubtitleWidget);
+			const TArray<FDialogueCallbacks> CallbacksCopy = DialogueEndCallbacks.Copy();
+			CallbackDataIndex = CallbacksCopy.IndexOfByKey(Data);
+			if (CallbackDataIndex == INDEX_NONE) return;
+		}
+
+		FDialogueCallbacks CallbackData = DialogueEndCallbacks.PopAt(CallbackDataIndex);
+		CallbackData.FireCallbacks();
+		
+		TWeakObjectPtr WeakThis(this);
+		const TFunction<void()> RemoveCallbackData = [WeakThis]
+		{
+			if (WeakThis.IsValid())
+			{
+				WeakThis->DialogueEndCallbacks.RemoveInvalid();
+			}
+		};
+
+		if (auto* ThreadPool = GetWorld()->GetGameInstance()->GetSubsystem<ULimenThreadPoolSubsystem>())
+		{
+			ThreadPool->AddJob(RemoveCallbackData);
+		}
+		else
+		{
+			RemoveCallbackData();
 		}
 	}
 }
 
-void ULimenDialogueSubsystem::DisplayDialogue(const UDataTable* InDialogueData)
+void ULimenDialogueSubsystem::DisplaySubtitles(ULimenSubtitle* Subtitle)
 {
-	if (DialoguePlayerClass.Get() != nullptr)
-	{
-		const TStrongObjectPtr DialoguePlayer = TStrongObjectPtr(NewObject<UDialoguePlayerBase>(this, DialoguePlayerClass));
-		DialoguePlayer->SubscribeToFinishEvent(this, &ThisClass::DialogueFinished);
-		DialoguePlayer->PlayDialogue(InDialogueData);
+	if (SubtitleDisplayWidget != nullptr) SubtitleDisplayWidget->AddSubtitle(Subtitle);
+}
 
-		DialoguePlayers.Push(DialoguePlayer);
-	}
-
-	LIMEN_LOG(LogLimen, Log, this, "Instanced new dialogue player. Currently there are %d active instances.", DialoguePlayers.Num())
+void ULimenDialogueSubsystem::DisplayDialogue(UDialoguePlayerBase* DialoguePlayer, const UDataTable* InDialogueData)
+{
+	DialoguePlayer->PlayDialogue(InDialogueData);
 }
 

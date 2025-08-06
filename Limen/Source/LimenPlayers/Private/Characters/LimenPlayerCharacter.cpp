@@ -710,14 +710,14 @@ void ALimenPlayerCharacter::OnInteract(AActor* InteractableActor, const TScriptI
 	if (CharacterInventory->AddItem(LimenItem))
 	{
 		LimenItem->PickUp(GetController(), this);
-		LIMEN_LOG(LogLimenPlayer, Log, this, "Item picked up")
+		LIMEN_LOG(LogLimenPlayer, Log, this, TEXT("Item picked up"))
 	}
 }
 
 void ALimenPlayerCharacter::ItemAdded(TSubclassOf<ALimenItemBase> NewItem)
 {
 	check(NewItem != nullptr)
-	LIMEN_LOG(LogLimenPlayer, Log, this, "Received new item notification")
+	LIMEN_LOG(LogLimenPlayer, Log, this, TEXT("Received new item notification"))
 	
 	FNotificationParams Params;
 	Params.NotificationTitle = FText::FromString(TEXT("New item"));
@@ -728,7 +728,7 @@ void ALimenPlayerCharacter::ItemAdded(TSubclassOf<ALimenItemBase> NewItem)
 void ALimenPlayerCharacter::ItemCouldNotBeAdded(TSubclassOf<ALimenItemBase> NewItem)
 {
 	check(NewItem != nullptr)
-	LIMEN_LOG(LogLimenPlayer, Warning, this, "Received 'item could not be added' notification")
+	LIMEN_LOG(LogLimenPlayer, Warning, this, TEXT("Received 'item could not be added' notification"))
 	
 	FNotificationParams Params;
 	Params.NotificationTitle = FText::FromString(FString::Printf(TEXT("Failed to pickup item")));
@@ -746,7 +746,7 @@ void ALimenPlayerCharacter::ObjectiveAdded(ALimenObjective* NewObjective)
 	Params.NotificationMessage = FText::FromString(Message);
 	QueueNotification(Params);
 
-	LIMEN_LOG(LogLimen, Log, this, "Received 'new objective' notification")
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Received 'new objective' notification"))
 }
 
 void ALimenPlayerCharacter::ObjectiveUpdated(ALimenObjective* UpdatedObjective)
@@ -759,7 +759,7 @@ void ALimenPlayerCharacter::ObjectiveUpdated(ALimenObjective* UpdatedObjective)
 	Params.NotificationMessage = FText::FromString(Message);
 	QueueNotification(Params);
 
-	LIMEN_LOG(LogLimen, Log, this, "Received 'objective updated' notification")
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Received 'objective updated' notification"))
 }
 
 void ALimenPlayerCharacter::ObjectiveComplete(ALimenObjective* UpdatedObjective)
@@ -772,7 +772,7 @@ void ALimenPlayerCharacter::ObjectiveComplete(ALimenObjective* UpdatedObjective)
 	Params.NotificationMessage = FText::FromString(Message);
 	QueueNotification(Params);
 
-	LIMEN_LOG(LogLimen, Log, this, "Received 'objective completed' notification")
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Received 'objective completed' notification"))
 }
 
 void ALimenPlayerCharacter::ToolChanged(ALimenPhysicalItem* Old, ALimenPhysicalItem* New)

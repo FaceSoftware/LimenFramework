@@ -9,6 +9,7 @@
 #include "LimenItemBase.generated.h"
 
 
+enum EPixelFormat : uint8;
 class USpotLightComponent;
 class UTextureRenderTarget2D;
 class UTexture;
@@ -86,6 +87,12 @@ protected:
 	bool bUseSceneCaptureForImage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
 	FColor RenderTargetBackgroundColor;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
+	FIntPoint RenderTargetResolution;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
+	TEnumAsByte<EPixelFormat> RenderTargetPixelFormat;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
+	bool bForceRenderTargetLinearGamma;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Item Parameters")
 	TObjectPtr<USceneCaptureComponent2D> ItemImageSceneCapture;

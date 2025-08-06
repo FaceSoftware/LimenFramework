@@ -24,19 +24,19 @@ void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, c
 	switch (Verbosity)
 	{
 	case ELogType::Log:
-		LIMEN_LOG(LogLimen, Log, Caller, "%s", *LogText);
+		LIMEN_LOG(LogLimen, Log, Caller, TEXT("%s"), *LogText);
 		DisplayTime = ErrorInformation::LogDisplayTime;
 		TextColor = ErrorInformation::LogTextColor;
 		break;
 
 	case ELogType::Warning:
-		LIMEN_LOG(LogLimen, Warning, Caller, "%s", *LogText);
+		LIMEN_LOG(LogLimen, Warning, Caller, TEXT("%s"), *LogText);
 		DisplayTime = ErrorInformation::WarningDisplayTime;
 		TextColor = ErrorInformation::WarningTextColor;
 		break;
 
 	case ELogType::Error:
-		LIMEN_LOG(LogLimen, Error, Caller, "%s", *LogText);
+		LIMEN_LOG(LogLimen, Error, Caller, TEXT("%s"), *LogText);
 		DisplayTime = ErrorInformation::ErrorDisplayTime;
 		TextColor = ErrorInformation::ErrorTextColor;
 		break;
@@ -64,19 +64,19 @@ void ULimenCoreStatics::StaticLimenLog(const FString FunctionName, const FString
 	switch (Verbosity)
 	{
 	case ELogType::Log:
-		STATIC_LIMEN_LOG(LogLimen, Log, FunctionName, "%s", *LogText)
+		STATIC_LIMEN_LOG(LogLimen, Log, FunctionName, TEXT("%s"), *LogText)
 		DisplayTime = ErrorInformation::LogDisplayTime;
 		TextColor = ErrorInformation::LogTextColor;
 		break;
 
 	case ELogType::Warning:
-		STATIC_LIMEN_LOG(LogLimen, Warning, FunctionName, "%s", *LogText)
+		STATIC_LIMEN_LOG(LogLimen, Warning, FunctionName, TEXT("%s"), *LogText)
 		DisplayTime = ErrorInformation::WarningDisplayTime;
 		TextColor = ErrorInformation::WarningTextColor;
 		break;
 
 	case ELogType::Error:
-		STATIC_LIMEN_LOG(LogLimen, Error, FunctionName, "%s", *LogText)
+		STATIC_LIMEN_LOG(LogLimen, Error, FunctionName, TEXT("%s"), *LogText)
 		DisplayTime = ErrorInformation::ErrorDisplayTime;
 		TextColor = ErrorInformation::ErrorTextColor;
 		break;

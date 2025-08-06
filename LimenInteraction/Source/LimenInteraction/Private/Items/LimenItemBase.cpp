@@ -1,7 +1,7 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
- #include "Items/LimenItemBase.h"
+#include "Items/LimenItemBase.h"
 
 #include "TextureResource.h"
 #include "TimerManager.h"
@@ -9,7 +9,6 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/Interactable/LimenInteractableAreaComponent.h"
 #include "Engine/Engine.h"
-#include "Engine/Texture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/Pawn.h"
 #include "ItemActions/LimenItemAction.h"
@@ -19,7 +18,7 @@
 
 UTexture* ALimenItemBase::GetItemImage(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
 {
-	check(ItemClass != nullptr);
+	if (ItemClass == nullptr) return nullptr;
 
 	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
 	if (Actor == nullptr)
@@ -34,7 +33,7 @@ UTexture* ALimenItemBase::GetItemImage(UObject* WorldContextObject, const TSubcl
 
 FText ALimenItemBase::GetDisplayName(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
 {
-	check(ItemClass != nullptr);
+	if (ItemClass == nullptr) return FText();
 
 	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
 	if (Actor == nullptr)
@@ -47,7 +46,7 @@ FText ALimenItemBase::GetDisplayName(UObject* WorldContextObject, const TSubclas
 
 FText ALimenItemBase::GetDescription(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
 {
-	check(ItemClass != nullptr);
+	if (ItemClass == nullptr) return FText();
 
 	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
 	if (Actor == nullptr)
@@ -76,14 +75,17 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 {
 	bHasBeenLoaded = false;
 	RenderTargetBackgroundColor = FColor::Transparent;
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	ItemQuantity = 1;
+	RenderTargetResolution = { 512, 512 };
+	RenderTargetPixelFormat = EPixelFormat::PF_R8G8B8A8;
+	bForceRenderTargetLinearGamma = false;
 
 	ItemImageSceneCapture = CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(TEXT("ItemImageSceneCapture"));
 	bUseSceneCaptureForImage = ItemImageSceneCapture != nullptr;
 	if (bUseSceneCaptureForImage)
 	{
 		ItemImageSceneCapture->SetupAttachment(GetRootComponent());
+		ItemImageSceneCapture->SetMobility(EComponentMobility::Movable);
 		ItemImageSceneCapture->bCaptureEveryFrame = false;
 		ItemImageSceneCapture->bCaptureOnMovement = false;
 		ItemImageSceneCapture->CaptureSource = ESceneCaptureSource::SCS_BaseColor;
@@ -117,10 +119,10 @@ void ALimenItemBase::BeginPlay()
 		ItemActions.Push(TStrongObjectPtr(Action));
 	}
 
-	if (bUseSceneCaptureForImage)
+	if (bUseSceneCaptureForImage && ItemImageSceneCapture)
 	{
 		ItemImageRenderTarget2D = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>());
-		ItemImageRenderTarget2D->InitCustomFormat(1024, 1024, EPixelFormat::PF_FloatRGBA, true);
+		ItemImageRenderTarget2D->InitCustomFormat(RenderTargetResolution.X, RenderTargetResolution.Y, RenderTargetPixelFormat, bForceRenderTargetLinearGamma);
 		ItemImageRenderTarget2D->ClearColor = RenderTargetBackgroundColor;
 
 		if (!ItemImageSceneCapture->ShowOnlyActors.Contains(TObjectPtr<AActor>(this)))
@@ -258,7 +260,7 @@ const FColor& ALimenItemBase::GetRenderTargetBackgroundColor() const
 
 void ALimenItemBase::CaptureItemImage()
 {
-	if (bUseSceneCaptureForImage)
+	if (bUseSceneCaptureForImage && ItemImageSceneCapture)
 	{
 		const bool bShouldHide = IsHidden();
 		SetActorHiddenInGame(false);

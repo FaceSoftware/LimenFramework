@@ -23,7 +23,7 @@ class ALimenProceduralTileMapBuilder;
 void ULimenCheatManager::ForceCrash()
 {
 	// Let's definitely crash
-	LIMEN_LOG(LogLimen, Warning, this, "Force crash requested!");
+	LIMEN_LOG(LogLimen, Warning, this, TEXT("Force crash requested!"))
 	check(false);
 }
 
@@ -94,12 +94,12 @@ void ULimenCheatManager::God()
 	if (Health->IsFrozen())
 	{
 		Health->FreezeAttribute(false);
-		LIMEN_LOG(LogLimen, Log, this, "God mode off");
+		LIMEN_LOG(LogLimen, Log, this, TEXT("God mode off"))
 	}
 	else
 	{
 		Health->FreezeAttribute(true);
-		LIMEN_LOG(LogLimen, Log, this, "God mode on");
+		LIMEN_LOG(LogLimen, Log, this, TEXT("God mode on"))
 	}
 }
 

@@ -2,11 +2,16 @@
 
 #include "LimenCore.h"
 
+#include "ShaderCore.h"
+#include "Misc/Paths.h"
+
+
 #define LOCTEXT_NAMESPACE "FLimenCoreModule"
 
 void FLimenCoreModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+	const FString PluginShaderDir = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("LimenFramework"), TEXT("LimenCore"), TEXT("Shaders"));
+	AddShaderSourceDirectoryMapping(TEXT("/LimenCore"), PluginShaderDir);
 }
 
 void FLimenCoreModule::ShutdownModule()

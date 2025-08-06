@@ -20,6 +20,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Menus|Player Controller")
 	virtual void BindPlayerController(APlayerController* InPlayerController);
 
+	template <typename T = APlayerController>
+	T* GetBoundPlayerController() const
+	{
+		static_assert(TIsDerivedFrom<T, APlayerController>::Value);
+		return CastChecked<T>(BoundPlayerController.Get(), ECastCheckedType::NullAllowed);
+	}
+
 protected:
 	UPROPERTY(BlueprintReadOnly, Category="Limen|Menus|Player Controller")
 	TObjectPtr<APlayerController> BoundPlayerController;

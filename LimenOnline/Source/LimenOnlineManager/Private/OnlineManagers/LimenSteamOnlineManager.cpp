@@ -82,6 +82,14 @@ bool ULimenSteamOnlineManager::ShouldCreateSubsystem(UObject* Outer) const
 void ULimenSteamOnlineManager::Initialize(FSubsystemCollectionBase& Collection)
 {	
 	Super::Initialize(Collection);
+
+	LobbyCreatedCallback.Register(this, &ThisClass::LobbyCreated);
+	LobbyEnterCallback.Register(this, &ThisClass::LobbyJoined);
+	LobbyInviteAcceptedCallback.Register(this, &ThisClass::LobbyInviteAccepted);
+	LobbyMemberUpdatedCallback.Register(this, &ThisClass::LobbyMemberUpdated);
+	MemberDataUpdatedCallback.Register(this, &ThisClass::MemberDataUpdated);
+	FriendAvatarImageLoadedCallback.Register(this, &ThisClass::FriendAvatarImageLoaded);
+	LobbyGameServerSetCallback.Register(this, &ThisClass::LobbyGameServerSet);	
 }
 
 void ULimenSteamOnlineManager::Deinitialize()

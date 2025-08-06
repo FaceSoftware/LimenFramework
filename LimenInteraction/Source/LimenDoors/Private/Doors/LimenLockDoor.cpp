@@ -109,7 +109,7 @@ ALimenKey* ALimenLockDoor::GetKeyFromPlayer(ULimenLock* LockContext, AController
 	
 	for (ALimenKey* Key : Inventory->PeekItemInstances<ALimenKey>())
 	{
-		if (LockContext->TryKey(Key))
+		if (LockContext->TryKeyword(Key->GetKeyword()))
 		{
 			return Key;
 		}
@@ -150,7 +150,7 @@ void ALimenLockDoor::UnlockAllLocks(ALimenKey* Key, AController* InController, A
 void ALimenLockDoor::UnlockFromInside(AController* InController, APawn* InPawn)
 {
 	ALimenKey* Key = GetKeyFromPlayer(OutsideLock.Get(), InController, InPawn);
-	if (InsideLock->ChangeLockedState(InController, InPawn, Key, false))
+	if (InsideLock->ChangeLockedState(InController, InPawn, Key->GetKeyword(), false))
 	{
 		OutsideLock->SetLockedState(false);
 	}
@@ -159,7 +159,7 @@ void ALimenLockDoor::UnlockFromInside(AController* InController, APawn* InPawn)
 void ALimenLockDoor::UnlockFromOutside(AController* InController, APawn* InPawn)
 {
 	ALimenKey* Key = GetKeyFromPlayer(OutsideLock.Get(), InController, InPawn);
-	if (OutsideLock->ChangeLockedState(InController, InPawn, Key, false))
+	if (OutsideLock->ChangeLockedState(InController, InPawn, Key->GetKeyword(), false))
 	{
 		InsideLock->SetLockedState(false);
 	}

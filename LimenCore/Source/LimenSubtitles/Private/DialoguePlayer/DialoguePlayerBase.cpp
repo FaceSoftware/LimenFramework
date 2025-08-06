@@ -6,6 +6,7 @@
 
 UDialoguePlayerBase::UDialoguePlayerBase() : Super()
 {
+	PlayerId = FGuid::NewGuid();
 }
 
 void UDialoguePlayerBase::BeginDestroy()
@@ -30,7 +31,16 @@ void UDialoguePlayerBase::FinishPlayDialogue()
 	OnDialogueFinished.Broadcast(this);
 }
 
+void UDialoguePlayerBase::StopDialogue()
+{
+}
+
 const UDataTable* UDialoguePlayerBase::GetDialogueData() const
 {
 	return DialogueData.Get();
+}
+
+FGuid UDialoguePlayerBase::GetPlayerId() const
+{
+	return PlayerId;
 }

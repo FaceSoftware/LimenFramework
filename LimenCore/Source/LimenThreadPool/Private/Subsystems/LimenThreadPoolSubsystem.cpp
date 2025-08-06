@@ -82,9 +82,8 @@ void ULimenThreadPoolSubsystem::FPoolWorker::DiscardWaitEvent() const
 	QueueCondition->Trigger();
 }
 
-ULimenThreadPoolSubsystem::ULimenThreadPoolSubsystem()
+ULimenThreadPoolSubsystem::ULimenThreadPoolSubsystem(): ThreadCount(0)
 {
-	
 }
 
 bool ULimenThreadPoolSubsystem::ShouldCreateSubsystem(UObject* Outer) const
@@ -93,19 +92,43 @@ bool ULimenThreadPoolSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	{
 		return false;
 	}
-	
-	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
-	if (!Settings->bUseSubsystem)
+
+	if (FPlatformMisc::NumberOfCoresIncludingHyperthreads() <= 1)
 	{
+		LIMEN_LOG(LogLimen, Warning, this, TEXT("Skipping thread pool subsystem: only one core available."))
 		return false;
 	}
 
-	return Settings->GetThreadCount() > 0;
+	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
+	if (!Settings || !Settings->bUseSubsystem)
+	{
+		LIMEN_LOG(LogLimen, Warning, this, TEXT("Thread pool subsystem disabled via developer settings."))
+		return false;
+	}
+
+	if (Settings->GetThreadCount() <= 0)
+	{
+		LIMEN_LOG(LogLimen, Warning, this, TEXT("Thread pool subsystem skipped: settings thread count <= 0."))
+		return false;
+	}
+
+	return true;
 }
 
 void ULimenThreadPoolSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
+	ThreadCount = Settings->GetThreadCount();
+
+
+	const int32 MaxThreads = FPlatformMisc::NumberOfCoresIncludingHyperthreads() - 1;
+	if (const int32 DesiredThreads = Settings->GetThreadCount(); MaxThreads < DesiredThreads)
+	{
+		LIMEN_LOG(LogLimen, Warning, this, TEXT("Requested thread count (%d) exceeds available cores (%d). Clamping to %d."), DesiredThreads, MaxThreads, MaxThreads);
+		ThreadCount = MaxThreads > 0 ? MaxThreads : 1;
+	}
 
 	CreateThreads();
 }
@@ -117,18 +140,18 @@ void ULimenThreadPoolSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void ULimenThreadPoolSubsystem::AddJob(const TFunction<void()>& Function) const
+void ULimenThreadPoolSubsystem::AddJob(const TFunction<void()>& Function)
 {
 	TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> AvailableThread = GetAvailableThread();
 	AvailableThread->QueueJob(Function);
 	
-	UE_LOG(LogLimen, Log, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run New job queued to thread %s. In queue: %d"), *AvailableThread->ThreadName, AvailableThread->GetQueuedJobsCount());
+	LIMEN_LOG(LogLimen, Log, this, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run New job queued to thread %s. In queue: %d"), *AvailableThread->ThreadName, AvailableThread->GetQueuedJobsCount());
 }
 
 void ULimenThreadPoolSubsystem::CreateThreads()
 {
 	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
-	for (int i = 0; i < Settings->GetThreadCount(); ++i)
+	for (int i = 0; i < ThreadCount; ++i)
 	{
 		const FString ThreadName = FString::Printf(TEXT("PoolThread_%d"), i);
 		TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> Worker = MakeShared<FPoolWorker, ESPMode::NotThreadSafe>();
@@ -140,7 +163,7 @@ void ULimenThreadPoolSubsystem::CreateThreads()
 		ThreadPool.Add(Worker, WorkerThread);
 	}
 
-	LIMEN_LOG(LogLimen, Log, this, "%d threads created successfully.", ThreadPool.Num());
+	LIMEN_LOG(LogLimen, Log, this, TEXT("%d threads created successfully."), ThreadPool.Num());
 }
 
 void ULimenThreadPoolSubsystem::DestroyThreads()
@@ -154,7 +177,7 @@ void ULimenThreadPoolSubsystem::DestroyThreads()
 	}
 	ThreadPool.Empty();
 
-	LIMEN_LOG(LogLimen, Log, this, "Threads destroyed.");
+	LIMEN_LOG(LogLimen, Log, this, TEXT("Threads destroyed."));
 }
 
 TSharedRef<ULimenThreadPoolSubsystem::FPoolWorker, ESPMode::NotThreadSafe> ULimenThreadPoolSubsystem::GetAvailableThread() const

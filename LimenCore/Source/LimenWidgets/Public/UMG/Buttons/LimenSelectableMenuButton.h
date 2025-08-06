@@ -31,6 +31,9 @@ public:
 	bool IsButtonSelected() const;
 	
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Button")
+	FButtonStyle ButtonSelectedStyle;
+
 	virtual FReply OnClicked() override;
 	virtual void OnHovered() override;
 	virtual void OnUnhovered() override;

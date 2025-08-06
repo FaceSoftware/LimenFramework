@@ -5,10 +5,9 @@
 
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
-#include "Subsystems/LimenDialogueSubsystem.h"
 
 
-ULimenDialogueSpeakerComponent::ULimenDialogueSpeakerComponent()
+ULimenDialogueSpeakerComponent::ULimenDialogueSpeakerComponent(): bIsRegisteredWithSubsystem(false)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	bAutoActivate = true;
@@ -19,6 +18,13 @@ void ULimenDialogueSpeakerComponent::BeginPlay()
 	Super::BeginPlay();
 
 	RegisterSpeaker();
+}
+
+void ULimenDialogueSpeakerComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	
+
+	Super::EndPlay(EndPlayReason);
 }
 
 UActorComponent* ULimenDialogueSpeakerComponent::GetDialogueAudioComponent() const
@@ -37,6 +43,26 @@ UActorComponent* ULimenDialogueSpeakerComponent::GetDialogueAudioComponent() con
 	return DialogueAudioComponent.Get();
 }
 
+void ULimenDialogueSpeakerComponent::SetSpeakerID(const FName& NewSpeakerID)
+{
+	check(!bIsRegisteredWithSubsystem);
+	SpeakerID = NewSpeakerID;
+}
+
+const FName& ULimenDialogueSpeakerComponent::GetSpeakerID() const
+{
+	return SpeakerID;
+}
+
+void ULimenDialogueSpeakerComponent::PlayDialogue(const UDataTable* InDialogueData,
+												  const FDialogueEndEvent OnDialogueEnd)
+{
+	auto* DialogueSubsystem = GetWorld()->GetSubsystem<ULimenDialogueSubsystem>();
+	if (!DialogueSubsystem) return;
+
+	DialogueSubsystem->BP_PlayDialogue(InDialogueData, OnDialogueEnd);
+}
+
 void ULimenDialogueSpeakerComponent::RegisterSpeaker()
 {
 	if (SpeakerID.IsNone()) return;
@@ -44,5 +70,16 @@ void ULimenDialogueSpeakerComponent::RegisterSpeaker()
 	auto* DialogueSubsystem = GetWorld()->GetSubsystem<ULimenDialogueSubsystem>();
 	if (!DialogueSubsystem) return;
 
-	DialogueSubsystem->RegisterSpeaker(SpeakerID, GetDialogueAudioComponent());
+	bIsRegisteredWithSubsystem = DialogueSubsystem->RegisterSpeaker(SpeakerID, GetDialogueAudioComponent());
+}
+
+void ULimenDialogueSpeakerComponent::UnRegisterSpeaker()
+{
+	if (SpeakerID.IsNone()) return;
+
+	auto* DialogueSubsystem = GetWorld()->GetSubsystem<ULimenDialogueSubsystem>();
+	if (!DialogueSubsystem) return;
+
+	DialogueSubsystem->UnregisterSpeaker(SpeakerID);
+	bIsRegisteredWithSubsystem = false;
 }

@@ -39,6 +39,12 @@ void ULimenSubtitleDisplay::AddSubtitle(ULimenSubtitle* InSubtitle)
 	ActiveSubtitles.Add(InSubtitle);
 }
 
+void ULimenSubtitleDisplay::RemoveSubtitle(ULimenSubtitle* InSubtitle)
+{
+	InSubtitle->StopDisplayingSubtitles();
+	RemoveFromScreen(InSubtitle);
+}
+
 void ULimenSubtitleDisplay::SubtitleDismissed(ULimenSubtitle* Subtitle)
 {
 	RemoveFromScreen(Subtitle);

@@ -53,16 +53,10 @@ TSharedRef<SWidget> ULimenStandardButton::RebuildWidget()
 		.Text(Text)
 		.ColorAndOpacity(TextColor)
 		.Font(Font)
-		.Justification(TextJustification);
+		.Justification(TextJustification)
+		.Visibility(EVisibility::HitTestInvisible);
 	
 	TSharedRef<SOverlay> Root = SNew(SOverlay)
-	+ SOverlay::Slot()
-	.HAlign(TextHorizontalAlignment)
-	.VAlign(TextVerticalAlignment)
-	[
-		TextBlock.ToSharedRef()
-	]
-		
 	+ SOverlay::Slot()
 	.HAlign(HAlign_Fill)
 	.VAlign(VAlign_Fill)
@@ -72,6 +66,12 @@ TSharedRef<SWidget> ULimenStandardButton::RebuildWidget()
 		.OnClicked(BIND_UOBJECT_DELEGATE(FOnClicked, OnClicked))
 		.OnHovered(BIND_UOBJECT_DELEGATE(FSimpleDelegate, OnHovered))
 		.OnUnhovered(BIND_UOBJECT_DELEGATE(FSimpleDelegate, OnUnhovered))
+	]
+	+ SOverlay::Slot()
+	.HAlign(TextHorizontalAlignment)
+	.VAlign(TextVerticalAlignment)
+	[
+		TextBlock.ToSharedRef()
 	];
 	
 	return Root;

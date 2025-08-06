@@ -73,9 +73,9 @@ public:
 	void QueueNotification(const FNotificationParams& InParams);
 
 	UFUNCTION(BlueprintCallable)
-	void SetGameInput();
+	virtual void SetGameInput();
 	UFUNCTION(BlueprintCallable)
-	void SetUIInput();
+	virtual void SetUIInput();
 	UFUNCTION(BlueprintCallable)
 	void SetUIOnlyInput(const bool bShowMouse = true);
 	void SetInputMode(const ELimenInputMode InInputMode);

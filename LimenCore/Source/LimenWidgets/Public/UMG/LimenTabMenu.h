@@ -10,6 +10,22 @@
 class ULimenStandardButton;
 class ULimenSelectableMenuButton;
 
+USTRUCT(BlueprintType)
+struct FTabData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName Id;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FText TabTitle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<ULimenSelectableMenuButton> TabButtonClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UWidget> TabMenuClass;
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTabButtonClicked, const FName&, ButtonId);
 
 /**
  * 
@@ -21,33 +37,46 @@ class LIMENWIDGETS_API ULimenTabMenu : public UWidget
 
 public:
 	UPROPERTY(BlueprintAssignable)
+	FTabButtonClicked OnButtonClicked;
+	UPROPERTY(BlueprintAssignable)
 	FButtonSelectedDelegate OnButtonSelected;
 	UPROPERTY(BlueprintAssignable)
 	FButtonSelectedDelegate OnButtonUnselected;
 
-	UFUNCTION(BlueprintCallable)
-	TArray<UWidget*> GetMenus() const;
-
 protected:
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<ULimenSelectableMenuButton> MenuButton;
-	UPROPERTY(EditAnywhere)
-	TArray<TSubclassOf<UWidget>> MenuClasses;
-	UPROPERTY(EditAnywhere)
-	TArray<FText> Titles;
+	TArray<FTabData> Tabs;
 
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(const bool bReleaseChildren) override;
+	virtual void BeginDestroy() override;
 
 	UFUNCTION()
 	virtual void ButtonClicked(ULimenStandardButton* Button);
 
 private:
-	UPROPERTY()
-	TArray<ULimenSelectableMenuButton*> Buttons;
-	UPROPERTY()
-	TArray<UWidget*> Menus;
+	struct FTabInstanceData
+	{
+		FTabInstanceData(ULimenSelectableMenuButton* Button, UWidget* TabInstance, const FName& Id)
+			: TabButtonInstance(Button), TabInstance(TabInstance), Id(Id) {}
+
+		TStrongObjectPtr<ULimenSelectableMenuButton> TabButtonInstance;
+		TStrongObjectPtr<UWidget> TabInstance;
+		FName Id;
+
+		bool operator==(const ULimenStandardButton* Button) const
+		{
+			return Button == TabButtonInstance.Get();
+		}
+		bool operator==(const UWidget* Tab) const
+		{
+			return Tab == TabInstance.Get();
+		}
+	};
+
+	TArray<FTabInstanceData> TabInstanceData;
 	TSharedPtr<SWidgetSwitcher> TabSwitcher;
+	TWeakPtr<SWidget> ActiveTabWidget;
 
 	UFUNCTION()
 	void ButtonSelected(ULimenSelectableMenuButton* Button);

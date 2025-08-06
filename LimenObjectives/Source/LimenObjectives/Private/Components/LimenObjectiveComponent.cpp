@@ -18,7 +18,7 @@ bool ULimenObjectiveComponent::TrackObjective(ALimenObjective* NewObjective)
 	
 	if (ObjectiveAlreadyExist(NewObjective))
 	{
-		LIMEN_LOG(LogLimenObjectives, Warning, this, "Attempted to add a duplicate objective");
+		LIMEN_LOG(LogLimenObjectives, Warning, this, TEXT("Attempted to add a duplicate objective"))
 		return false;
 	}
 
@@ -30,7 +30,7 @@ bool ULimenObjectiveComponent::TrackObjective(ALimenObjective* NewObjective)
 
 	OnNewObjectiveAdded.Broadcast(NewObjective);
 
-	LIMEN_LOG(LogLimenObjectives, Log, this, "Added new objective")
+	LIMEN_LOG(LogLimenObjectives, Log, this, TEXT("Added new objective"))
 	return true;
 }
 

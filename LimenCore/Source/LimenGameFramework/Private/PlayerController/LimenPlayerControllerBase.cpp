@@ -109,7 +109,7 @@ void ALimenPlayerControllerBase::SetGameInput()
 	SetShowMouseCursor(false);
 	CurrentInputMode = ELimenInputMode::Game;
 
-	LIMEN_LOG(LogLimenCore, Log, this, "Game input set");
+	LIMEN_LOG(LogLimenCore, Log, this, TEXT("Game input set"))
 }
 
 void ALimenPlayerControllerBase::SetUIInput()
@@ -121,7 +121,7 @@ void ALimenPlayerControllerBase::SetUIInput()
 	SetShowMouseCursor(true);
 	CurrentInputMode = ELimenInputMode::UI;
 	
-	LIMEN_LOG(LogLimenCore, Log, this, "UI input set");
+	LIMEN_LOG(LogLimenCore, Log, this, TEXT("UI input set"))
 }
 
 void ALimenPlayerControllerBase::SetUIOnlyInput(const bool bShowMouse /* = true */)
@@ -131,7 +131,7 @@ void ALimenPlayerControllerBase::SetUIOnlyInput(const bool bShowMouse /* = true 
 	SetShowMouseCursor(bShowMouse);
 	CurrentInputMode = ELimenInputMode::UIOnly;
 
-	LIMEN_LOG(LogLimenCore, Log, this, "UI Only input set")
+	LIMEN_LOG(LogLimenCore, Log, this, TEXT("UI Only input set"))
 }
 
 void ALimenPlayerControllerBase::SetInputMode(const FInputModeDataBase& InData)
