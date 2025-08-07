@@ -21,15 +21,14 @@ struct FAbilityArrayItem : public FFastArraySerializerItem
 	FAbilityArrayItem() = default;
 	explicit FAbilityArrayItem(ULimenAbilityBase* Ability)
 	{
-		Item = Ability;
+		Item = TStrongObjectPtr(Ability);
 	}
 
-	UPROPERTY()
-	TObjectPtr<ULimenAbilityBase> Item;
+	TStrongObjectPtr<ULimenAbilityBase> Item;
 
 	FAbilityArrayItem& operator=(ULimenAbilityBase* Ability)
 	{
-		Item = Ability;
+		Item = TStrongObjectPtr(Ability);
 		return *this;
 	}
 	ULimenAbilityBase* operator->()
@@ -114,15 +113,14 @@ struct FAttributeArrayItem : public FFastArraySerializerItem
 	FAttributeArrayItem() = default;
 	explicit FAttributeArrayItem(ULimenAttributeBase* Attribute)
 	{
-		Item = Attribute;
+		Item = TStrongObjectPtr(Attribute);
 	}
 
-	UPROPERTY()
-	TObjectPtr<ULimenAttributeBase> Item;
+	TStrongObjectPtr<ULimenAttributeBase> Item;
 
 	FAttributeArrayItem& operator=(ULimenAttributeBase* Attribute)
 	{
-		Item = Attribute;
+		Item = TStrongObjectPtr(Attribute);
 		return *this;
 	}
 	bool operator==(const FAttributeArrayItem& Other) const
@@ -224,10 +222,11 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Deactivate() override;
 
+	void SetupAbilitiesAndAttributes(AActor* Owner);
 	/**
 	 * Loads and initializes abilities for the specified owner from the defined AbilityClasses array.
 	 *
-	 * @param Owner The owner actor to which the abilities are associated. This will be used during the initialization of each ability.
+	 * @param Owner The owner actor which the abilities are associated to. This will be used during the initialization of each ability.
 	 */
 	UFUNCTION(BlueprintCallable)
 	void LoadAbilities(AActor* Owner);
@@ -379,14 +378,14 @@ template <typename AbilityClass>
 AbilityClass* ULimenAbilityComponent::GetAbility()
 {
 	static_assert(std::is_base_of_v<ULimenAbilityBase, AbilityClass>);
-	return Cast<AbilityClass>(GetAbility(AbilityClass::StaticClass()));
+	return CastChecked<AbilityClass>(GetAbility(AbilityClass::StaticClass()), ECastCheckedType::NullAllowed);
 }
 
 template <typename AttributeClass>
 AttributeClass* ULimenAbilityComponent::GetAttribute() const
 {
 	static_assert(std::is_base_of_v<ULimenAttributeBase, AttributeClass>);
-	return Cast<AttributeClass>(GetAttribute(AttributeClass::StaticClass()));
+	return CastChecked<AttributeClass>(GetAttribute(AttributeClass::StaticClass()), ECastCheckedType::NullAllowed);
 }
 
 template <typename AbilityClass>

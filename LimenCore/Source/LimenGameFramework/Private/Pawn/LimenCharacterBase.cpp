@@ -171,10 +171,5 @@ void ALimenCharacterBase::Multicast_SetCinematicMode_Implementation(bool bInCine
 void ALimenCharacterBase::SetupAbilityComponentInternal(ULimenAbilityComponent* InAbilityComponent)
 {
 	InAbilityComponent->OnAbilityComponentReady.AddUniqueDynamic(this, &ThisClass::SetupAbilityComponent);
-	
-	if (HasAuthority())
-	{
-		InAbilityComponent->LoadAbilities(this);
-		InAbilityComponent->LoadAttributes(this);
-	}
+	if (HasAuthority()) InAbilityComponent->SetupAbilitiesAndAttributes(this);
 }

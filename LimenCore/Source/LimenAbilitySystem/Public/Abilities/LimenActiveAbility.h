@@ -75,7 +75,7 @@ protected:
 	virtual void AbilityActivated(AController* Controller, APawn* Pawn);
 	virtual void AbilityCancelled(AController* Controller, APawn* Pawn);
 
-private:	
+private:
 	FTimerHandle AbilityCooldownTimer;
 	FTimerHandle AbilityTimerHandle;
 	bool bIsCooldownOver;

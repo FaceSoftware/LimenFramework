@@ -41,6 +41,11 @@ public:
 	void SetFastMovement(const bool bEnabled);
 	bool IsFastMovementEnabled() const;
 
+	void SetFastWalkSpeedMultiplier(const float Multiplier);
+	float GetFastWalkSpeedMultiplier() const;
+	void SetCrouchFastWalkSpeedMultiplier(const float Multiplier);
+	float GetCrouchFastWalkSpeedMultiplier() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Fast Movement")
 	float FastWalkSpeedMultiplier;

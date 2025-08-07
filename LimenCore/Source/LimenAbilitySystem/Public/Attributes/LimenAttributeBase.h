@@ -72,7 +72,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override;
 	virtual bool IsTickable() const override;
-	virtual bool IsAllowedToTick() const override;
 	virtual TStatId GetStatId() const override;
 	virtual bool IsTickableWhenPaused() const override;
 	virtual bool IsTickableInEditor() const override;
@@ -246,7 +245,7 @@ protected:
 	virtual void OnRep_CurrentValue();
 	
 private:
-	const float MinValue = 0.f;
+	static constexpr float MinValue = 0.f;
 
 	UPROPERTY(SaveGame, ReplicatedUsing=OnRep_CurrentValue)
 	float CurrentValue;

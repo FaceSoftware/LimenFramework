@@ -184,11 +184,6 @@ bool ULimenAttributeBase::IsTickable() const
 	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
 }
 
-bool ULimenAttributeBase::IsAllowedToTick() const
-{
-	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
-}
-
 TStatId ULimenAttributeBase::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(ULimenAttributeBase, STATGROUP_Tickables);
