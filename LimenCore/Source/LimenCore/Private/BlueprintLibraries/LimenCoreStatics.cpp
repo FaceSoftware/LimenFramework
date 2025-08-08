@@ -50,7 +50,7 @@ void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, c
 	{
 		check(GEngine)
 		const FString Message = FString::Printf(TEXT("%s: %s"), *Caller->GetClass()->GetName(), *LogText);
-		UKismetSystemLibrary::PrintString(Caller, Message, bPrintToScreen, true, TextColor, DisplayTime, Key);
+		UKismetSystemLibrary::PrintString(Caller, Message, bPrintToScreen, !bPrintToScreen, TextColor, DisplayTime, Key);
 	}
 #endif
 }
