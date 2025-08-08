@@ -118,6 +118,8 @@ bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPa
 		return true;
 	}
 
+	LIMEN_LOG(LogLimenInteraction, Log, this, TEXT("Interacted with air..."));
+
 	// Todo: Will need cooldown on network
 	Multicast_Interacted(nullptr);
 	return false;
