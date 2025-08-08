@@ -72,7 +72,7 @@ class LIMENCORE_API ULimenCoreStatics : public UBlueprintFunctionLibrary
 
 public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Debug", meta=(WorldContext=Caller, Development))
-	static void LimenLog(const UObject* Caller, const FString LogText, const ELogType Verbosity = ELogType::Log, const bool bPrintToScreen = true);
+	static void LimenLog(const UObject* Caller, const FString LogText, const ELogType Verbosity = ELogType::Log, const bool bPrintToScreen = true, FName Key = NAME_None);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Debug", meta=(WorldContext=Caller))
 	static void StaticLimenLog(const FString FunctionName, const FString LogText, const ELogType Verbosity = ELogType::Log, const bool bPrintToScreen = true);
@@ -159,8 +159,8 @@ TArray<T> ULimenCoreStatics::ShuffleArray(const TArray<T>& In)
 }
 
 static void LimenLog(const UObject* Caller, const FString& LogText, const ELogType Verbosity = ELogType::Log,
-					 const bool bPrintToScreen = true)
+					 const bool bPrintToScreen = true, FName Key = NAME_None)
 {
-	ULimenCoreStatics::LimenLog(Caller, LogText, Verbosity, bPrintToScreen);
+	ULimenCoreStatics::LimenLog(Caller, LogText, Verbosity, bPrintToScreen, Key);
 }
 
