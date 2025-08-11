@@ -89,8 +89,14 @@ void ALimenCharacterBase::DisableInput(APlayerController* InPlayerController)
 	}
 }
 
+bool ALimenCharacterBase::CanJumpInternal_Implementation() const
+{
+	// return Super::CanJumpInternal_Implementation();
+	return JumpIsAllowedInternal();
+}
+
 void ALimenCharacterBase::SetCinematicMode(bool bInCinematicMode, bool bHidePlayer, bool bAffectsHUD,
-	bool bAffectsMovement, bool bAffectsTurning)
+										   bool bAffectsMovement, bool bAffectsTurning)
 {
 	check(HasAuthority())
 
