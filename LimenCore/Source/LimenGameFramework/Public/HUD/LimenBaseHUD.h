@@ -18,7 +18,21 @@ class ULimenWidget;
 	inline void Show##WidgetVarName() { ShowWidget_Internal(WidgetVarName.Get()); } \
 	inline void Hide##WidgetVarName() { HideWidget_Internal(WidgetVarName.Get()); } \
 	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName && WidgetVarName->IsShowing(); } \
-	inline Type Get##WidgetVarName() const { return WidgetVarName.Get(); } \
+	inline Type* Get##WidgetVarName() const { return WidgetVarName.Get(); } \
+
+#define CREATE_WIDGET_SAFE_STRONG_PTR(WidgetPtr, WidgetClass) \
+	if (WidgetClass) \
+	{ \
+		auto* Widget = CreateWidget<ULimenBaseHudWidget>(GetOwningPlayerController(), WidgetClass); \
+		WidgetPtr = TStrongObjectPtr(Widget); \
+		WidgetPtr->BindPlayerController(GetOwningPlayerController()); \
+	} \
+
+#define CREATE_WIDGET_SAFE(WidgetPtr, WidgetClass) \
+	if (WidgetClass) \
+	{ \
+		WidgetPtr = CreateWidget<ULimenBaseHudWidget>(GetOwningPlayerController(), WidgetClass); \
+	} \
 	
 /**
  * 
@@ -30,7 +44,9 @@ class LIMENGAMEFRAMEWORK_API ALimenBaseHUD : public AHUD
 	
 public:	
 	ALimenBaseHUD();
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void ShowHUD() override;
+	virtual void HideHUD();
 
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
 	void ForceHUDState(const bool bForce);

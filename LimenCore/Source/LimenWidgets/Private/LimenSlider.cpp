@@ -15,15 +15,23 @@
 #include "Slate/SMouseDetector.h"
 #include "Widgets/Input/SEditableText.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SSpacer.h"
 
 
-ULimenSlider::ULimenSlider() : Super(), SliderInputMethod(ELimenSliderInputMethod::MousePosition),
+ULimenSlider::ULimenSlider() : Super(),
+							   SliderInputMethod(ELimenSliderInputMethod::MousePosition),
 							   InitialSliderValue(0.f), DecimalDigits(1), SliderMinValue(0), SliderMaxValue(1),
-							   SliderPadding(FMargin(4.f)), bUseValueText(true), TextColor(FColor::White),
-							   InvalidTextColor(FColor::Yellow), NumberTextJustification(ETextJustify::Type::Center),
-							   NumberBoxWidth(100.f), CurrentSliderValue(InitialSliderValue), bIsDragging(false),
-							   bIsHovering(false), LastMousePosition(), PreviousMouseCursor(),
-							   bShouldRevertCursorIcon(false), bBroadcastValueSetDelegate(false),
+							   SliderPadding(FMargin(4.f)), SliderDisplayMethod(ELimenSliderDisplay::Value),
+							   DisplayBoxWidth(100.f),
+							   bUserCanEditValue(false), DisplayHorizontalAlignment(HAlign_Center),
+							   DisplayVerticalAlignment(VAlign_Center),
+							   TextColor(FColor::White),
+							   InvalidTextColor(FColor::Yellow),
+							   NumberTextJustification(ETextJustify::Type::Center),
+							   CurrentSliderValue(InitialSliderValue), bIsDragging(false), bIsHovering(false),
+							   LastMousePosition(), PreviousMouseCursor(),
+							   bShouldRevertCursorIcon(false),
+							   bBroadcastValueSetDelegate(false),
 							   LastInputType(ELimenSliderInput::Undefined)
 {
 	InitialSliderValue = SliderMinValue;
@@ -90,12 +98,17 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 {
 	// return Super::RebuildWidget();
 
-	InputDetector = SNew(SMouseDetector)
-		.OnMouseButtonDown(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnPressed))
-		.OnMouseButtonUp(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnReleased))
-		.OnMouseMove(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnMoved))
-		.OnMouseHover(BIND_UOBJECT_DELEGATE(FNoReplyPointerEventHandler, OnHover))
-		.OnMouseUnHover(BIND_UOBJECT_DELEGATE(FSimpleNoReplyPointerEventHandler, OnUnHover));
+	TSharedRef<SWidget> EditorOrSpacer = SNew(SSpacer);
+	if (bUserCanEditValue)
+	{
+		InputDetector = SNew(SMouseDetector)
+			.OnMouseButtonDown(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnPressed))
+			.OnMouseButtonUp(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnReleased))
+			.OnMouseMove(BIND_UOBJECT_DELEGATE(FPointerEventHandler, OnMoved))
+			.OnMouseHover(BIND_UOBJECT_DELEGATE(FNoReplyPointerEventHandler, OnHover))
+			.OnMouseUnHover(BIND_UOBJECT_DELEGATE(FSimpleNoReplyPointerEventHandler, OnUnHover));
+		EditorOrSpacer = InputDetector.ToSharedRef();
+	}
 	
 	SliderImage = SNew(SImage)
 		.Image(&SliderBrush);
@@ -142,36 +155,58 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 		.VAlign(VAlign_Fill)
 		.Padding(0.f)
 		[
-			InputDetector.ToSharedRef()
+			EditorOrSpacer
 		]
-	
 	];
 
-	if (bUseValueText)
+	switch (SliderDisplayMethod)
 	{
-		NumberText = SNew(SEditableText)
-			.Font(NumberTextFont)
-			.Justification(NumberTextJustification)
-			.Text(GetValueAsText())
-			.ColorAndOpacity(FSlateColor(FColor::White))
-			.OnTextChanged(BIND_UOBJECT_DELEGATE(FOnTextChanged, TextValueChanged))
-			.OnTextCommitted(BIND_UOBJECT_DELEGATE(FOnTextCommitted, TextValueCommited));
+	case ELimenSliderDisplay::Value:
+		{
+			SliderTextDisplay = SNew(SEditableText)
+				.Font(NumberTextFont)
+				.Justification(NumberTextJustification)
+				.Text(GetValueAsText())
+				.ColorAndOpacity(FSlateColor(FColor::White))
+				.OnTextChanged(BIND_UOBJECT_DELEGATE(FOnTextChanged, TextValueChanged))
+				.OnTextCommitted(BIND_UOBJECT_DELEGATE(FOnTextCommitted, TextValueCommited));
 
-		HorizontalBox->AddSlot()
+			SliderDisplay = SliderTextDisplay;
+		}
+		break;
+
+	case ELimenSliderDisplay::CustomImage:
+		{
+			SliderImageDisplay = SNew(SImage)
+				.ColorAndOpacity(FSlateColor(FColor::White))
+				.Image(&CustomImageBrush);
+
+			SliderDisplay = SliderImageDisplay;
+		}
+		break;
+
+	case ELimenSliderDisplay::None:
+	default:
+		{
+			SliderDisplay = SNew(SSpacer);
+		}
+		break;
+	}
+
+	HorizontalBox->AddSlot()
 		.Padding(NumberTextMargin)
 		.SizeParam(FAuto())
 		.HAlign(HAlign_Center)
 		.VAlign(VAlign_Center)
 		[
 			SNew(SBox)
-			.WidthOverride(NumberBoxWidth)
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
+			.WidthOverride(DisplayBoxWidth)
+			.HAlign(DisplayHorizontalAlignment)
+			.VAlign(DisplayVerticalAlignment)
 			[
-				NumberText.ToSharedRef()
+				SliderDisplay.ToSharedRef()
 			]
 		];
-	}
 
 	Root = SNew(SOverlay)
 		+SOverlay::Slot() // Background
@@ -192,9 +227,13 @@ void ULimenSlider::ReleaseSlateResources(const bool bReleaseChildren)
 {
 	InputDetector.Reset();
 	SliderImage.Reset();
-	NumberText.Reset();
 	SliderBackground.Reset();
 	Root.Reset();
+
+	SliderDisplay.Reset();
+	SliderTextDisplay.Reset();
+	SliderImageDisplay.Reset();
+	
 
 	Super::ReleaseSlateResources(bReleaseChildren);
 }
@@ -289,18 +328,18 @@ void ULimenSlider::TextValueChanged(const FText& InText)
 	FString InputString = InText.ToString();
 	if (InputString.IsEmpty())
 	{
-		NumberText->SetColorAndOpacity(TextColor);
+		SliderTextDisplay->SetColorAndOpacity(TextColor);
 		return;
 	}
 	
 	if (InputString.IsNumeric())
 	{
-		NumberText->SetColorAndOpacity(ValidateTextInput(InputString) ? TextColor : InvalidTextColor);
+		SliderTextDisplay->SetColorAndOpacity(ValidateTextInput(InputString) ? TextColor : InvalidTextColor);
 	}
 	else
 	{
 		InputString.RemoveAt(InputString.Len() - 1);
-		NumberText->SetText(FText::FromString(InputString));
+		SliderTextDisplay->SetText(FText::FromString(InputString));
 	}
 }
 
@@ -321,6 +360,24 @@ void ULimenSlider::TextValueCommited(const FText& InText, const ETextCommit::Typ
 	
 	const float NewValue = FCString::Atof(*NewValueString);
 	SetValueInternal(ELimenSliderInput::Typed, FMath::Clamp(NewValue, SliderMinValue, SliderMaxValue), true);
+}
+
+void ULimenSlider::ValueChanged(ELimenSliderInput InputType, float NewValue)
+{
+	for (const TPair<FVector2D, FSlateColor>& ValueColor : ValueColors)
+	{
+		if (NewValue < ValueColor.Key.X || NewValue > ValueColor.Key.Y) continue;
+
+		if (SliderImage.IsValid()) SliderImage->SetColorAndOpacity(ValueColor.Value);
+		if (SliderBackground.IsValid())
+		{
+			SliderBackground->SetColorAndOpacity(ValueColor.Value);
+			SliderBackground->SetColorAndOpacity(ValueColor.Value);
+		}
+		if (SliderTextDisplay.IsValid()) SliderTextDisplay->SetColorAndOpacity(ValueColor.Value);
+		if (SliderImageDisplay.IsValid()) SliderImageDisplay->SetColorAndOpacity(ValueColor.Value);
+		break;
+	}
 }
 
 bool ULimenSlider::ValidateTextInput(const FString& InputText) const
@@ -389,11 +446,12 @@ void ULimenSlider::SetValueInternal(const ELimenSliderInput InputType, const flo
 		SliderImage->SetRenderTransform(FSlateRenderTransform(FScale2D(FillPercent, 1.0f)));
 	}
 
-	if (NumberText.IsValid())
+	if (SliderTextDisplay.IsValid())
 	{
-		NumberText->SetText(GetValueAsText());
+		SliderTextDisplay->SetText(GetValueAsText());
 	}
 
+	ValueChanged(LastInputType, GetValue());
 	if (bShouldBroadcast)
 	{
 		check(InputType != ELimenSliderInput::Undefined)

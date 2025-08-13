@@ -173,7 +173,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
 	float GetCurrentValue() const;
 	/**
-	 * @brief Gets the current value of this attribute but in percentage.
+	 * @brief Gets the current value of this attribute but in percentage in a [0, 100] range.
 	 * @return The percentage of the current value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")

@@ -7,6 +7,9 @@
 #include "LimenMath.generated.h"
 
 
+struct FCollisionQueryParams;
+struct FHitResult;
+struct FCollisionResponseParams;
 struct FConeData;
 /**
  * 
@@ -59,7 +62,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Math Library")
 	static UPrimitiveComponent* GetClosestComponentsTo(const FVector& Location, const TArray<UPrimitiveComponent*>& ComponentsList, float& OutClosestDistanceSquared);
 	
-	static bool ConeTraceMultiByProfile(const UWorld* World, FConeData& InConeData,
+	static bool ConeTraceMultiByProfile(const UWorld* World, const FConeData& InConeData,
 											const FName& ProfileName,
 											TArray<FHitResult>& OutHits,
 											const FCollisionQueryParams& QueryParams,

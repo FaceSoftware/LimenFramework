@@ -3,7 +3,10 @@
 
 #include "BlueprintLibraries/LimenMath.h"
 
+#include "DrawDebugHelpers.h"
 #include "NavigationSystem.h"
+#include "Components/PrimitiveComponent.h"
+#include "GameFramework/Pawn.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Namespaces/LimenCoreMath.h"
 #include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
@@ -260,7 +263,7 @@ UPrimitiveComponent* ULimenMath::GetClosestComponentsTo(const FVector& Location,
 	return ClosestComponent;
 }
 
-bool ULimenMath::ConeTraceMultiByProfile(const UWorld* World, FConeData& InConeData,
+bool ULimenMath::ConeTraceMultiByProfile(const UWorld* World, const FConeData& InConeData,
 										 const FName& ProfileName,
 										 TArray<FHitResult>& OutHits,
 										 const FCollisionQueryParams& QueryParams,
