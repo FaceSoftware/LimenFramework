@@ -21,7 +21,63 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 	GENERATED_BODY()
 
 	friend class FThreadPoolSpec;
-	
+
+	struct ISliceJob
+	{
+		virtual ~ISliceJob() = default;
+
+		// Do work for up to BudgetSeconds. Return true if finished.
+		virtual bool ExecuteSlice(double BudgetSeconds) = 0;
+
+		struct FBudgetHelper
+		{
+			FBudgetHelper(double BudgetSeconds)
+			{
+				Start = FPlatformTime::Cycles64();
+				Budget = FPlatformTime::SecondsToCycles64(BudgetSeconds);
+			}
+
+			bool ShouldYield() const
+			{
+				return FPlatformTime::Cycles64() - Start >= Budget;
+			}
+
+		private:
+			uint64 Start;
+			uint64 Budget;
+		};
+	};
+	struct FDummySliceJob final : ISliceJob
+	{
+		explicit FDummySliceJob(const TFunction<bool(double)>& InJob) : Job(InJob)
+		{
+			
+		}
+		virtual bool ExecuteSlice(const double BudgetSeconds) override
+		{
+			Job.CheckCallable();
+			return Job(BudgetSeconds);
+		}
+
+	private:
+		TFunction<bool(double)> Job;
+	};
+	struct FUnslicedJob final : ISliceJob
+	{
+		explicit FUnslicedJob(const TFunction<void()>& InJob) : Job(InJob)
+		{
+			
+		}
+		virtual bool ExecuteSlice(const double BudgetSeconds) override
+		{
+			Job.CheckCallable();
+			Job();
+			return true;
+		}
+
+	private:
+		TFunction<void()> Job;
+	};
 	class FPoolWorker final : public FRunnable
 	{		
 	public:
@@ -34,7 +90,7 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 		virtual uint32 Run() override;
 		virtual void Stop() override;
 
-		void QueueJob(const TFunction<void()>& Function);
+		void QueueJob(const TSharedRef<ISliceJob>& NewJob);
 
 		int32 GetQueuedJobsCount() const;
 		void DiscardWaitEvent() const;
@@ -42,8 +98,9 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 	private:
 		std::atomic<bool> bShouldStop;
 		FSharedEventRef QueueCondition;
-		TSpscQueue<TFunction<void()>> QueuedJobs;
+		TSpscQueue<TSharedPtr<ISliceJob>> QueuedJobs;
 		std::atomic_int32_t QueuedJobsCount;
+		const double SliceBudget = 0.002; // 2ms
 	};
 
 public:
@@ -52,9 +109,14 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	void AddJob(const TFunction<void()>& Function);
+	void AddJob(const TFunction<void()>& Job);
+	void AddJob(const TFunction<bool(double)>& Job);
+	void AddJob(const TSharedRef<ISliceJob>& Job);
 
 protected:
+#if WITH_EDITOR
+	void CreateThreadsForTest(const int32 NumberOfThreads);
+#endif
 	void CreateThreads();
 	void DestroyThreads();
 	TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> GetAvailableThread() const;
@@ -63,4 +125,3 @@ private:
 	TMap<TSharedRef<FPoolWorker, ESPMode::NotThreadSafe>, TSharedRef<FRunnableThread, ESPMode::NotThreadSafe>> ThreadPool;
 	int32 ThreadCount;
 };
-
