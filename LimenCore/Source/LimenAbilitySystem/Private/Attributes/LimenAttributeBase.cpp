@@ -165,13 +165,9 @@ bool ULimenAttributeBase::IsInitialized() const
 
 void ULimenAttributeBase::Tick(float DeltaTime)
 {
-	if (HasAuthority())
-	{
-		if (!FMath::IsNearlyZero(RechargeRate))
-		{
-			ModifyValueBy(RechargeRate * DeltaTime);
-		}
-	}
+	if (!HasAuthority() || FMath::IsNearlyZero(RechargeRate)) return;
+
+	ModifyValueBy(RechargeRate * DeltaTime);
 }
 
 ETickableTickType ULimenAttributeBase::GetTickableTickType() const

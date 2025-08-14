@@ -40,6 +40,8 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetFraction();
+	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int32 RandomIntRange(const int32 RangeStart, const int32 RangeEnd);
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float RandomFloatRange(const float RangeStart, const float RangeEnd);

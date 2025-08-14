@@ -48,6 +48,12 @@ float ULimenGlobalRandomStreamSubsystem::RandomFloat()
 	return GlobalRandomStream->FRand();
 }
 
+float ULimenGlobalRandomStreamSubsystem::GetFraction()
+{
+	FScopeLock Lock(&RandomStreamSection);
+	return GlobalRandomStream->GetFraction();
+}
+
 int32 ULimenGlobalRandomStreamSubsystem::RandomIntRange(const int32 RangeStart, const int32 RangeEnd)
 {
 	FScopeLock Lock(&RandomStreamSection);
