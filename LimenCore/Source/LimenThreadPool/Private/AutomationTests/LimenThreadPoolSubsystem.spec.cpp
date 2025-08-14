@@ -1,14 +1,11 @@
-﻿#include "Misc/AutomationTest.h"
+﻿#include "LogMacros/LimenLogMacros.h"
+#include "Misc/AutomationTest.h"
 #include "Subsystems/LimenThreadPoolSubsystem.h"
 
 
 BEGIN_DEFINE_SPEC(FThreadPoolSpec, "LimenFramework.LimenCore.Source.LimenThreadPool.ThreadPoolTest",
 				  EAutomationTestFlags::EditorContext | EAutomationTestFlags::CommandletContext |
 				  EAutomationTestFlags::HighPriority | EAutomationTestFlags::ProductFilter)
-
-std::atomic<int32> CompletedJobs;
-int32 NumberOfJobs;
-ULimenThreadPoolSubsystem* ThreadPoolSubsystem = nullptr;
 
 
 class FPrimeCheckTest final : public ULimenThreadPoolSubsystem::ISliceJob
@@ -30,7 +27,7 @@ public:
 			return true;
 		}
 
-		FBudgetHelper Helper(BudgetSeconds);
+		const FBudgetHelper Helper(BudgetSeconds);
 
 		// First-time initialization and trivial checks
 		if (!bInitialized)
@@ -60,6 +57,7 @@ public:
 
 			if (Helper.ShouldYield())
 			{
+				Slices++;
 				return false; // yield — state (NextDivisor) is preserved
 			}
 		}
@@ -75,6 +73,7 @@ public:
 	bool GetResult() const  { return bIsPrime; }
 	uint64 GetNumber() const { return N; }
 	int32 GetProgressDivisor() const { return NextDivisor; }
+	int32 GetSlicesExecuted() const { return Slices; }
 
 private:
 	uint64 N = 0;
@@ -82,29 +81,35 @@ private:
 	bool   bInitialized = false;
 	bool   bFinished    = false;
 	bool   bIsPrime     = false;
+	int32 Slices = 0;
 };
 
-FORCEINLINE bool IsPrime64(uint64 n)
+FORCEINLINE static bool IsPrime64(const uint64 N)
 {
-	if (n < 2) return false;
-	if ((n & 1ull) == 0ull) return n == 2;
-	if (n % 3ull == 0ull)   return n == 3;
+	if (N < 2) return false;
+	if ((N & 1ull) == 0ull) return N == 2;
+	if (N % 3ull == 0ull)   return N == 3;
 
 	// check 6k ± 1
-	for (uint64 i = 5; i <= n / i; i += 6)
+	for (uint64 i = 5; i <= N / i; i += 6)
 	{
-		if (n % i == 0ull || n % (i + 2) == 0ull) return false;
+		if (N % i == 0ull || N % (i + 2) == 0ull) return false;
 	}
 	return true;
 }
 
-FORCEINLINE uint64 NextPrime64(uint64 n)
+FORCEINLINE static uint64 NextPrime64(uint64 n)
 {
 	if (n <= 2) return 2;
 	if ((n & 1ull) == 0ull) ++n;            // make odd
 	while (!IsPrime64(n)) n += 2;           // skip evens
 	return n;
 }
+
+std::atomic<int32> CompletedJobs;
+int32 NumberOfJobs;
+ULimenThreadPoolSubsystem* ThreadPoolSubsystem = nullptr;
+TArray<TSharedPtr<FPrimeCheckTest>> Jobs;
 
 END_DEFINE_SPEC(FThreadPoolSpec)
 
@@ -116,49 +121,44 @@ void FThreadPoolSpec::Define()
 		BeforeEach([this]
 		{
 			CompletedJobs = 0;
-			NumberOfJobs = FGenericPlatformMisc::NumberOfCores() * 1;
+#if PLATFORM_WINDOWS
+			NumberOfJobs = FWindowsPlatformMisc::NumberOfCores();
+#else
+			NumberOfJobs = FGenericPlatformMisc::NumberOfCores();
+#endif
+			NumberOfJobs *= 5;
 			ThreadPoolSubsystem = NewObject<ULimenThreadPoolSubsystem>(GetTransientOuterForRename(ULimenThreadPoolSubsystem::StaticClass()));
 			ThreadPoolSubsystem->CreateThreadsForTest(FGenericPlatformMisc::NumberOfCores());
 		});
 		
 		LatentIt(TEXT("should confirm the work is completed successfully"), [this] (const FDoneDelegate& DoneDelegate)
 		{
-			auto OnJobDone = [this, DoneDelegate, Total = NumberOfJobs]
+			TArray<uint64> PrimeList;
+			PrimeList.Push(1000003);
+			PrimeList.Push(1000033);
+			PrimeList.Push(1000037);
+			PrimeList.Push(1000039);
+
+			auto OnJobDone = [this, DoneDelegate]
 			{
+				if (++CompletedJobs != NumberOfJobs) return;
+
 				// ensure we run on GT (if not already)
-				AsyncTask(ENamedThreads::GameThread, [this, DoneDelegate, Total]
+				AsyncTask(ENamedThreads::GameThread, [this, DoneDelegate]
 				{
-					if (++CompletedJobs == Total) DoneDelegate.ExecuteIfBound();
+					for (const auto& Job : Jobs)
+					DoneDelegate.ExecuteIfBound();
 				});
 			};
 
-			TArray<uint64> PrimeList;
-			PrimeList.Push(1152921504606847009ull);
-			PrimeList.Push(1152921504606847067ull);
-			PrimeList.Push(1152921504606847081ull);
-			PrimeList.Push(1152921504606847123ull);
-			PrimeList.Push(1152921504606847127ull);
-			PrimeList.Push(1152921504606847189ull);
-			PrimeList.Push(1152921504606847201ull);
-			PrimeList.Push(1152921504606847229ull);
-			PrimeList.Push(1152921504606847253ull);
-			PrimeList.Push(1152921504606847291ull);
-			PrimeList.Push(1152921504606847301ull);
-			PrimeList.Push(1152921504606847309ull);
-			PrimeList.Push(1152921504606847363ull);
-			PrimeList.Push(1152921504606847411ull);
-			PrimeList.Push(1152921504606847483ull);
-			PrimeList.Push(1152921504606847517ull);
-
-			TArray<TSharedPtr<FPrimeCheckTest>> Jobs;
 			int32 PrimeIndex = 0;
 			for (int32 i = 0; i < NumberOfJobs; ++i)
 			{
 				if (!PrimeList.IsValidIndex(PrimeIndex)) {PrimeIndex = 0; }
 
 				TSharedRef<FPrimeCheckTest> Temp = MakeShared<FPrimeCheckTest>(PrimeList[PrimeIndex]);
-				Jobs.Push(Temp);
 				Temp->OnThreadDone.BindLambda(OnJobDone);
+				Jobs.Push(Temp);
 			}
 
 			for (const TSharedPtr<FPrimeCheckTest>& Job : Jobs)
@@ -169,6 +169,14 @@ void FThreadPoolSpec::Define()
 
 		AfterEach([this]
 		{
+			int32 JobNumber = 1;
+			for (const auto& Job : Jobs)
+			{
+				STATIC_LIMEN_LOG(LogLimenCore, Log, FString(TEXT("FThreadPoolSpec")), TEXT("Job %d executed %d slices!"), JobNumber, Job->GetSlicesExecuted());
+				JobNumber++;
+			}
+			Jobs.Empty();
+			
 			if (ThreadPoolSubsystem)
 			{
 				ThreadPoolSubsystem->DestroyThreads();
