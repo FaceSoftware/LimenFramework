@@ -22,6 +22,7 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 
 	friend class FThreadPoolSpec;
 
+public:
 	struct ISliceJob
 	{
 		virtual ~ISliceJob() = default;
@@ -31,7 +32,7 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 
 		struct FBudgetHelper
 		{
-			FBudgetHelper(double BudgetSeconds)
+			explicit FBudgetHelper(const double BudgetSeconds)
 			{
 				Start = FPlatformTime::Cycles64();
 				Budget = FPlatformTime::SecondsToCycles64(BudgetSeconds);
@@ -47,6 +48,8 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 			uint64 Budget;
 		};
 	};
+
+private:
 	struct FDummySliceJob final : ISliceJob
 	{
 		explicit FDummySliceJob(const TFunction<bool(double)>& InJob) : Job(InJob)
@@ -100,7 +103,7 @@ class LIMENTHREADPOOL_API ULimenThreadPoolSubsystem : public UGameInstanceSubsys
 		FSharedEventRef QueueCondition;
 		TSpscQueue<TSharedPtr<ISliceJob>> QueuedJobs;
 		std::atomic_int32_t QueuedJobsCount;
-		const double SliceBudget = 0.002; // 2ms
+		const double SliceBudget = 1.f / 16.f; // 16 frame times
 	};
 
 public:

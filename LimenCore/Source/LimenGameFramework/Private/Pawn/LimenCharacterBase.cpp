@@ -44,10 +44,13 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 
-	GetMesh()->SetOnlyOwnerSee(false);
-	GetMesh()->SetOwnerNoSee(true);
-	GetMesh()->SetCastShadow(true);
-	GetMesh()->bEditableWhenInherited = true;
+	if (GetMesh())
+	{
+		GetMesh()->SetOnlyOwnerSee(false);
+		GetMesh()->SetOwnerNoSee(true);
+		GetMesh()->SetCastShadow(true);
+		GetMesh()->bEditableWhenInherited = true;
+	}
 
 	AbilityComponent = CreateDefaultSubobject<ULimenAbilityComponent>(TEXT("AbilityComponent"));
 }

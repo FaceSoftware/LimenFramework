@@ -26,6 +26,7 @@ public class LimenUpgrades : ModuleRules
                 "NetCore",
 
                 "LimenCore",
+                "LimenGlobalRandomStream",
             }
         );
     }

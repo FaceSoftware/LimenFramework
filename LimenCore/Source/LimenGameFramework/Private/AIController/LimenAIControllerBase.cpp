@@ -1,7 +1,7 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
-#include "AIControllers/LimenAIControllerBase.h"
+#include "AIController/LimenAIControllerBase.h"
 
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"

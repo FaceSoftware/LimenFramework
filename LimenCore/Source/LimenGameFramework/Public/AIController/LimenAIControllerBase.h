@@ -3,8 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Runtime/AIModule/Classes/AIController.h"
+#include "AIController.h"
 #include "LimenAIControllerBase.generated.h"
+
 
 class UBehaviorTreeComponent;
 class UBlackboardComponent;
@@ -13,7 +14,7 @@ struct FAIStimulus;
 class UAIPerceptionComponent;
 
 UCLASS()
-class LIMENPLAYERS_API ALimenAIControllerBase : public AAIController
+class LIMENGAMEFRAMEWORK_API ALimenAIControllerBase : public AAIController
 {
 	GENERATED_BODY()
 

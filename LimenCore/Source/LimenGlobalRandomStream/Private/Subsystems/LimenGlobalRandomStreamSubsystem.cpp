@@ -103,6 +103,8 @@ TArray<int32> ULimenGlobalRandomStreamSubsystem::GenerateValidRandomUniqueNumber
 	for (int i = 0; i < Count; i++)
 	{
 		bool bIsDuplicateIndex = false;
+
+		FScopeLock Lock(&RandomStreamSection);
 		const uint64 TempIndex = GlobalRandomStream->RandRange(Range.Min, Range.Max);
 
 		for (const auto& Index : OutIndexes)

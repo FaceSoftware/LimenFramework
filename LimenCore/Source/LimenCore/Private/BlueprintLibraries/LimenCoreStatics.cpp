@@ -6,6 +6,7 @@
 #include "EngineUtils.h"
 #include "GameMapsSettings.h"
 #include "NavigationSystem.h"
+#include "Engine/Engine.h"
 #include "Engine/NetConnection.h"
 #include "Engine/PostProcessVolume.h"
 #include "GameFramework/PlayerController.h"
@@ -13,7 +14,6 @@
 #include "LogMacros/LimenLogMacros.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Namespaces/GlobalInfo.h"
-#include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 
 
 void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, const ELogType Verbosity, const bool bPrintToScreen, FName Key)
@@ -113,27 +113,6 @@ void ULimenCoreStatics::SetDynamicGlobalIlluminationMethod(APostProcessVolume* P
 void ULimenCoreStatics::SetReflectionMethod(APostProcessVolume* PostProcessVolume, const EReflectionMethod::Type NewMethod)
 {
 	PostProcessVolume->Settings.ReflectionMethod = NewMethod;
-}
-
-void ULimenCoreStatics::RandomPercentage(const double ChanceToWin, bool& bWon)
-{
-	if (FMath::IsNearlyZero(ChanceToWin))
-	{
-		bWon = false;
-		return;
-	}
-
-	if (FMath::IsNearlyEqual(ChanceToWin, 100.0))
-	{
-		bWon = true;
-		return;
-	}
-	
-	auto* GlobalStream = ULimenGlobalRandomStreamSubsystem::Get();
-	check(GlobalStream)
-	
-	const double RandomValue = GlobalStream->GetGlobalRandomStream()->GetFraction() * 100.f;
-	bWon = RandomValue <= ChanceToWin;
 }
 
 FText ULimenCoreStatics::GetCurrentTime()

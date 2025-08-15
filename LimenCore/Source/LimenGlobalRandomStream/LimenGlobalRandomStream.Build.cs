@@ -1,18 +1,16 @@
 ﻿using UnrealBuildTool;
 
-public class ProceduralMaps : ModuleRules
+public class LimenGlobalRandomStream : ModuleRules
 {
-    public ProceduralMaps(ReadOnlyTargetRules Target) : base(Target)
+    public LimenGlobalRandomStream(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
-                
-                "LimenLevelTransitions", 
-                "LimenSaveSystem",
+                "Core", 
+                "AIModule",
             }
         );
 
@@ -24,10 +22,6 @@ public class ProceduralMaps : ModuleRules
                 "Slate",
                 "SlateCore",
                 "NavigationSystem",
-                
-                "LimenCore",
-                "LimenGlobalRandomStream",
-                "LimenProceduralGeneration",
             }
         );
     }

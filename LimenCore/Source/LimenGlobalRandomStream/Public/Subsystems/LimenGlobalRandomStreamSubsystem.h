@@ -15,7 +15,7 @@ typedef TSharedPtr<FRandomStream, ESPMode::NotThreadSafe> FRandomStreamPtr;
  * 
  */
 UCLASS()
-class LIMENCORE_API ULimenGlobalRandomStreamSubsystem : public UEngineSubsystem
+class LIMENGLOBALRANDOMSTREAM_API ULimenGlobalRandomStreamSubsystem : public UEngineSubsystem
 {
 	GENERATED_BODY()
 

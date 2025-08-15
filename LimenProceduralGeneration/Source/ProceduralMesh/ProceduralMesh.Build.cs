@@ -10,7 +10,9 @@ public class ProceduralMesh : ModuleRules
             new string[]
             {
                 "Core", 
-                "LimenCore",
+                
+                "LimenCore", 
+                "LimenGlobalRandomStream",
             }
         );
 

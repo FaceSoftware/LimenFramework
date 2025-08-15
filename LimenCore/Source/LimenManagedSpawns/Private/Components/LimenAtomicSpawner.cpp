@@ -4,7 +4,7 @@
 #include "Components/LimenAtomicSpawner.h"
 
 #include "Kismet/KismetMathLibrary.h"
-#include "LimenCore/Public/Subsystems/LimenGlobalRandomStreamSubsystem.h"
+#include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 
 
 ULimenAtomicSpawner::ULimenAtomicSpawner()

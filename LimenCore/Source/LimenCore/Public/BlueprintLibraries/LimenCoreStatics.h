@@ -4,9 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 #include "LimenCoreStatics.generated.h"
 
+
+namespace EDynamicGlobalIlluminationMethod
+{
+	enum Type : int;
+}
+
+namespace EReflectionMethod
+{
+	enum Type : int;
+}
 
 class ULimenGlobalRandomStreamSubsystem;
 class APostProcessVolume;
@@ -86,14 +95,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Post Process")
 	static void SetReflectionMethod(APostProcessVolume* PostProcessVolume, EReflectionMethod::Type NewMethod);
 	
-	/**
-	 * @brief Acts as a coin toss
-	 * @param ChanceToWin The probability of winning.
-	 * @param bWon True if won, false if lost
-	 */
-	UFUNCTION(BlueprintCallable, Category="Limen|Math", meta=(WorldContext="WorldContext", ExpandBoolAsExecs="bWon"))
-	static void RandomPercentage(const double ChanceToWin, UPARAM(DisplayName="Has Won")bool& bWon);
-	
 	UFUNCTION(BlueprintCallable, Category="Limen|Time")
 	static FText GetCurrentTime();
 	
@@ -117,9 +118,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Navigation", BlueprintPure)
 	static FString GetGameTransitionMap();
-
-	template <typename T>
-	static TArray<T> ShuffleArray(const TArray<T>& In);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|String", meta=(ExpandEnumAsExecs="ReturnValue"))
 	static bool SetCharacterAtIndex(const FString& String, const int32 Index, const FString& Char, FString& OutString);
@@ -137,30 +135,19 @@ public:
 	static void GetPacketLoss(APlayerController* PC, float& InLoss, float& OutLoss);
 };
 
-template <typename T>
-TArray<T> ULimenCoreStatics::ShuffleArray(const TArray<T>& In)
-{
-	TArray<T> Out = In;
-	ULimenGlobalRandomStreamSubsystem* RandomStream = ULimenGlobalRandomStreamSubsystem::Get();
-	
-	if (Out.Num() > 1)
-	{
-		for (int32 i = 0; i < Out.Num(); i++)
-		{
-			const int32 j = RandomStream->RandomIntRange(Out.Num() - 1, i);
-			if (i != j)
-			{
-				Out.Swap(i, j);
-			}
-		}
-	}
-
-	return Out;
-}
-
 static void LimenLog(const UObject* Caller, const FString& LogText, const ELogType Verbosity = ELogType::Log,
 					 const bool bPrintToScreen = true, FName Key = NAME_None)
 {
 	ULimenCoreStatics::LimenLog(Caller, LogText, Verbosity, bPrintToScreen, Key);
 }
 
+UENUM(BlueprintType)
+enum class EComparisonOperator : uint8
+{
+	GreaterThan,
+	LessThan,
+	Equal,
+	NotEqual,
+	GreaterThanOrEqualTo,
+	LessThanOrEqualTo,
+};

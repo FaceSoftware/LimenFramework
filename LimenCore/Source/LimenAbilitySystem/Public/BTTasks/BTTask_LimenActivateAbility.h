@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include "LimenActivateAbility.generated.h"
+#include "BTTask_LimenActivateAbility.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class LIMENAI_API ULimenActivateAbility : public UBTTaskNode
+class LIMENABILITYSYSTEM_API UBTTask_LimenActivateAbility : public UBTTaskNode
 {
 	GENERATED_BODY()
 
 public:
-	ULimenActivateAbility();
-
+	UBTTask_LimenActivateAbility();
+	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 protected:

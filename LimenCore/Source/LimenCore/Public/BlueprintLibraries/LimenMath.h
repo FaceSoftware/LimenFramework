@@ -11,6 +11,7 @@ struct FCollisionQueryParams;
 struct FHitResult;
 struct FCollisionResponseParams;
 struct FConeData;
+
 /**
  * 
  */
@@ -49,9 +50,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Math Library")
 	static FTransform RotateTransform(const FTransform TransformToRotate, const FVector RotationCenter, const double DegreeRotation, const FVector Axis = FVector(0.f, 0.f, 1.f));
-
-	UFUNCTION(BlueprintCallable, Category="Limen|Math Library", meta=(WorldContext="Caller"))
-	static void GetRandomReachablePointInCircumference(UObject* Caller, const FVector& Origin, const float Radius, int32 NumOfPoints, FVector& OutLocation, bool& bSuccess);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Math Library")
 	static AActor* GetClosestActorTo(const FVector& Location, const TArray<AActor*>& ActorsList);

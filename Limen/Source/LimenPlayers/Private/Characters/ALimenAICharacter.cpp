@@ -3,7 +3,7 @@
 
 #include "Characters/LimenAICharacter.h"
 
-#include "AIControllers/LimenAIControllerBase.h"
+#include "AIController/LimenAIControllerBase.h"
 #include "Animation/AnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/Interaction/LimenProximityInteractionComponent.h"

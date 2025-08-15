@@ -31,6 +31,7 @@ public class LimenKeyBindSettings : ModuleRules
                 "LimenCore",
                 "LimenStorage",
                 "LimenWidgets",
+                "LimenModals",
                 "LimenGameFramework",
             }
         );
