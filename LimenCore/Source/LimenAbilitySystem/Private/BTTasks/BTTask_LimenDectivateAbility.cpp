@@ -34,6 +34,6 @@ EBTNodeResult::Type UBTTask_LimenDeactivateAbility::ExecuteTask(UBehaviorTreeCom
 	if (!AbilityPtr) return EBTNodeResult::Type::Failed;
 	if (!AbilityPtr->IsActive()) return EBTNodeResult::Type::Succeeded;
 	
-	AbilityPtr->CancelAbility(Controller, Controller->GetPawn());
+	AbilityPtr->DeactivateAbility(Controller, Controller->GetPawn());
 	return EBTNodeResult::Type::Succeeded;
 }

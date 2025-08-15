@@ -26,7 +26,7 @@ void UBTService_Timer::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8
 	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
 
 	auto* Mem = reinterpret_cast<FTimerMem*>(NodeMemory);
-	Mem->Deadline = OwnerComp.GetWorld()->GetTimeSeconds() + Duration;
+	Mem->Deadline = OwnerComp.GetWorld()->GetTimeSeconds() + Duration.GetValue(OwnerComp);
 	Mem->bFired = false;
 
 	if (UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent(); BB && DoneKey.SelectedKeyType)
@@ -52,7 +52,7 @@ void UBTService_Timer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMe
 
 		if (bLoop)
 		{
-			Mem->Deadline = Now + Duration;
+			Mem->Deadline = Now + Duration.GetValue(OwnerComp);
 		}
 		else
 		{

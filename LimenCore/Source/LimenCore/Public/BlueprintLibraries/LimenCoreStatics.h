@@ -86,8 +86,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Debug", meta=(WorldContext=Caller))
 	static void StaticLimenLog(const FString FunctionName, const FString LogText, const ELogType Verbosity = ELogType::Log, const bool bPrintToScreen = true);
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Debug", meta=(WorldContext=Caller, ExpandBoolAsExecs="bIsEditorGame"))
-	static void IsGamePlayingInEditor(UObject* Caller, bool& bIsEditorGame);
+	UFUNCTION(BlueprintCallable, Category="Limen|Debug", meta=(ExpandBoolAsExecs="bIsEditorGame"))
+	static void IsGamePlayingInEditor(bool& bIsEditorGame);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Post Process")
 	static void SetDynamicGlobalIlluminationMethod(APostProcessVolume* PostProcessVolume, EDynamicGlobalIlluminationMethod::Type NewMethod);
@@ -108,10 +108,10 @@ public:
 	static AActor* GetActorWithTag(const UObject* Caller, const FName& Tag);
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Debug", meta=(WorldContext=Caller, ExpandEnumAsExecs="ReturnValue"))
-	static EMinimalWorldTypes GetWorldType(UObject* Caller);
+	static EMinimalWorldTypes GetWorldType(const UObject* Caller);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Navigation", meta=(WorldContext=WorldContext), BlueprintPure)
-	static bool AreLocationsReachableByNavigation(UObject* WorldContext, const FVector& Start, const FVector& End);
+	static bool AreLocationsReachableByNavigation(const UObject* WorldContext, const FVector& Start, const FVector& End);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Navigation", BlueprintPure)
 	static FString GetGameDefaultMap();

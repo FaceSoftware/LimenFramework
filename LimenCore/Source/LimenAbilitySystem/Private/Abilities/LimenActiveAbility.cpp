@@ -34,6 +34,7 @@ void ULimenActiveAbility::ForceDeactivateAbility()
 
 void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
 {
+	check(GetOwner()->HasAuthority())
 	if (!CanActivateAbility())
 	{
 		return;
@@ -54,14 +55,16 @@ void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
 	}
 }
 
-void ULimenActiveAbility::CancelAbility(AController* Controller, APawn* Pawn)
+void ULimenActiveAbility::DeactivateAbility(AController* Controller, APawn* Pawn)
 {
+	check(GetOwner()->HasAuthority())
+
 	bIsActive = false;
 	GetWorld()->GetTimerManager().ClearTimer(AbilityTimerHandle);
-
 	AbilityCancelled(Controller, Pawn);
-
 	StartCooldownTimer();
+
+	Multicast_AbilityDeactivated(Controller, Pawn);
 }
 
 bool ULimenActiveAbility::CanActivateAbility() const
@@ -135,4 +138,9 @@ void ULimenActiveAbility::StartCooldownTimer()
 void ULimenActiveAbility::Multicast_AbilityActivated_Implementation(AController* Controller, APawn* Pawn)
 {
 	OnAbilityActivated.Broadcast(this);
+}
+
+void ULimenActiveAbility::Multicast_AbilityDeactivated_Implementation(AController* Controller, APawn* Pawn)
+{
+	OnAbilityDeactivated.Broadcast(this);
 }

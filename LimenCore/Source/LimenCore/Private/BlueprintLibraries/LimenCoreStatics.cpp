@@ -5,6 +5,7 @@
 
 #include "EngineUtils.h"
 #include "GameMapsSettings.h"
+#include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "Engine/Engine.h"
 #include "Engine/NetConnection.h"
@@ -95,7 +96,7 @@ void ULimenCoreStatics::StaticLimenLog(const FString FunctionName, const FString
 #endif
 }
 
-void ULimenCoreStatics::IsGamePlayingInEditor(UObject* Caller, bool& bIsEditorGame)
+void ULimenCoreStatics::IsGamePlayingInEditor(bool& bIsEditorGame)
 {
 #if WITH_EDITOR
 	bIsEditorGame = true;
@@ -250,7 +251,7 @@ AActor* ULimenCoreStatics::GetActorWithTag(const UObject* Caller, const FName& T
 	return nullptr;
 }
 
-EMinimalWorldTypes ULimenCoreStatics::GetWorldType(UObject* Caller)
+EMinimalWorldTypes ULimenCoreStatics::GetWorldType(const UObject* Caller)
 {
 	check(GEngine)
 	const auto* World = GEngine->GetWorldFromContextObject(Caller, EGetWorldErrorMode::Assert);
@@ -297,27 +298,15 @@ EMinimalWorldTypes ULimenCoreStatics::GetWorldType(UObject* Caller)
 	return OutWorldType;
 }
 
-bool ULimenCoreStatics::AreLocationsReachableByNavigation(UObject* WorldContext, const FVector& Start, const FVector& End)
+bool ULimenCoreStatics::AreLocationsReachableByNavigation(const UObject* WorldContext, const FVector& Start, const FVector& End)
 {
-	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(WorldContext->GetWorld());
-	if (NavSys == nullptr)
-	{
-		return false;
-	}
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::Assert);
+	const UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(World);
+	if (!NavSys) return false;
 
-	const ANavigationData* NavData = NavSys->GetDefaultNavDataInstance(FNavigationSystem::DontCreate);
-	if (NavData == nullptr)
-	{
-		return false;
-	}
+	const UNavigationPath* Path = NavSys->FindPathToLocationSynchronously(World, Start, End);
 
-	// Prepare the pathfinding query using the navigation filter
-	const FSharedConstNavQueryFilter NavFilter = NavData->GetDefaultQueryFilter();
-	const FPathFindingQuery Query = FPathFindingQuery(nullptr, *NavData, Start, End, NavFilter);
-
-	// Perform the pathfinding query
-	const FPathFindingResult Result = NavSys->FindPathSync(Query);
-	return Result.IsSuccessful() && !Result.Path->IsPartial();
+	return Path && Path->IsValid() && Path->IsPartial() == false;
 }
 
 FString ULimenCoreStatics::GetGameDefaultMap()

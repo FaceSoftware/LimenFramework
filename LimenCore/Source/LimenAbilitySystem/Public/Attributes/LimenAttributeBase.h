@@ -147,7 +147,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
 	void Empty();
 
-	
 	/**
 	 * @brief Sets the attribute value to the maximum.
 	 */
