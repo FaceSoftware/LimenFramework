@@ -19,6 +19,7 @@ ULimenAttributeBase::ULimenAttributeBase() : Super()
 	CurrentValue = 0.f;
 	bIsInitialized = false;
 	bIsFrozen = false;
+	bShouldFreezeWhenValueIsReached = false;
 }
 
 void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -177,7 +178,7 @@ ETickableTickType ULimenAttributeBase::GetTickableTickType() const
 
 bool ULimenAttributeBase::IsTickable() const
 {
-	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
+	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority() && !bIsFrozen;
 }
 
 TStatId ULimenAttributeBase::GetStatId() const
@@ -404,12 +405,12 @@ void ULimenAttributeBase::SetCurrentValueAsMin()
 
 void ULimenAttributeBase::SetCurrentValueAs(const float Value)
 {
-	if (IsFrozen() || FMath::IsNearlyEqual(CurrentValue, Value))
+	if (IsFrozen() || FMath::IsNearlyEqual(CurrentValue, Value)) return;
 	{
-		return;
 	}
 	
 	CurrentValue = Value;
+	if (bShouldFreezeWhenValueIsReached && FreezeRange.Contains(CurrentValue)) FreezeAttribute(true);
 	AttributeUpdated();
 	OnAttributeChanged.Broadcast(this, CurrentValue);
 }

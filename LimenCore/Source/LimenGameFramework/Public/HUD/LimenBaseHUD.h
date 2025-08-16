@@ -20,18 +20,18 @@ class ULimenWidget;
 	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName && WidgetVarName->IsShowing(); } \
 	inline Type* Get##WidgetVarName() const { return WidgetVarName.Get(); } \
 
-#define CREATE_WIDGET_SAFE_STRONG_PTR(WidgetPtr, WidgetClass) \
+#define CREATE_WIDGET_SAFE_STRONG_PTR(Typename, WidgetPtr, WidgetClass) \
 	if (WidgetClass) \
 	{ \
-		auto* Widget = CreateWidget<ULimenBaseHudWidget>(GetOwningPlayerController(), WidgetClass); \
+		auto* Widget = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
 		WidgetPtr = TStrongObjectPtr(Widget); \
 		WidgetPtr->BindPlayerController(GetOwningPlayerController()); \
 	} \
 
-#define CREATE_WIDGET_SAFE(WidgetPtr, WidgetClass) \
+#define CREATE_WIDGET_SAFE(Typename, WidgetPtr, WidgetClass) \
 	if (WidgetClass) \
 	{ \
-		WidgetPtr = CreateWidget<ULimenBaseHudWidget>(GetOwningPlayerController(), WidgetClass); \
+		WidgetPtr = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
 	} \
 	
 /**

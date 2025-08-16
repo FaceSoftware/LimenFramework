@@ -214,29 +214,20 @@ class LIMENABILITYSYSTEM_API ULimenAbilityComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+	/**
+	 * @brief Signals that all abilities and attributes are instantiated.
+	 * Useful for clients since the objects are spawned over the network and will have a delay.
+	 * On authority, this is executed after Activate().
+	 */
 	UPROPERTY(BlueprintAssignable, Category="Limen|Ability Component")
 	FAbilityComponentReady OnAbilityComponentReady;
 
 	explicit ULimenAbilityComponent(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void Activate(bool bReset = false) override;
 	virtual void Deactivate() override;
-
-	void SetupAbilitiesAndAttributes(AActor* Owner);
-	/**
-	 * Loads and initializes abilities for the specified owner from the defined AbilityClasses array.
-	 *
-	 * @param Owner The owner actor which the abilities are associated to. This will be used during the initialization of each ability.
-	 */
-	UFUNCTION(BlueprintCallable)
-	void LoadAbilities(AActor* Owner);
-	/**
-	 * Loads and initializes attributes for the specified owner from the defined AttributeClasses array.
-	 *
-	 * @param Owner The owner actor to which the attributes are associated. This will be used during the initialization of each attribute.
-	 */
-	UFUNCTION(BlueprintCallable)
-	void LoadAttributes(AActor* Owner);
+	
 	/**
 	 * Adds a new ability to the component and initializes it.
 	 *
@@ -265,6 +256,14 @@ public:
 	 * or transitioning out of gameplay.
 	 */
 	void DeactivateAllAbilities();
+	/**
+	 * Deactivates all abilities associated with the component.
+	 *
+	 * Iterates through the list of abilities and forces their deactivation. This ensures
+	 * that no active abilities persist, which can be useful in scenarios like player death
+	 * or transitioning out of gameplay.
+	 */
+	void DeactivateAllAttributes();
 	/**
 	 * Retrieves an ability of the specified class type from the component's managed abilities.
 	 * This method searches for an ability that matches the provided class or any subclass of the specified class within the component's ability collection.
@@ -353,17 +352,19 @@ protected:
 	TArray<TSoftClassPtr<ULimenAttributeBase>> AttributeClasses;
 
 private:
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, Transient)
 	FAbilityArray Abilities;
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, Transient)
 	FAttributeArray Attributes;
-	UPROPERTY(ReplicatedUsing=OnRep_ServerAbilityCount)
+	UPROPERTY(ReplicatedUsing=OnRep_ServerAbilityCount, Transient)
 	int32 AuthAbilityCount;
-	UPROPERTY(ReplicatedUsing=OnRep_ServerAttributeCount)
+	UPROPERTY(ReplicatedUsing=OnRep_ServerAttributeCount, Transient)
 	int32 AuthAttributeCount;
 
 	bool bAbilitiesLoaded;
 	bool bAttributesLoaded;
+	bool bAbilitiesInstantiated;
+	bool bAttributesInstantiated;
 
 	UFUNCTION()
 	void OnRep_ServerAbilityCount();
@@ -371,6 +372,11 @@ private:
 	void OnRep_ServerAttributeCount();
 
 	bool IsNoAuthComponentGameplayReady();
+
+	void InitializeAbilities();
+	void InitializeAttributes();
+	void InstantiateAbilities();
+	void InstantiateAttributes();
 };
 
 

@@ -3,7 +3,10 @@
 
 #include "Widgets/LimenWidget.h"
 
+#include "Animation/UMGSequencePlayer.h"
+#include "Animation/WidgetAnimation.h"
 #include "Blueprint/WidgetTree.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "LogMacros/LimenLogMacros.h"
 
 
@@ -43,14 +46,16 @@ bool ULimenWidget::ShowWidget()
 	OnWidgetVisible();
 	OnLimenVisibilityChanged.Broadcast(true);
 	
-	if (bUseShowAnimation)
+	if (ShowAnimation)
 	{
 		PlayOnWidgetVisibleAnimation();
 		bIsAnimating = true;
+		ShowAnimationHandle = PlayAnimation(ShowAnimation.Get(), 0.f, 1, EUMGSequencePlayMode::Forward, 1.f, false);
+		ShowAnimationHandle.GetAnimationState()->GetOnWidgetAnimationFinished().AddUObject(this, &ThisClass::ShowAnimationFinished);
 	}
 	else
 	{
-		NotifyAnimationFinished(true);
+		ShowAnimationFinished();
 	}
 
 	return true;
@@ -62,14 +67,16 @@ bool ULimenWidget::HideWidget()
 
 	OnLimenVisibilityChanged.Broadcast(false);
 	
-	if (bUseHideAnimation)
+	if (HideAnimation)
 	{
 		PlayOnWidgetHiddenAnimation();
 		bIsAnimating = true;
+		HideAnimationHandle = PlayAnimation(HideAnimation.Get(), 0.f, 1, EUMGSequencePlayMode::Forward, 1.f, false);
+		HideAnimationHandle.GetAnimationState()->GetOnWidgetAnimationFinished().AddUObject(this, &ThisClass::HideAnimationFinished);
 	}
 	else
 	{
-		NotifyAnimationFinished(false);
+		HideAnimationFinished();
 	}
 
 	return true;
@@ -77,7 +84,7 @@ bool ULimenWidget::HideWidget()
 
 void ULimenWidget::HideWidgetWithCallback(FLimenBlueprintWidgetHidden OnWidgetHidden)
 {
-	if (!IsShowing() || !bUseHideAnimation)
+	if (!IsShowing() || !HideAnimation)
 	{
 		if (OnWidgetHidden.IsBound())
 		{
@@ -93,7 +100,7 @@ void ULimenWidget::HideWidgetWithCallback(FLimenBlueprintWidgetHidden OnWidgetHi
 
 void ULimenWidget::HideWidget(const FLimenWidgetHidden& OnWidgetHidden)
 {
-	if (!IsShowing() || !bUseHideAnimation)
+	if (!IsShowing() || !HideAnimation)
 	{
 		if (OnWidgetHidden.IsBound())
 		{
@@ -144,24 +151,6 @@ void ULimenWidget::DestroyWidget(const bool bWaitForHideAnimation)
 
 	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::DestroyWidgetInternal);
 	HideWidget();
-}
-
-void ULimenWidget::NotifyAnimationFinished(const bool bIsVisibleAnimation)
-{
-	bIsAnimating = false;
-	
-	if (bIsVisibleAnimation)
-	{
-		// Nothing to do here, if it's the visible animation the logic should go on the "ShowWidget" function
-	}
-	else
-	{
-		// HideAllChildren();
-		HideWidgetMethod();
-		OnWidgetHidden();
-	}
-
-	OnLimenAnimationFinished.Broadcast(bIsVisibleAnimation);
 }
 
 void ULimenWidget::SetWidgetLevel(const int32 NewLevel)
@@ -277,4 +266,29 @@ void ULimenWidget::DestroyWidgetInternal(const bool bIsHideAnimation)
 	
 	RemoveFromParent();
 	ConditionalBeginDestroy();
+}
+
+void ULimenWidget::ShowAnimationFinished(FWidgetAnimationState& State)
+{
+	ShowAnimationFinished();
+}
+
+void ULimenWidget::ShowAnimationFinished()
+{
+	bIsAnimating = false;
+	OnLimenAnimationFinished.Broadcast(true);
+}
+
+void ULimenWidget::HideAnimationFinished(FWidgetAnimationState& State)
+{
+	HideAnimationFinished();
+}
+
+void ULimenWidget::HideAnimationFinished()
+{
+	bIsAnimating = false;
+	// HideAllChildren();
+	HideWidgetMethod();
+	OnWidgetHidden();
+	OnLimenAnimationFinished.Broadcast(false);
 }

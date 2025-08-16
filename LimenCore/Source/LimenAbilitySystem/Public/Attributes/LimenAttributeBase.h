@@ -229,11 +229,15 @@ protected:
 	/**
 	 * @brief The amount to recharge every second.
 	 */
-	UPROPERTY(EditAnywhere, Category="Limen", Replicated)
+	UPROPERTY(EditAnywhere, Category="Attribute", Replicated)
 	float RechargeRate;
-	UPROPERTY(EditAnywhere, Replicated)
+	UPROPERTY(EditAnywhere, Category="Attribute")
+	bool bShouldFreezeWhenValueIsReached;
+	UPROPERTY(EditAnywhere, Category="Attribute", meta=(EditCondition="bShouldFreezeWhenValueIsReached"))
+	FFloatRange FreezeRange;
+	UPROPERTY(EditAnywhere, Category="Attribute", Replicated)
 	float MaxValue;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Attribute")
 	float InitialValue;
 
 	virtual void AttributeEmpty();

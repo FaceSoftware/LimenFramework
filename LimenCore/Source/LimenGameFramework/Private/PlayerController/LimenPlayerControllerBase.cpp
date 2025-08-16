@@ -243,6 +243,7 @@ void ALimenPlayerControllerBase::AddPitchInput(const float Val)
 
 void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
 {
+	check(NewPawn)
 	if (NewPawn == GetPawn())
 	{
 		GetPawn()->OnPawnBeginPlay.RemoveAll(this);

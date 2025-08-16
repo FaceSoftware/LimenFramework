@@ -23,14 +23,12 @@ ALimenTool::ALimenTool()
 	bWasActiveBeforeRecharge = false;
 	
 	AbilityComponent = CreateDefaultSubobject<ULimenAbilityComponent>(TEXT("AbilityComponent"));
+	AbilityComponent->bAutoActivate = true;
 }
 
 void ALimenTool::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AbilityComponent->LoadAbilities(this);
-	AbilityComponent->LoadAttributes(this);
 	
 	BatteryAttribute = AbilityComponent->GetAttribute<ULimenBatteryAttribute>();
 	check(BatteryAttribute != nullptr);
