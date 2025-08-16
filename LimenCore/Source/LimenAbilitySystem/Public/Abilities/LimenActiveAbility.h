@@ -51,6 +51,12 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
 	virtual bool CanActivateAbility() const;
+	/**
+	 * @brief Sets the rules whether the ability can be deactivated.
+	 * @return True if it can be deactivated, false if not.
+	 */
+	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
+	virtual bool CanDeactivateAbility() const;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
 	float GetFullCooldownTime() const;

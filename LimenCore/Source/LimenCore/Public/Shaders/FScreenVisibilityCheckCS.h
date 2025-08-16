@@ -9,11 +9,11 @@
 /**
  * 
  */
-class LIMENCORE_API FDownsamplerCS : public FGlobalShader
+class LIMENCORE_API FScreenVisibilityCheckCS : public FGlobalShader
 {
 public:
-	DECLARE_GLOBAL_SHADER(FDownsamplerCS);
-	SHADER_USE_PARAMETER_STRUCT(FDownsamplerCS, FGlobalShader)
+	DECLARE_GLOBAL_SHADER(FScreenVisibilityCheckCS);
+	SHADER_USE_PARAMETER_STRUCT(FScreenVisibilityCheckCS, FGlobalShader)
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
 			SHADER_PARAMETER_RDG_TEXTURE(Texture2D<float4>, Input)

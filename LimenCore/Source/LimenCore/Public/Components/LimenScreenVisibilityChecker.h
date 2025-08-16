@@ -35,14 +35,17 @@ public:
 	bool IsVisible() const;
 
 protected:
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditDefaultsOnly, Category="Render")
+	TSoftObjectPtr<UTextureRenderTarget2D> DebugVisualizationRenderTarget;
+#endif
+
 	UPROPERTY(EditDefaultsOnly, Category="Render")
 	float RenderTargetSizeScale;
 	UPROPERTY(EditDefaultsOnly, Category="Material")
 	TSoftObjectPtr<UMaterialInterface> StencilCheckerMaterial;
 	UPROPERTY(EditDefaultsOnly, Category="Material")
 	FName MaskParameter;
-	UPROPERTY(EditDefaultsOnly, Category="Material")
-	FName RenderTargetParameter;
 	UPROPERTY(EditDefaultsOnly, Category="Material")
 	int32 MaskToCheck;
 
@@ -59,5 +62,5 @@ private:
 	void AddReadbackStep(FRDGBuilder& GraphBuilder, FRDGTextureRef ResultTexture, ULimenScreenVisibilityChecker* Checker);
 	void PollReadback();
 
-	FVector2D GetViewportSize();
+	FIntPoint GetRenderTargetSize() const;
 };

@@ -8,7 +8,6 @@
 #include "LimenSlider.generated.h"
 
 
-struct FLimenRange;
 class SEditableText;
 class SMouseDetector;
 class SPanel;
@@ -41,6 +40,17 @@ enum class ELimenSliderDisplay : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLimenSliderEvent, ELimenSliderInput, InputType, float, NewValue);
+
+USTRUCT(BlueprintType)
+struct FValueColor
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FSlateColor Color;
+	UPROPERTY(EditAnywhere)
+	FFloatRange ValueRange;
+};
 
 /**
  * 
@@ -99,7 +109,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Display")
 	ELimenSliderDisplay SliderDisplayMethod;
 	UPROPERTY(EditAnywhere, Category="Display")
-	TMap<FVector2D, FSlateColor> ValueColors;
+	TArray<FValueColor> ValueColors;
 	UPROPERTY(EditAnywhere, Category="Display")
 	float DisplayBoxWidth;
 	UPROPERTY(EditAnywhere, Category="Display")

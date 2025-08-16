@@ -362,20 +362,21 @@ void ULimenSlider::TextValueCommited(const FText& InText, const ETextCommit::Typ
 	SetValueInternal(ELimenSliderInput::Typed, FMath::Clamp(NewValue, SliderMinValue, SliderMaxValue), true);
 }
 
-void ULimenSlider::ValueChanged(ELimenSliderInput InputType, float NewValue)
+void ULimenSlider::ValueChanged(ELimenSliderInput InputType, const float NewValue)
 {
-	for (const TPair<FVector2D, FSlateColor>& ValueColor : ValueColors)
+	for (const auto& [Color, Range] : ValueColors)
 	{
-		if (NewValue < ValueColor.Key.X || NewValue > ValueColor.Key.Y) continue;
+		if (!Range.Contains(NewValue)) continue;
 
-		if (SliderImage.IsValid()) SliderImage->SetColorAndOpacity(ValueColor.Value);
+		if (SliderImage.IsValid()) SliderImage->SetColorAndOpacity(Color);
 		if (SliderBackground.IsValid())
 		{
-			SliderBackground->SetColorAndOpacity(ValueColor.Value);
-			SliderBackground->SetColorAndOpacity(ValueColor.Value);
+			SliderBackground->SetColorAndOpacity(Color);
+			SliderBackground->SetColorAndOpacity(Color);
 		}
-		if (SliderTextDisplay.IsValid()) SliderTextDisplay->SetColorAndOpacity(ValueColor.Value);
-		if (SliderImageDisplay.IsValid()) SliderImageDisplay->SetColorAndOpacity(ValueColor.Value);
+		if (SliderTextDisplay.IsValid()) SliderTextDisplay->SetColorAndOpacity(Color);
+		if (SliderImageDisplay.IsValid()) SliderImageDisplay->SetColorAndOpacity(Color);
+
 		break;
 	}
 }

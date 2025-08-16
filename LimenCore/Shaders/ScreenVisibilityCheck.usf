@@ -1,8 +1,10 @@
 #include "/Engine/Public/Platform.ush"
 
+
 RWTexture2D<float> Result : register(u0);
 Texture2D Input : register(t0);
 SamplerState InputSampler : register(s0);
+
 
 [numthreads(8, 8, 1)]
 void MainCS(uint3 DTid : SV_DispatchThreadID)
@@ -10,8 +12,7 @@ void MainCS(uint3 DTid : SV_DispatchThreadID)
 	uint2 TexSize;
 	Input.GetDimensions(TexSize.x, TexSize.y);
 
-	if (DTid.x >= TexSize.x || DTid.y >= TexSize.y)
-		return;
+	if (DTid.x >= TexSize.x || DTid.y >= TexSize.y) return;
 
 	float4 Color = Input.Load(int3(DTid.xy, 0));
 

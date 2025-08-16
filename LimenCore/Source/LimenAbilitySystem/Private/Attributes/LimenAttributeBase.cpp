@@ -366,6 +366,11 @@ bool ULimenAttributeBase::IsFull() const
 	return FMath::IsNearlyEqual(CurrentValue, MaxValue);
 }
 
+float ULimenAttributeBase::GetValueUntilMax() const
+{
+	return MaxValue - CurrentValue;
+}
+
 bool ULimenAttributeBase::StatsMakeSense() const
 {
 	return MaxValue > MinValue && CurrentValue >= MinValue && CurrentValue <= MaxValue;

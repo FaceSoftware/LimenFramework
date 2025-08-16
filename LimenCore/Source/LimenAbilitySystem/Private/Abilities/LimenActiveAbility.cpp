@@ -35,13 +35,10 @@ void ULimenActiveAbility::ForceDeactivateAbility()
 void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
 {
 	check(GetOwner()->HasAuthority())
-	if (!CanActivateAbility())
-	{
-		return;
-	}
+	if (!CanActivateAbility()) return;
 	
 	bIsActive = true;
-	if (FMath::IsNearlyZero(AbilityActivationDelay))
+	if (FMath::IsNearlyZero(AbilityActivationDelay) || FMath::IsNegativeOrNegativeZero(AbilityActivationDelay))
 	{
 		AbilityActivated_Wrapper(Controller, Pawn);
 	}
@@ -58,6 +55,7 @@ void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
 void ULimenActiveAbility::DeactivateAbility(AController* Controller, APawn* Pawn)
 {
 	check(GetOwner()->HasAuthority())
+	if (!CanDeactivateAbility()) return;
 
 	bIsActive = false;
 	GetWorld()->GetTimerManager().ClearTimer(AbilityTimerHandle);
@@ -70,6 +68,11 @@ void ULimenActiveAbility::DeactivateAbility(AController* Controller, APawn* Pawn
 bool ULimenActiveAbility::CanActivateAbility() const
 {
 	return bIsCooldownOver && !bIsActive;
+}
+
+bool ULimenActiveAbility::CanDeactivateAbility() const
+{
+	return true;
 }
 
 float ULimenActiveAbility::GetFullCooldownTime() const
