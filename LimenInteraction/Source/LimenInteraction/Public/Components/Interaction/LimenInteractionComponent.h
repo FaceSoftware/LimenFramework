@@ -225,6 +225,7 @@ protected:
 	UActorComponent* GetCurrentInteractableInterface() const;
 
 private:
+	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	TScriptInterface<ILimenInteractableComponent> CurrentInteractableInterface;
 	TScriptInterface<ILimenInteractableComponent> PreviousInteractableInterface;
 

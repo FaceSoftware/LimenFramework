@@ -5,31 +5,95 @@
 
 #include "Widgets/DeclarativeSyntaxSupport.h"
 #include "Widgets/SOverlay.h"
-#include "Widgets/Images/SImage.h"
 
 
-const FSlateBrush ULimenCrosshair::CrosshairBrush = []
+void SLimenCrosshair::Construct(const FArguments& InArgs)
 {
-	FSlateBrush Result;
-	Result.DrawAs = ESlateBrushDrawType::Type::Box;
-	Result.ImageType = ESlateBrushImageType::NoImage;
-	Result.ImageSize = FVector2D(1.0f, 1.0f);
-	Result.Tiling = ESlateBrushTileType::Type::Both;
-	Result.TintColor = FSlateColor(FColor::White);
-	return Result;
-}();
-const FSlateBrush ULimenCrosshair::CenterDotBrush = []
+	Style = InArgs._StyleParams.Get();
+}
+
+FVector2D SLimenCrosshair::ComputeDesiredSize(float) const
 {
-	FSlateBrush Result;
-	Result.DrawAs = ESlateBrushDrawType::Type::RoundedBox;
-	Result.OutlineSettings.bUseBrushTransparency = true;
-	Result.OutlineSettings.RoundingType = ESlateBrushRoundingType::HalfHeightRadius;
-	Result.ImageType = ESlateBrushImageType::NoImage;
-	Result.ImageSize = FVector2D(1.0f, 1.0f);
-	Result.Tiling = ESlateBrushTileType::Type::Both;
-	Result.TintColor = FSlateColor(FColor::White);
-	return Result;
-}();
+	return FVector2D(Style.CrosshairLength);
+}
+
+int32 SLimenCrosshair::OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry,
+							   const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId,
+							   const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const
+{
+	const bool bEnabled = ShouldBeEnabled(bParentEnabled);
+	const ESlateDrawEffect DrawEffects = bEnabled ? ESlateDrawEffect::None : ESlateDrawEffect::DisabledEffect;
+
+	const FVector2D WidgetSize = AllottedGeometry.GetLocalSize();
+	const FVector2D Center = WidgetSize * 0.5f;
+
+	const float L  = Style.CrosshairLength;
+	const float T  = Style.CrosshairThickness;
+	const float G  = Style.CrosshairGap;
+	const float LineLength = (L - G) * 0.5;
+
+	// Colors respect parent/widget opacity tints
+	const FLinearColor Tint = Style.CrosshairColor * InWidgetStyle.GetColorAndOpacityTint();
+
+	// Reusable 1px box brush (no texture)
+	static FSlateBrush BoxBrush;
+	static bool bInit = false;
+	if (!bInit)
+	{
+		BoxBrush.DrawAs = ESlateBrushDrawType::Box;
+		BoxBrush.ImageType = ESlateBrushImageType::NoImage;
+		BoxBrush.Tiling = ESlateBrushTileType::Both;
+		BoxBrush.ImageSize = FVector2D(1,1);
+		bInit = true;
+	}
+
+	auto DrawRect = [&](const FVector2D& Pos, const FVector2D& RectSize, const FSlateBrush* Brush, const FLinearColor& Color, int32 Z)
+	{
+		FSlateDrawElement::MakeBox(
+			OutDrawElements, Z,
+			AllottedGeometry.ToPaintGeometry(RectSize, FSlateLayoutTransform(Pos)),
+			Brush, DrawEffects, Color
+		);
+	};
+
+	// Top Line
+	{
+		const FVector2D Size(Style.CrosshairThickness, LineLength);
+		const FVector2D Pos(Center.X - T * 0.5f, 0.f);
+		if (!Size.IsZero() && !Size.ContainsNaN()) DrawRect(Pos, Size, &BoxBrush, Tint, LayerId);
+	}
+
+	// Bottom Line
+	{
+		const FVector2D Size(Style.CrosshairThickness, LineLength);
+		const FVector2D Pos(Center.X - T * 0.5f, WidgetSize.Y - LineLength);
+		if (!Size.IsZero() && !Size.ContainsNaN()) DrawRect(Pos, Size, &BoxBrush, Tint, LayerId);
+	}
+
+	// Left Line
+	{
+		const FVector2D Size(LineLength, Style.CrosshairThickness);
+		const FVector2D Pos(0.f, Center.Y - T * 0.5f);
+		if (!Size.IsZero() && !Size.ContainsNaN()) DrawRect(Pos, Size, &BoxBrush, Tint, LayerId);
+	}
+
+	// Right Line
+	{
+		const FVector2D Size(LineLength, Style.CrosshairThickness);
+		const FVector2D Pos(WidgetSize.X - LineLength, Center.Y - T * 0.5f);
+		if (!Size.IsZero() && !Size.ContainsNaN()) DrawRect(Pos, Size, &BoxBrush, Tint, LayerId);
+	}
+
+	// CenterDot
+	if (Style.bCenterDot)
+	{
+		const FVector2D Size(Style.CrosshairThickness, Style.CrosshairThickness);
+		const FVector2D Pos(Center.X - T * 0.5f, Center.Y - T * 0.5f);
+		if (!Size.IsZero() && !Size.ContainsNaN()) DrawRect(Pos, Size, &BoxBrush, Tint, LayerId);
+	}
+
+	return LayerId + 1;
+}
 
 ULimenCrosshair::ULimenCrosshair()
 {
@@ -37,88 +101,13 @@ ULimenCrosshair::ULimenCrosshair()
 
 TSharedRef<SWidget> ULimenCrosshair::RebuildWidget()
 {
-	TSharedRef<SOverlay> Root = SNew(SOverlay);
 
-	// Top Line
-	{
-		TopLine = SNew(SImage)
-			.ColorAndOpacity(CrosshairStyleParameters.CrosshairColor)
-			.Image(&CrosshairBrush)
-			.DesiredSizeOverride(FVector2D(CrosshairStyleParameters.CrosshairThickness,
-										   CrosshairStyleParameters.CrosshairLength));
-		Root->AddSlot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		.Padding(FMargin(0.f, 0.f, 0.f, CrosshairStyleParameters.CrosshairGap))
-		[
-			TopLine.ToSharedRef()
-		];
-	}
+	FCrosshairStyleParameters P;
+	P.CrosshairLength = CrosshairStyleParameters.CrosshairLength;
+	P.CrosshairThickness = CrosshairStyleParameters.CrosshairThickness;
+	P.CrosshairGap = CrosshairStyleParameters.CrosshairGap;
+	P.bCenterDot = CrosshairStyleParameters.bCenterDot;
+	P.CrosshairColor = CrosshairStyleParameters.CrosshairColor;
 
-	// Bottom Line
-	{
-		BottomLine = SNew(SImage)
-			.ColorAndOpacity(CrosshairStyleParameters.CrosshairColor)
-			.Image(&CrosshairBrush)
-			.DesiredSizeOverride(FVector2D(CrosshairStyleParameters.CrosshairThickness,
-										   CrosshairStyleParameters.CrosshairLength));
-		Root->AddSlot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		.Padding(FMargin(0.f, CrosshairStyleParameters.CrosshairGap, 0.f, 0.f))
-		[
-			BottomLine.ToSharedRef()
-		];
-	}
-
-	// Left Line
-	{
-		LeftLine = SNew(SImage)
-			.ColorAndOpacity(CrosshairStyleParameters.CrosshairColor)
-			.Image(&CrosshairBrush)
-			.DesiredSizeOverride(FVector2D(CrosshairStyleParameters.CrosshairLength,
-										   CrosshairStyleParameters.CrosshairThickness));
-		Root->AddSlot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		.Padding(FMargin(CrosshairStyleParameters.CrosshairGap, 0.f, 0.f, 0.f))
-		[
-			LeftLine.ToSharedRef()
-		];
-	}
-
-	// Right Line
-	{
-		RightLine = SNew(SImage)
-			.ColorAndOpacity(CrosshairStyleParameters.CrosshairColor)
-			.Image(&CrosshairBrush)
-			.DesiredSizeOverride(FVector2D(CrosshairStyleParameters.CrosshairLength,
-										   CrosshairStyleParameters.CrosshairThickness));
-		Root->AddSlot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		.Padding(FMargin(0.f, 0.f, CrosshairStyleParameters.CrosshairGap, 0.f))
-		[
-			RightLine.ToSharedRef()
-		];
-	}
-
-	// CenterDot
-	if (CrosshairStyleParameters.bCenterDot)
-	{
-		CenterDot = SNew(SImage)
-			.ColorAndOpacity(CrosshairStyleParameters.CrosshairColor)
-			.Image(&CenterDotBrush)
-			.DesiredSizeOverride(FVector2D(CrosshairStyleParameters.CrosshairThickness,
-										   CrosshairStyleParameters.CrosshairThickness));
-		Root->AddSlot()
-		.HAlign(HAlign_Center)
-		.VAlign(VAlign_Center)
-		.Padding(FMargin(0.f, 0.f, 0.f, 0.f))
-		[
-			CenterDot.ToSharedRef()
-		];
-	}
-
-	return Root;
+	return SNew(SLimenCrosshair).StyleParams(P);
 }

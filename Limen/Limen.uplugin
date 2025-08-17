@@ -37,11 +37,6 @@
 			"Optional": false
 		},
 		{
-			"Name": "LimenObjectives",
-			"Enabled": true,
-			"Optional": false
-		},
-		{
 			"Name": "FMODStudio",
 			"Enabled": true,
 			"Optional": false
