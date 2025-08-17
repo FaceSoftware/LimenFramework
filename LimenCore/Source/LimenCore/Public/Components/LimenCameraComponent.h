@@ -14,6 +14,8 @@ enum class ETiltFunction : uint8
 	EaseIn,
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FZoomDelegate, ULimenCameraComponent*, CameraComponent, float, Value);
+
 /**
  * 
  */
@@ -23,12 +25,27 @@ class LIMENCORE_API ULimenCameraComponent : public UCameraComponent
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FZoomDelegate OnZoomValueChanged;
+
 	ULimenCameraComponent();
 	virtual void BeginPlay() override;
 	virtual void GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView) override;
 
 	void SetTiltEnabled(const bool bEnabled);
 	void NotifyYawInput(const float InputValue);
+	UFUNCTION(BlueprintCallable)
+	virtual void Zoom(float Amount);
+	UFUNCTION(BlueprintCallable)
+	FFloatRange GetZoomRange() const;
+	UFUNCTION(BlueprintCallable)
+	float GetCurrentZoom() const;
+	/**
+	 * @brief Current zoom in a [0, 1] range.
+	 * @return Zero if zoom it at minimum. One if it is at maximum. Any other value returns the corresponding value in between.
+	 */
+	UFUNCTION(BlueprintCallable)
+	float GetCurrentZoomNormalized() const;
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(EditCondition="bEnableTilt"))
@@ -43,6 +60,10 @@ protected:
 	bool bInvertTilt;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt")
 	bool bEnableTilt;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
+	FFloatRange ZoomRange;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
+	float ZoomMultiplier;
 	
 private:
 	TWeakObjectPtr<APlayerController> PlayerController;

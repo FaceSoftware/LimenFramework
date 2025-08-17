@@ -20,7 +20,7 @@ class ULimenWidget;
 	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName && WidgetVarName->IsShowing(); } \
 	inline Type* Get##WidgetVarName() const { return WidgetVarName.Get(); } \
 
-#define CREATE_WIDGET_SAFE_STRONG_PTR(Typename, WidgetPtr, WidgetClass) \
+#define CREATE_MENU_WIDGET_STRONG(Typename, WidgetPtr, WidgetClass) \
 	if (WidgetClass) \
 	{ \
 		auto* Widget = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
@@ -28,7 +28,7 @@ class ULimenWidget;
 		WidgetPtr->BindPlayerController(GetOwningPlayerController()); \
 	} \
 
-#define CREATE_WIDGET_SAFE(Typename, WidgetPtr, WidgetClass) \
+#define CREATE_WIDGET(Typename, WidgetPtr, WidgetClass) \
 	if (WidgetClass) \
 	{ \
 		WidgetPtr = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
