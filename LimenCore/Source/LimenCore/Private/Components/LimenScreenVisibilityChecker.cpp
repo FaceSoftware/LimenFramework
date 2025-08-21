@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright FaceSoftware. All Rights Reserved.
 
 
 #include "Components/LimenScreenVisibilityChecker.h"
@@ -117,7 +117,8 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 	StencilCheckerInst->UpdateCachedData();
 
 	CheckVisibility(SceneCapture->TextureTarget.Get());
-	PollReadback();
+
+	AsyncTask(ENamedThreads::ActualRenderingThread, [this] { PollReadback(); });
 }
 
 int32 ULimenScreenVisibilityChecker::GetStencilMask() const
@@ -223,6 +224,8 @@ FIntPoint ULimenScreenVisibilityChecker::GetRenderTargetSize() const
 		Size.X = FMath::Floor(ViewportSize.X * RenderTargetSizeScale);
 		Size.Y = FMath::Floor(ViewportSize.Y * RenderTargetSizeScale);
 	}
+	if (Size.X <= 0) Size.X = 1;
+	if (Size.Y <= 0) Size.Y = 1;
 
 	return Size;
 }

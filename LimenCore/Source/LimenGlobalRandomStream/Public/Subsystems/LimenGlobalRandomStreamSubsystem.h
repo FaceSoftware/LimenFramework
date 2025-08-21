@@ -38,7 +38,6 @@ public:
 	
 	float RandomFloat();
 
-
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float GetFraction();
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -55,7 +54,7 @@ public:
 	TArray<int32> GenerateValidRandomUniqueNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid = [] (const int32) { return true; });
 
 	TArray<int32> GenerateValidRandomNumbers(const int32 RangeStart, const int32 RangeEnd, const int32 Count, const TFunction<bool(const int32)>& IsNumberValid = [] (const int32) { return true; });
-	
+
 protected:
 	
 private:

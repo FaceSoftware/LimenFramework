@@ -94,12 +94,13 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<ULimenMouseSensitivityComponent> MouseInputSensitivityComponent;
-	
+
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
 
 	virtual void SetPawn(APawn* InPawn) override;
 	virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
 	virtual void OnRep_PlayerState() override;
+	virtual void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime = 0, EViewTargetBlendFunction BlendFunc = VTBlend_Linear, float BlendExp = 0, bool bLockOutgoing = false) override;
 
 	virtual void BindPawnDelegates(APawn* NewPawn);
 	virtual void UnbindPawnDelegates(APawn* InPawn);
@@ -108,6 +109,7 @@ protected:
 	virtual void CurrentPawnReady();
 	UFUNCTION()
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
+	virtual void BlendViewTargetSet(AActor* NewViewTarget);
 	
 private:
 	bool bPawnBeginPlayBound;
@@ -115,6 +117,8 @@ private:
 
 	float MouseYawMultiplier;
 	float MousePitchMultiplier;
+
+	FTimerHandle ViewTargetTransitionTimerHandle;
 
 	UFUNCTION()
 	virtual void SensitivityUpdated(ULimenMouseSensitivityComponent* Component);

@@ -38,8 +38,23 @@ void SMouseDetector::Construct(const FArguments& InArgs)
 		SetOnMouseLeave(InArgs._OnMouseUnHover);
 	}
 
+	if (InArgs._OnMouseDrag.IsBound())
+	{
+		MouseDragHandler = InArgs._OnMouseDrag;
+	}
+
 	ChildSlot
-	.HAlign(EHorizontalAlignment::HAlign_Fill)
-	.VAlign(EVerticalAlignment::VAlign_Fill)
+	.HAlign(HAlign_Fill)
+	.VAlign(VAlign_Fill)
 	.Padding(FMargin(0.f));
+}
+
+FReply SMouseDetector::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
+{
+	if (MouseDragHandler.IsBound())
+	{
+		return MouseDragHandler.Execute(MyGeometry, MouseEvent);
+	}
+
+	return FReply::Unhandled();
 }

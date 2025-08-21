@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright FaceSoftware. All Rights Reserved.
 
 
 #include "Components/LimenPuzzleElementComponent.h"
@@ -22,4 +22,9 @@ void ULimenPuzzleElementComponent::BeginPlay()
 const FName& ULimenPuzzleElementComponent::GetElementId() const
 {
 	return ElementId;
+}
+
+void ULimenPuzzleElementComponent::SetElementId(const FName& NewId)
+{
+	ElementId = NewId;
 }

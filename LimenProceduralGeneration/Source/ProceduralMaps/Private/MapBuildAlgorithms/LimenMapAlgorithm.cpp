@@ -26,10 +26,27 @@ void ULimenMapAlgorithm::CreateMap(const FGuid& MapId, const UProceduralMapParam
 		GeneratedMap->ConditionalBeginDestroy();
 	}
 	
-	GeneratedMap = NewObject<ULimenProceduralMap>(this, GetGeneratedMapClass());
+	GeneratedMap = TStrongObjectPtr(NewObject<ULimenProceduralMap>(this, GetGeneratedMapClass()));
 
 	FRunnableThread* NewThread = FRunnableThread::Create(this, TEXT("MapGenerationThread"));
 	MapGenerationThread.Reset(NewThread);
+}
+
+ULimenProceduralMap* ULimenMapAlgorithm::CreateMap(const FGuid& MapId, const UProceduralMapParameters* MapParameters)
+{
+	GeneratedMapParameters = MapParameters;
+	GeneratedMapId = MapId;
+	
+	if (GeneratedMap != nullptr)
+	{
+		GeneratedMap->ConditionalBeginDestroy();
+	}
+	
+	GeneratedMap = TStrongObjectPtr(NewObject<ULimenProceduralMap>(this, GetGeneratedMapClass()));
+	ULimenProceduralMap* Map = GeneratedMap.Get();
+	GenerateMap(GeneratedMapParameters.Get(), Map);
+
+	return GeneratedMap.Get();
 }
 
 TSubclassOf<ULimenProceduralMap> ULimenMapAlgorithm::GetGeneratedMapClass() const

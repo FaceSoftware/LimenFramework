@@ -54,23 +54,23 @@ TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 		RetainerBox = SNew(SRetainerWidget)
 		[
 			SNew(SHorizontalBox)
-			+ SHorizontalBox::Slot()
-			.HAlign(HAlign_Left)
-			.VAlign(VAlign_Center)
-			.SizeParam(FStretch())
-			.Padding(IconMargin)
-			[
-				Icon.ToSharedRef()
-			]
-					
-			+ SHorizontalBox::Slot()
-			.HAlign(TextHorizontalAlignment)
-			.VAlign(TextVerticalAlignment)
-			.SizeParam(FStretch())
-			.Padding(TextMargin)
-			[
-				TextBlock.ToSharedRef()
-			]
+				+ SHorizontalBox::Slot()
+				.HAlign(HAlign_Left)
+				.VAlign(VAlign_Center)
+				.SizeParam(FAuto())
+				.Padding(IconMargin)
+				[
+					Icon.ToSharedRef()
+				]
+						
+				+ SHorizontalBox::Slot()
+				.HAlign(TextHorizontalAlignment)
+				.VAlign(TextVerticalAlignment)
+				.SizeParam(FStretch())
+				.Padding(TextMargin)
+				[
+					TextBlock.ToSharedRef()
+				]
 		];
 	}
 	else

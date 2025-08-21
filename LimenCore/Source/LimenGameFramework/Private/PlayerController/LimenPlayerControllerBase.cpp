@@ -3,6 +3,7 @@
 
 #include "PlayerController/LimenPlayerControllerBase.h"
 
+#include "TimerManager.h"
 #include "Components/LimenMouseSensitivityComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
@@ -252,6 +253,7 @@ void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
 
 void ALimenPlayerControllerBase::UnbindPawnDelegates(APawn* InPawn)
 {
+	check(InPawn)
 }
 
 void ALimenPlayerControllerBase::QueueNotification(const FNotificationParams& InParams)
@@ -277,13 +279,17 @@ void ALimenPlayerControllerBase::LoadingScreenVisibilityChanged(const bool bIsVi
 	}
 }
 
+void ALimenPlayerControllerBase::BlendViewTargetSet(AActor* NewViewTarget)
+{
+}
+
 void ALimenPlayerControllerBase::SetPawn(APawn* InPawn)
 {
 	APawn* PrevPawn = GetPawn();
 
 	Super::SetPawn(InPawn);
 
-	UnbindPawnDelegates(PrevPawn);
+	if (PrevPawn) UnbindPawnDelegates(PrevPawn);
 
 	if (!InPawn) return;
 
@@ -321,6 +327,25 @@ void ALimenPlayerControllerBase::OnRep_PlayerState()
 	{
 		LimenBaseHUD->UpdateWidgets(this, GetPawn());
 		BindWidgetDelegates();
+	}
+}
+
+void ALimenPlayerControllerBase::SetViewTargetWithBlend(AActor* NewViewTarget, const float BlendTime,
+	const EViewTargetBlendFunction BlendFunc, const float BlendExp, const bool bLockOutgoing)
+{
+	Super::SetViewTargetWithBlend(NewViewTarget, BlendTime, BlendFunc, BlendExp, bLockOutgoing);
+
+	if (FMath::IsNearlyEqual(BlendTime, 0.f))
+	{
+		BlendViewTargetSet(NewViewTarget);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(ViewTargetTransitionTimerHandle, [this, NewViewTarget]
+		{
+			BlendViewTargetSet(NewViewTarget);
+		}
+		, BlendTime, false);
 	}
 }
 

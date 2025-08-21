@@ -23,6 +23,7 @@ public:
 		SLATE_EVENT( FPointerEventHandler, OnMouseButtonUp )
 		SLATE_EVENT( FPointerEventHandler, OnMouseMove )
 		SLATE_EVENT( FPointerEventHandler, OnMouseDoubleClick )
+		SLATE_EVENT( FPointerEventHandler, OnMouseDrag )
 		SLATE_EVENT( FNoReplyPointerEventHandler, OnMouseHover )
 		SLATE_EVENT( FSimpleNoReplyPointerEventHandler, OnMouseUnHover )
 
@@ -30,4 +31,10 @@ public:
 
 	/** Constructs this widget with InArgs */
 	void Construct(const FArguments& InArgs);
+
+protected:
+	virtual FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	
+private:
+	FPointerEventHandler MouseDragHandler;
 };

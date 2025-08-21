@@ -254,8 +254,7 @@ private:
 	float CurrentValue;
 
 	TWeakObjectPtr<AActor> Owner;
-	UPROPERTY()
-	TObjectPtr<ULimenAbilityComponent> OwnerAbilityComponent;
+	TWeakObjectPtr<ULimenAbilityComponent> OwnerAbilityComponent;
 	bool bIsInitialized;
 	bool bIsFrozen;
 };

@@ -265,7 +265,8 @@ void ULimenWidget::DestroyWidgetInternal(const bool bIsHideAnimation)
 	}
 	
 	RemoveFromParent();
-	ConditionalBeginDestroy();
+	RemoveFromRoot();
+	MarkAsGarbage();
 }
 
 void ULimenWidget::ShowAnimationFinished(FWidgetAnimationState& State)

@@ -33,7 +33,14 @@ class ULimenWidget;
 	{ \
 		WidgetPtr = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
 	} \
-	
+
+#define CLEANUP_WIDGET_STRONG(WidgetPtr) \
+	if (WidgetPtr) \
+	{ \
+		WidgetPtr->DestroyWidget(false); \
+		WidgetPtr.Reset(); \
+	} \
+
 /**
  * 
  */

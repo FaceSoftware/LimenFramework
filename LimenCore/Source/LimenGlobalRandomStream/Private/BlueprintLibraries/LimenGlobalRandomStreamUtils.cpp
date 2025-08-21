@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright FaceSoftware. All Rights Reserved.
 
 
 #include "LimenGlobalRandomStream/Public/BlueprintLibraries/LimenGlobalRandomStreamUtils.h"

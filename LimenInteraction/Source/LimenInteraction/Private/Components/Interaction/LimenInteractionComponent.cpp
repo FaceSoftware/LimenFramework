@@ -97,11 +97,11 @@ void ULimenInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickT
 bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPawn)
 {
 	check(GetOwner()->HasAuthority())
-
-	if (bIsInteracting)
-	{
-		return false;
-	}
+	// check(!bIsInteracting)
+	// if (bIsInteracting)
+	// {
+	// 	return false;
+	// }
 	
 	bIsInteracting = true;
 	UpdateInteraction(0.f);

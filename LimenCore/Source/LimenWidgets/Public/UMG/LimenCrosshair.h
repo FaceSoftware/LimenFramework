@@ -82,8 +82,7 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, Category="Crosshair")
 	FCrosshairStyleParameters CrosshairStyleParameters;
-	
-	
+
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 
 private:	

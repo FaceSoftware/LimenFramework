@@ -29,6 +29,7 @@ public class LimenCore : ModuleRules
 				"UMG",
 				"RHICore",
 				"RHI",
+				"InputCore",
 			}
 		);
 		

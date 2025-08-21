@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright FaceSoftware. All Rights Reserved.
 
 #pragma once
 
@@ -11,29 +11,31 @@
 class ULimenPuzzleElementComponent;
 class UPuzzleDefinition;
 
-UCLASS()
-class LIMENMODULARPUZZLES_API ALimenPuzzleController : public ALimenGameplayManager
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPuzzleStateDelegate, bool, bIsSolved);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPuzzleDelegate, ULimenPuzzleController*, Component);
+
+UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+class LIMENMODULARPUZZLES_API ULimenPuzzleController : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	ALimenPuzzleController();
+	UPROPERTY(BlueprintAssignable)
+	FPuzzleStateDelegate OnPuzzleStateChanged;
+	UPROPERTY(BlueprintAssignable)
+	FPuzzleDelegate OnPuzzleElementUpdated;
+
+	ULimenPuzzleController();
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	UFUNCTION(BlueprintCallable)
+	float GetCompletionNormalized() const;
 
 protected:
 	UPROPERTY(EditAnywhere, Category="Puzzle")
 	TObjectPtr<UPuzzleDefinition> PuzzleDefinition;
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void PuzzleSolved();
-	UFUNCTION(BlueprintImplementableEvent)
-	void PuzzleUnsolved();
-
-	UFUNCTION(BlueprintCallable)
-	float GetCompletionNormalized() const;
 
 	UFUNCTION()
 	virtual void OnRep_PuzzleState();

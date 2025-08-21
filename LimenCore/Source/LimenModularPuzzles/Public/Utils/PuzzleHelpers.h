@@ -1,9 +1,8 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Copyright FaceSoftware. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
 #include "PuzzleHelpers.generated.h"
 
 
@@ -28,12 +27,12 @@ struct LIMENMODULARPUZZLES_API FPuzzleConditionNode
 
 	UPROPERTY(EditAnywhere, Category="Node Logic")
 	EPuzzleOp Operator = EPuzzleOp::And;
-	UPROPERTY(EditAnywhere, Category="Node Logic", meta=(EditCondition="Operator == EPuzzleOp::AtLeast", EditConditionHides="true"))
+	UPROPERTY(EditAnywhere, Category="Node Logic", meta=(EditCondition="Operator==EPuzzleOp::AtLeast", EditConditionHides="true"))
 	int32 Threshold = 0;
 	UPROPERTY(EditAnywhere, Category="Node Logic", meta=(EditCondition="Operator==EPuzzleOp::TimerGate", EditConditionHides="true", ClampMin="0.0"))
-	float Duration = 1.0f;                                   // Seconds inputs must stay true
+	float Duration = 1.0f; // Seconds inputs must stay true
 	UPROPERTY(EditAnywhere, Category="Node Logic", meta=(EditCondition="Operator==EPuzzleOp::TimerGate", EditConditionHides="true"))
-	bool bLatch = false;                                     // Stay true once fired until reset
+	bool bLatch = false; // Stay true once fired until reset
 	UPROPERTY(EditAnywhere, Category="Node Logic", meta=(EditCondition="Operator==EPuzzleOp::TimerGate", ClampMin="0.0", EditConditionHides="true"))
 	float Cooldown = 0.0f; 
 };
