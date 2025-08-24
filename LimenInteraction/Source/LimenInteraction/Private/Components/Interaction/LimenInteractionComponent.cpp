@@ -184,6 +184,11 @@ void ULimenInteractionComponent::StopInteraction(AController* InController, APaw
 	}
 	
 	bIsInteracting = false;
+	UPrimitiveComponent* Component = PreviousInteractableInterface
+								   ? PreviousInteractableInterface->GetPrimitiveComponent()
+								   : nullptr;
+
+	Multicast_InteractionStopped(Component);
 }
 
 bool ULimenInteractionComponent::GetOwnerViewPoint(FVector& Start, FVector& End) const
@@ -221,9 +226,24 @@ void ULimenInteractionComponent::SetCurrentInteractableInterface(UActorComponent
 	CurrentInteractableInterface = TScriptInterface<ILimenInteractableComponent>(InComponent);
 }
 
-UActorComponent* ULimenInteractionComponent::GetCurrentInteractableInterface() const
+TScriptInterface<ILimenInteractableComponent> ULimenInteractionComponent::GetCurrentInteractableInterface() const
+{
+	return CurrentInteractableInterface;
+}
+
+UActorComponent* ULimenInteractionComponent::GetCurrentInteractableComponent() const
 {
 	return Cast<UActorComponent>(CurrentInteractableInterface.GetObject());
+}
+
+void ULimenInteractionComponent::Interacted(UActorComponent* Component)
+{
+	const TScriptInterface<ILimenInteractableComponent> Interface(Component);
+	OnInteract.Broadcast(Component ? Component->GetOwner() : nullptr, Interface);
+}
+
+void ULimenInteractionComponent::InteractionStopped(UActorComponent* Component)
+{
 }
 
 void ULimenInteractionComponent::Client_InteractableComponentHoveredChanged_Implementation(UActorComponent* Component)
@@ -237,8 +257,12 @@ void ULimenInteractionComponent::Client_InteractableComponentHoveredChanged_Impl
 
 void ULimenInteractionComponent::Multicast_Interacted_Implementation(UActorComponent* Component)
 {
-	const TScriptInterface<ILimenInteractableComponent> Interface(Component);
-	OnInteract.Broadcast(Component ? Component->GetOwner() : nullptr, Interface);
+	Interacted(Component);
+}
+
+void ULimenInteractionComponent::Multicast_InteractionStopped_Implementation(UActorComponent* Component)
+{
+	InteractionStopped(Component);
 }
 
 float ULimenInteractionComponent::GetInteractionRange() const

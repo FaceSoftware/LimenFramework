@@ -24,16 +24,16 @@ public:
 	ECollisionChannel GetTraceChannel() const;
 	
 protected:
+	UPROPERTY(EditAnywhere, Category="Limen")
+	TEnumAsByte<ECollisionChannel> InteractionCollisionChannel;
+
 	virtual void SetupInteraction() override;
 	virtual void UpdateInteraction(const float DeltaTime) override;
 
 private:
-	UPROPERTY(EditAnywhere, Category="Limen")
-	TEnumAsByte<ECollisionChannel> InteractionCollisionChannel;
-	
-	FCollisionQueryParams QueryParams;
 	TArray<FHitResult> InteractionResults;
 
+	FCollisionQueryParams QueryParams;
 	TOptional<FHitResult> InteractionHitResult;
 
 	static FCollisionResponseParams CollisionResponseParams;

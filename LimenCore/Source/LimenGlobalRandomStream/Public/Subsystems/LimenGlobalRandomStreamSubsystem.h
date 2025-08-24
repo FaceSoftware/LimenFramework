@@ -42,6 +42,11 @@ public:
 	float GetFraction();
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	int32 RandomIntRange(const int32 RangeStart, const int32 RangeEnd);
+	template <typename T>
+	T RandomIntRange(const int32 RangeStart, const int32 RangeEnd)
+	{
+		return static_cast<T>(RandomIntRange(RangeStart, RangeEnd));
+	}
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	float RandomFloatRange(const float RangeStart, const float RangeEnd);
 	

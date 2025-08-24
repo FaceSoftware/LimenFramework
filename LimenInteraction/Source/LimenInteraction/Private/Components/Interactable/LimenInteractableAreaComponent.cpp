@@ -51,6 +51,11 @@ void ULimenInteractableAreaComponent::NotifyUnHover(AController* Controller, APa
 	BP_OnHoverEnd.Broadcast(Controller, Pawn);
 }
 
+bool ULimenInteractableAreaComponent::IsBeingInteracted() const
+{
+	return bIsBeingInteracted;
+}
+
 FInteractableComponentDelegate* ULimenInteractableAreaComponent::GetInteractionDelegate()
 {
 	return &OnInteract;
@@ -80,10 +85,12 @@ void ULimenInteractableAreaComponent::Interact(AController* InController, APawn*
 {
 	OnInteract.Broadcast(InController, InPawn);
 	BP_OnInteract.Broadcast(InController, InPawn);
+	bIsBeingInteracted = true;
 }
 
 void ULimenInteractableAreaComponent::StopInteraction(AController* InController, APawn* InPawn)
 {
 	OnInteractionStopped.Broadcast(InController, InPawn);
 	BP_OnInteractionStopped.Broadcast(InController, InPawn);
+	bIsBeingInteracted = false;
 }
