@@ -170,6 +170,11 @@
 			"Name": "LimenModularPuzzles",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenGameMap",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
 		}
 	],
 	"SupportURL": ""
