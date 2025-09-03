@@ -71,6 +71,16 @@ public:
 	void DestroyWidget(const bool bWaitForHideAnimation = true);
 
 protected:
+	UPROPERTY(EditAnywhere, Category="Limen|Animations", Transient, meta=(BindWidgetAnimOptional))
+	TObjectPtr<UWidgetAnimation> ShowAnimation;
+	UPROPERTY(EditAnywhere, Category="Limen|Animations", Transient, meta=(BindWidgetAnimOptional))
+	TObjectPtr<UWidgetAnimation> HideAnimation;
+
+	UPROPERTY(EditAnywhere, Category="Limen|Animations")
+	ESlateVisibility DefaultVisibleState;
+	UPROPERTY(EditAnywhere, Category="Limen|Animations")
+	ESlateVisibility DefaultHiddenState;
+
 	UFUNCTION(BlueprintImplementableEvent, Category="Limen|Widgets", BlueprintCosmetic)
 	void PlayOnWidgetVisibleAnimation();
 	UFUNCTION(BlueprintNativeEvent, Category="Limen|Widgets")
@@ -83,9 +93,6 @@ protected:
 	void OnWidgetHidden();
 	virtual void OnWidgetHidden_Implementation() {}
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Widgets")
-	void NotifyAnimationFinished(const bool bIsVisibleAnimation);
-	
 	/**
 	 * @brief Sets the widget ZOrder. Only call this in the constructor.
 	 * @param NewLevel 
@@ -100,20 +107,14 @@ protected:
 	ESlateVisibility GetDefaultHiddenState() const;
 
 private:
-	UPROPERTY(EditAnywhere, Category="Limen|Animations")
-	bool bUseHideAnimation = false;
-	UPROPERTY(EditAnywhere, Category="Limen|Animations")
-	bool bUseShowAnimation = false;
-	bool bIsAnimating = false;
+	bool bIsAnimating;
 	int32 WidgetLevel = 0;
-	UPROPERTY(EditAnywhere, Category="Limen|Animations")
-	ESlateVisibility DefaultVisibleState;
-	UPROPERTY(EditAnywhere, Category="Limen|Animations")
-	ESlateVisibility DefaultHiddenState;
+	FWidgetAnimationHandle ShowAnimationHandle;
+	FWidgetAnimationHandle HideAnimationHandle;
 
 	/**
-	 * @brief Defines how this widget is added to viewport.
-	 * Default behaviour is calling AddToViewport.
+	 * @brief Defines how this widget is added to the viewport.
+	 * The default behavior is calling AddToViewport.
 	 */
 	virtual void ShowWidgetMethod();
 	virtual void HideWidgetMethod();
@@ -130,4 +131,9 @@ private:
 
 	UFUNCTION()
 	void DestroyWidgetInternal(const bool bIsHideAnimation = true);
+
+	FORCEINLINE void ShowAnimationFinished(FWidgetAnimationState& State);
+	FORCEINLINE void ShowAnimationFinished();
+	FORCEINLINE void HideAnimationFinished(FWidgetAnimationState& State);
+	FORCEINLINE void HideAnimationFinished();
 };

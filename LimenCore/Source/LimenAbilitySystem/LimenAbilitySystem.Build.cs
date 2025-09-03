@@ -10,6 +10,8 @@ public class LimenAbilitySystem : ModuleRules
             new string[]
             {
                 "Core",
+                "AIModule",
+                
                 "LimenStorage",
                 "LimenSaveSystem", 
                 "LimenCore",
@@ -23,9 +25,10 @@ public class LimenAbilitySystem : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
+                "NetCore",
+
                 "LimenLocomotion", 
                 "LimenCore",
-                "NetCore",
             }
         );
     }

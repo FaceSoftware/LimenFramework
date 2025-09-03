@@ -73,6 +73,26 @@ bool ULimenMovementComponent::IsFastMovementEnabled() const
 	return bIsFastMovementEnabled;
 }
 
+void ULimenMovementComponent::SetFastWalkSpeedMultiplier(const float Multiplier)
+{
+	FastWalkSpeedMultiplier = Multiplier;
+}
+
+float ULimenMovementComponent::GetFastWalkSpeedMultiplier() const
+{
+	return FastWalkSpeedMultiplier;
+}
+
+void ULimenMovementComponent::SetCrouchFastWalkSpeedMultiplier(const float Multiplier)
+{
+	CrouchFastWalkSpeedMultiplier = Multiplier;
+}
+
+float ULimenMovementComponent::GetCrouchFastWalkSpeedMultiplier() const
+{
+	return CrouchFastWalkSpeedMultiplier;
+}
+
 void ULimenMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
 {
 	Super::UpdateFromCompressedFlags(Flags);

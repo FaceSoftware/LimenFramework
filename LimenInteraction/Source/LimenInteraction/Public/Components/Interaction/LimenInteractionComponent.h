@@ -118,7 +118,7 @@ public:
 	 * @param InPawn The pawn associated with the interaction.
 	 * @return True if the interaction is successfully initiated, false otherwise.
 	 */
-	bool Interact(AController* InController, APawn* InPawn);
+	virtual bool Interact(AController* InController, APawn* InPawn);
 	/**
 	 * @brief Attempts to perform an interaction with a specific interactable actor.
 	 *
@@ -133,7 +133,7 @@ public:
 	 * @param SpecificInteractable The specific actor being targeted for interaction.
 	 * @return True if the interaction was successfully performed, otherwise false.
 	 */
-	bool Interact(AController* InController, APawn* InPawn, const AActor* SpecificInteractable);
+	virtual bool Interact(AController* InController, APawn* InPawn, const AActor* SpecificInteractable);
 	/**
 	 * @brief Attempts to perform an interaction with a specified interactable component.
 	 *
@@ -148,7 +148,7 @@ public:
 	 * @return true if the interaction is successful, false otherwise (e.g.,
 	 * if the component does not implement the required interface).
 	 */
-	bool Interact(AController* InController, APawn* InPawn, UActorComponent* SpecificInteractableComponent);
+	virtual bool Interact(AController* InController, APawn* InPawn, UActorComponent* SpecificInteractableComponent);
 
 	/**
 	 * @brief Stops the current interaction process by notifying the interactable component and updating interaction states.
@@ -160,7 +160,7 @@ public:
 	 * @param InController The controller associated with the interaction, usually representing the player or AI controlling the pawn.
 	 * @param InPawn The pawn involved in the interaction process, typically the one under the control of the provided controller.
 	 */
-	void StopInteraction(AController* InController, APawn* InPawn);
+	virtual void StopInteraction(AController* InController, APawn* InPawn);
 
 protected:
 #if WITH_EDITORONLY_DATA
@@ -222,9 +222,14 @@ protected:
 	virtual void UpdateInteraction(const float DeltaTime);
 
 	void SetCurrentInteractableInterface(UActorComponent* InComponent);
-	UActorComponent* GetCurrentInteractableInterface() const;
+	TScriptInterface<ILimenInteractableComponent> GetCurrentInteractableInterface() const;
+	UActorComponent* GetCurrentInteractableComponent() const;
+
+	virtual void Interacted(UActorComponent* Component);
+	virtual void InteractionStopped(UActorComponent* Component);
 
 private:
+	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
 	TScriptInterface<ILimenInteractableComponent> CurrentInteractableInterface;
 	TScriptInterface<ILimenInteractableComponent> PreviousInteractableInterface;
 
@@ -234,4 +239,6 @@ private:
 	void Client_InteractableComponentHoveredChanged(UActorComponent* Component);
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_Interacted(UActorComponent* Component);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_InteractionStopped(UActorComponent* Component);
 };

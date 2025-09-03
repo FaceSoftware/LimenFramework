@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "HAL/Runnable.h"
+#include "UObject/Linker.h"
 #include "LimenMapAlgorithm.generated.h"
 
 class ULimenProceduralMap;
@@ -25,6 +26,13 @@ public:
 								 ULimenProceduralMap* /* Map */);
 	
 	void CreateMap(const FGuid& MapId, const UProceduralMapParameters* MapParameters, FAlgorithmFinish& FinishCallback);
+	ULimenProceduralMap* CreateMap(const FGuid& MapId, const UProceduralMapParameters* MapParameters);
+	template<typename T>
+	T* CreateMap(const FGuid& MapId, const UProceduralMapParameters* MapParameters)
+	{
+		ULimenProceduralMap* OutMap = CreateMap(MapId, MapParameters);
+		return CastChecked<T>(OutMap);
+	}
 
 	virtual TSubclassOf<ULimenProceduralMap> GetGeneratedMapClass() const;
 	
@@ -43,11 +51,9 @@ protected:
 	virtual void Exit() override;
 
 private:
-	UPROPERTY()
-	TObjectPtr<ULimenProceduralMap> GeneratedMap;
-
-	UPROPERTY()
+	TStrongObjectPtr<ULimenProceduralMap> GeneratedMap;
 	TWeakObjectPtr<const UProceduralMapParameters> GeneratedMapParameters;
+
 	FGuid GeneratedMapId;
 	FAlgorithmFinish* OnAlgorithmFinished;
 	

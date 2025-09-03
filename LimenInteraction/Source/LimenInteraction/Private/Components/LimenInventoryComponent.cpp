@@ -15,7 +15,7 @@ ULimenInventoryComponent::ULimenInventoryComponent()
 	InventorySize = 0;
 	CurrentInventorySize = 0;
 	CurrentInventoryLoad = 0;
-	bUseStaticSize = false;
+	bLimitedSize = false;
 }
 
 void ULimenInventoryComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -32,6 +32,21 @@ void ULimenInventoryComponent::BeginPlay()
 {
 	ReplicatedItemRegistries.Owner = this;
 	CurrentInventorySize = InventorySize;
+
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		FActorSpawnParameters Params;
+		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+		for (auto& Item : StartingItems)
+		{
+			auto* ItemInst = GetWorld()->SpawnActor<ALimenItemBase>(Item);
+			check(ItemInst)
+
+			ItemInst->RemoveFromGameplay();
+			AddItem(ItemInst);
+		}
+	}
 
 	Super::BeginPlay();
 }
@@ -375,7 +390,7 @@ int32 ULimenInventoryComponent::GetItemQuantity(const TSubclassOf<ALimenItemBase
 
 bool ULimenInventoryComponent::HasCapacity(const int32 ExtraDesiredSpace) const
 {
-	return !bUseStaticSize ||
+	return !bLimitedSize ||
 		  ((CurrentInventoryLoad + ExtraDesiredSpace) <= CurrentInventorySize);
 }
 

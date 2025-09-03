@@ -316,10 +316,12 @@ public:
 	bool HasCapacity(const int32 ExtraDesiredSpace) const;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Config", meta=(ClampMin="0", EditCondition="bUseStaticSize", EditConditionHides))
+	UPROPERTY(EditDefaultsOnly, Category="Invetory", meta=(ClampMin="0", EditCondition="bLimitedSize", EditConditionHides))
 	uint16 InventorySize;
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Config")
-	bool bUseStaticSize;
+	UPROPERTY(EditDefaultsOnly, Category="Invetory")
+	bool bLimitedSize;
+	UPROPERTY(EditDefaultsOnly, Category="Invetory")
+	TArray<TSubclassOf<ALimenItemBase>> StartingItems;
 
 	virtual void ItemAdded(ALimenItemBase* NewItem);
 	virtual void ItemRemoved(ALimenItemBase* Item);
@@ -329,12 +331,12 @@ protected:
 	
 private:
 	uint16 CurrentInventoryLoad;
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, Transient)
 	uint16 CurrentInventorySize;
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TArray<FItemRegistry> ItemRegistries;
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, Transient)
 	FReplicatedItemRegistryArray ReplicatedItemRegistries;
 	
 	void AddItemToRegistry(ALimenItemBase* NewItem);

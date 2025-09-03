@@ -7,7 +7,11 @@
 #include "LimenMath.generated.h"
 
 
+struct FCollisionQueryParams;
+struct FHitResult;
+struct FCollisionResponseParams;
 struct FConeData;
+
 /**
  * 
  */
@@ -47,9 +51,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Math Library")
 	static FTransform RotateTransform(const FTransform TransformToRotate, const FVector RotationCenter, const double DegreeRotation, const FVector Axis = FVector(0.f, 0.f, 1.f));
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Math Library", meta=(WorldContext="Caller"))
-	static void GetRandomReachablePointInCircumference(UObject* Caller, const FVector& Origin, const float Radius, int32 NumOfPoints, FVector& OutLocation, bool& bSuccess);
-
 	UFUNCTION(BlueprintCallable, Category="Limen|Math Library")
 	static AActor* GetClosestActorTo(const FVector& Location, const TArray<AActor*>& ActorsList);
 
@@ -59,7 +60,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Math Library")
 	static UPrimitiveComponent* GetClosestComponentsTo(const FVector& Location, const TArray<UPrimitiveComponent*>& ComponentsList, float& OutClosestDistanceSquared);
 	
-	static bool ConeTraceMultiByProfile(const UWorld* World, FConeData& InConeData,
+	static bool ConeTraceMultiByProfile(const UWorld* World, const FConeData& InConeData,
 											const FName& ProfileName,
 											TArray<FHitResult>& OutHits,
 											const FCollisionQueryParams& QueryParams,
@@ -71,6 +72,19 @@ public:
 
 	template<typename T>
 	static T WrappedClamp(T Value, T Min, T Max);
+	
+	/**
+	 * @brief Clamp a rotator to the nearest major axis (10deg = 0deg; 150deg == 180deg).
+	 * @param InRotator 
+	 * @return 
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Limen|Math Library")
+	static FRotator ClampToMajorAxis(const FRotator InRotator);
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Limen|Math Library")
+	static float QuantizeWithHysteresis(float AngleDegrees, float StepDegrees, float HysteresisDegrees, float& LastSnapDegrees);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Limen|Math Library")
+	static float SignedAngleAroundAxis(const FVector& From, const FVector& To, const FVector& Axis);
 };
 
 template <typename T>

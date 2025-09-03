@@ -25,11 +25,19 @@ ALimenBaseHUD::ALimenBaseHUD() : Super()
 	
 }
 
+void ALimenBaseHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	DestroyWidgets();
+	Super::EndPlay(EndPlayReason);
+}
+
 void ALimenBaseHUD::ShowHUD()
 {
-	Super::ShowHUD();
+}
 
-	bShowHUD ? ShowActiveWidget() : HideActiveWidget();
+void ALimenBaseHUD::HideHUD()
+{
+	HideActiveWidget();
 }
 
 void ALimenBaseHUD::ForceHUDState(const bool bForce)

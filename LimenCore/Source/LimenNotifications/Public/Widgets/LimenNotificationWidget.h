@@ -33,7 +33,7 @@ protected:
 	FText& GetNotificationMessage();
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay|Notifications|Helpers", BlueprintPure)
-	double GetDelayTime(UWidgetAnimation* ShowAnimation, UWidgetAnimation* HideAnimation, bool& bIsPositive);
+	double GetDelayTime(UWidgetAnimation* InShowAnimation, UWidgetAnimation* InHideAnimation, bool& bIsPositive) const;
 
 	UFUNCTION(BlueprintImplementableEvent, Category="Limen|Gameplay|Notifications")
 	void NotificationParamsUpdated(const float InDisplayTime, const FText& InNotificationTitle, const FText& InNotificationMessage);

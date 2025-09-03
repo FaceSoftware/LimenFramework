@@ -3,10 +3,12 @@
 
 #include "BlueprintLibraries/LimenMath.h"
 
+#include "DrawDebugHelpers.h"
 #include "NavigationSystem.h"
+#include "Components/PrimitiveComponent.h"
+#include "GameFramework/Pawn.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Namespaces/LimenCoreMath.h"
-#include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 
 
 int64 ULimenMath::RoundToNearestInteger(const double Value)
@@ -143,46 +145,6 @@ FTransform ULimenMath::RotateTransform(const FTransform TransformToRotate, const
 	return NewTransform;
 }
 
-void ULimenMath::GetRandomReachablePointInCircumference(UObject* Caller, const FVector& Origin, const float Radius, int32 NumOfPoints, FVector& OutLocation, bool& bSuccess)
-{
-	bSuccess = false; // Initialize success flag to false
-    
-	if (!Caller) return;
-
-	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(Caller->GetWorld());
-	if (!NavSys) return;
-
-	TArray<FVector> Points;
-	// Generate points in the circumference
-	for (int32 i = 0; i < NumOfPoints; ++i)
-	{
-		float Angle = (360.f / NumOfPoints) * i; // Divide the circle into equal parts based on NumOfPoints
-		FVector Direction = FVector(UKismetMathLibrary::DegSin(Angle), UKismetMathLibrary::DegCos(Angle), 0.f); // Calculate direction vector based on angle, ignoring Z for height
-		FVector Point = Origin + Direction * Radius; // Calculate point on circumference
-		Points.Add(Point);
-	}
-
-	TArray<FVector> NavigablePoints;
-	FNavLocation NavPoint;
-
-	// Check each point for navigability
-	for (const FVector& Point : Points)
-	{
-		if (NavSys->ProjectPointToNavigation(Point, NavPoint, FVector::ZeroVector, nullptr /* Specify your navigation filter here, if needed */))
-		{
-			NavigablePoints.Add(NavPoint.Location);
-		}
-	}
-
-	// If we found any navigable points, pick one at random
-	if (NavigablePoints.Num() > 0)
-	{
-		const int32 Index = ULimenGlobalRandomStreamSubsystem::Get()->GenerateRandomNumbers(NavigablePoints.Num() - 1, 0, 1)[0];
-        OutLocation = NavigablePoints[Index];
-        bSuccess = true;
-    }
-}
-
 AActor* ULimenMath::GetClosestActorTo(const FVector& Location, const TArray<AActor*>& ActorsList)
 {
 	double ClosestDistance = TNumericLimits<double>::Max();
@@ -260,7 +222,7 @@ UPrimitiveComponent* ULimenMath::GetClosestComponentsTo(const FVector& Location,
 	return ClosestComponent;
 }
 
-bool ULimenMath::ConeTraceMultiByProfile(const UWorld* World, FConeData& InConeData,
+bool ULimenMath::ConeTraceMultiByProfile(const UWorld* World, const FConeData& InConeData,
 										 const FName& ProfileName,
 										 TArray<FHitResult>& OutHits,
 										 const FCollisionQueryParams& QueryParams,
@@ -331,4 +293,53 @@ bool ULimenMath::ConeTraceMultiByProfile(const UWorld* World, FConeData& InConeD
 bool ULimenMath::IsInteger(const double Test)
 {
 	return FMath::Abs(Test - FMath::RoundToInt(Test)) < UE_DOUBLE_KINDA_SMALL_NUMBER;
+}
+
+FRotator ULimenMath::ClampToMajorAxis(const FRotator InRotator)
+{
+	const FRotator ClampedRotator = InRotator.Clamp();
+	FVector RotationVector = FVector(ClampedRotator.Pitch, ClampedRotator.Yaw, ClampedRotator.Roll);
+
+	for (int i = 0; i < 3; ++i)
+	{
+		const float Angle = RotationVector[i];
+		if (Angle >= 315.f && Angle <= 45.f)
+		{
+			RotationVector[i] = 0.f;
+		}
+		else if (Angle >= 45.f && Angle <= 135.f)
+		{
+			RotationVector[i] = 90.f;
+		}
+		else if (Angle >= 135.f && Angle <= 225.f)
+		{
+			RotationVector[i] = 180.f;
+		}
+		else if (Angle >= 225.f && Angle <= 315.f)
+		{
+			RotationVector[i] = 270.f;
+		}
+	}
+	return FRotator(RotationVector.X, RotationVector.Y, RotationVector.Z);
+}
+
+float ULimenMath::QuantizeWithHysteresis(const float AngleDegrees, const float StepDegrees, const float HysteresisDegrees, float& LastSnapDegrees)
+{
+	const float Nearest = FMath::RoundToFloat(AngleDegrees / StepDegrees) * StepDegrees;
+	if (FMath::Abs(AngleDegrees - Nearest) <= HysteresisDegrees)   // inside sticky zone
+	{
+		LastSnapDegrees = Nearest;
+		return Nearest;
+	}
+	// If leaving a snap, keep output continuous until you enter a new sticky zone
+	return AngleDegrees;
+}
+
+float ULimenMath::SignedAngleAroundAxis(const FVector& From, const FVector& To, const FVector& Axis)
+{
+	const FVector f = From - FVector::DotProduct(From, Axis) * Axis;
+	const FVector t = To   - FVector::DotProduct(To,   Axis) * Axis;
+	const float s = FVector::DotProduct(Axis, FVector::CrossProduct(f, t));
+	const float c = FVector::DotProduct(f.GetSafeNormal(), t.GetSafeNormal());
+	return FMath::RadiansToDegrees(FMath::Atan2(s, c));
 }

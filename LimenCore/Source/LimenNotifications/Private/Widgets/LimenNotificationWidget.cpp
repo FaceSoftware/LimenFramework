@@ -43,7 +43,7 @@ FText& ULimenNotificationWidget::GetNotificationMessage()
 	return NotificationMessage;
 }
 
-double ULimenNotificationWidget::GetDelayTime(UWidgetAnimation* ShowAnimation, UWidgetAnimation* HideAnimation, bool& bIsPositive)
+double ULimenNotificationWidget::GetDelayTime(UWidgetAnimation* InShowAnimation, UWidgetAnimation* InHideAnimation, bool& bIsPositive) const
 {
 	const double DelayTime = DisplayTime - (ShowAnimation->GetEndTime() + HideAnimation->GetEndTime());
 	bIsPositive = !FMath::IsNegativeOrNegativeZero(DelayTime);

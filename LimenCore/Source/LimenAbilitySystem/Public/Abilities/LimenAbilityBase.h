@@ -53,6 +53,12 @@ public:
 protected:	
 	ULimenAbilityComponent* GetOwnerAbilityComponent() const;	
 	AActor* GetOwner() const;
+	template<typename T>
+	T* GetOwner() const
+	{
+		static_assert(TIsDerivedFrom<T, AActor>::Value);
+		return Cast<T>(GetOwner());
+	}
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic)
 	void BP_OnAbilityActivated(AController* Controller, APawn* Pawn);

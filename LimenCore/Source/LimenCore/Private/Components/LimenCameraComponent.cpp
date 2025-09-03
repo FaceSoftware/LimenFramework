@@ -27,6 +27,7 @@ ULimenCameraComponent::ULimenCameraComponent()
 	bIsTiltEnabled = false;
 
 	bOriginalUsePawnControlRotation = false;
+	ZoomMultiplier = 1.f;
 }
 
 void ULimenCameraComponent::BeginPlay()
@@ -127,7 +128,7 @@ void ULimenCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& Des
 		DesiredView.PostProcessSettings = PostProcessSettings;
 	}
 
-	// If this camera component has a motion vector simumlation transform, use that for the current view's previous transform
+	// If this camera component has a motion vector simulation transform, use that for the current view's previous transform
 	DesiredView.PreviousViewTransform = FMotionVectorSimulation::Get().GetPreviousTransform(this);
 }
 
@@ -139,6 +140,34 @@ void ULimenCameraComponent::SetTiltEnabled(const bool bEnabled)
 void ULimenCameraComponent::NotifyYawInput(const float InputValue)
 {
 	CurrentTilt = TiltFunctionPtr(TiltStrength * (bInvertTilt ? -InputValue : InputValue));
+}
+
+void ULimenCameraComponent::Zoom(const float Amount)
+{
+	const float PreviousZoom = FieldOfView;
+	FieldOfView = FMath::Clamp(
+		FieldOfView + Amount * ZoomMultiplier,
+		ZoomRange.GetLowerBoundValue(),
+		ZoomRange.GetUpperBoundValue());
+
+	if (PreviousZoom != FieldOfView) OnZoomValueChanged.Broadcast(this, FieldOfView);
+}
+
+FFloatRange ULimenCameraComponent::GetZoomRange() const
+{
+	return ZoomRange;
+}
+
+float ULimenCameraComponent::GetCurrentZoom() const
+{
+	return FieldOfView;
+}
+
+float ULimenCameraComponent::GetCurrentZoomNormalized() const
+{
+	const float RangeAmount = ZoomRange.GetUpperBoundValue() - ZoomRange.GetLowerBoundValue();
+	const float MinRangeAmount = ZoomRange.GetLowerBoundValue() / RangeAmount;
+	return (FieldOfView / RangeAmount) - MinRangeAmount;
 }
 
 void ULimenCameraComponent::SetTiltFunctionPtr()

@@ -70,6 +70,7 @@ void ULimenLineTraceInteractionComponent::UpdateInteraction(const float DeltaTim
 
 	if (!InteractionResults.IsEmpty())
 	{
+		InteractionHitResult = InteractionResults[0];
 		FHitResult* InteractionHit = nullptr;
 		bool bIsHoveringItem = false;
 		UPrimitiveComponent* FirstInteractableComponent = nullptr;

@@ -5,6 +5,7 @@
 
 #include "EngineUtils.h"
 #include "BlueprintLibraries/LimenCoreStatics.h"
+#include "BlueprintLibraries/LimenGlobalRandomStreamUtils.h"
 #include "Components/LimenAtomicSpawner.h"
 
 
@@ -40,7 +41,7 @@ TArray<AActor*> ALimenAtomicSpawnManager::SpawnItems(const TArray<FAtomicSpawnPa
 	}
 #endif
 
-	for (FAtomicSpawnParameters& ItemParam : ULimenCoreStatics::ShuffleArray(ItemParameters))
+	for (FAtomicSpawnParameters& ItemParam : ULimenGlobalRandomStreamUtils::ShuffleArray(ItemParameters))
 	{
 		TArray<ULimenAtomicSpawner*> Spawners = GetItemSpawners(ItemParam.SpawnTag);
 		check(CanSpawnAllItems(ItemParam, Spawners))
@@ -49,7 +50,7 @@ TArray<AActor*> ALimenAtomicSpawnManager::SpawnItems(const TArray<FAtomicSpawnPa
 			continue;
 		}
 		
-		TArray<ULimenAtomicSpawner*> ShuffledSpawners = ULimenCoreStatics::ShuffleArray(Spawners);
+		TArray<ULimenAtomicSpawner*> ShuffledSpawners = ULimenGlobalRandomStreamUtils::ShuffleArray(Spawners);
 		while (ItemParam.SpawnedAmount < ItemParam.TotalAmount)
 		{
 			for (ULimenAtomicSpawner* Spawner : ShuffledSpawners)

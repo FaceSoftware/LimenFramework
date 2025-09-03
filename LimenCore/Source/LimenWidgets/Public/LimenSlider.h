@@ -31,7 +31,26 @@ enum class ELimenSliderInputMethod : uint8
 	MousePosition,
 };
 
+UENUM(BlueprintType)
+enum class ELimenSliderDisplay : uint8
+{
+	None,
+	Value,
+	CustomImage,
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLimenSliderEvent, ELimenSliderInput, InputType, float, NewValue);
+
+USTRUCT(BlueprintType)
+struct FValueColor
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere)
+	FSlateColor Color;
+	UPROPERTY(EditAnywhere)
+	FFloatRange ValueRange;
+};
 
 /**
  * 
@@ -87,20 +106,30 @@ protected:
 	UPROPERTY(EditAnywhere)
 	FMargin SliderPadding;
 
-	UPROPERTY(EditAnywhere)
-	bool bUseValueText;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Display")
+	ELimenSliderDisplay SliderDisplayMethod;
+	UPROPERTY(EditAnywhere, Category="Display")
+	TArray<FValueColor> ValueColors;
+	UPROPERTY(EditAnywhere, Category="Display")
+	float DisplayBoxWidth;
+	UPROPERTY(EditAnywhere, Category="Display")
+	bool bUserCanEditValue;
+	UPROPERTY(EditAnywhere, Category="Display")
+	TEnumAsByte<EHorizontalAlignment> DisplayHorizontalAlignment;
+	UPROPERTY(EditAnywhere, Category="Display")
+	TEnumAsByte<EVerticalAlignment> DisplayVerticalAlignment;
+	UPROPERTY(EditAnywhere, Category="Display", meta=(EditCondition="SliderDisplayMethod == ELimenSliderDisplay::CustomImage"))
+	FSlateBrush CustomImageBrush;
+	UPROPERTY(EditAnywhere, Category="Display", meta=(EditCondition="SliderDisplayMethod == ELimenSliderDisplay::Value"))
 	FSlateColor TextColor;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Display", meta=(EditCondition="SliderDisplayMethod == ELimenSliderDisplay::Value"))
 	FSlateColor InvalidTextColor;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Display", meta=(EditCondition="SliderDisplayMethod == ELimenSliderDisplay::Value"))
 	FSlateFontInfo NumberTextFont;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Display", meta=(EditCondition="SliderDisplayMethod == ELimenSliderDisplay::Value"))
 	TEnumAsByte<ETextJustify::Type> NumberTextJustification;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Display", meta=(EditCondition="SliderDisplayMethod == ELimenSliderDisplay::Value"))
 	FMargin NumberTextMargin;
-	UPROPERTY(EditAnywhere)
-	float NumberBoxWidth;
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(const bool bReleaseChildren) override;
@@ -114,10 +143,11 @@ protected:
 	virtual void TextValueChanged(const FText& InText);
 	virtual void TextValueCommited(const FText& InText, const ETextCommit::Type CommitType);
 
+	virtual void ValueChanged(ELimenSliderInput InputType, float NewValue);
+
 private:
 	TSharedPtr<SMouseDetector> InputDetector;
 	TSharedPtr<SImage> SliderImage;
-	TSharedPtr<SEditableText> NumberText;
 	TSharedPtr<SImage> SliderBackground;
 	TSharedPtr<SPanel> Root;
 
@@ -132,6 +162,10 @@ private:
 	FDelegateHandle WorldTickDelegate;
 	bool bBroadcastValueSetDelegate;
 	ELimenSliderInput LastInputType;
+
+	TSharedPtr<SWidget> SliderDisplay;
+	TSharedPtr<SEditableText> SliderTextDisplay;
+	TSharedPtr<SImage> SliderImageDisplay;
 	
 
 	bool ValidateTextInput(const FString& InputText) const;

@@ -10,7 +10,10 @@ public class LimenCore : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "RenderCore", "Engine", 
+				"Core",
+				"RenderCore",
+				"Engine",
+				"AIModule",
 			}
 		);
 
@@ -26,6 +29,7 @@ public class LimenCore : ModuleRules
 				"UMG",
 				"RHICore",
 				"RHI",
+				"InputCore",
 			}
 		);
 		

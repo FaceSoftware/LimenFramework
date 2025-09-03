@@ -97,11 +97,11 @@ void ULimenInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickT
 bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPawn)
 {
 	check(GetOwner()->HasAuthority())
-
-	if (bIsInteracting)
-	{
-		return false;
-	}
+	// check(!bIsInteracting)
+	// if (bIsInteracting)
+	// {
+	// 	return false;
+	// }
 	
 	bIsInteracting = true;
 	UpdateInteraction(0.f);
@@ -117,6 +117,8 @@ bool ULimenInteractionComponent::Interact(AController* InController, APawn* InPa
 		LIMEN_LOG(LogLimenInteraction, Log, this, TEXT("Interacted with: %s"), *ComponentOwner->GetName());
 		return true;
 	}
+
+	LIMEN_LOG(LogLimenInteraction, Log, this, TEXT("Interacted with air..."));
 
 	// Todo: Will need cooldown on network
 	Multicast_Interacted(nullptr);
@@ -182,6 +184,11 @@ void ULimenInteractionComponent::StopInteraction(AController* InController, APaw
 	}
 	
 	bIsInteracting = false;
+	UPrimitiveComponent* Component = PreviousInteractableInterface
+								   ? PreviousInteractableInterface->GetPrimitiveComponent()
+								   : nullptr;
+
+	Multicast_InteractionStopped(Component);
 }
 
 bool ULimenInteractionComponent::GetOwnerViewPoint(FVector& Start, FVector& End) const
@@ -219,9 +226,24 @@ void ULimenInteractionComponent::SetCurrentInteractableInterface(UActorComponent
 	CurrentInteractableInterface = TScriptInterface<ILimenInteractableComponent>(InComponent);
 }
 
-UActorComponent* ULimenInteractionComponent::GetCurrentInteractableInterface() const
+TScriptInterface<ILimenInteractableComponent> ULimenInteractionComponent::GetCurrentInteractableInterface() const
+{
+	return CurrentInteractableInterface;
+}
+
+UActorComponent* ULimenInteractionComponent::GetCurrentInteractableComponent() const
 {
 	return Cast<UActorComponent>(CurrentInteractableInterface.GetObject());
+}
+
+void ULimenInteractionComponent::Interacted(UActorComponent* Component)
+{
+	const TScriptInterface<ILimenInteractableComponent> Interface(Component);
+	OnInteract.Broadcast(Component ? Component->GetOwner() : nullptr, Interface);
+}
+
+void ULimenInteractionComponent::InteractionStopped(UActorComponent* Component)
+{
 }
 
 void ULimenInteractionComponent::Client_InteractableComponentHoveredChanged_Implementation(UActorComponent* Component)
@@ -235,8 +257,12 @@ void ULimenInteractionComponent::Client_InteractableComponentHoveredChanged_Impl
 
 void ULimenInteractionComponent::Multicast_Interacted_Implementation(UActorComponent* Component)
 {
-	const TScriptInterface<ILimenInteractableComponent> Interface(Component);
-	OnInteract.Broadcast(Component ? Component->GetOwner() : nullptr, Interface);
+	Interacted(Component);
+}
+
+void ULimenInteractionComponent::Multicast_InteractionStopped_Implementation(UActorComponent* Component)
+{
+	InteractionStopped(Component);
 }
 
 float ULimenInteractionComponent::GetInteractionRange() const

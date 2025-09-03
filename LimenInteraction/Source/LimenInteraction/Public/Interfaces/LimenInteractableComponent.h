@@ -38,4 +38,6 @@ public:
 	virtual void NotifyUnHover(AController* Controller, APawn* Pawn) = 0;
 	virtual void Interact(AController* InController, APawn* InPawn) = 0;
 	virtual void StopInteraction(AController* InController, APawn* InPawn) = 0;
+
+	virtual bool IsBeingInteracted() const = 0;
 };

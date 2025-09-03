@@ -843,7 +843,7 @@ void ALimenPlayerCharacter::StopSprinting()
 		return;
 	}
 	
-	VariableMovementAbility->CancelAbility(GetController(), this);
+	VariableMovementAbility->DeactivateAbility(GetController(), this);
 }
 
 void ALimenPlayerCharacter::ToggleSprint()

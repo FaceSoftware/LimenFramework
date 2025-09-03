@@ -44,10 +44,13 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 
-	GetMesh()->SetOnlyOwnerSee(false);
-	GetMesh()->SetOwnerNoSee(true);
-	GetMesh()->SetCastShadow(true);
-	GetMesh()->bEditableWhenInherited = true;
+	if (GetMesh())
+	{
+		GetMesh()->SetOnlyOwnerSee(false);
+		GetMesh()->SetOwnerNoSee(true);
+		GetMesh()->SetCastShadow(true);
+		GetMesh()->bEditableWhenInherited = true;
+	}
 
 	AbilityComponent = CreateDefaultSubobject<ULimenAbilityComponent>(TEXT("AbilityComponent"));
 }
@@ -89,8 +92,14 @@ void ALimenCharacterBase::DisableInput(APlayerController* InPlayerController)
 	}
 }
 
+bool ALimenCharacterBase::CanJumpInternal_Implementation() const
+{
+	// return Super::CanJumpInternal_Implementation();
+	return JumpIsAllowedInternal();
+}
+
 void ALimenCharacterBase::SetCinematicMode(bool bInCinematicMode, bool bHidePlayer, bool bAffectsHUD,
-	bool bAffectsMovement, bool bAffectsTurning)
+										   bool bAffectsMovement, bool bAffectsTurning)
 {
 	check(HasAuthority())
 
@@ -171,10 +180,5 @@ void ALimenCharacterBase::Multicast_SetCinematicMode_Implementation(bool bInCine
 void ALimenCharacterBase::SetupAbilityComponentInternal(ULimenAbilityComponent* InAbilityComponent)
 {
 	InAbilityComponent->OnAbilityComponentReady.AddUniqueDynamic(this, &ThisClass::SetupAbilityComponent);
-	
-	if (HasAuthority())
-	{
-		InAbilityComponent->LoadAbilities(this);
-		InAbilityComponent->LoadAttributes(this);
-	}
+	if (HasAuthority()) InAbilityComponent->Activate();
 }

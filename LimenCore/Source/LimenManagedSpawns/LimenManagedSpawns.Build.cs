@@ -24,6 +24,7 @@ public class LimenManagedSpawns : ModuleRules
                 "NavigationSystem",
                 
                 "LimenCore",
+                "LimenGlobalRandomStream",
             }
         );
     }

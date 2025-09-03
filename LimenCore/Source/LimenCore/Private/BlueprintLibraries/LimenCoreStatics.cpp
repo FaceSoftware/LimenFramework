@@ -5,7 +5,9 @@
 
 #include "EngineUtils.h"
 #include "GameMapsSettings.h"
+#include "NavigationPath.h"
 #include "NavigationSystem.h"
+#include "Engine/Engine.h"
 #include "Engine/NetConnection.h"
 #include "Engine/PostProcessVolume.h"
 #include "GameFramework/PlayerController.h"
@@ -13,10 +15,9 @@
 #include "LogMacros/LimenLogMacros.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Namespaces/GlobalInfo.h"
-#include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 
 
-void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, const ELogType Verbosity, const bool bPrintToScreen)
+void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, const ELogType Verbosity, const bool bPrintToScreen, FName Key)
 {
 	float DisplayTime = 0.f;
 	FColor TextColor = FColor();
@@ -50,7 +51,7 @@ void ULimenCoreStatics::LimenLog(const UObject* Caller, const FString LogText, c
 	{
 		check(GEngine)
 		const FString Message = FString::Printf(TEXT("%s: %s"), *Caller->GetClass()->GetName(), *LogText);
-		UKismetSystemLibrary::PrintString(Caller, Message, bPrintToScreen, true, TextColor, DisplayTime);
+		UKismetSystemLibrary::PrintString(Caller, Message, bPrintToScreen, !bPrintToScreen, TextColor, DisplayTime, Key);
 	}
 #endif
 }
@@ -95,7 +96,7 @@ void ULimenCoreStatics::StaticLimenLog(const FString FunctionName, const FString
 #endif
 }
 
-void ULimenCoreStatics::IsGamePlayingInEditor(UObject* Caller, bool& bIsEditorGame)
+void ULimenCoreStatics::IsGamePlayingInEditor(bool& bIsEditorGame)
 {
 #if WITH_EDITOR
 	bIsEditorGame = true;
@@ -113,27 +114,6 @@ void ULimenCoreStatics::SetDynamicGlobalIlluminationMethod(APostProcessVolume* P
 void ULimenCoreStatics::SetReflectionMethod(APostProcessVolume* PostProcessVolume, const EReflectionMethod::Type NewMethod)
 {
 	PostProcessVolume->Settings.ReflectionMethod = NewMethod;
-}
-
-void ULimenCoreStatics::RandomPercentage(const double ChanceToWin, bool& bWon)
-{
-	if (FMath::IsNearlyZero(ChanceToWin))
-	{
-		bWon = false;
-		return;
-	}
-
-	if (FMath::IsNearlyEqual(ChanceToWin, 100.0))
-	{
-		bWon = true;
-		return;
-	}
-	
-	auto* GlobalStream = ULimenGlobalRandomStreamSubsystem::Get();
-	check(GlobalStream)
-	
-	const double RandomValue = GlobalStream->GetGlobalRandomStream()->GetFraction() * 100.f;
-	bWon = RandomValue <= ChanceToWin;
 }
 
 FText ULimenCoreStatics::GetCurrentTime()
@@ -271,7 +251,7 @@ AActor* ULimenCoreStatics::GetActorWithTag(const UObject* Caller, const FName& T
 	return nullptr;
 }
 
-EMinimalWorldTypes ULimenCoreStatics::GetWorldType(UObject* Caller)
+EMinimalWorldTypes ULimenCoreStatics::GetWorldType(const UObject* Caller)
 {
 	check(GEngine)
 	const auto* World = GEngine->GetWorldFromContextObject(Caller, EGetWorldErrorMode::Assert);
@@ -318,27 +298,15 @@ EMinimalWorldTypes ULimenCoreStatics::GetWorldType(UObject* Caller)
 	return OutWorldType;
 }
 
-bool ULimenCoreStatics::AreLocationsReachableByNavigation(UObject* WorldContext, const FVector& Start, const FVector& End)
+bool ULimenCoreStatics::AreLocationsReachableByNavigation(const UObject* WorldContext, const FVector& Start, const FVector& End)
 {
-	UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(WorldContext->GetWorld());
-	if (NavSys == nullptr)
-	{
-		return false;
-	}
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContext, EGetWorldErrorMode::Assert);
+	const UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(World);
+	if (!NavSys) return false;
 
-	const ANavigationData* NavData = NavSys->GetDefaultNavDataInstance(FNavigationSystem::DontCreate);
-	if (NavData == nullptr)
-	{
-		return false;
-	}
+	const UNavigationPath* Path = NavSys->FindPathToLocationSynchronously(World, Start, End);
 
-	// Prepare the pathfinding query using the navigation filter
-	const FSharedConstNavQueryFilter NavFilter = NavData->GetDefaultQueryFilter();
-	const FPathFindingQuery Query = FPathFindingQuery(nullptr, *NavData, Start, End, NavFilter);
-
-	// Perform the pathfinding query
-	const FPathFindingResult Result = NavSys->FindPathSync(Query);
-	return Result.IsSuccessful() && !Result.Path->IsPartial();
+	return Path && Path->IsValid() && Path->IsPartial() == false;
 }
 
 FString ULimenCoreStatics::GetGameDefaultMap()

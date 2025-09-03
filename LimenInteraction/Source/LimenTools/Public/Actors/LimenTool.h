@@ -16,7 +16,7 @@ struct FBatteryData;
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBatteryChanged, const double, BatteryPercentage);
-DECLARE_MULTICAST_DELEGATE_OneParam(FToolActivationDelegate, const bool /* bIsActive */);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FToolActivationDelegate, const bool, bIsActive);
 
 UCLASS(Blueprintable, BlueprintType)
 class LIMENTOOLS_API ALimenTool : public ALimenPhysicalItem
@@ -27,6 +27,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FBatteryChanged OnBatteryChanged;
 	
+	UPROPERTY(BlueprintAssignable)
 	FToolActivationDelegate OnToolActiveStateChanged;
 	
 	ALimenTool();

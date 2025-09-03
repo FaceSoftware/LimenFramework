@@ -23,6 +23,8 @@ class LIMENABILITYSYSTEM_API ULimenActiveAbility : public ULimenAbilityBase
 public:
 	UPROPERTY(BlueprintAssignable, Category="Ability Events")
 	FAbilityActivationDelegate OnAbilityActivated;
+	UPROPERTY(BlueprintAssignable, Category="Ability Events")
+	FAbilityActivationDelegate OnAbilityDeactivated;
 
 	ULimenActiveAbility();
 
@@ -42,13 +44,19 @@ public:
 	 * @param Pawn The pawn who canceled this ability.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
-	void CancelAbility(AController* Controller, APawn* Pawn);
+	void DeactivateAbility(AController* Controller, APawn* Pawn);
 	/**
 	 * @brief Sets the rules whether the ability can be activated.
 	 * @return True if it can be activated, false if not.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
 	virtual bool CanActivateAbility() const;
+	/**
+	 * @brief Sets the rules whether the ability can be deactivated.
+	 * @return True if it can be deactivated, false if not.
+	 */
+	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
+	virtual bool CanDeactivateAbility() const;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
 	float GetFullCooldownTime() const;
@@ -75,7 +83,7 @@ protected:
 	virtual void AbilityActivated(AController* Controller, APawn* Pawn);
 	virtual void AbilityCancelled(AController* Controller, APawn* Pawn);
 
-private:	
+private:
 	FTimerHandle AbilityCooldownTimer;
 	FTimerHandle AbilityTimerHandle;
 	bool bIsCooldownOver;
@@ -84,6 +92,8 @@ private:
 	void AbilityActivated_Wrapper(AController* Controller, APawn* Pawn);
 	void StartCooldownTimer();
 
-	UFUNCTION(NetMulticast, Unreliable)
+	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_AbilityActivated(AController* Controller, APawn* Pawn);
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_AbilityDeactivated(AController* Controller, APawn* Pawn);
 };

@@ -15,6 +15,7 @@ public class LimenLevelTransitions : ModuleRules
                 
                 "LimenCore", 
                 "LimenWidgets",
+                "LimenGlobalRandomStream",
             }
         );
 

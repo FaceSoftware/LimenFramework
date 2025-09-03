@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright FaceSoftware. All Rights Reserved.
 
 
 #include "Components/LimenScreenVisibilityChecker.h"
@@ -14,7 +14,7 @@
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
-#include "Shaders/DownsamplerCS.h"
+#include "Shaders/FScreenVisibilityCheckCS.h"
 
 
 ULimenScreenVisibilityChecker::ULimenScreenVisibilityChecker()
@@ -24,9 +24,8 @@ ULimenScreenVisibilityChecker::ULimenScreenVisibilityChecker()
 	PrimaryComponentTick.bRunOnAnyThread = false;
 
 	RenderTargetSizeScale = .5f;
-	StencilCheckerMaterial = FSoftObjectPath(TEXT("/LimenCore/Materials/PostProcess/M_StencilCheck.M_StencilCheck"));
+	StencilCheckerMaterial = FSoftObjectPath(TEXT("/LimenCore/Materials/PostProcess/M_PP_DepthStencilCheck.M_PP_DepthStencilCheck"));
 	MaskParameter = TEXT("Mask");
-	RenderTargetParameter = TEXT("RenderTarget");
 	MaskToCheck = 1;
 	bPreviousVisibleState = false;
 	bAutoActivate = true;
@@ -44,40 +43,51 @@ void ULimenScreenVisibilityChecker::BeginPlay()
 	auto* Inst = UMaterialInstanceDynamic::Create(StencilCheckerMaterial.LoadSynchronous(), this, TEXT("StencilChecker"));
 	StencilCheckerInst = TStrongObjectPtr(Inst);
 	StencilCheckerInst->SetScalarParameterValue(MaskParameter, MaskToCheck);
-	StencilCheckerInst->SetTextureParameterValue(RenderTargetParameter, RenderTarget.Get());
 	
 	if (const auto* Pawn = GetOwner<APawn>())
 	{
 		OwnerCamera = Pawn->GetComponentByClass<UCameraComponent>();
 	}
 
-	RenderTarget = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>(this));
-	RenderTarget->RenderTargetFormat = RTF_RGBA8;
-	RenderTarget->ClearColor = FLinearColor::Transparent;
-	if (const FVector2D RenderTargetSize = GetViewportSize() * RenderTargetSizeScale; RenderTargetSize.X > 0.f && RenderTargetSize.Y > 0.f)
 	{
+		RenderTarget = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>(this));
+		const FIntPoint RenderTargetSize = GetRenderTargetSize();
 		RenderTarget->InitAutoFormat(RenderTargetSize.X, RenderTargetSize.Y);
+		RenderTarget->RenderTargetFormat = RTF_RGBA8;
+		RenderTarget->ClearColor = FLinearColor::Transparent;
+		RenderTarget->UpdateResourceImmediate(true);
+		RenderTarget->bAutoGenerateMips = true;
+		RenderTarget->MipGenSettings = TMGS_FromTextureGroup;
 	}
-	RenderTarget->UpdateResourceImmediate(true);
-	RenderTarget->bAutoGenerateMips = true;
-	RenderTarget->MipGenSettings = TMGS_FromTextureGroup;
 
-	SceneCapture = TStrongObjectPtr(NewObject<USceneCaptureComponent2D>(this));
-	const FAttachmentTransformRules Rules(EAttachmentRule::SnapToTarget, true);
-	OwnerCamera.IsValid()
-		? SceneCapture->AttachToComponent(OwnerCamera.Get(), Rules)
-		: SceneCapture->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
-	SceneCapture->SetRelativeTransform(FTransform::Identity);
-	SceneCapture->TextureTarget = RenderTarget.Get();
-	SceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_LegacySceneCapture;
-	SceneCapture->bCaptureEveryFrame = false;
-	SceneCapture->bAlwaysPersistRenderingState = true;
-	SceneCapture->CaptureSource = SCS_FinalColorLDR;
-	SceneCapture->PrimaryComponentTick.bCanEverTick = true;
-	SceneCapture->PrimaryComponentTick.TickInterval = PrimaryComponentTick.TickInterval;
-	SceneCapture->AddOrUpdateBlendable(StencilCheckerInst.Get(), 1.f);
-	SceneCapture->FOVAngle = OwnerCamera->FieldOfView;
-	SceneCapture->RegisterComponent();
+	{
+		SceneCapture = TStrongObjectPtr(NewObject<USceneCaptureComponent2D>(this));
+		const FAttachmentTransformRules Rules(EAttachmentRule::SnapToTarget, true);
+		if (OwnerCamera.IsValid()) SceneCapture->AttachToComponent(OwnerCamera.Get(), Rules);
+		else SceneCapture->AttachToComponent(GetOwner()->GetRootComponent(), Rules);
+		SceneCapture->SetRelativeTransform(FTransform::Identity);
+
+
+#if WITH_EDITORONLY_DATA
+		if (!DebugVisualizationRenderTarget.IsNull())
+		{
+			SceneCapture->TextureTarget = DebugVisualizationRenderTarget.LoadSynchronous();
+		}
+	else
+#endif
+		{
+			SceneCapture->TextureTarget = RenderTarget.Get();
+		}
+		SceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_LegacySceneCapture;
+		SceneCapture->bCaptureEveryFrame = false;
+		SceneCapture->bAlwaysPersistRenderingState = true;
+		SceneCapture->CaptureSource = SCS_FinalColorLDR;
+		SceneCapture->PrimaryComponentTick.bCanEverTick = true;
+		SceneCapture->PrimaryComponentTick.TickInterval = PrimaryComponentTick.TickInterval;
+		SceneCapture->AddOrUpdateBlendable(StencilCheckerInst.Get(), 1.f);
+		SceneCapture->FOVAngle = OwnerCamera->FieldOfView;
+		SceneCapture->RegisterComponent();
+	}
 }
 
 void ULimenScreenVisibilityChecker::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -95,9 +105,8 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 
 	if (!SceneCapture || !StencilCheckerInst.IsValid() || !RenderTarget.IsValid()) return;
 
-	const FVector2D NewRenderTargetSize = GetViewportSize() * RenderTargetSizeScale;
-	if (NewRenderTargetSize != FVector2D(RenderTarget->SizeX, RenderTarget->SizeY) &&
-		NewRenderTargetSize.X > 0.f && NewRenderTargetSize.Y > 0.f)
+	if (const FVector2D NewRenderTargetSize = GetRenderTargetSize();
+		NewRenderTargetSize != FVector2D(RenderTarget->SizeX, RenderTarget->SizeY))
 	{
 		RenderTarget->ResizeTarget(NewRenderTargetSize.X, NewRenderTargetSize.Y);
 		RenderTarget->UpdateResourceWithParams(UTexture::EUpdateResourceFlags::ForceRebuild);
@@ -107,33 +116,9 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 	SceneCapture->CaptureScene();
 	StencilCheckerInst->UpdateCachedData();
 
-	CheckVisibility(RenderTarget.Get());
-	PollReadback();
+	CheckVisibility(SceneCapture->TextureTarget.Get());
 
-	// Todo: It sucks to do it in the CPU but man, I cannot find a way to offload the work. Use a small render target res I guess...
-	/*
-	TArray<FColor> OutPixels;
-	RTResource->ReadPixels(OutPixels);
-
-	const bool bIsVisible = [OutPixels]
-	{
-		for (const FColor& Pixel : OutPixels)
-		{
-			if (Pixel != FColor(0.f))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}();
-
-	if (bIsVisible != bPreviousVisibleState)
-	{
-		OnActorVisibilityUpdated.Broadcast(bIsVisible);
-		bPreviousVisibleState = bIsVisible;
-	}
-	*/
+	AsyncTask(ENamedThreads::ActualRenderingThread, [this] { PollReadback(); });
 }
 
 int32 ULimenScreenVisibilityChecker::GetStencilMask() const
@@ -162,8 +147,8 @@ void ULimenScreenVisibilityChecker::CheckVisibility(UTextureRenderTarget2D* InRe
 
 			// 3. Dispatch compute shader
 			{
-				TShaderMapRef<FDownsamplerCS> Shader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
-				auto* Params = GraphBuilder.AllocParameters<FDownsamplerCS::FParameters>();
+				TShaderMapRef<FScreenVisibilityCheckCS> Shader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
+				auto* Params = GraphBuilder.AllocParameters<FScreenVisibilityCheckCS::FParameters>();
 				Params->Input = MaskTextureRDG;
 				Params->InputSampler = TStaticSamplerState<SF_Point>::GetRHI();
 				Params->Result = GraphBuilder.CreateUAV(ResultTexture);
@@ -211,13 +196,13 @@ void ULimenScreenVisibilityChecker::PollReadback()
 	if (Width == 0 || Height == 0) return;
 	if (!DataPtr) return;
 
-	// Validation
+	// Assertion
 	check(Width != 0);
 	check(Height != 0);
 
-	// Read your pixel data here, e.g.:
-	float* PixelData = static_cast<float*>(DataPtr);
-	bool bIsVisible = PixelData[0] > 0.5f;
+	// Read pixel data
+	const float* PixelData = static_cast<float*>(DataPtr);
+	bool bIsVisible = PixelData[0] > UE_SMALL_NUMBER;
 
 	if (bIsVisible != bPreviousVisibleState)
 	{
@@ -228,14 +213,19 @@ void ULimenScreenVisibilityChecker::PollReadback()
 	Readback->Unlock();
 }
 
-FVector2D ULimenScreenVisibilityChecker::GetViewportSize()
+FIntPoint ULimenScreenVisibilityChecker::GetRenderTargetSize() const
 {
+	FIntPoint Size(1, 1);
+
 	if (GEngine && GEngine->GameViewport)
 	{
 		FVector2D ViewportSize;
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
-		return ViewportSize;
+		Size.X = FMath::Floor(ViewportSize.X * RenderTargetSizeScale);
+		Size.Y = FMath::Floor(ViewportSize.Y * RenderTargetSizeScale);
 	}
+	if (Size.X <= 0) Size.X = 1;
+	if (Size.Y <= 0) Size.Y = 1;
 
-	return FVector2D(0, 0); // fallback if no viewport
+	return Size;
 }

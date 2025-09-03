@@ -19,6 +19,7 @@ ULimenAttributeBase::ULimenAttributeBase() : Super()
 	CurrentValue = 0.f;
 	bIsInitialized = false;
 	bIsFrozen = false;
+	bShouldFreezeWhenValueIsReached = false;
 }
 
 void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -165,13 +166,9 @@ bool ULimenAttributeBase::IsInitialized() const
 
 void ULimenAttributeBase::Tick(float DeltaTime)
 {
-	if (HasAuthority())
-	{
-		if (!FMath::IsNearlyZero(RechargeRate))
-		{
-			ModifyValueBy(RechargeRate * DeltaTime);
-		}
-	}
+	if (!HasAuthority() || FMath::IsNearlyZero(RechargeRate)) return;
+
+	ModifyValueBy(RechargeRate * DeltaTime);
 }
 
 ETickableTickType ULimenAttributeBase::GetTickableTickType() const
@@ -181,12 +178,7 @@ ETickableTickType ULimenAttributeBase::GetTickableTickType() const
 
 bool ULimenAttributeBase::IsTickable() const
 {
-	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
-}
-
-bool ULimenAttributeBase::IsAllowedToTick() const
-{
-	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority();
+	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority() && !bIsFrozen;
 }
 
 TStatId ULimenAttributeBase::GetStatId() const
@@ -375,6 +367,11 @@ bool ULimenAttributeBase::IsFull() const
 	return FMath::IsNearlyEqual(CurrentValue, MaxValue);
 }
 
+float ULimenAttributeBase::GetValueUntilMax() const
+{
+	return MaxValue - CurrentValue;
+}
+
 bool ULimenAttributeBase::StatsMakeSense() const
 {
 	return MaxValue > MinValue && CurrentValue >= MinValue && CurrentValue <= MaxValue;
@@ -408,12 +405,12 @@ void ULimenAttributeBase::SetCurrentValueAsMin()
 
 void ULimenAttributeBase::SetCurrentValueAs(const float Value)
 {
-	if (IsFrozen() || FMath::IsNearlyEqual(CurrentValue, Value))
+	if (IsFrozen() || FMath::IsNearlyEqual(CurrentValue, Value)) return;
 	{
-		return;
 	}
 	
 	CurrentValue = Value;
+	if (bShouldFreezeWhenValueIsReached && FreezeRange.Contains(CurrentValue)) FreezeAttribute(true);
 	AttributeUpdated();
 	OnAttributeChanged.Broadcast(this, CurrentValue);
 }

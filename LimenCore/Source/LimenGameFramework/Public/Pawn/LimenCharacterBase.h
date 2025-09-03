@@ -33,6 +33,7 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void EnableInput(APlayerController* InPlayerController) override;
 	virtual void DisableInput(APlayerController* InPlayerController) override;
+	virtual bool CanJumpInternal_Implementation() const override;
 
 	virtual void SetCinematicMode(bool bInCinematicMode, bool bHidePlayer, bool bAffectsHUD, bool bAffectsMovement, bool bAffectsTurning);
 	

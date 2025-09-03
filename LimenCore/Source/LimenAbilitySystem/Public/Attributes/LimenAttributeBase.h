@@ -72,7 +72,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual ETickableTickType GetTickableTickType() const override;
 	virtual bool IsTickable() const override;
-	virtual bool IsAllowedToTick() const override;
 	virtual TStatId GetStatId() const override;
 	virtual bool IsTickableWhenPaused() const override;
 	virtual bool IsTickableInEditor() const override;
@@ -146,62 +145,61 @@ public:
 	 * @brief Empties the attribute value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	void Empty();
+	FORCEINLINE void Empty();
 
-	
 	/**
 	 * @brief Sets the attribute value to the maximum.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	void Full();
+	FORCEINLINE void Full();
 
 	/**
 	 * @brief Gets the current max value.
 	 * @return The current max value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	float GetMaxValue() const;
+	FORCEINLINE float GetMaxValue() const;
 	/**
 	 * @brief Gets the current minimum value.
 	 * @return The current minimum value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	float GetMinValue() const;
+	FORCEINLINE float GetMinValue() const;
 	/**
 	 * @brief Getter for the current value of this attribute.
 	 * @return The current value of the attribute.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	float GetCurrentValue() const;
+	FORCEINLINE float GetCurrentValue() const;
 	/**
-	 * @brief Gets the current value of this attribute but in percentage.
+	 * @brief Gets the current value of this attribute but in percentage in a [0, 100] range.
 	 * @return The percentage of the current value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	float GetCurrentValueAsPercentage() const;
+	FORCEINLINE float GetCurrentValueAsPercentage() const;
 	/**
 	 * @brief Gets the current value of this attribute but in a [0, 1] range.
 	 * @return The normalized value of this attribute.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	float GetCurrentValueNormalized() const;
+	FORCEINLINE float GetCurrentValueNormalized() const;
 
 	/**
 	 * @brief Checks if thi attribute is empty.
 	 * @return True if empty, false if not.
 	 */
 	UFUNCTION(BlueprintCallable)
-	bool IsEmpty() const;
+	FORCEINLINE bool IsEmpty() const;
 	
 	UFUNCTION(BlueprintCallable)
-	bool IsFull() const;
+	FORCEINLINE bool IsFull() const;
 
 	/**
 	 * @brief Gets how much is needed to reach the maximum value.
 	 * @return How many units are needed to reach the maximum value.
 	 */
 	UFUNCTION(BlueprintCallable)
-	float GetValueUntilMax() const { return MaxValue - CurrentValue; }
+	FORCEINLINE float GetValueUntilMax() const;
 
 	/**
 	 * @brief Checks if the current value does not exceed it's limits.
@@ -231,11 +229,15 @@ protected:
 	/**
 	 * @brief The amount to recharge every second.
 	 */
-	UPROPERTY(EditAnywhere, Category="Limen", Replicated)
+	UPROPERTY(EditAnywhere, Category="Attribute", Replicated)
 	float RechargeRate;
-	UPROPERTY(EditAnywhere, Replicated)
+	UPROPERTY(EditAnywhere, Category="Attribute")
+	bool bShouldFreezeWhenValueIsReached;
+	UPROPERTY(EditAnywhere, Category="Attribute", meta=(EditCondition="bShouldFreezeWhenValueIsReached"))
+	FFloatRange FreezeRange;
+	UPROPERTY(EditAnywhere, Category="Attribute", Replicated)
 	float MaxValue;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Attribute")
 	float InitialValue;
 
 	virtual void AttributeEmpty();
@@ -246,14 +248,13 @@ protected:
 	virtual void OnRep_CurrentValue();
 	
 private:
-	const float MinValue = 0.f;
+	static constexpr float MinValue = 0.f;
 
 	UPROPERTY(SaveGame, ReplicatedUsing=OnRep_CurrentValue)
 	float CurrentValue;
 
 	TWeakObjectPtr<AActor> Owner;
-	UPROPERTY()
-	TObjectPtr<ULimenAbilityComponent> OwnerAbilityComponent;
+	TWeakObjectPtr<ULimenAbilityComponent> OwnerAbilityComponent;
 	bool bIsInitialized;
 	bool bIsFrozen;
 };

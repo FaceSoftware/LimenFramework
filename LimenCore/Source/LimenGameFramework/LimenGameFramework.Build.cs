@@ -12,6 +12,7 @@ public class LimenGameFramework : ModuleRules
                 "Core", 
                 "Engine",
                 "LimenCore",
+                "AIModule",
             }
         );
 
@@ -24,7 +25,6 @@ public class LimenGameFramework : ModuleRules
                 "SlateCore",
                 "EnhancedInput", 
                 "UMG",
-                "AIModule", 
                 "NetCore",
                 "OnlineSubsystem",
                 "OnlineSubsystemUtils",

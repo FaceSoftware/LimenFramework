@@ -18,8 +18,29 @@ class ULimenWidget;
 	inline void Show##WidgetVarName() { ShowWidget_Internal(WidgetVarName.Get()); } \
 	inline void Hide##WidgetVarName() { HideWidget_Internal(WidgetVarName.Get()); } \
 	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName && WidgetVarName->IsShowing(); } \
-	inline Type Get##WidgetVarName() const { return WidgetVarName.Get(); } \
-	
+	inline Type* Get##WidgetVarName() const { return WidgetVarName.Get(); } \
+
+#define CREATE_MENU_WIDGET_STRONG(Typename, WidgetPtr, WidgetClass) \
+	if (WidgetClass) \
+	{ \
+		auto* Widget = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
+		WidgetPtr = TStrongObjectPtr(Widget); \
+		WidgetPtr->BindPlayerController(GetOwningPlayerController()); \
+	} \
+
+#define CREATE_WIDGET(Typename, WidgetPtr, WidgetClass) \
+	if (WidgetClass) \
+	{ \
+		WidgetPtr = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
+	} \
+
+#define CLEANUP_WIDGET_STRONG(WidgetPtr) \
+	if (WidgetPtr) \
+	{ \
+		WidgetPtr->DestroyWidget(false); \
+		WidgetPtr.Reset(); \
+	} \
+
 /**
  * 
  */
@@ -30,7 +51,9 @@ class LIMENGAMEFRAMEWORK_API ALimenBaseHUD : public AHUD
 	
 public:	
 	ALimenBaseHUD();
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void ShowHUD() override;
+	virtual void HideHUD();
 
 	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
 	void ForceHUDState(const bool bForce);

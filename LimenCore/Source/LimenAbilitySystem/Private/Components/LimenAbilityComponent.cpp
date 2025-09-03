@@ -14,7 +14,7 @@
 
 ULimenAbilityComponent::ULimenAbilityComponent(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
 	SetIsReplicated(true);
 	bAutoActivate = true;
@@ -43,22 +43,25 @@ void ULimenAbilityComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	DeactivateAllAbilities();
+	DeactivateAllAttributes();
+
 	if (GetOwner()->HasAuthority())
 	{
 		for (FAbilityArrayItem& Ability : Abilities.Items)
 		{
-			Ability->Deinitialize(GetOwner());
 			RemoveReplicatedSubObject(*Ability);
-			Ability = nullptr;
+			Ability.Item->MarkAsGarbage();
+			Ability.Item.Reset();
 		}
 		Abilities->Empty();
 		Abilities.MarkArrayDirty();
 
 		for (FAttributeArrayItem& Attribute : Attributes.Items)
 		{
-			Attribute->Deinitialize(GetOwner());
 			RemoveReplicatedSubObject(*Attribute);
-			Attribute = nullptr;
+			Attribute.Item->MarkAsGarbage();
+			Attribute.Item.Reset();
 		}
 		Attributes->Empty();
 		Attributes.MarkArrayDirty();
@@ -67,63 +70,35 @@ void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
+void ULimenAbilityComponent::Activate(bool bReset)
+{
+	Super::Activate(bReset);
+
+	if (!GetOwner()->HasAuthority()) return;
+
+	if (bReset)
+	{
+		DeactivateAllAbilities();
+		DeactivateAllAttributes();
+	}
+
+	if (!bAbilitiesInstantiated) InstantiateAbilities();
+	if (!bAttributesInstantiated) InstantiateAttributes();
+
+	InitializeAbilities();
+	InitializeAttributes();
+
+	OnAbilityComponentReady.Broadcast(this);
+}
+
 void ULimenAbilityComponent::Deactivate()
 {
+	check(GetOwner()->HasAuthority())
+
 	DeactivateAllAbilities();
+	DeactivateAllAttributes();
 
 	Super::Deactivate();
-}
-
-void ULimenAbilityComponent::LoadAbilities(AActor* Owner)
-{
-	check(GetOwner()->HasAuthority())
-
-	Abilities->Empty(AbilityClasses.Num());
-	for (auto& AbilityClass : AbilityClasses)
-	{
-		check(!AbilityClass.IsNull());
-		
-		ULimenAbilityBase* Ability = NewObject<ULimenAbilityBase>(this, AbilityClass.LoadSynchronous());
-		AddReplicatedSubObject(Ability);
-		Ability->Initialize(Owner);
-
-		const int32 Index = Abilities->Add(FAbilityArrayItem(Ability));
-		Abilities.MarkItemDirty(Abilities[Index]);
-	}
-	bAbilitiesLoaded = true;
-	AuthAbilityCount = Abilities->Num();
-
-	if (bAttributesLoaded)
-	{
-		OnAbilityComponentReady.Broadcast(this);
-	}
-}
-
-void ULimenAbilityComponent::LoadAttributes(AActor* Owner)
-{
-	check(GetOwner()->HasAuthority())
-
-	Attributes->Empty(AttributeClasses.Num());
-	for (auto& AttributeClass : AttributeClasses)
-	{
-		check(!AttributeClass.IsNull());
-		
-		ULimenAttributeBase* Attribute = NewObject<ULimenAttributeBase>(this,
-			AttributeClass.LoadSynchronous());
-		AddReplicatedSubObject(Attribute);
-		
-		Attribute->Initialize(Owner);
-
-		const int32 Index = Attributes->Add(FAttributeArrayItem(Attribute));
-		Attributes.MarkItemDirty(Attributes[Index]);
-	}
-	bAttributesLoaded = true;
-	AuthAttributeCount = Attributes->Num();
-
-	if (bAbilitiesLoaded)
-	{
-		OnAbilityComponentReady.Broadcast(this);
-	}
 }
 
 void ULimenAbilityComponent::AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass)
@@ -158,8 +133,20 @@ void ULimenAbilityComponent::DeactivateAllAbilities()
 	check(GetOwner()->HasAuthority())
 	for (const FAbilityArrayItem& Ability : Abilities.Items)
 	{
-		check(*Ability)
+		if (!Ability.Item.IsValid()) continue;
 		Ability->ForceDeactivateAbility();
+		Ability->Deinitialize(GetOwner());
+	}
+}
+
+void ULimenAbilityComponent::DeactivateAllAttributes()
+{
+	check(GetOwner()->HasAuthority())
+	for (const FAttributeArrayItem& Attribute : Attributes.Items)
+	{
+		if (!Attribute.Item.IsValid()) continue;
+		Attribute->FreezeAttribute(true);
+		Attribute->Deinitialize(GetOwner());
 	}
 }
 
@@ -167,15 +154,8 @@ ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAb
 {
 	for (const FAbilityArrayItem& Ability : Abilities.Items)
 	{
-		if (*Ability == nullptr)
-		{
-			continue;
-		}
-
-		if (Ability->IsA(AbilityClass))
-		{
-			return *Ability;
-		}
+		if (*Ability == nullptr) continue;
+		if (Ability->IsA(AbilityClass)) return *Ability;
 	}
 
 	return nullptr;
@@ -185,15 +165,8 @@ ULimenAttributeBase* ULimenAbilityComponent::GetAttribute(const TSubclassOf<ULim
 {
 	for (const FAttributeArrayItem& Attribute : Attributes.Items)
 	{
-		if (*Attribute == nullptr)
-		{
-			continue;
-		}
-
-		if (Attribute->IsA(AttributeClass))
-		{
-			return *Attribute;
-		}
+		if (*Attribute == nullptr) continue;
+		if (Attribute->IsA(AttributeClass)) return *Attribute;
 	}
 
 	return nullptr;
@@ -203,12 +176,7 @@ TArray<ULimenAbilityBase*> ULimenAbilityComponent::GetAbilities() const
 {
 	TArray<ULimenAbilityBase*> Out;
 	Out.Reserve(Abilities->Num());
-
-	for (const FAbilityArrayItem& Ability : Abilities.Items)
-	{
-		Out.Push(*Ability);
-	}
-
+	for (const FAbilityArrayItem& Ability : Abilities.Items) Out.Push(*Ability);
 	return Out;
 }
 
@@ -216,35 +184,82 @@ TArray<ULimenAttributeBase*> ULimenAbilityComponent::GetAttributes() const
 {
 	TArray<ULimenAttributeBase*> Out;
 	Out.Reserve(Attributes->Num());
-
-	for (const FAttributeArrayItem& Attribute : Attributes.Items)
-	{
-		Out.Push(*Attribute);
-	}
-
+	for (const FAttributeArrayItem& Attribute : Attributes.Items) Out.Push(*Attribute);
 	return Out;
 }
 
 void ULimenAbilityComponent::OnRep_ServerAbilityCount()
 {
 	bAbilitiesLoaded = Abilities->Num() == AuthAbilityCount;
-	if (IsNoAuthComponentGameplayReady())
-	{
-		OnAbilityComponentReady.Broadcast(this);
-	}
+	if (IsNoAuthComponentGameplayReady()) OnAbilityComponentReady.Broadcast(this);
 }
 
 void ULimenAbilityComponent::OnRep_ServerAttributeCount()
 {
 	bAttributesLoaded = Attributes->Num() == AuthAttributeCount;
-	if (IsNoAuthComponentGameplayReady())
-	{
-		OnAbilityComponentReady.Broadcast(this);
-	}
+	if (IsNoAuthComponentGameplayReady()) OnAbilityComponentReady.Broadcast(this);
 }
 
 bool ULimenAbilityComponent::IsNoAuthComponentGameplayReady()
 {
 	check(!GetOwner()->HasAuthority())
 	return Abilities->Num() == AuthAbilityCount && Attributes->Num() == AuthAttributeCount;
+}
+
+void ULimenAbilityComponent::InitializeAbilities()
+{
+	for (auto& Ability : Abilities.Items)
+	{
+		if (Ability.Item.IsValid()) Ability->Initialize(GetOwner());
+	}
+	bAbilitiesLoaded = true;
+}
+
+void ULimenAbilityComponent::InitializeAttributes()
+{
+	for (auto& Attribute : Attributes.Items)
+	{
+		if (Attribute.Item.IsValid()) Attribute->Initialize(GetOwner());
+	}
+	bAttributesLoaded = true;
+}
+
+void ULimenAbilityComponent::InstantiateAbilities()
+{
+	check(GetOwner()->HasAuthority())
+	check(Abilities->IsEmpty())
+
+	for (auto& AbilityClass : AbilityClasses)
+	{
+		check(!AbilityClass.IsNull());
+		
+		ULimenAbilityBase* Ability = NewObject<ULimenAbilityBase>(this, AbilityClass.LoadSynchronous());
+		AddReplicatedSubObject(Ability);
+
+		const int32 Index = Abilities->Add(FAbilityArrayItem(Ability));
+		Abilities.MarkItemDirty(Abilities[Index]);
+	}
+	bAbilitiesInstantiated = true;
+	AuthAbilityCount = Abilities->Num();
+}
+
+void ULimenAbilityComponent::InstantiateAttributes()
+{
+	check(GetOwner()->HasAuthority())
+	check(Attributes->IsEmpty())
+
+	Attributes->Empty(AttributeClasses.Num());
+	for (auto& AttributeClass : AttributeClasses)
+	{
+		check(!AttributeClass.IsNull());
+		
+		ULimenAttributeBase* Attribute = NewObject<ULimenAttributeBase>(this,
+			AttributeClass.LoadSynchronous());
+		AddReplicatedSubObject(Attribute);
+
+		const int32 Index = Attributes->Add(FAttributeArrayItem(Attribute));
+		Attributes.MarkItemDirty(Attributes[Index]);
+	}
+	bAttributesInstantiated = true;
+	AuthAttributeCount = Attributes->Num();
 }

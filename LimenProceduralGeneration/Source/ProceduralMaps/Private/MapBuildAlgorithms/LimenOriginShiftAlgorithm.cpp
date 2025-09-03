@@ -510,6 +510,7 @@ void ULimenOriginShiftAlgorithm::AssignTileClass() const
 		}
 
 		check(RelevantTileList != nullptr);
+		if (RelevantTileList->IsEmpty()) continue;
 		
 		const uint64 RandomIndex = GlobalRandStream->GenerateRandomUniqueNumbers(RelevantTileList->Num() - 1, 0, 1)[0];
 		Tile->TileClass =(*RelevantTileList)[RandomIndex];

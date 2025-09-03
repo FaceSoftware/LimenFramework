@@ -11,9 +11,10 @@
 #include "LimenCore/Public/LogMacros/LimenLogMacros.h"
 
 
-ULimenThreadPoolSubsystem::FPoolWorker::FPoolWorker() : QueueCondition(FSharedEventRef(EEventMode::ManualReset))
+ULimenThreadPoolSubsystem::FPoolWorker::FPoolWorker() : QueueCondition(FSharedEventRef(EEventMode::AutoReset))
 {
 	bShouldStop = false;
+	QueuedJobsCount.store(0);
 }
 
 ULimenThreadPoolSubsystem::FPoolWorker::~FPoolWorker()
@@ -35,24 +36,30 @@ uint32 ULimenThreadPoolSubsystem::FPoolWorker::Run()
 	while (!bShouldStop.load())
 	{
 		// Wait until there are jobs in the queue
-		while (QueuedJobs.IsEmpty() && !bShouldStop)
+		TSharedPtr<ISliceJob> CurrentJob = nullptr;
+		if (!QueuedJobs.Dequeue(CurrentJob))
 		{
-			// Wait for the event to be signaled
+			if (bShouldStop.load()) break;
 			QueueCondition->Wait();
+			continue;
 		}
 
-		TFunction<void()> CurrentJob = nullptr;
-		if (QueuedJobs.Dequeue(CurrentJob))
+		QueuedJobsCount.fetch_sub(1);
+		check(CurrentJob.IsValid());
+
+
+		if (!CurrentJob->ExecuteSlice(SliceBudget))
 		{
-			QueuedJobsCount.store(QueuedJobsCount.load() - 1);
-			check(CurrentJob != nullptr);
-			CurrentJob();
-
-			AsyncTask(ENamedThreads::GameThread, [this]
-			{
-				UE_LOG(LogLimen, Log, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run: Thread %s completed job. In queue: %d"), *ThreadName, QueuedJobsCount.load());
-			});	
+			QueueJob(CurrentJob.ToSharedRef());
+			continue;
 		}
+
+#if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
+		AsyncTask(ENamedThreads::GameThread, [ThreadNameCopy = FString(ThreadName), QueuedJobsCopy = QueuedJobsCount.load()]
+		{
+			UE_LOG(LogLimen, Log, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run: Thread %s completed job. In queue: %d"), *ThreadNameCopy, QueuedJobsCopy);
+		});		
+#endif
 	}
 
 	return 0;
@@ -64,10 +71,9 @@ void ULimenThreadPoolSubsystem::FPoolWorker::Stop()
 	QueueCondition->Trigger();
 }
 
-void ULimenThreadPoolSubsystem::FPoolWorker::QueueJob(const TFunction<void()>& Function)
+void ULimenThreadPoolSubsystem::FPoolWorker::QueueJob(const TSharedRef<ISliceJob>& NewJob)
 {
-	Function.CheckCallable();
-	QueuedJobs.Enqueue(Function);
+	QueuedJobs.Enqueue(NewJob);
 	++QueuedJobsCount;
 	QueueCondition->Trigger();
 }
@@ -140,13 +146,47 @@ void ULimenThreadPoolSubsystem::Deinitialize()
 	Super::Deinitialize();
 }
 
-void ULimenThreadPoolSubsystem::AddJob(const TFunction<void()>& Function)
+void ULimenThreadPoolSubsystem::AddJob(const TFunction<void()>& Job)
 {
+	AddJob(MakeShared<FUnslicedJob>(Job));
+}
+
+void ULimenThreadPoolSubsystem::AddJob(const TFunction<bool(double)>& Job)
+{
+	AddJob(MakeShared<FDummySliceJob>(Job));
+}
+
+void ULimenThreadPoolSubsystem::AddJob(const TSharedRef<ISliceJob>& Job)
+{
+	// Ironically, not thread safe.
+	// But it doesn't make sense to queue work into a thread if already outside the game thread.
+	check(IsInGameThread());
+
 	TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> AvailableThread = GetAvailableThread();
-	AvailableThread->QueueJob(Function);
+	AvailableThread->QueueJob(Job);
 	
 	LIMEN_LOG(LogLimen, Log, this, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run New job queued to thread %s. In queue: %d"), *AvailableThread->ThreadName, AvailableThread->GetQueuedJobsCount());
 }
+
+#if WITH_EDITOR
+void ULimenThreadPoolSubsystem::CreateThreadsForTest(const int32 NumberOfThreads)
+{
+	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
+	for (int i = 0; i < NumberOfThreads; ++i)
+	{
+		const FString ThreadName = FString::Printf(TEXT("PoolThread_%d"), i);
+		TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> Worker = MakeShared<FPoolWorker, ESPMode::NotThreadSafe>();
+		Worker->ThreadName = ThreadName;
+		
+		FRunnableThread* WorkerThreadRawPtr = FRunnableThread::Create(&Worker.Get(), *ThreadName, Settings->MemoryPerThreadInBytes, static_cast<EThreadPriority>(Settings->ThreadsPriority));
+		TSharedRef<FRunnableThread, ESPMode::NotThreadSafe> WorkerThread = MakeShareable(WorkerThreadRawPtr);
+
+		ThreadPool.Add(Worker, WorkerThread);
+	}
+
+	LIMEN_LOG(LogLimen, Log, this, TEXT("%d threads created successfully."), ThreadPool.Num());
+}
+#endif
 
 void ULimenThreadPoolSubsystem::CreateThreads()
 {
@@ -168,13 +208,10 @@ void ULimenThreadPoolSubsystem::CreateThreads()
 
 void ULimenThreadPoolSubsystem::DestroyThreads()
 {
-	TArray<TSharedRef<FPoolWorker, ESPMode::NotThreadSafe>> ThreadArray;
-	ThreadPool.GenerateKeyArray(ThreadArray);
-	for (TSharedRef<FPoolWorker, ESPMode::NotThreadSafe>& ThreadWorker : ThreadArray)
-	{
-		ThreadWorker->DiscardWaitEvent();
-		ThreadPool[ThreadWorker]->Kill(true);
-	}
+	TArray<TSharedRef<FPoolWorker, ESPMode::NotThreadSafe>> Workers;
+	ThreadPool.GenerateKeyArray(Workers);
+	for (const auto& W : Workers) { W->Stop(); }
+	for (auto& W : Workers) { ThreadPool[W]->WaitForCompletion(); }
 	ThreadPool.Empty();
 
 	LIMEN_LOG(LogLimen, Log, this, TEXT("Threads destroyed."));
@@ -182,20 +219,20 @@ void ULimenThreadPoolSubsystem::DestroyThreads()
 
 TSharedRef<ULimenThreadPoolSubsystem::FPoolWorker, ESPMode::NotThreadSafe> ULimenThreadPoolSubsystem::GetAvailableThread() const
 {
-	TArray<TSharedRef<FPoolWorker, ESPMode::NotThreadSafe>> ThreadWorkerArray;
-	ThreadPool.GenerateKeyArray(ThreadWorkerArray);
+	check(IsInGameThread());
+	check(ThreadPool.Num() > 0);
 
-	int32 SmallestJobsCount = TNumericLimits<int32>::Max();
-	TSharedPtr<FPoolWorker, ESPMode::NotThreadSafe> OutThread;
-	
-	for (TSharedRef<FPoolWorker, ESPMode::NotThreadSafe>& ThreadWorker : ThreadWorkerArray)
+	TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> Best = ThreadPool.CreateConstIterator().Key();
+	int32 BestCount = Best->GetQueuedJobsCount();
+
+	for (const auto& Pair : ThreadPool)
 	{
-		if (ThreadWorker->GetQueuedJobsCount() < SmallestJobsCount)
+		if (const int32 WorkCount = Pair.Key->GetQueuedJobsCount(); WorkCount < BestCount)
 		{
-			SmallestJobsCount = ThreadWorker->GetQueuedJobsCount();
-			OutThread = ThreadWorker.ToSharedPtr();
+			Best = Pair.Key;
+			BestCount = WorkCount;
 		}
 	}
-	
-	return OutThread.ToSharedRef();
+
+	return Best;
 }

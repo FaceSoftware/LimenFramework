@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CollisionQueryParams.h"
 #include "LimenInteractionComponent.h"
 #include "LimenLineTraceInteractionComponent.generated.h"
 
+
+struct FHitResult;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENINTERACTION_API ULimenLineTraceInteractionComponent : public ULimenInteractionComponent
@@ -21,16 +24,16 @@ public:
 	ECollisionChannel GetTraceChannel() const;
 	
 protected:
+	UPROPERTY(EditAnywhere, Category="Limen")
+	TEnumAsByte<ECollisionChannel> InteractionCollisionChannel;
+
 	virtual void SetupInteraction() override;
 	virtual void UpdateInteraction(const float DeltaTime) override;
 
 private:
-	UPROPERTY(EditAnywhere, Category="Limen")
-	TEnumAsByte<ECollisionChannel> InteractionCollisionChannel;
-	
-	FCollisionQueryParams QueryParams;
 	TArray<FHitResult> InteractionResults;
 
+	FCollisionQueryParams QueryParams;
 	TOptional<FHitResult> InteractionHitResult;
 
 	static FCollisionResponseParams CollisionResponseParams;

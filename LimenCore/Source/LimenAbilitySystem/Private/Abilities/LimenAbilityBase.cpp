@@ -127,6 +127,7 @@ bool ULimenAbilityBase::IsInitialized() const
 
 void ULimenAbilityBase::Deinitialize(AActor* InOwner)
 {
+	bIsInitialized = false;
 }
 
 void ULimenAbilityBase::ForceDeactivateAbility()
@@ -145,7 +146,7 @@ ETickableTickType ULimenAbilityBase::GetTickableTickType() const
 
 bool ULimenAbilityBase::IsTickable() const
 {
-	return !HasAnyFlags(RF_ClassDefaultObject);
+	return !HasAnyFlags(RF_ClassDefaultObject) || bIsInitialized;
 }
 
 TStatId ULimenAbilityBase::GetStatId() const
