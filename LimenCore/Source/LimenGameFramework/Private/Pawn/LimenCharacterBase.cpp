@@ -47,7 +47,7 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 	if (GetMesh())
 	{
 		GetMesh()->SetOnlyOwnerSee(false);
-		GetMesh()->SetOwnerNoSee(true);
+		GetMesh()->SetOwnerNoSee(false);
 		GetMesh()->SetCastShadow(true);
 		GetMesh()->bEditableWhenInherited = true;
 	}

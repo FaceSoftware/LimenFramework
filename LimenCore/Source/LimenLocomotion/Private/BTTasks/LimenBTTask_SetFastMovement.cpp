@@ -21,6 +21,6 @@ EBTNodeResult::Type ULimenBTTask_SetFastMovement::ExecuteTask(UBehaviorTreeCompo
 	auto* MovementComponent = Pawn->GetComponentByClass<ULimenMovementComponent>();
 	if (!MovementComponent) return EBTNodeResult::Failed;
 
-	MovementComponent->SetFastMovement(Activate.GetValue(OwnerComp));
+	MovementComponent->SetSprintMode(Activate.GetValue(OwnerComp));
 	return EBTNodeResult::Succeeded;
 }

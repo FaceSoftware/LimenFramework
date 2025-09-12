@@ -67,12 +67,12 @@ void ULimenActiveAbility::DeactivateAbility(AController* Controller, APawn* Pawn
 
 bool ULimenActiveAbility::CanActivateAbility() const
 {
-	return bIsCooldownOver && !bIsActive;
+	return bIsCooldownOver && !bIsActive && IsInitialized();
 }
 
 bool ULimenActiveAbility::CanDeactivateAbility() const
 {
-	return true;
+	return bIsActive && IsInitialized();
 }
 
 float ULimenActiveAbility::GetFullCooldownTime() const
@@ -82,10 +82,7 @@ float ULimenActiveAbility::GetFullCooldownTime() const
 
 float ULimenActiveAbility::GetRemainingCooldownTime() const
 {
-	if (bIsCooldownOver)
-	{
-		return 0.f;
-	}
+	if (bIsCooldownOver) return 0.f;
 
 	check(GetWorld()->GetTimerManager().IsTimerActive(AbilityCooldownTimer));
 	return GetWorld()->GetTimerManager().GetTimerRemaining(AbilityCooldownTimer);
@@ -98,10 +95,7 @@ bool ULimenActiveAbility::IsActive() const
 
 void ULimenActiveAbility::SetCooldownOver()
 {
-	if (!bIsCooldownOver)
-	{
-		bIsCooldownOver = true;
-	}
+	if (!bIsCooldownOver) bIsCooldownOver = true;
 }
 
 void ULimenActiveAbility::AbilityActivated(AController* Controller, APawn* Pawn)

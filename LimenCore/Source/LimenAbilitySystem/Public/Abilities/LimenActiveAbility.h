@@ -75,6 +75,10 @@ protected:
 	float AbilityCooldown;
 	UPROPERTY(EditDefaultsOnly, Category="Ability Parameters", meta=(ClampMin="0"))
 	float AbilityActivationDelay;
+	/**
+	 * @brief Whether this ability is deactivated instantly.
+	 * False if ability must be manually deactivated, true otherwise.
+	 */
 	UPROPERTY(EditDefaultsOnly, Category="Ability Parameters")
 	bool bIsOneShot;
 
