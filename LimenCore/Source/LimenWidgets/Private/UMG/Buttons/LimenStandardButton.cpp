@@ -42,9 +42,19 @@ void ULimenStandardButton::SetButtonNormalBrush(const FSlateBrush& NewBrush)
 	ButtonStyle.Normal = NewBrush;
 }
 
+void ULimenStandardButton::SetButtonFont(const FSlateFontInfo& NewFont)
+{
+	Font = NewFont;
+}
+
 const FGuid& ULimenStandardButton::GetButtonId() const
 {
 	return ButtonId;
+}
+
+const FText& ULimenStandardButton::GetButtonText() const
+{
+	return TextBlock->GetText();
 }
 
 TSharedRef<SWidget> ULimenStandardButton::RebuildWidget()

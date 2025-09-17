@@ -27,11 +27,12 @@ ULimenPhysicsInteractionComponent::ULimenPhysicsInteractionComponent()
 
 bool ULimenPhysicsInteractionComponent::Interact(AController* InController, APawn* InPawn)
 {
-	InteractController = InController;
-	InteractPawn = InPawn;
-
-	if (!Super::Interact(InController, InPawn)) return false;
-	return true;
+//	InteractController = InController;
+//	InteractPawn = InPawn;
+//
+//	if (!Super::Interact(InController, InPawn)) return false;
+//	return true;
+	return false;
 }
 
 void ULimenPhysicsInteractionComponent::StopInteraction(AController* InController, APawn* InPawn)
@@ -90,6 +91,7 @@ void ULimenPhysicsInteractionComponent::UpdateInteraction(const float DeltaTime)
 	}
 	else
 	{
+		SetCurrentInteractableInterface(nullptr);
 		TracedComponent.Reset();
 	}
 
@@ -119,6 +121,7 @@ void ULimenPhysicsInteractionComponent::Interacted(UActorComponent* Component)
 {
 	Super::Interacted(Component);
 
+	if (!GetCurrentInteractableInterface().GetObject()) return;
 	HeldComponent = TracedComponent;
 	if (!HeldComponent.IsValid()) return;
 
@@ -151,6 +154,8 @@ void ULimenPhysicsInteractionComponent::InteractionStopped(UActorComponent* Comp
 	TraceQueryParams.ClearIgnoredSourceObjects();
 	TraceQueryParams.AddIgnoredSourceObject(GetOwner());
 	HeldComponent.Reset();
+	TracedComponent.Reset();
+	InteractionComponent.Reset();
 	SetCurrentInteractableInterface(nullptr);
 
 	GrabLocation = FVector::ZeroVector;

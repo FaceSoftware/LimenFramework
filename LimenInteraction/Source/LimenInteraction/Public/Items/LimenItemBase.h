@@ -27,6 +27,8 @@ class LIMENINTERACTION_API ALimenItemBase : public ALimenInteractable, public IL
 	GENERATED_BODY()
 
 public:
+	inline static const FName ItemImageSceneCaptureName = TEXT("ItemImageSceneCapture");
+
 	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure, meta=(WorldContext=WorldContextObject))
 	static UTexture* GetItemImage(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass);
 	UFUNCTION(BlueprintCallable, Category="Limen|Items", BlueprintPure, meta=(WorldContext=WorldContextObject))
@@ -42,8 +44,11 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Limen|Items", BlueprintPure)
-	UStaticMeshComponent* GetItemMesh() const;
-	virtual UStaticMeshComponent* GetItemMesh_Implementation() const;
+	UStaticMeshComponent* GetStaticMesh() const;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Limen|Items", BlueprintPure)
+	USkeletalMeshComponent* GetSkeletalMesh() const;
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Limen|Items", BlueprintPure)
+	UMeshComponent* GetMesh() const;
 	
 	UTexture* GetItemImage() const;
 	const FText& GetDisplayName() const;
@@ -100,11 +105,20 @@ protected:
 	virtual void Interact(AController* InController, APawn* InPawn) override final;
 	virtual void InteractionStopped(AController* InController, APawn* InPawn) override final;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void ItemPickedUp(AController* InController, APawn* InPawn);
+	UFUNCTION(BlueprintImplementableEvent)
+	void ItemDropped(AController* InController, APawn* InPawn);
+
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic)
 	void InteractAnimation(const float AnimationTime);
 
 	UFUNCTION()
 	virtual void OnRep_IsDropped();
+	
+	virtual UStaticMeshComponent* GetStaticMesh_Implementation() const;
+	virtual USkeletalMeshComponent* GetSkeletalMesh_Implementation() const;
+	virtual UMeshComponent* GetMesh_Implementation() const;
 	
 private:
 	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;

@@ -58,7 +58,7 @@ struct FAbilityArray : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TArray<FAbilityArrayItem> Items;
 
 	TArray<FAbilityArrayItem>* operator->()
@@ -154,7 +154,7 @@ struct FAttributeArray : public FFastArraySerializer
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(Transient)
 	TArray<FAttributeArrayItem> Items;
 
 	TArray<FAttributeArrayItem>* operator->()
@@ -256,6 +256,7 @@ public:
 	 * or transitioning out of gameplay.
 	 */
 	void DeactivateAllAbilities();
+	void DestroyAllAbilities();
 	/**
 	 * Deactivates all abilities associated with the component.
 	 *
@@ -264,6 +265,7 @@ public:
 	 * or transitioning out of gameplay.
 	 */
 	void DeactivateAllAttributes();
+	void DestroyAllAttributes();
 	/**
 	 * Retrieves an ability of the specified class type from the component's managed abilities.
 	 * This method searches for an ability that matches the provided class or any subclass of the specified class within the component's ability collection.

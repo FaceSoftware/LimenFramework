@@ -66,7 +66,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FActorAchoredWithActorPtr, ULimenSna
  * @brief An anchor point
  */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class ULimenAnchorPointComponent : public UArrowComponent
+class LIMENCORE_API ULimenAnchorPointComponent : public UArrowComponent
 {
 	GENERATED_BODY()
 
@@ -79,7 +79,7 @@ public:
 	ULimenAnchorPointComponent();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void Anchor(ULimenSnapAnchorComponent* InRequestor, bool bAttachToAnchor = true);
+	virtual bool Anchor(ULimenSnapAnchorComponent* InRequestor, bool bAttachToAnchor = true);
 	UFUNCTION(BlueprintCallable)
 	virtual void RemoveAnchor(ULimenSnapAnchorComponent* InRequestor, bool bDetachFromAnchor = true);
 

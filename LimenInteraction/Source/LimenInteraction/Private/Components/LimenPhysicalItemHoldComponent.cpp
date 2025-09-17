@@ -24,7 +24,7 @@ void ULimenPhysicalItemHoldComponent::Hold(ALimenPhysicalItem* InPhysicalItem)
 {
 	check(GetOwner()->HasAuthority())
 
-	if (InPhysicalItem == WeaponData.PhysicalItem.Get())
+	if (InPhysicalItem == WeaponData.PhysicalItem.Get() || InPhysicalItem == nullptr)
 	{
 		return;
 	}

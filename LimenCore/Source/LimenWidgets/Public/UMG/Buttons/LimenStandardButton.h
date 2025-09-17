@@ -36,9 +36,13 @@ public:
 	virtual void SetButtonStyle(const FButtonStyle& NewStyle);
 	UFUNCTION(BlueprintCallable)
 	virtual void SetButtonNormalBrush(const FSlateBrush& NewBrush);
+	UFUNCTION(BlueprintCallable)
+	virtual void SetButtonFont(const FSlateFontInfo& NewFont);
 	
 	UFUNCTION(BlueprintCallable)
 	const FGuid& GetButtonId() const;
+	UFUNCTION(BlueprintCallable)
+	const FText& GetButtonText() const;
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Button")

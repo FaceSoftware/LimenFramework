@@ -3,7 +3,6 @@
 
 #include "Components/LimenSnapAnchorComponent.h"
 
-#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Components/ArrowComponent.h"
 #include "GameFramework/Actor.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -40,8 +39,11 @@ void ULimenSnapAnchorComponent::AnchorTo(ULimenAnchorPointComponent* InTarget, c
 	if (!InTarget || InTarget->GetOwner() == GetOwner()) return;
 
 	RemoveCurrentAnchor();
-	InTarget->Anchor(this, bAttachToAnchor);
-	OnAnchored.Broadcast();
+	if (InTarget->Anchor(this, bAttachToAnchor))
+	{
+		CurrentAnchor = InTarget;
+		OnAnchored.Broadcast();
+	}
 }
 
 void ULimenSnapAnchorComponent::AnchorToActor(AActor* InTarget, FName AnchorId, const bool bAttachToAnchor)
@@ -94,9 +96,9 @@ ULimenAnchorPointComponent::ULimenAnchorPointComponent()
 	Mobility = EComponentMobility::Movable;
 }
 
-void ULimenAnchorPointComponent::Anchor(ULimenSnapAnchorComponent* InRequestor, const bool bAttachToAnchor)
+bool ULimenAnchorPointComponent::Anchor(ULimenSnapAnchorComponent* InRequestor, const bool bAttachToAnchor)
 {
-	if (!InRequestor || !InRequestor->GetOwner()) return;
+	if (!InRequestor || !InRequestor->GetOwner()) return false;
 
 	const FTransform TargetTransform = GetComponentTransform();
 	const FTransform RequestorAnchorTransform = InRequestor->GetComponentTransform();
@@ -115,6 +117,7 @@ void ULimenAnchorPointComponent::Anchor(ULimenSnapAnchorComponent* InRequestor, 
 	OnNewAnchoredActor.Broadcast(InRequestor);
 
 	LIMEN_LOG(LogLimen, Log, this, TEXT("Snapped %s to anchor %s."), *InRequestor->GetOwner()->GetName(), *GetName());
+	return true;
 }
 
 void ULimenAnchorPointComponent::RemoveAnchor(ULimenSnapAnchorComponent* InRequestor, const bool bDetachFromAnchor)

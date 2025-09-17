@@ -80,7 +80,7 @@ ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Su
 	RenderTargetPixelFormat = EPixelFormat::PF_R8G8B8A8;
 	bForceRenderTargetLinearGamma = false;
 
-	ItemImageSceneCapture = CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(TEXT("ItemImageSceneCapture"));
+	ItemImageSceneCapture = CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(ItemImageSceneCaptureName);
 	bUseSceneCaptureForImage = ItemImageSceneCapture != nullptr;
 	if (bUseSceneCaptureForImage)
 	{
@@ -146,8 +146,24 @@ void ALimenItemBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 }
 
-UStaticMeshComponent* ALimenItemBase::GetItemMesh_Implementation() const
+UStaticMeshComponent* ALimenItemBase::GetStaticMesh_Implementation() const
 {
+	return nullptr;
+}
+
+USkeletalMeshComponent* ALimenItemBase::GetSkeletalMesh_Implementation() const
+{
+	return nullptr;
+}
+
+UMeshComponent* ALimenItemBase::GetMesh_Implementation() const
+{
+	UMeshComponent* SkeletalMesh = GetSkeletalMesh();
+	UMeshComponent* StaticMesh = GetStaticMesh();
+
+	if (SkeletalMesh && StaticMesh) return StaticMesh;
+	if (StaticMesh) return StaticMesh;
+	if (SkeletalMesh) return SkeletalMesh;
 	return nullptr;
 }
 
@@ -220,6 +236,8 @@ void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
 	}
 
 	bIsDropped = false;
+
+	ItemPickedUp(InController, InPawn);
 }
 
 void ALimenItemBase::Drop(AController* InController, APawn* InPawn)
@@ -236,6 +254,8 @@ void ALimenItemBase::Drop(AController* InController, APawn* InPawn)
 	AddToGameplay();
 
 	bIsDropped = true;
+
+	ItemDropped(InController, InPawn);
 }
 
 bool ALimenItemBase::IsDropped() const
