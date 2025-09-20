@@ -27,12 +27,11 @@ ULimenPhysicsInteractionComponent::ULimenPhysicsInteractionComponent()
 
 bool ULimenPhysicsInteractionComponent::Interact(AController* InController, APawn* InPawn)
 {
-//	InteractController = InController;
-//	InteractPawn = InPawn;
-//
-//	if (!Super::Interact(InController, InPawn)) return false;
-//	return true;
-	return false;
+	InteractController = InController;
+	InteractPawn = InPawn;
+	
+	if (!Super::Interact(InController, InPawn)) return false;
+	return GetCurrentInteractableInterface()->AllowPhysicsInteraction();
 }
 
 void ULimenPhysicsInteractionComponent::StopInteraction(AController* InController, APawn* InPawn)
@@ -80,22 +79,16 @@ void ULimenPhysicsInteractionComponent::UpdateInteraction(const float DeltaTime)
 
 	GetWorld()->LineTraceSingleByChannel(OutHit, TraceStart, TraceEnd, TraceChannel, TraceQueryParams);
 	
-	if (OutHit.bBlockingHit && OutHit.GetComponent()->IsSimulatingPhysics())
+	if (OutHit.bBlockingHit)
 	{
-		TracedComponent = OutHit.GetComponent();
-		check(OutHit.GetActor())
-		if (auto* Component = OutHit.GetActor()->GetComponentByClass<ULimenInteractableAreaComponent>())
-		{
-			SetCurrentInteractableInterface(Component);
-		}
+		SetCurrentInteractableInterface(OutHit.GetComponent());
 	}
 	else
 	{
 		SetCurrentInteractableInterface(nullptr);
-		TracedComponent.Reset();
 	}
 
-	if (InteractPawn.IsValid() && HeldComponent.IsValid())
+	if (InteractPawn.IsValid() && GetCurrentInteractableInterface())
 	{
 		FVector EyesLocation;
 		FRotator EyesRotation;
@@ -119,11 +112,12 @@ void ULimenPhysicsInteractionComponent::UpdateInteraction(const float DeltaTime)
 
 void ULimenPhysicsInteractionComponent::Interacted(UActorComponent* Component)
 {
-	Super::Interacted(Component);
-
 	if (!GetCurrentInteractableInterface().GetObject()) return;
-	HeldComponent = TracedComponent;
-	if (!HeldComponent.IsValid()) return;
+	if (!GetCurrentInteractableInterface()->AllowPhysicsInteraction()) return;
+	if (!GetCurrentInteractableInterface()->GetPrimitiveComponent()->IsSimulatingPhysics()) return;
+
+	UPrimitiveComponent* InteractionComponent = GetCurrentInteractableInterface()->GetPrimitiveComponent();
+	if (!InteractionComponent) return;
 
 	FVector EyesLocation;
 	FRotator EyesRotation;
@@ -131,20 +125,22 @@ void ULimenPhysicsInteractionComponent::Interacted(UActorComponent* Component)
 	const FTransform EyesTransform = FTransform(EyesRotation, EyesLocation);
 
 	{
-		const FQuat RelQuat = EyesTransform.InverseTransformRotation(HeldComponent->GetComponentQuat());
+		const FQuat RelQuat = EyesTransform.InverseTransformRotation(InteractionComponent->GetComponentQuat());
 		GrabRotation = RelQuat.Rotator();
 	}
 	{
 
-		const FVector RelLocation = EyesTransform.InverseTransformPosition(HeldComponent->GetComponentLocation());
+		const FVector RelLocation = EyesTransform.InverseTransformPosition(InteractionComponent->GetComponentLocation());
 		GrabLocation = RelLocation;
 	}
 
-	TraceQueryParams.AddIgnoredSourceObject(HeldComponent.Get());
+	TraceQueryParams.AddIgnoredSourceObject(InteractionComponent);
 
 	const FVector TargetLocation = EyesLocation + EyesRotation.Vector() * GrabLocation.Length();
 	const FRotator TargetRotation = FRotator::ZeroRotator;
-	PhysicsHandle->GrabComponentAtLocation(HeldComponent.Get(), NAME_None, TargetLocation);
+	PhysicsHandle->GrabComponentAtLocation(InteractionComponent, NAME_None, TargetLocation);
+	
+	Super::Interacted(Component);
 }
 
 void ULimenPhysicsInteractionComponent::InteractionStopped(UActorComponent* Component)
@@ -153,9 +149,6 @@ void ULimenPhysicsInteractionComponent::InteractionStopped(UActorComponent* Comp
 
 	TraceQueryParams.ClearIgnoredSourceObjects();
 	TraceQueryParams.AddIgnoredSourceObject(GetOwner());
-	HeldComponent.Reset();
-	TracedComponent.Reset();
-	InteractionComponent.Reset();
 	SetCurrentInteractableInterface(nullptr);
 
 	GrabLocation = FVector::ZeroVector;

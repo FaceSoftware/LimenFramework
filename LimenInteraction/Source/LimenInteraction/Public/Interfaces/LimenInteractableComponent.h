@@ -39,5 +39,6 @@ public:
 	virtual void Interact(AController* InController, APawn* InPawn) = 0;
 	virtual void StopInteraction(AController* InController, APawn* InPawn) = 0;
 
+	virtual bool AllowPhysicsInteraction() const = 0;
 	virtual bool IsBeingInteracted() const = 0;
 };

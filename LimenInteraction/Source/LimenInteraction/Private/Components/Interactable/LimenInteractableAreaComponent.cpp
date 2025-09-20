@@ -16,7 +16,7 @@ void ULimenInteractableAreaComponent::OnComponentCreated()
 	SetCollisionProfileName(TEXT("OverlapAllDynamic"));
 }
 
-void ULimenInteractableAreaComponent::Activate(bool bReset)
+void ULimenInteractableAreaComponent::Activate(const bool bReset)
 {
 	Super::Activate(bReset);
 
@@ -49,6 +49,11 @@ void ULimenInteractableAreaComponent::NotifyHover(AController* Controller, APawn
 void ULimenInteractableAreaComponent::NotifyUnHover(AController* Controller, APawn* Pawn)
 {
 	BP_OnHoverEnd.Broadcast(Controller, Pawn);
+}
+
+bool ULimenInteractableAreaComponent::AllowPhysicsInteraction() const
+{
+	return false;
 }
 
 bool ULimenInteractableAreaComponent::IsBeingInteracted() const

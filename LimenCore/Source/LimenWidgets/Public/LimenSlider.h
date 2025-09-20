@@ -40,6 +40,7 @@ enum class ELimenSliderDisplay : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLimenSliderEvent, ELimenSliderInput, InputType, float, NewValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLimenSliderBlinkEvent, const bool, bBlink);
 
 USTRUCT(BlueprintType)
 struct FValueColor
@@ -63,6 +64,8 @@ class LIMENWIDGETS_API ULimenSlider : public UWidget
 public:
 	UPROPERTY(BlueprintAssignable)
 	FLimenSliderEvent OnNewValueSet;
+	UPROPERTY(BlueprintAssignable)
+	FLimenSliderBlinkEvent OnBlink;
 	
 	ULimenSlider();
 
@@ -78,6 +81,12 @@ public:
 	void SetDecimalDigitsCount(const int32 NewDecimalDigits);
 	UFUNCTION(BlueprintCallable)
 	int32 GetDecimalDigitsCount() const;
+	UFUNCTION(BlueprintCallable)
+	void SetBlinkState(const bool bNewState);
+	UFUNCTION(BlueprintCallable)
+	void SetBlinkColor(const FSlateColor InColor);
+	UFUNCTION(BlueprintCallable)
+	bool IsBlinking() const;
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -105,6 +114,11 @@ protected:
 	FSlateBrush SliderBrush;
 	UPROPERTY(EditAnywhere)
 	FMargin SliderPadding;
+
+	UPROPERTY(EditAnywhere, Category="Blinking")
+	FSlateColor BlinkColor;
+	UPROPERTY(EditAnywhere, Category="Blinking", meta=(ClampMin="0"))
+	float BlinkSpeed;
 
 	UPROPERTY(EditAnywhere, Category="Display")
 	ELimenSliderDisplay SliderDisplayMethod;
@@ -166,7 +180,10 @@ private:
 	TSharedPtr<SWidget> SliderDisplay;
 	TSharedPtr<SEditableText> SliderTextDisplay;
 	TSharedPtr<SImage> SliderImageDisplay;
-	
+
+	bool bIsBlinking;
+	bool bIsBlinkColorActive;
+	FTimerHandle BlinkTimer;
 
 	bool ValidateTextInput(const FString& InputText) const;
 	FText GetValueAsText() const;
@@ -174,4 +191,7 @@ private:
 	void UpdateSliderPositionWithCursorPosition(const FGeometry& MyGeometry, const float LocalMouseX);
 	void SetValueInternal(const ELimenSliderInput InputType, const float Value, const bool bShouldBroadcast);
 	void WorldTick(UWorld* WorldPtr, const ELevelTick LevelTick, const float DeltaTime);
+
+	void SetBlink();
+	void SetColorBasedOnValue(const float Value);
 };

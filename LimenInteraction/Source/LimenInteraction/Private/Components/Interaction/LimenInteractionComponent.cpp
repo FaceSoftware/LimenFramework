@@ -223,7 +223,14 @@ void ULimenInteractionComponent::UpdateInteraction(const float DeltaTime)
 
 void ULimenInteractionComponent::SetCurrentInteractableInterface(UActorComponent* InComponent)
 {
-	CurrentInteractableInterface = TScriptInterface<ILimenInteractableComponent>(InComponent);
+	if (InComponent && InComponent->Implements<ULimenInteractableComponent>())
+	{
+		CurrentInteractableInterface = TScriptInterface<ILimenInteractableComponent>(InComponent);
+	}
+	else
+	{
+		CurrentInteractableInterface = nullptr;
+	}
 }
 
 TScriptInterface<ILimenInteractableComponent> ULimenInteractionComponent::GetCurrentInteractableInterface() const
