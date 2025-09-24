@@ -32,14 +32,14 @@ public:
 	virtual void BeginPlay() override;
 	virtual void GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView) override;
 
-	void SetTiltEnabled(const bool bEnabled);
-	void NotifyYawInput(const float InputValue);
+	FORCEINLINE void SetTiltEnabled(const bool bEnabled);
+	FORCEINLINE void NotifyYawInput(const float InputValue);
 	UFUNCTION(BlueprintCallable)
 	virtual void Zoom(float Amount);
 	UFUNCTION(BlueprintCallable)
-	FFloatRange GetZoomRange() const;
+	FORCEINLINE FFloatRange GetZoomRange() const;
 	UFUNCTION(BlueprintCallable)
-	float GetCurrentZoom() const;
+	FORCEINLINE float GetCurrentZoom() const;
 	/**
 	 * @brief Current zoom in a [0, 1] range.
 	 * @return Zero if zoom it at minimum. One if it is at maximum. Any other value returns the corresponding value in between.
