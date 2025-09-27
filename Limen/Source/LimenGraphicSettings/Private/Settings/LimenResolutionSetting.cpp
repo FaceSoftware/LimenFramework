@@ -12,17 +12,16 @@
 #include "Framework/Application/SlateApplication.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Settings/LimenWindowModeSetting.h"
-#include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 #include "Subsystems/LimenModalsSubsystem.h"
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 
 
 const FString ULimenResolutionSetting::ConfirmationModalTitle = TEXT("New resolution");
-const FString ULimenResolutionSetting::SecondsTag = TEXT("%SECONDS");
-const FString ULimenResolutionSetting::ConfirmationModalText = TEXT("To prevent the UI screen from becoming unusable, "
+const FString ULimenResolutionSetting::SecondsTag = TEXT("%SECONDS%");
+const FString ULimenResolutionSetting::ConfirmationModalText = TEXT("To prevent the UI from becoming unusable, "
 																	"the settings will be reverted in " + SecondsTag +
 																	" seconds. Click \"Ok\" if the current resolution"
-																	" works for your monitor.");
+																	" WORKS for your monitor.");
 const float ULimenResolutionSetting::ResolutionChangeTimeout = 10.f;
 
 ULimenResolutionSetting::ULimenResolutionSetting(): bIsResolutionChangeConfirmed(false), bShouldTick(false),
@@ -119,7 +118,7 @@ void ULimenResolutionSetting::ApplyCurrentSetting(const bool bUserRequest)
 		return;
 	}
 	
-	const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+	ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
 	ModalWidget = ModalsSubsystem->DisplayConfirmationModal({
 		ConfirmationModalTitle, FormatModalText(10)
 	});

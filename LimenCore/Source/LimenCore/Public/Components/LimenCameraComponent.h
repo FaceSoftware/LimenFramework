@@ -26,7 +26,9 @@ class LIMENCORE_API ULimenCameraComponent : public UCameraComponent
 
 public:
 	UPROPERTY(BlueprintAssignable)
-	FZoomDelegate OnZoomValueChanged;
+	FZoomDelegate OnCameraZoomValueChanged;
+	UPROPERTY(BlueprintAssignable)
+	FZoomDelegate OnFirstPersonZoomValueChanged;
 
 	ULimenCameraComponent();
 	virtual void BeginPlay() override;
@@ -35,17 +37,27 @@ public:
 	FORCEINLINE void SetTiltEnabled(const bool bEnabled);
 	FORCEINLINE void NotifyYawInput(const float InputValue);
 	UFUNCTION(BlueprintCallable)
-	virtual void Zoom(float Amount);
+	virtual void CameraZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE FFloatRange GetZoomRange() const;
+	virtual void FirstPersonZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE float GetCurrentZoom() const;
+	FORCEINLINE FFloatRange GetCameraZoomRange() const;
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE float GetCurrentCameraZoom() const;
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE float GetCurrentFirstPersonZoom() const;
 	/**
 	 * @brief Current zoom in a [0, 1] range.
 	 * @return Zero if zoom it at minimum. One if it is at maximum. Any other value returns the corresponding value in between.
 	 */
 	UFUNCTION(BlueprintCallable)
-	float GetCurrentZoomNormalized() const;
+	float GetCurrentCameraZoomNormalized() const;
+	/**
+	 * @brief Current zoom in a [0, 1] range.
+	 * @return Zero if zoom it at minimum. One if it is at maximum. Any other value returns the corresponding value in between.
+	 */
+	UFUNCTION(BlueprintCallable)
+	float GetCurrentFirstPersonZoomNormalized() const;
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(EditCondition="bEnableTilt"))
@@ -61,7 +73,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt")
 	bool bEnableTilt;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
-	FFloatRange ZoomRange;
+	FFloatRange CameraZoomRange;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
+	FFloatRange FirstPersonZoomRange;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
 	float ZoomMultiplier;
 	

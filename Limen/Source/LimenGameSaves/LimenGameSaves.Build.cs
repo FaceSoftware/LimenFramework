@@ -12,6 +12,7 @@ public class LimenGameSaves : ModuleRules
                 "Core",
                 "LimenSaveSystem",
                 "DeveloperSettings",
+                "LimenModals",
             }
         );
 

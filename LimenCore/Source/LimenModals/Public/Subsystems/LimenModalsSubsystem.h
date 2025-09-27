@@ -22,9 +22,9 @@ class LIMENMODALS_API ULimenModalsSubsystem : public UGameInstanceSubsystem
 public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
-	ULimenGenericModalWidget* DisplayConfirmationModal(const FModalParams& InParams) const;
-	ULimenGenericModalWidget* DisplayConsentModal(const FModalParams& InParams) const;
-	ULimenGenericModalWidget* DisplayTimedModal(const FModalParams& InParams) const;
+	ULimenGenericModalWidget* DisplayConfirmationModal(const FModalParams& InParams);
+	ULimenGenericModalWidget* DisplayConsentModal(const FModalParams& InParams);
+	ULimenGenericModalWidget* DisplayTimedModal(const FModalParams& InParams);
 
 private:
 	ULimenGenericModalWidget* DisplayModalInternal(const TSubclassOf<ULimenGenericModalWidget>& ModalClass, const FModalParams& InParams) const;

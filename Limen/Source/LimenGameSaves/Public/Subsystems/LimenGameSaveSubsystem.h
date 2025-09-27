@@ -8,6 +8,7 @@
 #include "LimenGameSaveSubsystem.generated.h"
 
 
+enum class ESaveState : uint8;
 class ULimenGenericModalWidget;
 struct FActorsInitializedParams;
 class ULimenSaveSubsystem;
@@ -15,10 +16,21 @@ class ULimenGameSaveData;
 struct FActorSaveData;
 
 DECLARE_MULTICAST_DELEGATE(FGameSaveDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGameSaveState, ESaveState, SaveState);
 
 /**
- * 
+ * @brief GameInstance subsystem that manages saving and loading.
+ *
+ * - Serializes ULimenSavesHandler instances into ULimenGameSaveData.
+ * - Owns the active ULimenGameSaveData and provides async save/load.
+ * - Exposes delegates for save/load state changes.
+ *
+ * Notes:
+ * - ILimenSaveObjectInterface methods are final: subsystem is always save/load eligible.
+ * - Handlers are created as temporary objects and destroyed after serialization.
+ * - Uses developer settings to resolve save handlers and modal error handling.
  */
+
 UCLASS()
 class LIMENGAMESAVES_API ULimenGameSaveSubsystem : public UGameInstanceSubsystem, public ILimenSaveObjectInterface
 {
@@ -26,9 +38,12 @@ class LIMENGAMESAVES_API ULimenGameSaveSubsystem : public UGameInstanceSubsystem
 
 public:	
 	FGameSaveDelegate OnGameDataLoaded;
+	UPROPERTY(BlueprintAssignable)
+	FGameSaveState OnGameSaveStateChanged;
 	
 	ULimenGameSaveSubsystem();
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Game Saves", meta=(WorldContext="Caller"))
 	void SaveCurrentGame(UObject* Caller);
@@ -57,15 +72,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Game Saves")
 	void DeleteGameSave();
 
-	virtual bool ShouldSaveData() const override;
-	virtual bool ShouldLoadData() const override;
-	virtual void DataSaved()override;
-	virtual void DataLoaded() override;
+	virtual bool ShouldSaveData() const override final;
+	virtual bool ShouldLoadData() const override final;
+	virtual void DataSaved() override final {}
+	virtual void DataLoaded() override final {}
 
 	UFUNCTION(BlueprintCallable)
 	const ULimenGameSaveData* GetCurrentGameSaveData() const;
 
 protected:
+	void DataSaved(const FString& SaveName, const int32 UserIndex, const bool bSuccess);
 	
 private:
 	static const FString SaveDataName;
@@ -81,6 +97,8 @@ private:
 	bool bHasLoadedGameData;
 	bool bShouldLoadGameOnMapChange;
 
+	ESaveState CurrentSaveState;
+
 	void SaveToCurrentSaveData();
 	void LoadToCurrentSaveData();
 
@@ -93,4 +111,6 @@ private:
 	void FailedToLoadDataModalDismissed(ULimenGenericModalWidget* ModalWidget, bool bAccepted);
 	UFUNCTION()
 	void FailedToSaveDataModalDismissed(ULimenGenericModalWidget* ModalWidget, bool bAccepted);
+
+	void DisplaySaveErrorModal();
 };

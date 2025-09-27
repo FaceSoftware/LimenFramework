@@ -26,6 +26,8 @@ public:
 	explicit ULimenLock(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
 
+	void SetStartLocked(const bool bNewLocked);
+
 	UFUNCTION(BlueprintCallable)
 	void SetKeyword(const FName& NewKeyword);
 	UFUNCTION(BlueprintCallable)

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
+#include "UMG/LimenGenericModalWidget.h"
 #include "LimenGameSavesDeveloperSettings.generated.h"
 
 class ULimenSavesHandler;
@@ -18,6 +19,10 @@ class LIMENGAMESAVES_API ULimenGameSavesDeveloperSettings : public UDeveloperSet
 public:
 	UPROPERTY(EditAnywhere, Config)
 	TArray<TSoftClassPtr<ULimenSavesHandler>> SaveHandlers;
+	UPROPERTY(EditAnywhere, Config)
+	FModalParams LoadGameFailedModalParams = FModalParams(TEXT("Save Data Corrupted"), TEXT("Something went wrong loading the save data."));
+	UPROPERTY(EditAnywhere, Config)
+	FModalParams SaveGameFailedModalParams = FModalParams(TEXT("Save Error"),TEXT("Something went wrong saving game data."));
 
 	virtual FName GetContainerName() const override;
 	virtual FName GetCategoryName() const override;

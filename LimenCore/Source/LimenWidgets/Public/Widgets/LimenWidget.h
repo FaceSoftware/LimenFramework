@@ -71,9 +71,9 @@ public:
 	void DestroyWidget(const bool bWaitForHideAnimation = true);
 
 protected:
-	UPROPERTY(EditAnywhere, Category="Limen|Animations", Transient, meta=(BindWidgetAnimOptional))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen|Animations", Transient, meta=(BindWidgetAnimOptional))
 	TObjectPtr<UWidgetAnimation> ShowAnimation;
-	UPROPERTY(EditAnywhere, Category="Limen|Animations", Transient, meta=(BindWidgetAnimOptional))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Limen|Animations", Transient, meta=(BindWidgetAnimOptional))
 	TObjectPtr<UWidgetAnimation> HideAnimation;
 
 	UPROPERTY(EditAnywhere, Category="Limen|Animations")

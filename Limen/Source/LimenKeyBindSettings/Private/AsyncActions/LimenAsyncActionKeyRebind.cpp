@@ -44,7 +44,7 @@ void ULimenAsyncActionKeyRebind::Activate()
 	PlayerController->SetInputMode(ELimenInputMode::Game);
 	PlayerController->DisableInput(PlayerController.Get());
 
-	const ULimenModalsSubsystem* ModalsSubsystem = World->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+	ULimenModalsSubsystem* ModalsSubsystem = World->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
 	DisplayModal = ModalsSubsystem->DisplayTimedModal(ModalParams);
 	UpdateModal();
 

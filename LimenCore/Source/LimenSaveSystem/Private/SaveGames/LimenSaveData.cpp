@@ -60,6 +60,13 @@ bool FActorSaveData::operator==(const FActorSaveData& Other) const
 	return ActorClass == Other.ActorClass;
 }
 
+bool FActorSaveData::operator==(const AActor* Other) const
+{
+	if (!Other) return !ActorClass;
+
+	return Other->GetClass() == ActorClass;
+}
+
 void FActorSaveData::SetActorName(const FName& InActorName)
 {
 	ActorName = InActorName;
@@ -81,6 +88,7 @@ void FActorSaveData::SaveActorData(AActor* InActor)
 
 	ILimenSaveObjectInterface* SaveObjectInterface = Cast<ILimenSaveObjectInterface>(InActor);
 	check(SaveObjectInterface != nullptr);
+	SaveObjectInterface->DataSaved();
 }
 
 void FActorSaveData::LoadActorData(AActor* InActor) const

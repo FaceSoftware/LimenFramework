@@ -27,19 +27,18 @@ public:
 	
 	void SaveObjectData(UObject* InObject)
 	{
+		ByteData.Empty();
+
 		ILimenSaveObjectInterface* ObjectSaveInterface = Cast<ILimenSaveObjectInterface>(InObject);
 		check(ObjectSaveInterface != nullptr);
-		if (!ByteData.IsEmpty())
-		{
-			ByteData.Empty(10);
-		}
 		
 		FMemoryWriter Writer(ByteData);
 		FObjectAndNameAsStringProxyArchive Archive(Writer, true);
 		Archive.ArIsSaveGame = true;
-	
 		InObject->Serialize(Archive);
 		ObjectClass = FSoftClassPath(InObject->GetClass());
+
+		ObjectSaveInterface->DataSaved();
 	}
 	
 	void LoadData(UObject* OutObject) const
@@ -51,8 +50,8 @@ public:
 		FMemoryReader Reader(ByteData);
 		FObjectAndNameAsStringProxyArchive Archive(Reader, true);
 		Archive.ArIsSaveGame = true;
-		
 		OutObject->Serialize(Archive);
+		
 		ObjectSaveInterface->DataLoaded();
 	}
 
@@ -89,6 +88,7 @@ public:
 	void LoadData(AActor* Actor) const;
 
 	bool operator==(const FActorSaveData& Other) const;
+	bool operator==(const AActor* Other) const;
 
 protected:
 	const TArray<uint8>& GetByteData() const;

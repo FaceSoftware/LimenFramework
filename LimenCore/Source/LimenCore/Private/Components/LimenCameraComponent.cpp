@@ -142,32 +142,53 @@ void ULimenCameraComponent::NotifyYawInput(const float InputValue)
 	CurrentTilt = TiltFunctionPtr(TiltStrength * (bInvertTilt ? -InputValue : InputValue));
 }
 
-void ULimenCameraComponent::Zoom(const float Amount)
+void ULimenCameraComponent::CameraZoom(const float Amount)
 {
 	const float PreviousZoom = FieldOfView;
-	FieldOfView = FMath::Clamp(
-		FieldOfView + Amount * ZoomMultiplier,
-		ZoomRange.GetLowerBoundValue(),
-		ZoomRange.GetUpperBoundValue());
+	FieldOfView = FMath::Clamp(FieldOfView + Amount * ZoomMultiplier,
+							   CameraZoomRange.GetLowerBoundValue(),
+							   CameraZoomRange.GetUpperBoundValue());
 
-	if (PreviousZoom != FieldOfView) OnZoomValueChanged.Broadcast(this, FieldOfView);
+	if (PreviousZoom != FieldOfView) OnCameraZoomValueChanged.Broadcast(this, FieldOfView);
 }
 
-FFloatRange ULimenCameraComponent::GetZoomRange() const
+void ULimenCameraComponent::FirstPersonZoom(const float Amount)
 {
-	return ZoomRange;
+	const float PreviousZoom = FirstPersonFieldOfView;
+	FirstPersonFieldOfView = FMath::Clamp(FirstPersonFieldOfView + Amount * ZoomMultiplier,
+							   FirstPersonZoomRange.GetLowerBoundValue(),
+							   FirstPersonZoomRange.GetUpperBoundValue());
+
+	if (PreviousZoom != FirstPersonFieldOfView) OnFirstPersonZoomValueChanged.Broadcast(this, FirstPersonFieldOfView);
 }
 
-float ULimenCameraComponent::GetCurrentZoom() const
+FFloatRange ULimenCameraComponent::GetCameraZoomRange() const
+{
+	return CameraZoomRange;
+}
+
+float ULimenCameraComponent::GetCurrentCameraZoom() const
 {
 	return FieldOfView;
 }
 
-float ULimenCameraComponent::GetCurrentZoomNormalized() const
+float ULimenCameraComponent::GetCurrentFirstPersonZoom() const
 {
-	const float RangeAmount = ZoomRange.GetUpperBoundValue() - ZoomRange.GetLowerBoundValue();
-	const float MinRangeAmount = ZoomRange.GetLowerBoundValue() / RangeAmount;
+	return FirstPersonFieldOfView;
+}
+
+float ULimenCameraComponent::GetCurrentCameraZoomNormalized() const
+{
+	const float RangeAmount = CameraZoomRange.GetUpperBoundValue() - CameraZoomRange.GetLowerBoundValue();
+	const float MinRangeAmount = CameraZoomRange.GetLowerBoundValue() / RangeAmount;
 	return (FieldOfView / RangeAmount) - MinRangeAmount;
+}
+
+float ULimenCameraComponent::GetCurrentFirstPersonZoomNormalized() const
+{
+	const float RangeAmount = FirstPersonZoomRange.GetUpperBoundValue() - FirstPersonZoomRange.GetLowerBoundValue();
+	const float MinRangeAmount = FirstPersonZoomRange.GetLowerBoundValue() / RangeAmount;
+	return (FirstPersonFieldOfView / RangeAmount) - MinRangeAmount;
 }
 
 void ULimenCameraComponent::SetTiltFunctionPtr()

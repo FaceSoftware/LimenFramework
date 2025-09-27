@@ -32,6 +32,7 @@ void ULimenGameSaveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	Collection.InitializeDependency(ULimenSaveSubsystem::StaticClass());
+
 	SaveSubsystem = ULimenSaveSubsystem::Get(GetWorld());
 	check(SaveSubsystem != nullptr);
 
@@ -43,6 +44,14 @@ void ULimenGameSaveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	});
 
 	LoadToCurrentSaveData();
+}
+
+void ULimenGameSaveSubsystem::Deinitialize()
+{
+	Super::Deinitialize();
+
+	FWorldDelegates::OnWorldInitializedActors.RemoveAll(this);
+	FWorldDelegates::OnPostWorldInitialization.RemoveAll(this);
 }
 
 void ULimenGameSaveSubsystem::SaveCurrentGame(UObject* Caller)
@@ -80,17 +89,8 @@ void ULimenGameSaveSubsystem::SaveCurrentGame(UWorld* InWorld)
 
 	if (!InitializeHandlersForSaving() || CurrentGameSaveData->GameLevelIndex == INDEX_NONE)
 	{
-		const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
-		check(ModalsSubsystem != nullptr);
-
-		ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(
-			FModalParams(
-				TEXT("Save Error"),
-				TEXT(
-					"Something went wrong saving game data. The game will resume play but data won't be saved until a next save point is reached.")));
-		check(Modal != nullptr)
-
-		Modal->OnModalResponseReceived.AddDynamic(this, &ThisClass::FailedToSaveDataModalDismissed);
+		DisplaySaveErrorModal();
+		return;
 	}
 	
 	SaveToCurrentSaveData();
@@ -117,10 +117,12 @@ void ULimenGameSaveSubsystem::LoadCurrentGame(UWorld* InWorld)
 	
 	if (!InitializeHandlersForLoading())
 	{
-		const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+		ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
 		check(ModalsSubsystem != nullptr);
 
-		ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(FModalParams(TEXT("Save Data Corrupted"), TEXT("Something went wrong loading the save data.")));
+		const ULimenGameSavesDeveloperSettings* Settings = GetDefault<ULimenGameSavesDeveloperSettings>();
+
+		ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(Settings->LoadGameFailedModalParams);
 		check(Modal != nullptr)
 
 		Modal->OnModalResponseReceived.AddDynamic(this, &ThisClass::FailedToLoadDataModalDismissed);
@@ -157,54 +159,63 @@ bool ULimenGameSaveSubsystem::ShouldLoadData() const
 	return true;
 }
 
-void ULimenGameSaveSubsystem::DataSaved()
-{
-}
-
-void ULimenGameSaveSubsystem::DataLoaded()
-{
-}
-
 const ULimenGameSaveData* ULimenGameSaveSubsystem::GetCurrentGameSaveData() const
 {
 	return CurrentGameSaveData.Get();
 }
 
+void ULimenGameSaveSubsystem::DataSaved(const FString& SaveName, const int32 UserIndex, const bool bSuccess)
+{
+	CurrentSaveState = ESaveState::SavingComplete;
+	OnGameSaveStateChanged.Broadcast(CurrentSaveState);
+}
+
 void ULimenGameSaveSubsystem::SaveToCurrentSaveData()
 {
-	SaveSubsystem->SaveData(CurrentGameSaveData.Get(), GameSaveDataFolder / SaveDataName);
+	CurrentSaveState = ESaveState::Saving;
+	OnGameSaveStateChanged.Broadcast(CurrentSaveState);
+
+	SaveSubsystem->SaveDataAsync(CurrentGameSaveData.Get(), GameSaveDataFolder / SaveDataName,
+		[this] (const FString& SaveName, const int32 UserIndex, const bool bSuccess)
+		{
+			DataSaved(SaveName, UserIndex, bSuccess);
+		});
 }
 
 void ULimenGameSaveSubsystem::LoadToCurrentSaveData()
 {
+	CurrentSaveState = ESaveState::Loading;
+	OnGameSaveStateChanged.Broadcast(CurrentSaveState);
+
 	CurrentGameSaveData = SaveSubsystem->LoadData<ULimenGameSaveData>(GameSaveDataFolder / SaveDataName);
+
+	CurrentSaveState = ESaveState::LoadingComplete;
+	OnGameSaveStateChanged.Broadcast(CurrentSaveState);
 }
 
 bool ULimenGameSaveSubsystem::InitializeHandlersForSaving()
 {
-	CurrentGameSaveData->StoredSaveHandlers.Empty(0);
 	const ULimenGameSavesDeveloperSettings* Settings = GetDefault<ULimenGameSavesDeveloperSettings>();
+
+	TArray<FObjectSaveData> HandlerData;
+	HandlerData.Reserve(Settings->SaveHandlers.Num());
+
 	for (auto& HandlerClass : Settings->SaveHandlers)
 	{
-		if (HandlerClass.IsNull())
-		{
-			continue;
-		}
+		if (HandlerClass.IsNull()) { continue; }
 		
 		ULimenSavesHandler* Handler = NewObject<ULimenSavesHandler>(this, HandlerClass.LoadSynchronous());
-		if (Handler->SaveDataFrom(GetWorld()))
-		{
-			CurrentGameSaveData->StoredSaveHandlers.Push(FObjectSaveData(Handler));
-		}
-		else
+		if (!Handler->SaveDataFrom(GetWorld()))
 		{
 			Handler->ConditionalBeginDestroy();
 			return false;
 		}
 
+		HandlerData.Push(FObjectSaveData(Handler));
 		Handler->ConditionalBeginDestroy();
 	}
 
+	CurrentGameSaveData->StoredSaveHandlers = MoveTemp(HandlerData);
 	return true;
 }
 
@@ -214,12 +225,8 @@ bool ULimenGameSaveSubsystem::InitializeHandlersForLoading()
 	{
 		check(!HandlerData.GetObjectClass().IsNull());
 
-		FSoftClassPath HandlerClassPath = HandlerData.GetObjectClass();
-		const UClass* HandlerClass = HandlerClassPath.TryLoadClass<ULimenSavesHandler>();
-		if (HandlerClass == nullptr)
-		{
-			continue;
-		}
+		const UClass* HandlerClass = HandlerData.GetObjectClass().TryLoadClass<ULimenSavesHandler>();
+		if (!HandlerClass) return false;
 		
 		ULimenSavesHandler* Handler = NewObject<ULimenSavesHandler>(this, HandlerClass);
 		HandlerData.LoadData(Handler); // Load the saved data to the handler
@@ -269,4 +276,16 @@ void ULimenGameSaveSubsystem::FailedToLoadDataModalDismissed(ULimenGenericModalW
 void ULimenGameSaveSubsystem::FailedToSaveDataModalDismissed(ULimenGenericModalWidget* ModalWidget, bool bAccepted)
 {
 	ModalWidget->OnModalResponseReceived.RemoveDynamic(this, &ThisClass::FailedToSaveDataModalDismissed);
+}
+
+void ULimenGameSaveSubsystem::DisplaySaveErrorModal()
+{
+	ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+	check(ModalsSubsystem != nullptr);
+
+	const ULimenGameSavesDeveloperSettings* Settings = GetDefault<ULimenGameSavesDeveloperSettings>();
+	ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(Settings->SaveGameFailedModalParams);
+
+	if (!Modal) { return; }
+	Modal->OnModalResponseReceived.AddDynamic(this, &ThisClass::FailedToSaveDataModalDismissed);
 }
