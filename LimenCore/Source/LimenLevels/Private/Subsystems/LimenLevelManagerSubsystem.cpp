@@ -4,7 +4,6 @@
 #include "Subsystems/LimenLevelManagerSubsystem.h"
 
 #include "Developer/LimenLevelsDeveloperSettings.h"
-#include "Engine/AssetManager.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -22,6 +21,10 @@ bool ULimenLevelManagerSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 void ULimenLevelManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+#if !WITH_EDITOR
+	OpenInitializationLevel();
+#endif
 }
 
 void ULimenLevelManagerSubsystem::Deinitialize()
@@ -129,5 +132,5 @@ void ULimenLevelManagerSubsystem::ConnectToServer_Internal(const FString& IPAddr
 
 void ULimenLevelManagerSubsystem::OpenOfflineLevel_Internal(const FString& LevelName, const FString& Options)
 {
-	GetWorld()->GetFirstPlayerController()->ClientTravel(LevelName + Options, TRAVEL_Absolute, true);
+	UGameplayStatics::OpenLevel(this, FName(LevelName), TRAVEL_Absolute, Options);
 }

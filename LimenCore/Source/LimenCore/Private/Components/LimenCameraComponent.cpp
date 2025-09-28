@@ -34,6 +34,9 @@ void ULimenCameraComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	BaseCameraFOV = FieldOfView;
+	BaseFirstPersonFOV = FirstPersonFieldOfView;
+
 	bOriginalUsePawnControlRotation = bUsePawnControlRotation;
 	
 	bIsTiltEnabled = bEnableTilt;
@@ -152,12 +155,28 @@ void ULimenCameraComponent::CameraZoom(const float Amount)
 	if (PreviousZoom != FieldOfView) OnCameraZoomValueChanged.Broadcast(this, FieldOfView);
 }
 
+void ULimenCameraComponent::SetCameraZoom(const float Amount)
+{
+	const float PreviousZoom = FieldOfView;
+	FieldOfView = FMath::Clamp(Amount, CameraZoomRange.GetLowerBoundValue(), CameraZoomRange.GetUpperBoundValue());
+
+	if (PreviousZoom != FieldOfView) OnCameraZoomValueChanged.Broadcast(this, FieldOfView);
+}
+
 void ULimenCameraComponent::FirstPersonZoom(const float Amount)
 {
 	const float PreviousZoom = FirstPersonFieldOfView;
 	FirstPersonFieldOfView = FMath::Clamp(FirstPersonFieldOfView + Amount * ZoomMultiplier,
 							   FirstPersonZoomRange.GetLowerBoundValue(),
 							   FirstPersonZoomRange.GetUpperBoundValue());
+
+	if (PreviousZoom != FirstPersonFieldOfView) OnFirstPersonZoomValueChanged.Broadcast(this, FirstPersonFieldOfView);
+}
+
+void ULimenCameraComponent::SetFirstPersonZoom(float Amount)
+{
+	const float PreviousZoom = FirstPersonFieldOfView;
+	FirstPersonFieldOfView = FMath::Clamp(Amount, FirstPersonZoomRange.GetLowerBoundValue(), FirstPersonZoomRange.GetUpperBoundValue());
 
 	if (PreviousZoom != FirstPersonFieldOfView) OnFirstPersonZoomValueChanged.Broadcast(this, FirstPersonFieldOfView);
 }

@@ -56,14 +56,38 @@ bool ALimenLevelSequenceTrigger::IsEnabled() const
 	return bIsTriggerEnabled;
 }
 
+bool ALimenLevelSequenceTrigger::ShouldSaveData() const
+{
+	return true;
+}
+
+bool ALimenLevelSequenceTrigger::ShouldLoadData() const
+{
+	return true;
+}
+
+void ALimenLevelSequenceTrigger::DataSaved()
+{
+}
+
+void ALimenLevelSequenceTrigger::DataLoaded()
+{
+	if (!bAllowMultipleExecution && bWasTriggered || bDestroyAfterFinish && bWasTriggered)
+	{
+		SetTriggerEnabled(false);
+		UnloadSequence();
+	}
+}
+
 void ALimenLevelSequenceTrigger::TriggerBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                                         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-														bool bFromSweep, const FHitResult& SweepResult)
+                                                        bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!OtherActor) return;
 	if (!OtherActor->GetClass()) return;
 	if (!ActorsAllowedToTrigger.IsEmpty() && !ActorsAllowedToTrigger.Contains(OtherActor->GetClass())) return;
 
+	bWasTriggered = true;
 	if (!IsSequenceLoaded())
 	{
 		LoadSequence();

@@ -38,8 +38,10 @@ public:
 	FORCEINLINE void NotifyYawInput(const float InputValue);
 	UFUNCTION(BlueprintCallable)
 	virtual void CameraZoom(float Amount);
+	virtual void SetCameraZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
 	virtual void FirstPersonZoom(float Amount);
+	virtual void SetFirstPersonZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE FFloatRange GetCameraZoomRange() const;
 	UFUNCTION(BlueprintCallable)
@@ -88,6 +90,9 @@ private:
 
 	bool bOriginalUsePawnControlRotation;
 	TFunction<float(float)> TiltFunctionPtr;
+
+	float BaseCameraFOV;
+	float BaseFirstPersonFOV;
 
 	void SetTiltFunctionPtr();
 

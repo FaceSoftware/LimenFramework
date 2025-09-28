@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Actors/LimenGameplayActor.h"
+#include "Interfaces/LimenSaveObjectInterface.h"
 #include "LimenLevelSequenceTrigger.generated.h"
 
 
@@ -16,7 +17,7 @@ class UBoxComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLimenLevelSequenceTriggered, AActor*, TriggeringActor);
 
 UCLASS(Blueprintable)
-class LIMENCINEMATICS_API ALimenLevelSequenceTrigger : public ALimenGameplayActor
+class LIMENCINEMATICS_API ALimenLevelSequenceTrigger : public ALimenGameplayActor, public ILimenSaveObjectInterface
 {
 	GENERATED_BODY()
 
@@ -32,6 +33,11 @@ public:
 	void SetTriggerEnabled(const bool bNewEnabled);
 	UFUNCTION(BlueprintCallable)
 	bool IsEnabled() const;
+
+	virtual bool ShouldSaveData() const override;
+	virtual bool ShouldLoadData() const override;
+	virtual void DataSaved() override;
+	virtual void DataLoaded() override;
 
 protected:
 	inline static ECollisionEnabled::Type CollisionEnabledType = ECollisionEnabled::QueryAndPhysics;
@@ -64,6 +70,8 @@ protected:
 	virtual void SequenceFinished();
 
 private:
+	UPROPERTY(SaveGame)
+	bool bWasTriggered;
 	bool bIsTriggerEnabled;
 	TStrongObjectPtr<ULevelSequencePlayer> SequencePlayerStrongPtr;
 	TWeakObjectPtr<ALevelSequenceActor> SequenceActorWeakPtr;

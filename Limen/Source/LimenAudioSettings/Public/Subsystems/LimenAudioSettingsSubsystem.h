@@ -22,6 +22,5 @@ protected:
 	virtual void LoadDefaultSettingsList() override;
 
 private:
-	UPROPERTY()
-	TObjectPtr<const ULimenAudioDeveloperSettings> SubsystemSettings;
+	TWeakObjectPtr<const ULimenAudioDeveloperSettings> SubsystemSettings;
 };
