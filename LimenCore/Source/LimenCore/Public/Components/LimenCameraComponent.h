@@ -37,10 +37,10 @@ public:
 	FORCEINLINE void SetTiltEnabled(const bool bEnabled);
 	FORCEINLINE void NotifyYawInput(const float InputValue);
 	UFUNCTION(BlueprintCallable)
-	virtual void CameraZoom(float Amount);
+	virtual void AddCameraZoom(float Amount);
 	virtual void SetCameraZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
-	virtual void FirstPersonZoom(float Amount);
+	virtual void AddFirstPersonZoom(float Amount);
 	virtual void SetFirstPersonZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE FFloatRange GetCameraZoomRange() const;
@@ -80,6 +80,10 @@ protected:
 	FFloatRange FirstPersonZoomRange;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
 	float ZoomMultiplier;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(ClampMin=0))
+	float CameraZoomInterpolationSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(ClampMin=0))
+	float FirstPersonZoomInterpolationSpeed;
 	
 private:
 	TWeakObjectPtr<APlayerController> PlayerController;
@@ -92,10 +96,15 @@ private:
 	TFunction<float(float)> TiltFunctionPtr;
 
 	float BaseCameraFOV;
+	float TargetCameraFOV;
 	float BaseFirstPersonFOV;
+	float TargetFirstPersonFOV;
 
 	void SetTiltFunctionPtr();
 
 	float CalculateLinearTilt(const float Target = 0.f);
 	float CalculateEaseInTilt(const float Target = 0.f);
+
+	float ZoomToFOV(float InZoom, const FFloatRange& FOVRange);
+	float FOVToZoom(float InFOV, const FFloatRange& FOVRange);
 };

@@ -27,7 +27,7 @@ void ULimenOverallQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 	QualityLevels.AntiAliasingQuality = FMath::Max(1, Level);
 	QualityLevels.ShadowQuality = FMath::Max(1, Level);
 	QualityLevels.GlobalIlluminationQuality = FMath::Max(2, Level);
-	QualityLevels.ReflectionQuality =  FMath::Max(2, Level);
+	QualityLevels.ReflectionQuality =  FMath::Max(1, Level);
 	QualityLevels.PostProcessQuality = FMath::Max(2, Level);
 	QualityLevels.TextureQuality = Level;
 	QualityLevels.EffectsQuality = Level;
