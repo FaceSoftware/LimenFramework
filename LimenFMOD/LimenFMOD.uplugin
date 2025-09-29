@@ -1,0 +1,23 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "LimenFMOD",
+	"Description": "",
+	"Category": "Other",
+	"CreatedBy": "FaceSoftware",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "LimenFMOD",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
