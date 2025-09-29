@@ -3,34 +3,47 @@
 
 #include "Components/LimenFMODAudioComponent.h"
 
+#include "GameMode/LimenGameModeBase.h"
 
-// Sets default values for this component's properties
+
 ULimenFMODAudioComponent::ULimenFMODAudioComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	bPausePlaybackWithWorld = true;
+	bAutoActivate = false;
 }
 
-
-// Called when the game starts
 void ULimenFMODAudioComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	if (GetOwner()->HasAuthority())
+	{
+		GetWorld()->GetAuthGameMode<ALimenGameModeBase>()->OnGamePauseStateChanged.AddUniqueDynamic(this, &ThisClass::GamePausedStateChanged);
+	}
+}
+
+void ULimenFMODAudioComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GetWorld()->GetAuthGameMode<ALimenGameModeBase>()->OnGamePauseStateChanged.RemoveDynamic(this, &ThisClass::GamePausedStateChanged);
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void ULimenFMODAudioComponent::SetPausePlaybackWithWorld(const bool bPause)
+{
+	bPausePlaybackWithWorld = bPause;
+}
+
+void ULimenFMODAudioComponent::GamePausedStateChanged(const bool bIsPaused)
+{
+	if (bPausePlaybackWithWorld)
+	{
+		SetPaused(bIsPaused);
+	}
+}
+
+ALimenFMODAmbientSound::ALimenFMODAmbientSound(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass(TEXT("FMODAudioComponent0"), ULimenFMODAudioComponent::StaticClass()))
+{
 	
 }
-
-
-// Called every frame
-void ULimenFMODAudioComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                             FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-

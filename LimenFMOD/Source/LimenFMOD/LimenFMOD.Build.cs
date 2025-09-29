@@ -26,6 +26,8 @@ public class LimenFMOD : ModuleRules
 			new string[]
 			{
 				"Core",
+				"FMODStudio",
+				"LimenCore"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -38,6 +40,8 @@ public class LimenFMOD : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				
+				"LimenGameFramework",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

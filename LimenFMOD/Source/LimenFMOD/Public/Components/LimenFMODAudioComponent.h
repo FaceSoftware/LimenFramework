@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FMODAudioComponent.h"
+#include "FMODAmbientSound.h"
 #include "LimenFMODAudioComponent.generated.h"
 
+
+enum class EPauseReason : uint8;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENFMOD_API ULimenFMODAudioComponent : public UFMODAudioComponent
@@ -13,15 +15,28 @@ class LIMENFMOD_API ULimenFMODAudioComponent : public UFMODAudioComponent
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
 	ULimenFMODAudioComponent();
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	UFUNCTION(BlueprintCallable)
+	void SetPausePlaybackWithWorld(const bool bPause);
 
 protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+	UPROPERTY(EditAnywhere)
+	bool bPausePlaybackWithWorld;
+
+private:
+	UFUNCTION()
+	void GamePausedStateChanged(const bool bIsPaused);
+};
+
+UCLASS()
+class LIMENFMOD_API ALimenFMODAmbientSound : public AFMODAmbientSound
+{
+	GENERATED_BODY()
 
 public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
+	explicit ALimenFMODAmbientSound(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	
 };

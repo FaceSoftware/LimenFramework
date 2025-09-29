@@ -3,23 +3,40 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/LimenGameplayManager.h"
+#include "FMODBlueprintStatics.h"
+#include "Actors/LimenGameplayActor.h"
 #include "LimenFMODAudioVolume.generated.h"
 
-UCLASS()
-class LIMENFMOD_API ALimenFMODAudioVolume : public ALimenGameplayManager
+class UBoxComponent;
+
+UCLASS(DisplayName="Limen FMOD Audio Volume")
+class LIMENFMOD_API ALimenFMODAudioVolume : public ALimenGameplayActor
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	ALimenFMODAudioVolume();
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FMOD Audio Volume")
+	TObjectPtr<UBoxComponent> VolumeBounds;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FMOD Audio Volume")
+	TArray<TSubclassOf<AActor>> ActorsAllowedToTrigger;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FMOD Audio Volume")
+	TObjectPtr<UFMODEvent> AudioEvent;
 
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UFUNCTION()
+	virtual void BoundsBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+									UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+									const FHitResult& SweepResult);
+	UFUNCTION()
+	virtual void BoundsEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+								  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	bool CanActorTriggerThis(const AActor* Test) const;
+
+private:
+	FFMODEventInstance EventInstance;
 };
