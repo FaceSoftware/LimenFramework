@@ -26,10 +26,15 @@ public:
 	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
-	FString FmodVcaName;
-
-	FMOD::Studio::Bus* FmodBus;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Volume Level Setting")
+	TObjectPtr<USoundClass> SoundClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Volume Level Setting")
+	TObjectPtr<USoundMix> SoundMix;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Volume Level Setting|FMOD")
+	FString FmodBusName;
 
 	virtual void SetDefaults() override;
+
+private:
+	FMOD::Studio::Bus* FmodBus;
 };

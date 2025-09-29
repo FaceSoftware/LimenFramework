@@ -23,6 +23,7 @@ void ULimenVolumeLevelSetting::ApplyCurrentSetting(const bool bUserRequest)
 	Super::ApplyCurrentSetting();
 
 	if (FmodBus) FmodBus->setVolume(GetCurrentValue());
+	if (SoundClass) SoundClass->Properties.Volume = GetCurrentValue();
 }
 
 void ULimenVolumeLevelSetting::SetDefaults()
@@ -35,10 +36,9 @@ void ULimenVolumeLevelSetting::SetDefaults()
 	DefaultSettingValue = 1.f;
 
 	const FMOD::Studio::System* StudioSystem = IFMODStudioModule::Get().GetStudioSystem(EFMODSystemContext::Runtime);
-	const FString BusPath = TEXT("bus:") + FmodVcaName;
+	const FString BusPath = TEXT("bus:/") + FmodBusName;
 	const FMOD_RESULT Result = StudioSystem->getBus(TCHAR_TO_UTF8(*BusPath), &FmodBus);
-	if (Result != FMOD_OK)
-	{
-		LIMEN_LOG(LogTemp, Warning, this, TEXT("Failed to get Bus! Error: %d"), Result);
-	}
+	if (Result == FMOD_OK) { return; }
+
+	LIMEN_LOG(LogTemp, Warning, this, TEXT("Failed to get Bus! Error: %d"), Result);
 }

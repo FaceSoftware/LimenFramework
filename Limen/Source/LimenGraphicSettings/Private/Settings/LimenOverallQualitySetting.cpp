@@ -23,7 +23,7 @@ void ULimenOverallQualitySetting::ApplyCurrentSetting(const bool bUserRequest)
 
 	Scalability::FQualityLevels QualityLevels = Scalability::GetQualityLevels();
 
-	QualityLevels.ViewDistanceQuality = FMath::Min(1, Level);
+	QualityLevels.ViewDistanceQuality = FMath::Max(1, Level);
 	QualityLevels.AntiAliasingQuality = FMath::Max(1, Level);
 	QualityLevels.ShadowQuality = FMath::Max(1, Level);
 	QualityLevels.GlobalIlluminationQuality = FMath::Max(2, Level);
@@ -46,7 +46,7 @@ void ULimenOverallQualitySetting::SetDefaults()
 	PossibleSelections.Push(High);
 	PossibleSelections.Push(Epic);
 	// PossibleSelections.Push(Cinematic); Not recommended for games
-	DefaultSelection = Epic;
+	DefaultSelection = High;
 }
 
 FString ULimenOverallQualitySetting::FormatReflectionSetting(const int32 Method)
