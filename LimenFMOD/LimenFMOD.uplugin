@@ -24,6 +24,10 @@
         {
             "Name": "FMODStudio",
             "Enabled": true
+        },
+        {
+            "Name": "LimenCore",
+            "Enabled": true
         }
     ]
 }
