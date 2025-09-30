@@ -73,7 +73,6 @@ FColor ALimenItemBase::GetRenderTargetBackgroundColor(UObject* WorldContextObjec
 
 ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	bHasBeenLoaded = false;
 	RenderTargetBackgroundColor = FColor::Transparent;
 	ItemQuantity = 1;
 	RenderTargetResolution = { 512, 512 };
@@ -189,15 +188,22 @@ bool ALimenItemBase::ShouldSaveData() const
 
 bool ALimenItemBase::ShouldLoadData() const
 {
-	return bHasBeenLoaded;
+	return true;
 }
 
-void ALimenItemBase::DataLoaded()
+void ALimenItemBase::PreDataSaved()
 {
-	bHasBeenLoaded = true;
 }
 
-void ALimenItemBase::DataSaved()
+void ALimenItemBase::PostDataLoaded()
+{
+}
+
+void ALimenItemBase::PostDataSaved()
+{
+}
+
+void ALimenItemBase::PreDataLoaded()
 {
 }
 

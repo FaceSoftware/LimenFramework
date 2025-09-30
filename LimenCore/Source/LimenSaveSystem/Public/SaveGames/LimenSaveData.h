@@ -38,7 +38,7 @@ public:
 		InObject->Serialize(Archive);
 		ObjectClass = FSoftClassPath(InObject->GetClass());
 
-		ObjectSaveInterface->DataSaved();
+		ObjectSaveInterface->PostDataSaved();
 	}
 	
 	void LoadData(UObject* OutObject) const
@@ -52,7 +52,7 @@ public:
 		Archive.ArIsSaveGame = true;
 		OutObject->Serialize(Archive);
 		
-		ObjectSaveInterface->DataLoaded();
+		ObjectSaveInterface->PostDataLoaded();
 	}
 
 	const FSoftClassPath& GetObjectClass() const

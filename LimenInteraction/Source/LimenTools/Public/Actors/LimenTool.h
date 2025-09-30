@@ -47,7 +47,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Tools")
 	bool IsActive() const { return bIsActive; }
 
-	virtual void DataLoaded() override;
+	virtual void PostDataLoaded() override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")

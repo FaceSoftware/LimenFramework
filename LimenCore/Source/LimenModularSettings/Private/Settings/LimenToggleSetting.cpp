@@ -71,9 +71,9 @@ void ULimenToggleSetting::SetDefaultValue()
 	Super::SetDefaultValue();
 }
 
-void ULimenToggleSetting::DataLoaded()
+void ULimenToggleSetting::PostDataLoaded()
 {
 	bPreviousSettingState = bCurrentSettingState;
 	
-	Super::DataLoaded();
+	Super::PostDataLoaded();
 }

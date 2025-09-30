@@ -107,9 +107,9 @@ bool ALimenTool::CanActivate() const
 	return true;
 }
 
-void ALimenTool::DataLoaded()
+void ALimenTool::PostDataLoaded()
 {
-	Super::DataLoaded();
+	Super::PostDataLoaded();
 
 	if (BatteryAttribute.IsValid())
 	{

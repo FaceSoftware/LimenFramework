@@ -204,26 +204,36 @@ FFloatRange ULimenCameraComponent::GetCameraZoomRange() const
 
 float ULimenCameraComponent::GetCurrentCameraZoom() const
 {
-	return FieldOfView;
-}
-
-float ULimenCameraComponent::GetCurrentFirstPersonZoom() const
-{
-	return FirstPersonFieldOfView;
-}
-
-float ULimenCameraComponent::GetCurrentCameraZoomNormalized() const
-{
 	const float RangeAmount = CameraZoomRange.GetUpperBoundValue() - CameraZoomRange.GetLowerBoundValue();
 	const float MinRangeAmount = CameraZoomRange.GetLowerBoundValue() / RangeAmount;
 	return (FieldOfView / RangeAmount) - MinRangeAmount;
 }
 
-float ULimenCameraComponent::GetCurrentFirstPersonZoomNormalized() const
+float ULimenCameraComponent::GetCurrentFirstPersonZoom() const
 {
 	const float RangeAmount = FirstPersonZoomRange.GetUpperBoundValue() - FirstPersonZoomRange.GetLowerBoundValue();
 	const float MinRangeAmount = FirstPersonZoomRange.GetLowerBoundValue() / RangeAmount;
 	return (FirstPersonFieldOfView / RangeAmount) - MinRangeAmount;
+}
+
+float ULimenCameraComponent::CameraZoomToFOV(float InZoom)
+{
+	return InZoom * CameraZoomRange.GetUpperBoundValue();
+}
+
+float ULimenCameraComponent::FirstPersonZoomToFOV(float InZoom)
+{
+	return InZoom * FirstPersonZoomRange.GetUpperBoundValue();
+}
+
+float ULimenCameraComponent::CameraFOVToZoom(float InFOV)
+{
+	return InFOV / CameraZoomRange.GetUpperBoundValue();
+}
+
+float ULimenCameraComponent::FirstPersonFOVToZoom(float InFOV)
+{
+	return InFOV / FirstPersonZoomRange.GetUpperBoundValue();
 }
 
 void ULimenCameraComponent::SetTiltFunctionPtr()

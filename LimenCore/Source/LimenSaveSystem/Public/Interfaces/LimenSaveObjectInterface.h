@@ -36,9 +36,17 @@ public:
 	/**
 	 * @brief Called after a save was performed on the object.
 	 */
-	virtual void DataSaved() = 0;
+	virtual void PreDataSaved() = 0;
+	/**
+	 * @brief Called after a save was performed on the object.
+	 */
+	virtual void PostDataSaved() = 0;
 	/**
 	 * @brief Called when data has been loaded into the object.
 	 */
-	virtual void DataLoaded() = 0;
+	virtual void PreDataLoaded() = 0;
+	/**
+	 * @brief Called when data has been loaded into the object.
+	 */
+	virtual void PostDataLoaded() = 0;
 };

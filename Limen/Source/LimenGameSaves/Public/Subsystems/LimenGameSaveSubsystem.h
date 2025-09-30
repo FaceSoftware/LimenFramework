@@ -72,10 +72,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Game Saves")
 	void DeleteGameSave();
 
-	virtual bool ShouldSaveData() const override final;
-	virtual bool ShouldLoadData() const override final;
-	virtual void DataSaved() override final {}
-	virtual void DataLoaded() override final {}
+	virtual bool ShouldSaveData() const override;
+	virtual bool ShouldLoadData() const override;
+	virtual void PreDataSaved() override;
+	virtual void PostDataSaved() override;
+	virtual void PreDataLoaded() override;
+	virtual void PostDataLoaded() override;
 
 	UFUNCTION(BlueprintCallable)
 	const ULimenGameSaveData* GetCurrentGameSaveData() const;

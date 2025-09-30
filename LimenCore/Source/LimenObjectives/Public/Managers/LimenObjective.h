@@ -98,8 +98,10 @@ public:
 
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
-	virtual void DataSaved() override;
-	virtual void DataLoaded() override;
+	virtual void PreDataSaved() override;
+	virtual void PostDataSaved() override;
+	virtual void PreDataLoaded() override;
+	virtual void PostDataLoaded() override;
 
 #pragma endregion
 	

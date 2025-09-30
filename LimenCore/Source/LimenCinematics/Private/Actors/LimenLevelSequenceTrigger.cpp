@@ -66,11 +66,19 @@ bool ALimenLevelSequenceTrigger::ShouldLoadData() const
 	return true;
 }
 
-void ALimenLevelSequenceTrigger::DataSaved()
+void ALimenLevelSequenceTrigger::PreDataSaved()
 {
 }
 
-void ALimenLevelSequenceTrigger::DataLoaded()
+void ALimenLevelSequenceTrigger::PostDataSaved()
+{
+}
+
+void ALimenLevelSequenceTrigger::PreDataLoaded()
+{
+}
+
+void ALimenLevelSequenceTrigger::PostDataLoaded()
 {
 	if (!bAllowMultipleExecution && bWasTriggered || bDestroyAfterFinish && bWasTriggered)
 	{

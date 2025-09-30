@@ -82,7 +82,7 @@ protected:
 	 */
 	virtual void ApplyCurrentSetting(bool bUserRequest = false);
 	
-	virtual void DataLoaded() override;
+	virtual void PostDataLoaded() override;
 	virtual bool ShouldLoadData() const override;
 	
 	UPROPERTY(EditAnywhere, Category="Limen")

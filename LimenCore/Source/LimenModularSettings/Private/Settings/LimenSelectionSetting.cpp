@@ -75,11 +75,11 @@ void ULimenSelectionSetting::SetDefaultValue()
 	Super::SetDefaultValue();
 }
 
-void ULimenSelectionSetting::DataLoaded()
+void ULimenSelectionSetting::PostDataLoaded()
 {
 	PreviousSelection = CurrentSelection;
 	
-	Super::DataLoaded();
+	Super::PostDataLoaded();
 }
 
 bool ULimenSelectionSetting::IsEnabled() const

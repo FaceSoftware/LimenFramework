@@ -60,8 +60,10 @@ public:
 
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
-	virtual void DataLoaded() override;
-	virtual void DataSaved() override;
+	virtual void PreDataSaved() override;
+	virtual void PostDataSaved() override;
+	virtual void PreDataLoaded() override;
+	virtual void PostDataLoaded() override;
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Items|Actions", BlueprintPure)
 	TArray<ULimenItemAction*> GetItemActions() const;
@@ -122,12 +124,8 @@ protected:
 	
 private:
 	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
-	bool bHasBeenLoaded;
-
 	TStrongObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
-
 	FTimerHandle InteractAnimationTimerHandle;
-
 	UPROPERTY(ReplicatedUsing=OnRep_IsDropped)
 	bool bIsDropped;
 };

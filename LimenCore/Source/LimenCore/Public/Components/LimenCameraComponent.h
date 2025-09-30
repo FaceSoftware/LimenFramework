@@ -48,18 +48,11 @@ public:
 	FORCEINLINE float GetCurrentCameraZoom() const;
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE float GetCurrentFirstPersonZoom() const;
-	/**
-	 * @brief Current zoom in a [0, 1] range.
-	 * @return Zero if zoom it at minimum. One if it is at maximum. Any other value returns the corresponding value in between.
-	 */
-	UFUNCTION(BlueprintCallable)
-	float GetCurrentCameraZoomNormalized() const;
-	/**
-	 * @brief Current zoom in a [0, 1] range.
-	 * @return Zero if zoom it at minimum. One if it is at maximum. Any other value returns the corresponding value in between.
-	 */
-	UFUNCTION(BlueprintCallable)
-	float GetCurrentFirstPersonZoomNormalized() const;
+	
+	float CameraZoomToFOV(float InZoom);
+	float FirstPersonZoomToFOV(float InZoom);
+    float CameraFOVToZoom(float InFOV);
+    float FirstPersonFOVToZoom(float InFOV);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(EditCondition="bEnableTilt"))

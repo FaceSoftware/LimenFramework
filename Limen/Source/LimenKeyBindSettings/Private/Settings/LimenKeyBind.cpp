@@ -167,7 +167,7 @@ void ULimenKeyBind::SetDefaultValue()
 	Super::SetDefaultValue();
 }
 
-void ULimenKeyBind::DataLoaded()
+void ULimenKeyBind::PostDataLoaded()
 {
 	PreviousKeyMapping = CurrentKeyMapping;
 	
@@ -177,7 +177,7 @@ void ULimenKeyBind::DataLoaded()
 		Settings->InputHandlingType = SavedInputHandlingType;
 	}
 	
-	Super::DataLoaded();
+	Super::PostDataLoaded();
 }
 
 void ULimenKeyBind::SetInputActionHandlingType(const EInputActionHandlingType NewType)

@@ -111,11 +111,19 @@ bool ALimenObjective::ShouldLoadData() const
 	return true;
 }
 
-void ALimenObjective::DataSaved()
+void ALimenObjective::PreDataSaved()
 {
 }
 
-void ALimenObjective::DataLoaded()
+void ALimenObjective::PostDataSaved()
+{
+}
+
+void ALimenObjective::PreDataLoaded()
+{
+}
+
+void ALimenObjective::PostDataLoaded()
 {
 }
 

@@ -24,18 +24,26 @@ bool ALimenSaveableHintsManager::ShouldLoadData() const
 	return true;
 }
 
+void ALimenSaveableHintsManager::PreDataSaved()
+{
+}
+
 bool ALimenSaveableHintsManager::ShouldSaveData() const
 {
 	return true;
 }
 
-void ALimenSaveableHintsManager::DataLoaded()
+void ALimenSaveableHintsManager::PostDataLoaded()
 {
 	LoadSavedHints();
 	SetupRemoveStaleHints();
 }
 
-void ALimenSaveableHintsManager::DataSaved()
+void ALimenSaveableHintsManager::PostDataSaved()
+{
+}
+
+void ALimenSaveableHintsManager::PreDataLoaded()
 {
 }
 

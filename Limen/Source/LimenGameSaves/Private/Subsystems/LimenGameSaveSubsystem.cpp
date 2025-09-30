@@ -159,6 +159,22 @@ bool ULimenGameSaveSubsystem::ShouldLoadData() const
 	return true;
 }
 
+void ULimenGameSaveSubsystem::PreDataSaved()
+{
+}
+
+void ULimenGameSaveSubsystem::PostDataSaved()
+{
+}
+
+void ULimenGameSaveSubsystem::PreDataLoaded()
+{
+}
+
+void ULimenGameSaveSubsystem::PostDataLoaded()
+{
+}
+
 const ULimenGameSaveData* ULimenGameSaveSubsystem::GetCurrentGameSaveData() const
 {
 	return CurrentGameSaveData.Get();

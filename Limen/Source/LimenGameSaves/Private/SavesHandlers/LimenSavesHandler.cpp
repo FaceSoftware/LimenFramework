@@ -13,11 +13,19 @@ bool ULimenSavesHandler::ShouldLoadData() const
 	return true;
 }
 
-void ULimenSavesHandler::DataSaved()
+void ULimenSavesHandler::PreDataSaved()
 {
 }
 
-void ULimenSavesHandler::DataLoaded()
+void ULimenSavesHandler::PostDataSaved()
+{
+}
+
+void ULimenSavesHandler::PreDataLoaded()
+{
+}
+
+void ULimenSavesHandler::PostDataLoaded()
 {
 }
 
