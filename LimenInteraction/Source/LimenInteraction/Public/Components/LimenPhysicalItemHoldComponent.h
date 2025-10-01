@@ -6,11 +6,11 @@
 #include "Components/ActorComponent.h"
 #include "LimenPhysicalItemHoldComponent.generated.h"
 
+
 class ALimenPhysicalItem;
 
-
 USTRUCT()
-struct FLimenPhysicalItemHoldComponent_WeaponData
+struct FLimenPhysicalItemHoldComponent_ReplicatedWeaponData
 {
 	GENERATED_BODY()
 
@@ -39,7 +39,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	void StopHolding();
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
-	FORCEINLINE bool IsHoldingSomething() const;
+	bool IsHoldingSomething() const;
 
 	template<typename T>
 	FORCEINLINE bool IsHoldingSomething() const
@@ -50,7 +50,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
-	FORCEINLINE ALimenPhysicalItem* GetPhysicalItem() const;
+	ALimenPhysicalItem* GetPhysicalItem() const;
 
 	template<typename T>
 	FORCEINLINE T* GetPhysicalItem() const
@@ -87,7 +87,7 @@ public:
 
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_WeaponData)
-	FLimenPhysicalItemHoldComponent_WeaponData WeaponData;
+	FLimenPhysicalItemHoldComponent_ReplicatedWeaponData WeaponData;
 
 	UFUNCTION()
 	void OnRep_WeaponData();

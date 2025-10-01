@@ -36,7 +36,7 @@ TSharedRef<SWidget> ULimenDraggableWidget::RebuildWidget()
 		}
 		break;
 
-		default: checkNoEntry()
+		default: checkNoEntry();
 	}
 
 	MouseDetector = SNew(SMouseDetector)

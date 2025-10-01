@@ -26,7 +26,9 @@ void ALimenFMODAudioVolume::BeginPlay()
 	GetWorld()->GetTimerManager().SetTimerForNextTick([this]
 	{
 		VolumeBounds->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+#if WITH_EDITOR
 		VolumeBounds->UpdateCollisionProfile();
+#endif WITH_EDITOR
 	});
 
 	Super::BeginPlay();

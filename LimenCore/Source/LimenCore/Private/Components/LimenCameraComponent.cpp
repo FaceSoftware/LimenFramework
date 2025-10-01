@@ -151,16 +151,6 @@ void ULimenCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& Des
 	DesiredView.PreviousViewTransform = FMotionVectorSimulation::Get().GetPreviousTransform(this);
 }
 
-void ULimenCameraComponent::SetTiltEnabled(const bool bEnabled)
-{
-	bIsTiltEnabled = bEnabled;
-}
-
-void ULimenCameraComponent::NotifyYawInput(const float InputValue)
-{
-	CurrentTilt = TiltFunctionPtr(TiltStrength * (bInvertTilt ? -InputValue : InputValue));
-}
-
 void ULimenCameraComponent::AddCameraZoom(const float Amount)
 {
 	const float PreviousZoom = TargetCameraFOV;

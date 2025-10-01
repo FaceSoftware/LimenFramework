@@ -14,7 +14,9 @@ UBTService_FindRandomLocation::UBTService_FindRandomLocation()
 	MinRadius = 5000;
 	AcceptanceRadius = 100;
 
+#if WITH_EDITOR
 	bCanTickOnSearchStartBeExposed = true;
+#endif
 	SearchOrigin.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, SearchOrigin), AActor::StaticClass());
 }
 

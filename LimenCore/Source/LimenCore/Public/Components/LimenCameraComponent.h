@@ -34,8 +34,8 @@ public:
 	virtual void BeginPlay() override;
 	virtual void GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView) override;
 
-	FORCEINLINE void SetTiltEnabled(const bool bEnabled);
-	FORCEINLINE void NotifyYawInput(const float InputValue);
+	FORCEINLINE void SetTiltEnabled(const bool bEnabled) { bIsTiltEnabled = bEnabled; }
+	FORCEINLINE void NotifyYawInput(const float InputValue) { CurrentTilt = TiltFunctionPtr(TiltStrength * (bInvertTilt ? -InputValue : InputValue)); }
 	UFUNCTION(BlueprintCallable)
 	virtual void AddCameraZoom(float Amount);
 	virtual void SetCameraZoom(float Amount);
@@ -43,11 +43,11 @@ public:
 	virtual void AddFirstPersonZoom(float Amount);
 	virtual void SetFirstPersonZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE FFloatRange GetCameraZoomRange() const;
+	FFloatRange GetCameraZoomRange() const;
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE float GetCurrentCameraZoom() const;
+	float GetCurrentCameraZoom() const;
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE float GetCurrentFirstPersonZoom() const;
+	float GetCurrentFirstPersonZoom() const;
 	
 	float CameraZoomToFOV(float InZoom);
 	float FirstPersonZoomToFOV(float InZoom);

@@ -10,7 +10,9 @@
 UBTService_CompareAttributeValue::UBTService_CompareAttributeValue()
 {
 	NodeName = TEXT("Compare Attribute Value");
+#if WITH_EDITOR
 	bCanTickOnSearchStartBeExposed = true;
+#endif
 	ComparisonResult.AddBoolFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, ComparisonResult));
 }
 

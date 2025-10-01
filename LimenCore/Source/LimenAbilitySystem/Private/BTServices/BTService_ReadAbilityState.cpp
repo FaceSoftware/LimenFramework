@@ -11,7 +11,9 @@
 UBTService_ReadAbilityState::UBTService_ReadAbilityState()
 {
 	NodeName = TEXT("Read Ability State");
+#if WITH_EDITOR
 	bCanTickOnSearchStartBeExposed = true;
+#endif
 	bNotifyBecomeRelevant = bNotifyTick = bNotifyCeaseRelevant = true;
 }
 
