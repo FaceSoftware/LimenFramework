@@ -11,9 +11,7 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Engine/Engine.h"
 #include "Engine/TextureRenderTarget2D.h"
-#include "Engine/World.h"
 #include "GameFramework/Pawn.h"
-#include "Kismet/GameplayStatics.h"
 #include "Shaders/FScreenVisibilityCheckCS.h"
 
 
@@ -53,11 +51,10 @@ void ULimenScreenVisibilityChecker::BeginPlay()
 		RenderTarget = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>(this));
 		const FIntPoint RenderTargetSize = GetRenderTargetSize();
 		RenderTarget->InitAutoFormat(RenderTargetSize.X, RenderTargetSize.Y);
-		RenderTarget->RenderTargetFormat = RTF_RGBA8;
-		RenderTarget->ClearColor = FLinearColor::Transparent;
-		RenderTarget->UpdateResourceImmediate(true);
+		RenderTarget->RenderTargetFormat = RTF_RGBA16f;
+		RenderTarget->ClearColor = FLinearColor::Black;
 		RenderTarget->bAutoGenerateMips = true;
-		RenderTarget->MipGenSettings = TMGS_FromTextureGroup;
+		RenderTarget->UpdateResourceImmediate(true);
 	}
 
 	{
@@ -69,24 +66,28 @@ void ULimenScreenVisibilityChecker::BeginPlay()
 
 
 #if WITH_EDITORONLY_DATA
-		if (!DebugVisualizationRenderTarget.IsNull())
-		{
-			SceneCapture->TextureTarget = DebugVisualizationRenderTarget.LoadSynchronous();
-		}
-	else
+		!DebugVisualizationRenderTarget.IsNull()
+			? SceneCapture->TextureTarget = DebugVisualizationRenderTarget.LoadSynchronous()
+			:
 #endif
-		{
 			SceneCapture->TextureTarget = RenderTarget.Get();
-		}
+
 		SceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_LegacySceneCapture;
 		SceneCapture->bCaptureEveryFrame = false;
 		SceneCapture->bAlwaysPersistRenderingState = true;
 		SceneCapture->CaptureSource = SCS_FinalColorLDR;
 		SceneCapture->PrimaryComponentTick.bCanEverTick = true;
 		SceneCapture->PrimaryComponentTick.TickInterval = PrimaryComponentTick.TickInterval;
-		SceneCapture->AddOrUpdateBlendable(StencilCheckerInst.Get(), 1.f);
 		SceneCapture->FOVAngle = OwnerCamera->FieldOfView;
+		SceneCapture->ShowFlags = FEngineShowFlags(ESFIM_Game);
+		SceneCapture->ShowFlags.SetPostProcessing(true);
+		SceneCapture->PostProcessBlendWeight = 1.0f;
+		SceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
+
+		SceneCapture->PostProcessSettings.AddBlendable(StencilCheckerInst.Get(), 1.f);
+
 		SceneCapture->RegisterComponent();
+		RenderTarget->UpdateResourceImmediate(true);
 	}
 }
 
@@ -110,11 +111,10 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 	{
 		RenderTarget->ResizeTarget(NewRenderTargetSize.X, NewRenderTargetSize.Y);
 		RenderTarget->UpdateResourceWithParams(UTexture::EUpdateResourceFlags::ForceRebuild);
-		RenderTarget->BlockOnAnyAsyncBuild();
 	}
 
+	RenderTarget->UpdateResourceImmediate(false);
 	SceneCapture->CaptureScene();
-	StencilCheckerInst->UpdateCachedData();
 
 	CheckVisibility(SceneCapture->TextureTarget.Get());
 
@@ -129,6 +129,11 @@ int32 ULimenScreenVisibilityChecker::GetStencilMask() const
 bool ULimenScreenVisibilityChecker::IsVisible() const
 {
 	return bPreviousVisibleState;
+}
+
+UTextureRenderTarget2D* ULimenScreenVisibilityChecker::GetRenderTarget() const
+{
+	return RenderTarget.Get();
 }
 
 void ULimenScreenVisibilityChecker::CheckVisibility(UTextureRenderTarget2D* InRenderTarget)
@@ -203,14 +208,13 @@ void ULimenScreenVisibilityChecker::PollReadback()
 	// Read pixel data
 	const float* PixelData = static_cast<float*>(DataPtr);
 	bool bIsVisible = PixelData[0] > UE_SMALL_NUMBER;
+	Readback->Unlock();
 
 	if (bIsVisible != bPreviousVisibleState)
 	{
 		OnActorVisibilityUpdated.Broadcast(bIsVisible);
 		bPreviousVisibleState = bIsVisible;
 	}
-
-	Readback->Unlock();
 }
 
 FIntPoint ULimenScreenVisibilityChecker::GetRenderTargetSize() const
