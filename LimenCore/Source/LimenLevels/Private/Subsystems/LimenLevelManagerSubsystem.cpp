@@ -3,6 +3,7 @@
 
 #include "Subsystems/LimenLevelManagerSubsystem.h"
 
+#include "GameMapsSettings.h"
 #include "Developer/LimenLevelsDeveloperSettings.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
@@ -23,7 +24,12 @@ void ULimenLevelManagerSubsystem::Initialize(FSubsystemCollectionBase& Collectio
 	Super::Initialize(Collection);
 
 #if !WITH_EDITOR
-	OpenInitializationLevel();
+	UGameMapsSettings* Settings = GetMutableDefault<UGameMapsSettings>();
+	if (const TSoftObjectPtr<UWorld> Level = ULimenLevelsDeveloperSettings::GetInitializationLevel(); !Level.IsNull())
+	{
+		Settings->SetGameDefaultMap(Level.GetLongPackageName());
+		Settings->SaveConfig();
+	}
 #endif
 }
 
