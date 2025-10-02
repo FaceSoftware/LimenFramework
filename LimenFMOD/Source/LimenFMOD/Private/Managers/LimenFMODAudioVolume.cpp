@@ -16,9 +16,6 @@ ALimenFMODAudioVolume::ALimenFMODAudioVolume()
 
 void ALimenFMODAudioVolume::BeginPlay()
 {
-	EventInstance = UFMODBlueprintStatics::PlayEvent2D(this, AudioEvent.Get(), false);
-
-
 	VolumeBounds->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	VolumeBounds->OnComponentBeginOverlap.AddUniqueDynamic(this, &ThisClass::BoundsBeginOverlap);
 	VolumeBounds->OnComponentEndOverlap.AddUniqueDynamic(this, &ThisClass::BoundsEndOverlap);
@@ -26,6 +23,7 @@ void ALimenFMODAudioVolume::BeginPlay()
 	GetWorld()->GetTimerManager().SetTimerForNextTick([this]
 	{
 		VolumeBounds->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		VolumeBounds->UpdateBodySetup();
 #if WITH_EDITOR
 		VolumeBounds->UpdateCollisionProfile();
 #endif WITH_EDITOR
@@ -39,7 +37,7 @@ void ALimenFMODAudioVolume::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	VolumeBounds->OnComponentBeginOverlap.RemoveAll(this);
 	VolumeBounds->OnComponentEndOverlap.RemoveAll(this);
 
-	EventInstance.Instance->release();
+	UFMODBlueprintStatics::EventInstanceStop(EventInstance, true);
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -49,8 +47,7 @@ void ALimenFMODAudioVolume::BoundsBeginOverlap(UPrimitiveComponent* OverlappedCo
 											   const FHitResult& SweepResult)
 {
 	if (!CanActorTriggerThis(OtherActor)) return;
-
-	EventInstance.Instance->start();
+	EventInstance = UFMODBlueprintStatics::PlayEvent2D(this, AudioEvent.Get(), true);
 }
 
 void ALimenFMODAudioVolume::BoundsEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -58,7 +55,7 @@ void ALimenFMODAudioVolume::BoundsEndOverlap(UPrimitiveComponent* OverlappedComp
 {
 	if (!CanActorTriggerThis(OtherActor)) return;
 
-	EventInstance.Instance->stop(FMOD_STUDIO_STOP_ALLOWFADEOUT);
+	UFMODBlueprintStatics::EventInstanceStop(EventInstance, true);
 }
 
 bool ALimenFMODAudioVolume::CanActorTriggerThis(const AActor* Test) const
