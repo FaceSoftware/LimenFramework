@@ -113,9 +113,8 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 		RenderTarget->UpdateResourceWithParams(UTexture::EUpdateResourceFlags::ForceRebuild);
 	}
 
-	RenderTarget->UpdateResourceImmediate(false);
 	SceneCapture->CaptureScene();
-
+	RenderTarget->UpdateResourceImmediate(false);
 	CheckVisibility(SceneCapture->TextureTarget.Get());
 
 	AsyncTask(ENamedThreads::ActualRenderingThread, [this] { PollReadback(); });
