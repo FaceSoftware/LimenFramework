@@ -58,7 +58,6 @@ ALimenCharacterBase::ALimenCharacterBase(const FObjectInitializer& InObjectIniti
 void ALimenCharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
-	SetupAbilityComponentInternal(AbilityComponent.Get());
 }
 
 void ALimenCharacterBase::PossessedBy(AController* NewController)
@@ -68,18 +67,18 @@ void ALimenCharacterBase::PossessedBy(AController* NewController)
 	PlayerController = Cast<APlayerController>(NewController);
 	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(NewController);
 	LimenBasePlayerState = NewController->GetPlayerState<ALimenPlayerStateBase>();
+
+	SetupAbilityComponentInternal(AbilityComponent.Get());
 }
 
 void ALimenCharacterBase::EnableInput(APlayerController* InPlayerController)
 {
 	Super::EnableInput(InPlayerController);
 
-	
 	if (InPlayerController == PlayerController)
 	{
 		GetComponentByClass<UEnhancedInputComponent>()->Activate();
 	}
-	
 }
 
 void ALimenCharacterBase::DisableInput(APlayerController* InPlayerController)
@@ -179,6 +178,10 @@ void ALimenCharacterBase::Multicast_SetCinematicMode_Implementation(bool bInCine
 
 void ALimenCharacterBase::SetupAbilityComponentInternal(ULimenAbilityComponent* InAbilityComponent)
 {
-	InAbilityComponent->OnAbilityComponentReady.AddUniqueDynamic(this, &ThisClass::SetupAbilityComponent);
+	if (!InAbilityComponent->OnAbilityComponentReady.IsAlreadyBound(this, &ThisClass::SetupAbilityComponent))
+	{
+		InAbilityComponent->OnAbilityComponentReady.AddUniqueDynamic(this, &ThisClass::SetupAbilityComponent);
+	}
+
 	if (HasAuthority()) InAbilityComponent->Activate();
 }

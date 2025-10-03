@@ -84,6 +84,7 @@ private:
 	bool bIsLoadingScreenNotifiedToHide;
 
 	float SecondsShown = 0;
+	mutable float PostCompletedSecondsShown = 0;
 
 	bool bDebugShowLoadingScreen = false;
 

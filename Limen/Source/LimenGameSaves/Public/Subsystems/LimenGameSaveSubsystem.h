@@ -81,6 +81,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	const ULimenGameSaveData* GetCurrentGameSaveData() const;
+	UFUNCTION(BlueprintCallable)
+	bool IsGameLoadScheduled() const;
 
 protected:
 	void DataSaved(const FString& SaveName, const int32 UserIndex, const bool bSuccess);

@@ -6,7 +6,6 @@
 #include "EngineUtils.h"
 #include "ShaderPipelineCache.h"
 #include "TimerManager.h"
-#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "UMG/LimenLoadingScreenWidget.h"
 #include "Developer/LimenLoadingScreenSettings.h"
 #include "Engine/Engine.h"
@@ -269,7 +268,14 @@ bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
 			return true;
 		}
 	}
-	
+
+	PostCompletedSecondsShown += GetWorld()->GetDeltaSeconds();
+	if (PostCompletedSecondsShown < CurrentLoadingScreenSettings->GetPostCompleteDisplayTime())
+	{
+		return true;
+	}
+
+	PostCompletedSecondsShown = 0.f;
 	return false;
 }
 

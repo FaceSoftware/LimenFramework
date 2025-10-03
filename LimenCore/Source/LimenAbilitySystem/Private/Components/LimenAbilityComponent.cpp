@@ -41,6 +41,8 @@ void ULimenAbilityComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	Super::EndPlay(EndPlayReason);
+
 	if (GetOwner()->HasAuthority())
 	{
 		DeactivateAllAbilities();
@@ -49,8 +51,6 @@ void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		DestroyAllAbilities();
 		DestroyAllAttributes();
 	}
-	
-	Super::EndPlay(EndPlayReason);
 }
 
 void ULimenAbilityComponent::Activate(bool bReset)
@@ -133,11 +133,12 @@ void ULimenAbilityComponent::DestroyAllAbilities()
 		Ability->Deinitialize(GetOwner());
 
 		RemoveReplicatedSubObject(*Ability);
-		Ability->MarkAsGarbage();
+		Ability->ConditionalBeginDestroy();
 		Ability.Item.Reset();
 	}
 	Abilities.Items.Empty();
 	Abilities.MarkArrayDirty();
+	bAbilitiesInstantiated = false;
 }
 
 void ULimenAbilityComponent::DeactivateAllAttributes()
@@ -161,11 +162,12 @@ void ULimenAbilityComponent::DestroyAllAttributes()
 		Attribute->Deinitialize(GetOwner());
 
 		RemoveReplicatedSubObject(*Attribute);
-		Attribute->MarkAsGarbage();
+		Attribute->ConditionalBeginDestroy();
 		Attribute.Item.Reset();
 	}
 	Attributes.Items.Empty();
 	Attributes.MarkArrayDirty();
+	bAttributesInstantiated = false;
 }
 
 ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAbilityBase> AbilityClass) const

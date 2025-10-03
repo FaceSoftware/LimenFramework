@@ -36,12 +36,15 @@ void ULimenGameSaveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	SaveSubsystem = ULimenSaveSubsystem::Get(GetWorld());
 	check(SaveSubsystem != nullptr);
 
-	FWorldDelegates::OnWorldInitializedActors.AddUObject(this, &ULimenGameSaveSubsystem::OnWorldActorsInitialized);
-
-	FWorldDelegates::OnPostWorldInitialization.AddLambda([this] (UWorld*, UWorld::InitializationValues)
+	auto* Settings = GetDefault<ULimenGameSavesDeveloperSettings>();
+	if (Settings && Settings->bAutoLoadGameOnBeginPlay)
 	{
-		bHasLoadedGameData = false;
-	});
+		FWorldDelegates::OnWorldInitializedActors.AddUObject(this, &ULimenGameSaveSubsystem::OnWorldActorsInitialized);
+		FWorldDelegates::OnPostWorldInitialization.AddLambda([this] (UWorld*, UWorld::InitializationValues)
+		{
+			bHasLoadedGameData = false;
+		});
+	}
 
 	LoadToCurrentSaveData();
 }
@@ -127,6 +130,12 @@ void ULimenGameSaveSubsystem::LoadCurrentGame(UWorld* InWorld)
 
 		Modal->OnModalResponseReceived.AddDynamic(this, &ThisClass::FailedToLoadDataModalDismissed);
 	}
+
+	auto* Settings = GetDefault<ULimenGameSavesDeveloperSettings>();
+	if (Settings && !Settings->bAutoLoadGameOnBeginPlay)
+	{
+		bShouldLoadGameOnMapChange = false;
+	}
 }
 
 void ULimenGameSaveSubsystem::ScheduleGameLoadOnMapChange()
@@ -178,6 +187,11 @@ void ULimenGameSaveSubsystem::PostDataLoaded()
 const ULimenGameSaveData* ULimenGameSaveSubsystem::GetCurrentGameSaveData() const
 {
 	return CurrentGameSaveData.Get();
+}
+
+bool ULimenGameSaveSubsystem::IsGameLoadScheduled() const
+{
+	return bShouldLoadGameOnMapChange;
 }
 
 void ULimenGameSaveSubsystem::DataSaved(const FString& SaveName, const int32 UserIndex, const bool bSuccess)

@@ -23,6 +23,8 @@ public:
 	FModalParams LoadGameFailedModalParams = FModalParams(TEXT("Save Data Corrupted"), TEXT("Something went wrong loading the save data."));
 	UPROPERTY(EditAnywhere, Config)
 	FModalParams SaveGameFailedModalParams = FModalParams(TEXT("Save Error"),TEXT("Something went wrong saving game data."));
+	UPROPERTY(EditAnywhere, Config)
+	bool bAutoLoadGameOnBeginPlay = false;
 
 	virtual FName GetContainerName() const override;
 	virtual FName GetCategoryName() const override;

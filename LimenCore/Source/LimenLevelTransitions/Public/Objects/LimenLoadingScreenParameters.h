@@ -19,6 +19,8 @@ public:
 	TSoftClassPtr<ULimenLoadingScreenWidget> LoadingScreenWidget;
 	UPROPERTY(EditDefaultsOnly)
 	float MinimumDisplayTimeSeconds = 0.f;
+	UPROPERTY(EditDefaultsOnly)
+	float PostCompleteDisplayTime = 0.f;
 	
 	TSubclassOf<UUserWidget> GetLoadingScreenWidgetClass() const
 	{
@@ -26,6 +28,10 @@ public:
 	}
 
 	float GetMinimumDisplayTimeSeconds() const
+	{
+		return MinimumDisplayTimeSeconds;
+	}
+	float GetPostCompleteDisplayTime() const
 	{
 		return MinimumDisplayTimeSeconds;
 	}

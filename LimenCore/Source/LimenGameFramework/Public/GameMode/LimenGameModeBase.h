@@ -51,17 +51,21 @@ public:
 	}
 
 	void ResetManagers();
+	bool IsInitialLevelStreamingComplete() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Classes")
 	TArray<TSoftClassPtr<ALimenGameplayManager>> ManagersClassList;
 	
-private:
-	UPROPERTY()
-	TArray<TObjectPtr<ALimenGameplayManager>> ManagersList;
+	virtual void InitialLevelStreamingComplete();
 
-	UPROPERTY()
-	TObjectPtr<ALimenGameStateBase> LimenGameState;
+private:
+	TArray<TWeakObjectPtr<ALimenGameplayManager>> ManagersList;
+	TWeakObjectPtr<ALimenGameStateBase> LimenGameState;
+	int32 InitialStreamingLevels;
+	TArray<TWeakObjectPtr<ULevelStreaming>> InitialStreamingLevelsList;
 	
 	virtual void SpawnManagers();
+	UFUNCTION()
+	void InitialStreamingLevelShown();
 };
