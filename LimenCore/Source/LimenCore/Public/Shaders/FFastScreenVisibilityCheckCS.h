@@ -27,7 +27,7 @@ public:
 
 		// Output flag (1 uint)
 		SHADER_PARAMETER_RDG_BUFFER_UAV(RWBuffer<uint>, OutFlag)
-		// SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D<float4>, DebugOut)
+		SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D<float4>, DebugOut)
 	END_SHADER_PARAMETER_STRUCT()
 
 	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Params)

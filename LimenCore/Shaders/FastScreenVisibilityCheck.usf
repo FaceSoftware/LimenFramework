@@ -9,7 +9,7 @@ uint Mask;
 
 // Out
 RWBuffer<uint> OutFlag;
-// RWTexture2D<float4> DebugOut;
+RWTexture2D<float4> DebugOut;
 
 groupshared uint GroupFlags;       // bit0 = hit, bit1 = visible
 
@@ -26,8 +26,8 @@ void MainCS(uint3 Tid:SV_GroupThreadID, uint3 DTid:SV_DispatchThreadID)
 	if (LocalPixel.x < ViewRectSize.x && LocalPixel.y < ViewRectSize.y)
 	{
 		// Depths
-		float SceneZ   = SceneTexturesStruct.SceneDepthTexture .Load(int3(GlobalPixel,0)).r;
-		float CustomZ  = SceneTexturesStruct.CustomDepthTexture .Load(int3(GlobalPixel,0)).r;
+		float SceneZ   = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
+		float CustomZ  = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
 		float SceneLinearDepth = ConvertFromDeviceZ(SceneZ);
 		float CustomLinearDepth  = ConvertFromDeviceZ(CustomZ);
 
@@ -41,9 +41,9 @@ void MainCS(uint3 Tid:SV_GroupThreadID, uint3 DTid:SV_DispatchThreadID)
 		bool bVisible  = bHit && !bOccluded;
 
 		// Visualize (white when visible match; black otherwise)
-		// DebugOut[LocalPixel] = bVisible ? float4(1,1,1,1) : float4(0,0,0,1);
+		DebugOut[LocalPixel] = bVisible ? float4(1.f, 1.f, 1.f, 1.f) : float4(.0f, .0f, .0f, 1.f);
 
-		// Accumulate flags in this threadgroup
+		// Accumulate flags in this thread group
 		if (bHit)     InterlockedOr(GroupFlags, 0x1);
 		if (bVisible) InterlockedOr(GroupFlags, 0x2);
 	}

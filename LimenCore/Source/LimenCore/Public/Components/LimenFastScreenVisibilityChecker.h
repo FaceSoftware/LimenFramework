@@ -6,7 +6,7 @@
 #include "RHIGPUReadback.h"
 #include "SceneViewExtension.h"
 #include "Components/ActorComponent.h"
-// #include "Engine/TextureRenderTarget2D.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "LimenFastScreenVisibilityChecker.generated.h"
 
 
@@ -49,7 +49,7 @@ public:
 	explicit ULimenFastScreenVisibilityChecker(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
 	bool IsVisible() const;
@@ -59,11 +59,13 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
 	uint8 StencilMask;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
+	bool bEnableDebug;
 
 private:
 	TSharedPtr<FSceneViewExtensionBase> ViewExt; 
 	bool bCurrentIsVisible;
-	// TStrongObjectPtr<UTextureRenderTarget2D> DebugOutputRT;
+	TStrongObjectPtr<UTextureRenderTarget2D> DebugOutputRT;
 
 	void VisibilityResultFromRender(const bool bIsVisible);
 };
