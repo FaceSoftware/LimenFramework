@@ -152,7 +152,7 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 			TotalPrecompiles = ShadersLeft;
 		}
 
-		CurrentPrecompileDonePercentage = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles)
+		CurrentPrecompileDonePercentage = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
 		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage, ShadersLeft);
 #endif
 	}
