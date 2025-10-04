@@ -114,7 +114,6 @@ void ULimenScreenVisibilityChecker::TickComponent(const float DeltaTime, const E
 	}
 
 	SceneCapture->CaptureScene();
-	RenderTarget->UpdateResourceImmediate(false);
 	CheckVisibility(SceneCapture->TextureTarget.Get());
 
 	AsyncTask(ENamedThreads::ActualRenderingThread, [this] { PollReadback(); });
@@ -197,23 +196,30 @@ void ULimenScreenVisibilityChecker::PollReadback()
 	int32 Width = 0;
 	int32 Height = 0;
 	void* DataPtr = Readback->Lock(Width, &Height);
-	if (Width == 0 || Height == 0) return;
-	if (!DataPtr) return;
+	if (Width > 0 && Height > 0 && DataPtr)
+	{
+		// Read pixel data
+		const float* PixelData = static_cast<float*>(DataPtr);
+		bool bIsVisible = PixelData[0] > UE_SMALL_NUMBER;
 
-	// Assertion
-	check(Width != 0);
-	check(Height != 0);
+		TWeakObjectPtr WeakThis = this;
+		AsyncTask(ENamedThreads::GameThread, [WeakThis, bIsVisible]
+		{
+			if (!WeakThis.IsValid()) return;
+			const auto StrongThis = WeakThis.Pin();
 
-	// Read pixel data
-	const float* PixelData = static_cast<float*>(DataPtr);
-	bool bIsVisible = PixelData[0] > UE_SMALL_NUMBER;
+			if (bIsVisible != StrongThis->bPreviousVisibleState)
+			{
+				StrongThis->OnActorVisibilityUpdated.Broadcast(bIsVisible);
+				StrongThis->bPreviousVisibleState = bIsVisible;
+			}
+		});
+	}
 	Readback->Unlock();
 
-	if (bIsVisible != bPreviousVisibleState)
-	{
-		OnActorVisibilityUpdated.Broadcast(bIsVisible);
-		bPreviousVisibleState = bIsVisible;
-	}
+	// Sanity
+	check(Width != 0);
+	check(Height != 0);
 }
 
 FIntPoint ULimenScreenVisibilityChecker::GetRenderTargetSize() const
