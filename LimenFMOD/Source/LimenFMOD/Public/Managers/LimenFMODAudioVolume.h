@@ -26,6 +26,8 @@ protected:
 	TArray<TSubclassOf<AActor>> ActorsAllowedToTrigger;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FMOD Audio Volume")
 	TObjectPtr<UFMODEvent> AudioEvent;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="FMOD Audio Volume", meta=(ClampMin="0"))
+	int32 Priority;
 
 	UFUNCTION()
 	virtual void BoundsBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -39,4 +41,8 @@ protected:
 
 private:
 	FFMODEventInstance EventInstance;
+	TArray<TWeakObjectPtr<ALimenFMODAudioVolume>> IntersectingVolumes;
+
+	void StartPlayingEvent();
+	void StopPlayingEvent();
 };

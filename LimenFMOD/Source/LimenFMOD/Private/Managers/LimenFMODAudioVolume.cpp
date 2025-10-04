@@ -3,6 +3,7 @@
 
 #include "Managers/LimenFMODAudioVolume.h"
 
+#include "CompGeom/FitOrientedBox3.h"
 #include "Components/BoxComponent.h"
 
 
@@ -12,6 +13,8 @@ ALimenFMODAudioVolume::ALimenFMODAudioVolume()
 
 	VolumeBounds = CreateDefaultSubobject<UBoxComponent>(TEXT("VolumeBounds"));
 	RootComponent = VolumeBounds;
+
+	Priority = 0;
 }
 
 void ALimenFMODAudioVolume::BeginPlay()
@@ -24,9 +27,6 @@ void ALimenFMODAudioVolume::BeginPlay()
 	{
 		VolumeBounds->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		VolumeBounds->UpdateBodySetup();
-#if WITH_EDITOR
-		VolumeBounds->UpdateCollisionProfile();
-#endif WITH_EDITOR
 	});
 
 	Super::BeginPlay();
@@ -46,19 +46,61 @@ void ALimenFMODAudioVolume::BoundsBeginOverlap(UPrimitiveComponent* OverlappedCo
 											   UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 											   const FHitResult& SweepResult)
 {
+	if (auto* OtherAudioVolume = Cast<ALimenFMODAudioVolume>(OtherActor))
+	{
+		if (OtherAudioVolume->Priority < Priority)
+		{
+			IntersectingVolumes.Push(TWeakObjectPtr(OtherAudioVolume));
+		}
+	}
+
 	if (!CanActorTriggerThis(OtherActor)) return;
-	EventInstance = UFMODBlueprintStatics::PlayEvent2D(this, AudioEvent.Get(), true);
+	StartPlayingEvent();
+
+	for (const auto& Volume : IntersectingVolumes)
+	{
+		Volume->StopPlayingEvent();
+	}
 }
 
 void ALimenFMODAudioVolume::BoundsEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 											 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!CanActorTriggerThis(OtherActor)) return;
+	if (auto* OtherAudioVolume = Cast<ALimenFMODAudioVolume>(OtherActor))
+	{
+		if (OtherAudioVolume->Priority < Priority)
+		{
+			IntersectingVolumes.Remove(TWeakObjectPtr(OtherAudioVolume));
+		}
+	}
 
-	UFMODBlueprintStatics::EventInstanceStop(EventInstance, true);
+	if (!CanActorTriggerThis(OtherActor)) return;
+	StopPlayingEvent();
+
+	int32 HighestPriority = -1;
+	TWeakObjectPtr<ALimenFMODAudioVolume> VolumeToPlay = nullptr;
+	for (const auto& Volume : IntersectingVolumes)
+	{
+		if (Volume.IsValid() && Volume->Priority > HighestPriority)
+		{
+			HighestPriority = Volume->Priority;
+			VolumeToPlay = Volume;
+		}
+	}
+	if (VolumeToPlay.IsValid()) VolumeToPlay->StartPlayingEvent();
 }
 
 bool ALimenFMODAudioVolume::CanActorTriggerThis(const AActor* Test) const
 {
 	return ActorsAllowedToTrigger.IsEmpty() || Test && ActorsAllowedToTrigger.Contains(Test->GetClass());
+}
+
+void ALimenFMODAudioVolume::StartPlayingEvent()
+{
+	EventInstance = UFMODBlueprintStatics::PlayEvent2D(this, AudioEvent.Get(), true);
+}
+
+void ALimenFMODAudioVolume::StopPlayingEvent()
+{
+	UFMODBlueprintStatics::EventInstanceStop(EventInstance, true);
 }
