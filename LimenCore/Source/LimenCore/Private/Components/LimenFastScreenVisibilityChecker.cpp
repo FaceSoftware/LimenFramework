@@ -20,7 +20,7 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
 
     if (!Owner.IsValid()) return;
     if (InView.ViewActor.Actor != Owner->GetOwner()) return;
-    if (MaximumFrameBuffering <= 0 || Readbacks.Num() < MaximumFrameBuffering) return;
+    if (MaximumFrameBuffering > 0 && Readbacks.Num() >= MaximumFrameBuffering) return;
 
     // 1) 1-uint buffer + UAV (flag)
     FRDGBufferDesc OutFlagBufDesc = FRDGBufferDesc::CreateBufferDesc(sizeof(uint32), 1);
