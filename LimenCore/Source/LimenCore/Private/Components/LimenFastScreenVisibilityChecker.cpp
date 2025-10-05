@@ -120,7 +120,7 @@ ULimenFastScreenVisibilityChecker::ULimenFastScreenVisibilityChecker(const FObje
     : Super(ObjectInitializer)
 {
     PrimaryComponentTick.bCanEverTick = true;
-    PrimaryComponentTick.TickInterval = 0.f;
+    PrimaryComponentTick.TickInterval = 1.f;
     bAutoActivate = true;
 
     bCurrentIsVisible = false;
