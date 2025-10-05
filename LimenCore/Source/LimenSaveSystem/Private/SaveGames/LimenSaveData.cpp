@@ -45,26 +45,46 @@ UClass* FActorSaveData::GetActorClass() const
 	return ActorClass.Get();
 }
 
+FName FActorSaveData::GetDeterministicId() const
+{
+	return DeterministicId;
+}
+
 void FActorSaveData::LoadData(AActor* Actor) const
 {
-	if (!IsValid(Actor))
-	{
-		return;
-	}
+	if (!Actor) return;
 
 	LoadActorData(Actor);
 }
 
 bool FActorSaveData::operator==(const FActorSaveData& Other) const
 {
-	return ActorClass == Other.ActorClass;
+	return DeterministicId == Other.DeterministicId;
 }
 
-bool FActorSaveData::operator==(const AActor* Other) const
+bool FActorSaveData::operator==(AActor* Other) const
 {
-	if (!Other) return !ActorClass;
+	if (!Other) return false;
 
-	return Other->GetClass() == ActorClass;
+	const TScriptInterface<ILimenSaveObjectInterface> SaveInterface = Other;
+	if (!SaveInterface) return false;
+
+	return Other->IsA(ActorClass.Get()) && DeterministicId == SaveInterface->GetUniqueDeterministicId();
+}
+
+bool FActorSaveData::IsValid() const
+{
+	return ActorClass != nullptr;
+}
+
+FActorSaveData::operator bool() const
+{
+	return IsValid();
+}
+
+bool FActorSaveData::operator!() const
+{
+	return !IsValid();
 }
 
 void FActorSaveData::SetActorName(const FName& InActorName)
@@ -77,19 +97,20 @@ void FActorSaveData::SaveActorData(AActor* InActor)
 	ILimenSaveObjectInterface* SaveObjectInterface = Cast<ILimenSaveObjectInterface>(InActor);
 	check(SaveObjectInterface != nullptr);
 
+	SaveObjectInterface->PreDataSaved();
+
 	TArray<uint8> NewByteData;
 	FMemoryWriter Writer(NewByteData);
 
 	FObjectAndNameAsStringProxyArchive Archive(Writer, true);
 	Archive.ArIsSaveGame = true;
-	
-	SaveObjectInterface->PreDataSaved();
 
 	InActor->Serialize(Archive);
 	SetByteData(NewByteData);
 	SetActorTransform(InActor->GetTransform());
 	SetActorName(InActor->GetFName());
-	ActorClass = InActor->GetClass();
+	ActorClass = InActor->GetClass(); 
+	DeterministicId = SaveObjectInterface->GetUniqueDeterministicId();
 
 	SaveObjectInterface->PostDataSaved();
 }

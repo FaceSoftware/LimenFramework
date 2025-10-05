@@ -16,6 +16,10 @@ ALimenLevelSequenceTrigger::ALimenLevelSequenceTrigger()
 	bAllowMultipleExecution = false;
 	bLoadSequenceOnLevelStart = true;
 	bStartEnabled = true;
+	if (UniqueId == NAME_None)
+	{
+		UniqueId = *FGuid::NewGuid().ToString();
+	}
 
 	TriggerBox = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerBox"));
 	TriggerBox->SetCollisionEnabled(CollisionEnabledType);
@@ -85,6 +89,11 @@ void ALimenLevelSequenceTrigger::PostDataLoaded()
 		SetTriggerEnabled(false);
 		UnloadSequence();
 	}
+}
+
+FName ALimenLevelSequenceTrigger::GetUniqueDeterministicId() const
+{
+	return UniqueId;
 }
 
 void ALimenLevelSequenceTrigger::TriggerBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

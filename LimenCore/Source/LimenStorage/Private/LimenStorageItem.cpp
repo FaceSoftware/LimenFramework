@@ -43,3 +43,8 @@ void ULimenStorageItem::PreDataLoaded()
 void ULimenStorageItem::PostDataLoaded()
 {
 }
+
+FName ULimenStorageItem::GetUniqueDeterministicId() const
+{
+	return DevelopmentName;
+}

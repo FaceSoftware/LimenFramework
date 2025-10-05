@@ -64,6 +64,9 @@ public:
 	virtual void PostDataSaved() override;
 	virtual void PreDataLoaded() override;
 	virtual void PostDataLoaded() override;
+	virtual FName GetUniqueDeterministicId() const override;
+
+	void SetUniqueName(const FName& NewUniqueName);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Items|Actions", BlueprintPure)
 	TArray<ULimenItemAction*> GetItemActions() const;
@@ -88,6 +91,8 @@ protected:
 	FText DisplayName;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters")
 	FText Description;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters")
+	FName UniqueName;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "!bUseSceneCaptureForImage"))
 	TObjectPtr<UTexture> ItemImage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "ItemImageSceneCapture != nullptr"))

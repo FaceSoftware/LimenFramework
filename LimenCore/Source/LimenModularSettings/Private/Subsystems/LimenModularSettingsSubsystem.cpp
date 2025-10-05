@@ -99,6 +99,11 @@ void ULimenModularSettingsSubsystem::PostDataLoaded()
 {
 }
 
+FName ULimenModularSettingsSubsystem::GetUniqueDeterministicId() const
+{
+	return GetClass()->GetFName();
+}
+
 void ULimenModularSettingsSubsystem::PostDataSaved()
 {
 }

@@ -6,6 +6,7 @@
 #include "Interfaces/LimenSaveObjectInterface.h"
 #include "LimenSavesHandler.generated.h"
 
+struct FActorSaveData;
 /**
  * @brief Handler that serializes gameplay actors for the save system.
  *
@@ -30,6 +31,7 @@ class LIMENGAMESAVES_API ULimenSavesHandler : public UObject, public ILimenSaveO
 	GENERATED_BODY()
 
 public:
+	bool DoesListContainDuplicatedDeterministicIds(TArray<FActorSaveData>& InData) const;
 
 #pragma region ILimenSaveObjectInterface
 
@@ -39,6 +41,7 @@ public:
 	virtual void PostDataSaved() override;
 	virtual void PreDataLoaded() override;
 	virtual void PostDataLoaded() override;
+	virtual FName GetUniqueDeterministicId() const override;
 
 #pragma endregion
 

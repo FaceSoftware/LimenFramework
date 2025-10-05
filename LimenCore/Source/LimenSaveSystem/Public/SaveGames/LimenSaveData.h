@@ -29,16 +29,19 @@ public:
 	{
 		ByteData.Empty();
 
-		ILimenSaveObjectInterface* ObjectSaveInterface = Cast<ILimenSaveObjectInterface>(InObject);
-		check(ObjectSaveInterface != nullptr);
+		ILimenSaveObjectInterface* SaveObjectInterface = Cast<ILimenSaveObjectInterface>(InObject);
+		check(SaveObjectInterface != nullptr);
+
+		SaveObjectInterface->PreDataSaved();
 		
 		FMemoryWriter Writer(ByteData);
 		FObjectAndNameAsStringProxyArchive Archive(Writer, true);
 		Archive.ArIsSaveGame = true;
 		InObject->Serialize(Archive);
 		ObjectClass = FSoftClassPath(InObject->GetClass());
+		DeterministicId = SaveObjectInterface->GetUniqueDeterministicId();
 
-		ObjectSaveInterface->PostDataSaved();
+		SaveObjectInterface->PostDataSaved();
 	}
 	
 	void LoadData(UObject* OutObject) const
@@ -46,6 +49,8 @@ public:
 		ILimenSaveObjectInterface* ObjectSaveInterface = Cast<ILimenSaveObjectInterface>(OutObject);
 		check(ObjectSaveInterface != nullptr);
 		// Do not empty byte data! Big mistake...
+
+		ObjectSaveInterface->PreDataLoaded();
 		
 		FMemoryReader Reader(ByteData);
 		FObjectAndNameAsStringProxyArchive Archive(Reader, true);
@@ -66,6 +71,8 @@ private:
 	TArray<uint8> ByteData;
 	UPROPERTY(SaveGame)
 	FSoftClassPath ObjectClass;
+	UPROPERTY(SaveGame)
+	FName DeterministicId;
 };
 
 USTRUCT()
@@ -80,6 +87,7 @@ public:
 	FTransform GetActorTransform() const;
 	FName GetActorName() const;
 	UClass* GetActorClass() const;
+	FName GetDeterministicId() const;
 	
 	/**
 	 * 
@@ -88,7 +96,10 @@ public:
 	void LoadData(AActor* Actor) const;
 
 	bool operator==(const FActorSaveData& Other) const;
-	bool operator==(const AActor* Other) const;
+	bool operator==(AActor* Other) const;
+	bool IsValid() const;
+	explicit operator bool() const;
+	bool operator!() const;
 
 protected:
 	const TArray<uint8>& GetByteData() const;
@@ -110,6 +121,8 @@ private:
 	FName ActorName;
 	UPROPERTY(SaveGame)
 	TObjectPtr<UClass> ActorClass;
+	UPROPERTY(SaveGame)
+	FName DeterministicId;
 };
 
 

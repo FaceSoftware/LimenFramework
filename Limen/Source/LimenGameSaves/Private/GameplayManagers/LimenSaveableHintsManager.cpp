@@ -39,6 +39,11 @@ void ALimenSaveableHintsManager::PostDataLoaded()
 	SetupRemoveStaleHints();
 }
 
+FName ALimenSaveableHintsManager::GetUniqueDeterministicId() const
+{
+	return NAME_None;
+}
+
 void ALimenSaveableHintsManager::PostDataSaved()
 {
 }

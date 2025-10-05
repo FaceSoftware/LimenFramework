@@ -40,6 +40,7 @@ public:
 	virtual void PostDataSaved() override;
 	virtual void PreDataLoaded() override;
 	virtual void PostDataLoaded() override;
+	virtual FName GetUniqueDeterministicId() const override;
 
 protected:
 	inline static ECollisionEnabled::Type CollisionEnabledType = ECollisionEnabled::QueryAndPhysics;
@@ -48,6 +49,8 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UBoxComponent> TriggerBox;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Level Sequence Trigger")
+	FName UniqueId;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Level Sequence Trigger")
 	TArray<TSubclassOf<AActor>> ActorsAllowedToTrigger;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Level Sequence Trigger")

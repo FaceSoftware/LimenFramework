@@ -127,6 +127,11 @@ void ALimenObjective::PostDataLoaded()
 {
 }
 
+FName ALimenObjective::GetUniqueDeterministicId() const
+{
+	return UniqueName;
+}
+
 void ALimenObjective::CompleteObjective()
 {
 	ObjectiveData.State = EObjectiveState::Completed;

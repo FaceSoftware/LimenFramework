@@ -49,4 +49,9 @@ public:
 	 * @brief Called when data has been loaded into the object.
 	 */
 	virtual void PostDataLoaded() = 0;
+	/**
+	 * @brief
+	 * @return 
+	 */
+	virtual FName GetUniqueDeterministicId() const = 0;
 };

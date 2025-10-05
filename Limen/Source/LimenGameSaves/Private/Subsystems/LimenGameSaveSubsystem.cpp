@@ -184,6 +184,11 @@ void ULimenGameSaveSubsystem::PostDataLoaded()
 {
 }
 
+FName ULimenGameSaveSubsystem::GetUniqueDeterministicId() const
+{
+	return GetClass()->GetFName();
+}
+
 const ULimenGameSaveData* ULimenGameSaveSubsystem::GetCurrentGameSaveData() const
 {
 	return CurrentGameSaveData.Get();

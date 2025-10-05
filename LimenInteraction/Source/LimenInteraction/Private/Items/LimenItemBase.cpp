@@ -199,6 +199,16 @@ void ALimenItemBase::PostDataLoaded()
 {
 }
 
+FName ALimenItemBase::GetUniqueDeterministicId() const
+{
+	return UniqueName;
+}
+
+void ALimenItemBase::SetUniqueName(const FName& NewUniqueName)
+{
+	UniqueName = NewUniqueName;
+}
+
 void ALimenItemBase::PostDataSaved()
 {
 }

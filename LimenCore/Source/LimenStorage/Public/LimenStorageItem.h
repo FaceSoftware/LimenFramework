@@ -29,6 +29,7 @@ public:
 	virtual void PostDataSaved() override;
 	virtual void PreDataLoaded() override;
 	virtual void PostDataLoaded() override;
+	virtual FName GetUniqueDeterministicId() const override;
 
 protected:
 	UPROPERTY(EditAnywhere)
