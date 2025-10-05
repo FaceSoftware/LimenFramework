@@ -157,7 +157,7 @@ TSharedRef<SImage> ULimenMenuButton::GetIcon() const
 
 bool ULimenMenuButton::PlayDistortionEffect()
 {
-	if (RetainerBox->GetEffectMaterial() == nullptr)
+	if (!RetainerBox || RetainerBox->GetEffectMaterial() == nullptr)
 	{
 		return false;
 	}
