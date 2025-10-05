@@ -173,15 +173,15 @@ void ULimenFastScreenVisibilityChecker::TickComponent(float DeltaTime, enum ELev
         DebugOutputRT->ResizeTarget(FMath::Max(ViewRectSize.X, 1), FMath::Max(ViewRectSize.Y, 1));
     }
 
-    LimenLog(this, FString::Printf(TEXT("Is visible: %d"), bCurrentIsVisible),
-             ELogType::Log,
-             true,
-             TEXT("ULimenFastScreenVisibilityChecker"));
-
-    LimenLog(this, FString::Printf(TEXT("Updates: %llu"), UpdatesThisTick),
-             ELogType::Log,
-             true,
-             TEXT("ULimenFastScreenVisibilityChecker UpdatesThisTick"));
+    // LimenLog(this, FString::Printf(TEXT("Is visible: %d"), bCurrentIsVisible),
+    //          ELogType::Log,
+    //          true,
+    //          TEXT("ULimenFastScreenVisibilityChecker"));
+    // 
+    // LimenLog(this, FString::Printf(TEXT("Updates: %llu"), UpdatesThisTick),
+    //          ELogType::Log,
+    //          true,
+    //          TEXT("ULimenFastScreenVisibilityChecker UpdatesThisTick"));
 
     UpdatesThisTick = 0;
 }
