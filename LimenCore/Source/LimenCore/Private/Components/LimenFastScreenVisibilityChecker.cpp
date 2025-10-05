@@ -7,106 +7,126 @@
 #include "RenderGraphResources.h"
 #include "RenderGraphUtils.h"
 #include "SceneRenderTargetParameters.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
+#include "LogMacros/LimenLogMacros.h"
 #include "Shaders/FFastScreenVisibilityCheckCS.h"
 
 
 void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::
-    PostRenderViewFamily_RenderThread(FRDGBuilder& GraphBuilder, FSceneViewFamily& ViewFamily)
+PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& InView,
+    const FRenderTargetBindingSlots& RenderTargets, TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures)
 {
-	FSceneViewExtensionBase::PostRenderViewFamily_RenderThread(GraphBuilder, ViewFamily);
+    FSceneViewExtensionBase::PostRenderBasePassDeferred_RenderThread(GraphBuilder, InView, RenderTargets, SceneTextures);
 
     if (!Owner.IsValid()) return;
-    if (!ViewFamily.EngineShowFlags.Game) return;
+    if (InView.ViewActor.Actor != Owner->GetOwner()) return;
 
-    // --- enqueue one pass per view ---
-    for (const FSceneView* V : ViewFamily.Views)
+    // 1) 1-uint buffer + UAV (flag)
+    FRDGBufferDesc OutFlagBufDesc = FRDGBufferDesc::CreateBufferDesc(sizeof(uint32), 1);
+    const FRDGBufferRef  OutFlagBuf = GraphBuilder.CreateBuffer(OutFlagBufDesc, TEXT("Limen.StencilFlag"));
+    const FRDGBufferUAVRef OutFlagUAV = GraphBuilder.CreateUAV(OutFlagBuf, PF_R32_UINT);
+    AddClearUAVPass(GraphBuilder, OutFlagUAV, 0u);
+
+
+    const FSceneView& ViewRef = InView;
+
+    ViewRect = ViewRef.CameraConstrainedViewRect;
+
+    FRDGTextureDesc DebugDesc = FRDGTextureDesc::Create2D(ViewRect.Size(),
+                                                  PF_R8G8B8A8, FClearValueBinding::Black,
+                                                  TexCreate_ShaderResource | TexCreate_UAV);
+    const FRDGTextureRef DebugTex = GraphBuilder.CreateTexture(DebugDesc, TEXT("Limen.DebugStencilOut"));
+    const FRDGTextureUAVRef DebugUAV = GraphBuilder.CreateUAV(FRDGTextureUAVDesc(DebugTex));
+    AddClearUAVPass(GraphBuilder, DebugUAV, FUintVector4(0,0,0,255));
+
+    // 3) Fill params
+    auto* Params =
+        GraphBuilder.AllocParameters<FFastScreenVisibilityCheckCS::FParameters>();
+    Params->View            = ViewRef.ViewUniformBuffer;
+    Params->SceneTextures   = CreateSceneTextureUniformBuffer(GraphBuilder, ViewRef,
+                                                                 ESceneTextureSetupMode::All);
+    Params->ViewRectMin     = ViewRect.Min;
+    Params->ViewRectSize    = ViewRect.Size();
+    Params->Mask            = MaskToCheck;
+    Params->OutFlag         = OutFlagUAV;
+    Params->DebugOut        = DebugUAV;
+
+    // 4) Dispatch compute
+    TShaderMapRef<FFastScreenVisibilityCheckCS> CS(GetGlobalShaderMap(ViewRef.GetFeatureLevel()));
+    const FIntPoint Sz = ViewRect.Size();
+    const FIntVector Groups( (Sz.X + 7) / 8, (Sz.Y + 7) / 8, 1 );
+
+    FComputeShaderUtils::AddPass(GraphBuilder, RDG_EVENT_NAME("Limen.StencilReduce"), CS, Params, Groups);
+
+    // --- 5) Queue GPU->CPU copy **right here** (buffer path)
+    if (MaximumFrameBuffering <= 0 || Readbacks.Num() < MaximumFrameBuffering)
     {
-        const FSceneView& View = *V;
-        if (!View.bIsGameView) continue;
-        const FIntRect ViewRect = View.UnscaledViewRect;
+        Readbacks.Push(MakeShared<FRHIGPUBufferReadback>(TEXT("Limen.StencilFlagRB")));
 
-        // 1) 1-uint buffer + UAV (flag)
-        FRDGBufferDesc OutFlagBufDesc = FRDGBufferDesc::CreateBufferDesc(sizeof(uint32), 1);
-        const FRDGBufferRef  OutFlagBuf = GraphBuilder.CreateBuffer(OutFlagBufDesc, TEXT("Limen.StencilFlag"));
-        const FRDGBufferUAVRef OutFlagUAV = GraphBuilder.CreateUAV(OutFlagBuf, PF_R32_UINT);
-        AddClearUAVPass(GraphBuilder, OutFlagUAV, 0u);
-
-        FRDGTextureDesc DebugDesc = FRDGTextureDesc::Create2D(ViewRect.Size(), PF_R8G8B8A8, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_UAV);
-        const FRDGTextureRef DebugTex = GraphBuilder.CreateTexture(DebugDesc, TEXT("Limen.DebugStencilOut"));
-        const FRDGTextureUAVRef DebugUAV = GraphBuilder.CreateUAV(FRDGTextureUAVDesc(DebugTex));
-        AddClearUAVPass(GraphBuilder, DebugUAV, FUintVector4(0,0,0,255));
-
-        // 3) Fill params
-        auto* Params = GraphBuilder.AllocParameters<FFastScreenVisibilityCheckCS::FParameters>();
-        Params->View            = View.ViewUniformBuffer;
-        Params->SceneTextures   = CreateSceneTextureUniformBuffer(GraphBuilder, View, ESceneTextureSetupMode::All);
-        Params->ViewRectMin     = ViewRect.Min;
-        Params->ViewRectSize    = ViewRect.Size();
-        Params->Mask            = MaskToCheck;
-        Params->OutFlag         = OutFlagUAV;
-        Params->DebugOut        = DebugUAV;
-
-        // 4) Dispatch compute
-        TShaderMapRef<FFastScreenVisibilityCheckCS> CS(GetGlobalShaderMap(View.GetFeatureLevel()));
-        const FIntPoint Sz = ViewRect.Size();
-        const FIntVector Groups( (Sz.X + 7) / 8, (Sz.Y + 7) / 8, 1 );
-
-        FComputeShaderUtils::AddPass(GraphBuilder, RDG_EVENT_NAME("Limen.StencilReduce"), CS, Params, Groups);
-
-        // --- 5) Queue GPU->CPU copy **right here** (buffer path)
-        const int WriteIdx = FrameCounter & 1;
-        if (!Readbacks[WriteIdx].IsValid())
-        {
-            Readbacks[WriteIdx] = MakeUnique<FRHIGPUBufferReadback>(TEXT("Limen.StencilFlagRB"));
-        }
         // Buffer overload takes a byte size (sizeof(uint32) for one element)
-        AddEnqueueCopyPass(GraphBuilder, Readbacks[WriteIdx].Get(), OutFlagBuf, sizeof(uint32));
+        AddEnqueueCopyPass(GraphBuilder, Readbacks.Last().Get(), OutFlagBuf, sizeof(uint32));
+    }
 
-        if (Owner->bEnableDebug)
-        if (UTextureRenderTarget2D* RT = Owner->GetDebugRenderTarget())
-        if (FTextureRenderTargetResource* Res = RT->GetRenderTargetResource())
-        if (FRHITexture* RHI = Res->GetTextureRHI())
+
+    if (Owner->bEnableDebug)
+    if (UTextureRenderTarget2D* RT = Owner->GetDebugRenderTarget())
+    if (FTextureRenderTargetResource* Res = RT->GetRenderTargetResource())
+    if (FRHITexture* RHI = Res->GetTextureRHI())
+    {
+        if (FIntPoint(RHI->GetDesc().Extent.X, RHI->GetDesc().Extent.Y ) == ViewRect.Size())
         {
-            if (FIntPoint(RHI->GetDesc().Extent.X, RHI->GetDesc().Extent.Y ) == ViewRect.Size())
-            {
-                FTextureRHIRef ExtRHI = RHI;
-                const FRDGTextureRef ExtRDG = RegisterExternalTexture(GraphBuilder, ExtRHI, TEXT("Limen.DebugRT"));
-                AddCopyTexturePass(GraphBuilder, DebugTex, ExtRDG);
-            }
+            const FRDGTextureRef ExtRDG = RegisterExternalTexture(GraphBuilder, RHI,
+                                                                  TEXT("Limen.DebugRT"));
+            AddCopyTexturePass(GraphBuilder, DebugTex, ExtRDG);
         }
     }
+}
+
+void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::PostRenderViewFamily_RenderThread(
+    FRDGBuilder& GraphBuilder, FSceneViewFamily& ViewFamily)
+{
+    FSceneViewExtensionBase::PostRenderViewFamily_RenderThread(GraphBuilder, ViewFamily);
 
     // --- 6) Poll last frame's readback on RT, then bounce to GT
-    if (const int ReadIdx = (FrameCounter + 1) & 1; Readbacks[ReadIdx].IsValid() && Readbacks[ReadIdx]->IsReady())
+    for (int32 i = Readbacks.Num() - 1; i >= 0; --i)
     {
-        const void* Ptr = Readbacks[ReadIdx]->Lock(sizeof(uint32));
-        const uint32 v = *static_cast<const uint32*>(Ptr);
-        Readbacks[ReadIdx]->Unlock();
-
-        // const bool bStencilMaskHit = (v & 0x1) != 0;
-        const bool bVisible = (v & 0x2) != 0;
-
-        auto LocalOwner = Owner;
-        AsyncTask(ENamedThreads::GameThread, [LocalOwner, bVisible]
+        if (Readbacks[i].IsValid() && Readbacks[i]->IsReady())
         {
-            if (LocalOwner.IsValid())
-            {
-                LocalOwner->VisibilityResultFromRender(bVisible);
-            }
-        });
-    }
+            const TSharedPtr<FRHIGPUBufferReadback> MostUpToDateReadbackReady = Readbacks[i];
 
-    ++FrameCounter;
+            const void* Ptr = MostUpToDateReadbackReady->Lock(sizeof(uint32));
+            const uint32 v = *static_cast<const uint32*>(Ptr);
+            MostUpToDateReadbackReady->Unlock();
+
+            // const bool bStencilMaskHit = (v & 0x1) != 0;
+            const bool bVisible = (v & 0x2) != 0;
+
+            auto LocalOwner = Owner;
+            AsyncTask(ENamedThreads::GameThread, [LocalOwner, bVisible]
+            {
+                if (LocalOwner.IsValid())
+                {
+                    LocalOwner->VisibilityResultFromRender(bVisible);
+                }
+            });
+
+            Readbacks.RemoveAt(0, i + 1, EAllowShrinking::Yes);
+            break;
+        }
+    }
 }
 
 ULimenFastScreenVisibilityChecker::ULimenFastScreenVisibilityChecker(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    PrimaryComponentTick.bCanEverTick = false;
+    PrimaryComponentTick.bCanEverTick = true;
+    PrimaryComponentTick.TickInterval = 0.f;
+    bAutoActivate = true;
 
     bCurrentIsVisible = false;
     StencilMask = 0;
     bEnableDebug = false;
+    MaximumFrameBuffering = 1;
 }
 
 void ULimenFastScreenVisibilityChecker::BeginPlay()
@@ -119,10 +139,16 @@ void ULimenFastScreenVisibilityChecker::BeginPlay()
         DebugOutputRT->RenderTargetFormat = RTF_RGBA8;
         DebugOutputRT->bAutoGenerateMips = false;
         DebugOutputRT->ClearColor = FLinearColor::Black;
+        DebugOutputRT->InitCustomFormat(1, 1, EPixelFormat::PF_R8G8B8A8, false);
     }
 
-    ViewExt = FSceneViewExtensions::NewExtension<FFastScreenVisibilityCheckViewExtension>(TWeakObjectPtr(this),
-                                                                                          StencilMask);
+    if (MaximumFrameBuffering <= 0)
+    {
+        LIMEN_LOG(LogLimenCore, Error, this, TEXT("MaximumFrameBuffering is set to %d! HIGH RISK OF MEMORY LEAKS -> Try a value above 0."), MaximumFrameBuffering)
+    }
+
+    ViewExt = FSceneViewExtensions::NewExtension<FFastScreenVisibilityCheckViewExtension>(
+        TWeakObjectPtr(this), StencilMask, MaximumFrameBuffering);
 }
 
 void ULimenFastScreenVisibilityChecker::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -140,6 +166,24 @@ void ULimenFastScreenVisibilityChecker::TickComponent(float DeltaTime, enum ELev
     FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    if (DebugOutputRT.IsValid() && ViewExt.IsValid())
+    {
+        const FIntPoint ViewRectSize = ViewExt->GetViewRect().Size();
+        DebugOutputRT->ResizeTarget(FMath::Max(ViewRectSize.X, 1), FMath::Max(ViewRectSize.Y, 1));
+    }
+
+    LimenLog(this, FString::Printf(TEXT("Is visible: %d"), bCurrentIsVisible),
+             ELogType::Log,
+             true,
+             TEXT("ULimenFastScreenVisibilityChecker"));
+
+    LimenLog(this, FString::Printf(TEXT("Updates: %llu"), UpdatesThisTick),
+             ELogType::Log,
+             true,
+             TEXT("ULimenFastScreenVisibilityChecker UpdatesThisTick"));
+
+    UpdatesThisTick = 0;
 }
 
 bool ULimenFastScreenVisibilityChecker::IsVisible() const
@@ -150,13 +194,13 @@ bool ULimenFastScreenVisibilityChecker::IsVisible() const
 UTextureRenderTarget2D* ULimenFastScreenVisibilityChecker::GetDebugRenderTarget() const
 {
     return DebugOutputRT.Get();
-    // return nullptr;
 }
 
 void ULimenFastScreenVisibilityChecker::VisibilityResultFromRender(const bool bIsVisible)
 {
     check(IsInGameThread());
-    if (GetWorld()->IsPaused()) return;
+
+    UpdatesThisTick++;
     if (bCurrentIsVisible == bIsVisible) return;
 
     bCurrentIsVisible = bIsVisible;

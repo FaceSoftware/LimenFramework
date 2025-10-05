@@ -23,22 +23,27 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		FFastScreenVisibilityCheckViewExtension(
 			const FAutoRegister& AutoReg,
 			const TWeakObjectPtr<ULimenFastScreenVisibilityChecker> InOwner,
-			const uint32 InMask)
+			const uint32 InMask,
+			int32 InMaximumFrameBuffering)
 			: FSceneViewExtensionBase(AutoReg)
 			, Owner(InOwner)
 			, MaskToCheck(InMask)
+			, MaximumFrameBuffering(InMaximumFrameBuffering)
 		{
 		}
 
+		virtual void PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& InView, const FRenderTargetBindingSlots& RenderTargets, TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures) override;
 		virtual void PostRenderViewFamily_RenderThread(FRDGBuilder& GraphBuilder, FSceneViewFamily& ViewFamily) override;
+
+		FORCEINLINE FIntRect GetViewRect() const { return ViewRect; }
 
 	private:
 		TWeakObjectPtr<ULimenFastScreenVisibilityChecker> Owner; // read only on RT
 		uint8 MaskToCheck = 1u;
 
-		// double-buffered readbacks to avoid contention
-		TUniquePtr<FRHIGPUBufferReadback> Readbacks[2];
-		uint64 FrameCounter = 0;
+		TArray<TSharedPtr<FRHIGPUBufferReadback>> Readbacks;
+		int32 MaximumFrameBuffering;
+		FIntRect ViewRect;
 	};
 
 public:
@@ -49,7 +54,8 @@ public:
 	explicit ULimenFastScreenVisibilityChecker(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
+							   FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
 	bool IsVisible() const;
@@ -61,11 +67,14 @@ protected:
 	uint8 StencilMask;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
 	bool bEnableDebug;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
+	int32 MaximumFrameBuffering;
 
 private:
-	TSharedPtr<FSceneViewExtensionBase> ViewExt; 
+	TSharedPtr<FFastScreenVisibilityCheckViewExtension> ViewExt; 
 	bool bCurrentIsVisible;
 	TStrongObjectPtr<UTextureRenderTarget2D> DebugOutputRT;
+	uint64 UpdatesThisTick;
 
 	void VisibilityResultFromRender(const bool bIsVisible);
 };

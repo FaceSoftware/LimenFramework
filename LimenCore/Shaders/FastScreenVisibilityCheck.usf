@@ -36,12 +36,13 @@ void MainCS(uint3 Tid:SV_GroupThreadID, uint3 DTid:SV_DispatchThreadID)
 		bool bOccluded = (CustomLinearDepth > SceneLinearDepth + Bias);
 
 		// Stencil
-		uint s = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel,0)) STENCIL_COMPONENT_SWIZZLE;
+		uint s = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
 		bool bHit      = ((s & Mask) != 0u);
 		bool bVisible  = bHit && !bOccluded;
 
-		// Visualize (white when visible match; black otherwise)
-		DebugOut[LocalPixel] = bVisible ? float4(1.f, 1.f, 1.f, 1.f) : float4(.0f, .0f, .0f, 1.f);
+		// Visualize (white when visible match; blue when occluded; black otherwise)
+		DebugOut[LocalPixel] = bHit ? (bVisible ? float4(1.f, 1.f, 1.f, 1.f) : float4(0.f, 0.f, 1.f, 1.f)) : float4(.0f, .0f, .0f, 1.f);
+		// DebugOut[LocalPixel] =  SceneTexturesStruct.SceneColorTexture.Load(int3(GlobalPixel, 0));
 
 		// Accumulate flags in this thread group
 		if (bHit)     InterlockedOr(GroupFlags, 0x1);
