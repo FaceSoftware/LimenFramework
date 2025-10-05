@@ -7,7 +7,7 @@
 #include "RenderGraphResources.h"
 #include "RenderGraphUtils.h"
 #include "SceneRenderTargetParameters.h"
-#include "BlueprintLibraries/LimenCoreStatics.h"
+// #include "BlueprintLibraries/LimenCoreStatics.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Shaders/FFastScreenVisibilityCheckCS.h"
 
@@ -20,6 +20,7 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
 
     if (!Owner.IsValid()) return;
     if (InView.ViewActor.Actor != Owner->GetOwner()) return;
+    if (MaximumFrameBuffering <= 0 || Readbacks.Num() < MaximumFrameBuffering) return;
 
     // 1) 1-uint buffer + UAV (flag)
     FRDGBufferDesc OutFlagBufDesc = FRDGBufferDesc::CreateBufferDesc(sizeof(uint32), 1);
@@ -27,10 +28,7 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     const FRDGBufferUAVRef OutFlagUAV = GraphBuilder.CreateUAV(OutFlagBuf, PF_R32_UINT);
     AddClearUAVPass(GraphBuilder, OutFlagUAV, 0u);
 
-
-    const FSceneView& ViewRef = InView;
-
-    ViewRect = ViewRef.CameraConstrainedViewRect;
+    ViewRect = InView.CameraConstrainedViewRect;
 
     FRDGTextureDesc DebugDesc = FRDGTextureDesc::Create2D(ViewRect.Size(),
                                                   PF_R8G8B8A8, FClearValueBinding::Black,
@@ -42,8 +40,8 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     // 3) Fill params
     auto* Params =
         GraphBuilder.AllocParameters<FFastScreenVisibilityCheckCS::FParameters>();
-    Params->View            = ViewRef.ViewUniformBuffer;
-    Params->SceneTextures   = CreateSceneTextureUniformBuffer(GraphBuilder, ViewRef,
+    Params->View            = InView.ViewUniformBuffer;
+    Params->SceneTextures   = CreateSceneTextureUniformBuffer(GraphBuilder, InView,
                                                                  ESceneTextureSetupMode::All);
     Params->ViewRectMin     = ViewRect.Min;
     Params->ViewRectSize    = ViewRect.Size();
@@ -52,21 +50,18 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     Params->DebugOut        = DebugUAV;
 
     // 4) Dispatch compute
-    TShaderMapRef<FFastScreenVisibilityCheckCS> CS(GetGlobalShaderMap(ViewRef.GetFeatureLevel()));
+    TShaderMapRef<FFastScreenVisibilityCheckCS> CS(GetGlobalShaderMap(InView.GetFeatureLevel()));
     const FIntPoint Sz = ViewRect.Size();
     const FIntVector Groups( (Sz.X + 7) / 8, (Sz.Y + 7) / 8, 1 );
 
     FComputeShaderUtils::AddPass(GraphBuilder, RDG_EVENT_NAME("Limen.StencilReduce"), CS, Params, Groups);
 
     // --- 5) Queue GPU->CPU copy **right here** (buffer path)
-    if (MaximumFrameBuffering <= 0 || Readbacks.Num() < MaximumFrameBuffering)
-    {
-        Readbacks.Push(MakeShared<FRHIGPUBufferReadback>(TEXT("Limen.StencilFlagRB")));
+    check(MaximumFrameBuffering <= 0 || Readbacks.Num() < MaximumFrameBuffering)
+    Readbacks.Push(MakeShared<FRHIGPUBufferReadback>(TEXT("Limen.StencilFlagRB")));
 
-        // Buffer overload takes a byte size (sizeof(uint32) for one element)
-        AddEnqueueCopyPass(GraphBuilder, Readbacks.Last().Get(), OutFlagBuf, sizeof(uint32));
-    }
-
+    // Buffer overload takes a byte size (sizeof(uint32) for one element)
+    AddEnqueueCopyPass(GraphBuilder, Readbacks.Last().Get(), OutFlagBuf, sizeof(uint32));
 
     if (Owner->bEnableDebug)
     if (UTextureRenderTarget2D* RT = Owner->GetDebugRenderTarget())
