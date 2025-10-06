@@ -8,7 +8,6 @@
 #include "LimenMovementComponent.generated.h"
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMovementStatusUpdate);
 
 /**
  * Class that communicates with a character movement component instance to support Sprint movement mode.
@@ -20,6 +19,7 @@ class LIMENLOCOMOTION_API ULimenMovementComponent : public UCharacterMovementCom
 
 	friend class FSavedMove_Limen;
 
+public:
 	enum class EWalkModifier
 	{
 		None,
@@ -27,7 +27,9 @@ class LIMENLOCOMOTION_API ULimenMovementComponent : public UCharacterMovementCom
 		Sprint,
 	};
 
-public:
+	DECLARE_MULTICAST_DELEGATE_OneParam(FWalkModifierUpdated, const EWalkModifier /* NewModifier */);
+	FWalkModifierUpdated OnWalkModifierChanged;
+
 	explicit ULimenMovementComponent(const FObjectInitializer& InObjectInitializer);
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;

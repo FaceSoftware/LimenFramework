@@ -177,6 +177,8 @@ bool ULimenMovementComponent::CanAttemptJump() const
 
 void ULimenMovementComponent::OnWalkModeChanged(const EWalkModifier NewMode)
 {
+	check(NewMode == WalkMode)
+
 	switch (NewMode)
 	{
 	case EWalkModifier::None:
@@ -200,6 +202,8 @@ void ULimenMovementComponent::OnWalkModeChanged(const EWalkModifier NewMode)
 		}
 		break;
 	}
+
+	OnWalkModifierChanged.Broadcast(NewMode);
 }
 
 void ULimenMovementComponent::SetupAirStrafing()
