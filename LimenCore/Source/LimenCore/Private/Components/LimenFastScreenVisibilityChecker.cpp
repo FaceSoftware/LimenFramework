@@ -195,6 +195,8 @@ void ULimenFastScreenVisibilityChecker::VisibilityResultFromRender(const bool bI
 {
     check(IsInGameThread());
 
+    if (!IsActive()) return;
+
     UpdatesThisTick++;
     if (bCurrentIsVisible == bIsVisible) return;
 
