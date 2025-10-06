@@ -51,6 +51,42 @@ TArray<ILimenInteractableComponent*> ALimenInteractable::GetInteractableComponen
 	return OutComponents;
 }
 
+bool ALimenInteractable::ShouldSaveData() const
+{
+	return true;
+}
+
+bool ALimenInteractable::ShouldLoadData() const
+{
+	return true;
+}
+
+void ALimenInteractable::PreDataSaved()
+{
+}
+
+void ALimenInteractable::PostDataLoaded()
+{
+}
+
+FName ALimenInteractable::GetUniqueDeterministicId() const
+{
+	return UniqueName;
+}
+
+void ALimenInteractable::SetUniqueName(const FName& NewUniqueName)
+{
+	UniqueName = NewUniqueName;
+}
+
+void ALimenInteractable::PostDataSaved()
+{
+}
+
+void ALimenInteractable::PreDataLoaded()
+{
+}
+
 bool ALimenInteractable::IsBeingContinuouslyInteracted() const
 {
 	return bIsBeingContinuouslyInteracted;

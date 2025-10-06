@@ -181,42 +181,6 @@ const FText& ALimenItemBase::GetDescription() const
 	return Description;
 }
 
-bool ALimenItemBase::ShouldSaveData() const
-{
-	return HasBeenInteracted();
-}
-
-bool ALimenItemBase::ShouldLoadData() const
-{
-	return true;
-}
-
-void ALimenItemBase::PreDataSaved()
-{
-}
-
-void ALimenItemBase::PostDataLoaded()
-{
-}
-
-FName ALimenItemBase::GetUniqueDeterministicId() const
-{
-	return UniqueName;
-}
-
-void ALimenItemBase::SetUniqueName(const FName& NewUniqueName)
-{
-	UniqueName = NewUniqueName;
-}
-
-void ALimenItemBase::PostDataSaved()
-{
-}
-
-void ALimenItemBase::PreDataLoaded()
-{
-}
-
 TArray<ULimenItemAction*> ALimenItemBase::GetItemActions() const
 {
 	TArray<ULimenItemAction*> Out;

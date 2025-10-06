@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Actors/LimenGameplayActor.h"
 #include "Interfaces/LimenInteractableComponent.h"
+#include "Interfaces/LimenSaveObjectInterface.h"
 #include "LimenInteractable.generated.h"
 
 
@@ -13,7 +14,7 @@ class ULimenInteractableComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInteractableDelegate, AController*, Controller, APawn*, Pawn);
 
 UCLASS(BlueprintType, Blueprintable)
-class LIMENINTERACTION_API ALimenInteractable : public ALimenGameplayActor
+class LIMENINTERACTION_API ALimenInteractable : public ALimenGameplayActor, public ILimenSaveObjectInterface
 {
 	GENERATED_BODY()
 
@@ -48,8 +49,19 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool IsBeingContinuouslyInteracted() const;
+
+	virtual bool ShouldSaveData() const override;
+	virtual bool ShouldLoadData() const override;
+	virtual void PreDataSaved() override;
+	virtual void PostDataSaved() override;
+	virtual void PreDataLoaded() override;
+	virtual void PostDataLoaded() override;
+	virtual FName GetUniqueDeterministicId() const override;
+	void SetUniqueName(const FName& NewUniqueName);
 	
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interactable")
+	FName UniqueName;
 	/**
 	 * @brief Simulates an interaction.
 	 * Useful after loading to simulate previous player interactions.

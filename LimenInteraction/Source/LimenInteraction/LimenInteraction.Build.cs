@@ -27,6 +27,7 @@ public class LimenInteraction : ModuleRules
 			{
 				"Core", 
 				"LimenCore",
+				"LimenSaveSystem",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

@@ -22,7 +22,7 @@ class ALimenItemBase;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FItemActionRequest, TSubclassOf<ALimenItemBase>, Item, AController*, InController, APawn*, InPawn);
 
 UCLASS(Abstract, Blueprintable, BlueprintType)
-class LIMENINTERACTION_API ALimenItemBase : public ALimenInteractable, public ILimenSaveObjectInterface
+class LIMENINTERACTION_API ALimenItemBase : public ALimenInteractable
 {
 	GENERATED_BODY()
 
@@ -57,16 +57,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void CaptureItemImage();
-
-	virtual bool ShouldSaveData() const override;
-	virtual bool ShouldLoadData() const override;
-	virtual void PreDataSaved() override;
-	virtual void PostDataSaved() override;
-	virtual void PreDataLoaded() override;
-	virtual void PostDataLoaded() override;
-	virtual FName GetUniqueDeterministicId() const override;
-
-	void SetUniqueName(const FName& NewUniqueName);
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Items|Actions", BlueprintPure)
 	TArray<ULimenItemAction*> GetItemActions() const;
@@ -91,8 +81,6 @@ protected:
 	FText DisplayName;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters")
 	FText Description;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters")
-	FName UniqueName;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "!bUseSceneCaptureForImage"))
 	TObjectPtr<UTexture> ItemImage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "ItemImageSceneCapture != nullptr"))
