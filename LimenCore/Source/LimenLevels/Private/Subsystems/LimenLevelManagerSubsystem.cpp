@@ -54,34 +54,25 @@ bool ULimenLevelManagerSubsystem::OpenInitializationLevel()
 	return true;
 }
 
-void ULimenLevelManagerSubsystem::OpenMainMenu(ELevelOpenContext Context)
+void ULimenLevelManagerSubsystem::OpenMainMenu()
 {
 	const TSoftObjectPtr<UWorld> Level = ULimenLevelsDeveloperSettings::GetMainMenuLevel();
 	if (Level.IsNull()) return;
 
 	const FString LevelPath = Level.ToSoftObjectPath().GetLongPackageName();
-	switch (Context)
-	{
-	case ELevelOpenContext::Local:
-		OpenOfflineLevel_Internal(LevelPath);
-		break;
-
-	case ELevelOpenContext::Connect:
-		ConnectToServer_Internal(LevelPath);
-		break;
-
-	case ELevelOpenContext::Server:
-		OpenServerLevel_Internal(LevelPath);
-		break;
-	}
+	OpenOfflineLevel_Internal(LevelPath);
 }
 
 void ULimenLevelManagerSubsystem::OpenGameEndLevel()
 {
-	OpenOfflineLevel_Internal(ULimenLevelsDeveloperSettings::GetGameEndLevel()->GetMapName());
+	const TSoftObjectPtr<UWorld> Level = ULimenLevelsDeveloperSettings::GetGameEndLevel();
+	if (Level.IsNull()) return;
+
+	const FString LevelPath = Level.ToSoftObjectPath().GetLongPackageName();
+	OpenOfflineLevel_Internal(LevelPath);
 }
 
-void ULimenLevelManagerSubsystem::OpenGameLevel(ELevelOpenContext Context, const int32 Index, FString Options)
+void ULimenLevelManagerSubsystem::OpenGameLevel(const ELevelOpenContext Context, const int32 Index, const FString Options)
 {
 	if (!IsGameLevelIndexValid(Index)) return;
 
