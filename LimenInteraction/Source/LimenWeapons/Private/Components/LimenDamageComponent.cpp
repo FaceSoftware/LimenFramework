@@ -73,6 +73,12 @@ void ULimenDamageComponent::ApplyDamage(AController* Instigator, AActor* Causer,
 	ActiveDamageInfo.Push(Info);
 }
 
+void ULimenDamageComponent::SetDamageCalculationFunction(
+	const TFunction<float(const FDamageParameters&, const ULimenDamageType*)>& InFunction)
+{
+	DamageCalcFunc = InFunction;
+}
+
 void ULimenDamageComponent::Multicast_BroadcastDamageReceived_Implementation(const FDamageInfo& Info)
 {
 	// Broadcast the damage received

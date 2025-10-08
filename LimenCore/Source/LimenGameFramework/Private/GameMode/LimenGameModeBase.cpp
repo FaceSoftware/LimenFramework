@@ -38,6 +38,16 @@ void ALimenGameModeBase::InitGame(const FString& MapName, const FString& Options
 	{
 		ULimenCoreStatics::LimenLog(this, TEXT("Game initialized successfully"), ELogType::Log, false);
 	}
+
+	for (auto& StreamingLevel : GetWorld()->GetStreamingLevels())
+	{
+		if (StreamingLevel->IsStreamingStatePending())
+		{
+			InitialStreamingLevels++;
+			StreamingLevel->OnLevelShown.AddUniqueDynamic(this, &ThisClass::InitialStreamingLevelShown);
+			InitialStreamingLevelsList.Push(StreamingLevel);
+		}
+	}
 }
 
 void ALimenGameModeBase::BeginPlay()
@@ -96,17 +106,26 @@ bool ALimenGameModeBase::ClearPause()
 ALimenGameStateBase* ALimenGameModeBase::GetLimenGameState()
 {
 	LimenGameState = GetGameState<ALimenGameStateBase>();
-	check(LimenGameState)
+	check(LimenGameState.IsValid())
 	
 	return LimenGameState.Get();
 }
 
 void ALimenGameModeBase::ResetManagers()
 {
-	for (const TObjectPtr<ALimenGameplayManager>& Manager : ManagersList)
+	for (const TWeakObjectPtr<ALimenGameplayManager>& Manager : ManagersList)
 	{
 		Manager->Reset();
 	}
+}
+
+bool ALimenGameModeBase::IsInitialLevelStreamingComplete() const
+{
+	return InitialStreamingLevelsList.IsEmpty();
+}
+
+void ALimenGameModeBase::InitialLevelStreamingComplete()
+{
 }
 
 void ALimenGameModeBase::SpawnManagers()
@@ -123,5 +142,24 @@ void ALimenGameModeBase::SpawnManagers()
 		
 		ManagerInstance->BindGameMode(this);
 		ManagersList.Push(TObjectPtr<ALimenGameplayManager>(ManagerInstance));
+	}
+}
+
+void ALimenGameModeBase::InitialStreamingLevelShown()
+{
+	InitialStreamingLevels--;
+	check(InitialStreamingLevels >= 0)
+	if (InitialStreamingLevels == 0)
+	{
+		for (auto& StreamingLevel : InitialStreamingLevelsList)
+		{
+			if (StreamingLevel.IsValid())
+			{
+				StreamingLevel->OnLevelShown.RemoveDynamic(this, &ThisClass::InitialStreamingLevelShown);
+			}
+		}
+		InitialStreamingLevelsList.Empty(0);
+
+		InitialLevelStreamingComplete();
 	}
 }

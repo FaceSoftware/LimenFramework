@@ -51,6 +51,8 @@ public:
 	void SetDamageCalculationFunction(T* Object,
 		typename TMemFunPtrType<true, T, float(const FDamageParameters&, const ULimenDamageType*)>::Type Callback);
 
+	void SetDamageCalculationFunction(const TFunction<float(const FDamageParameters&, const ULimenDamageType*)>& InFunction);
+
 protected:
 
 private:

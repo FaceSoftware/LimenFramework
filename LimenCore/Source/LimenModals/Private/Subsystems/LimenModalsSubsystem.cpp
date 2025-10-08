@@ -19,7 +19,7 @@ bool ULimenModalsSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	return !IsRunningDedicatedServer();
 }
 
-ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConfirmationModal(const FModalParams& InParams) const
+ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConfirmationModal(const FModalParams& InParams)
 {
 	const ULimenModalsDeveloperSettings* Settings = GetDefault<ULimenModalsDeveloperSettings>();
 	check(Settings != nullptr);
@@ -28,7 +28,7 @@ ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConfirmationModal(const 
 	return ModalWidget;
 }
 
-ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConsentModal(const FModalParams& InParams) const
+ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConsentModal(const FModalParams& InParams)
 {
 	const ULimenModalsDeveloperSettings* Settings = GetDefault<ULimenModalsDeveloperSettings>();
 	check(Settings != nullptr);
@@ -37,7 +37,7 @@ ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayConsentModal(const FModa
 	return ModalWidget;
 }
 
-ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayTimedModal(const FModalParams& InParams) const
+ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayTimedModal(const FModalParams& InParams)
 {
 	const ULimenModalsDeveloperSettings* Settings = GetDefault<ULimenModalsDeveloperSettings>();
 	check(Settings != nullptr);
@@ -70,9 +70,11 @@ void UConfirmationModalAsyncAction::Activate()
 {
 	Super::Activate();
 
-	const ULimenModalsSubsystem* ModalSubsystem = World->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
-	ULimenGenericModalWidget* ModalWidget = ModalSubsystem->DisplayConfirmationModal(Params);
-	ModalWidget->OnModalResponseReceived.AddDynamic(this, &ThisClass::ModalDismissed);
+	ULimenModalsSubsystem* ModalSubsystem = World->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+	if (ULimenGenericModalWidget* ModalWidget = ModalSubsystem->DisplayConfirmationModal(Params))
+	{
+		ModalWidget->OnModalResponseReceived.AddDynamic(this, &ThisClass::ModalDismissed);
+	}
 }
 
 void UConfirmationModalAsyncAction::ModalDismissed(ULimenGenericModalWidget* ModalWidget, const bool bAccepted)
@@ -96,9 +98,11 @@ void UConsentModalAsyncAction::Activate()
 {
 	Super::Activate();
 
-	const ULimenModalsSubsystem* ModalSubsystem = World->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
-	ULimenGenericModalWidget* ModalWidget = ModalSubsystem->DisplayConsentModal(Params);
-	ModalWidget->OnModalResponseReceived.AddDynamic(this, &ThisClass::ModalDismissed);
+	ULimenModalsSubsystem* ModalSubsystem = World->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+	if (ULimenGenericModalWidget* ModalWidget = ModalSubsystem->DisplayConsentModal(Params))
+	{
+		ModalWidget->OnModalResponseReceived.AddDynamic(this, &ThisClass::ModalDismissed);
+	}
 }
 
 void UConsentModalAsyncAction::ModalDismissed(ULimenGenericModalWidget* ModalWidget, const bool bAccepted)

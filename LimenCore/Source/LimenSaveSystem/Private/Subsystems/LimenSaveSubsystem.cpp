@@ -3,19 +3,50 @@
 
 #include "Subsystems/LimenSaveSubsystem.h"
 
+#include "Blueprint/UserWidget.h"
+#include "DeveloperSettings/LimenSaveSystemDeveloperSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "SaveGames/LimenSaveData.h"
+#include "Widgets/LimenSaveWidget.h"
 
+
+ULimenSaveSubsystem::ULimenSaveSubsystem()
+{
+	bShouldShowSaveWidget = false;
+}
 
 void ULimenSaveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	auto* Settings = GetDefault<ULimenSaveSystemDeveloperSettings>();
+	if (Settings->SaveWidgetClass)
+	{
+		auto* SaveWidget = CreateWidget<ULimenSaveWidget>(GetWorld(),
+														  Settings->SaveWidgetClass.Get(),
+														  TEXT("SaveWidget"));
+
+		SaveWidgetStrongPtr = TStrongObjectPtr(SaveWidget);
+		SaveWidgetStrongPtr->OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::SaveWidgetAnimationFinished);
+	}
+}
+
+void ULimenSaveSubsystem::Deinitialize()
+{
+	Super::Deinitialize();
+
+	if (SaveWidgetStrongPtr.IsValid())
+	{
+		SaveWidgetStrongPtr->OnLimenAnimationFinished.RemoveDynamic(this, &ThisClass::SaveWidgetAnimationFinished);
+		SaveWidgetStrongPtr->DestroyWidget();
+		SaveWidgetStrongPtr.Reset();
+	}
 }
 
 ULimenSaveSubsystem* ULimenSaveSubsystem::Get(const UWorld* World)
 {
-	const auto* GameInstanceSubsystem = World->GetGameInstance();
-	check(GameInstanceSubsystem);
+	const auto* GameInstance = World->GetGameInstance();
+	check(GameInstance);
 
 	auto* SaveSubsystem = World->GetGameInstance()->GetSubsystem<ULimenSaveSubsystem>();
 	check(SaveSubsystem)
@@ -46,12 +77,10 @@ bool ULimenSaveSubsystem::SaveDataAsync(ULimenSaveData* SaveData, const FString&
 	SaveDelegate.BindLambda([this, SaveFinishCallback] (const FString& StringDataName, const int32 UserIndex, const bool bSuccess)
 	{
 		SaveFinishCallback(StringDataName, UserIndex, bSuccess);
-		OnSaveStateChanged.Broadcast(ESaveState::SavingComplete);
-		bIsAsyncOperationInProgress = false;
+		AsyncSaveFinished(StringDataName, UserIndex, bSuccess);
 	});
 
-	bIsAsyncOperationInProgress = true;
-	OnSaveStateChanged.Broadcast(ESaveState::Saving);
+	AsyncSaveStarted(DataName, 0);
 	UGameplayStatics::AsyncSaveGameToSlot(SaveData, DataName, 0, SaveDelegate);
 	return true;
 }
@@ -93,4 +122,44 @@ bool ULimenSaveSubsystem::LoadDataAsync(const FName& DataName, const TFunction<v
 bool ULimenSaveSubsystem::IsAsyncOperationInProgress() const
 {
 	return bIsAsyncOperationInProgress;
+}
+
+void ULimenSaveSubsystem::AsyncSaveStarted(const FString& StringDataName, const int32 UserIndex)
+{
+	bIsAsyncOperationInProgress = true;
+
+	if (SaveWidgetStrongPtr.IsValid())
+	{
+		SaveWidgetStrongPtr->ShowWidget();
+		SaveWidgetStrongPtr->SaveStarted();
+		bShouldShowSaveWidget = true;
+	}
+
+	OnSaveStateChanged.Broadcast(ESaveState::Saving);
+}
+
+void ULimenSaveSubsystem::AsyncSaveFinished(const FString& StringDataName, const int32 UserIndex, const bool bSuccess)
+{
+	bIsAsyncOperationInProgress = false;
+
+	if (SaveWidgetStrongPtr.IsValid())
+	{
+		SaveWidgetStrongPtr->SaveFinished();
+		SaveWidgetStrongPtr->HideWidget();
+		bShouldShowSaveWidget = false;
+	}
+
+	OnSaveStateChanged.Broadcast(ESaveState::SavingComplete);
+}
+
+void ULimenSaveSubsystem::SaveWidgetAnimationFinished(const bool bIsVisible)
+{
+	if (bIsVisible && !bShouldShowSaveWidget)
+	{
+		SaveWidgetStrongPtr->HideWidget();
+	}
+	else if (!bIsVisible && bShouldShowSaveWidget)
+	{
+		SaveWidgetStrongPtr->ShowWidget();
+	}
 }

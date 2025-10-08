@@ -50,9 +50,6 @@ private:
 	TWeakObjectPtr<APawn> InteractPawn;
 
 	TWeakObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
-	TWeakObjectPtr<UPrimitiveComponent> HeldComponent;
-	TWeakObjectPtr<UPrimitiveComponent> TracedComponent;
-	TWeakObjectPtr<ULimenInteractableAreaComponent> InteractionComponent;
 	FHitResult OutHit;
 	FCollisionQueryParams TraceQueryParams;
 	FCollisionResponseParams TraceResponseParams;

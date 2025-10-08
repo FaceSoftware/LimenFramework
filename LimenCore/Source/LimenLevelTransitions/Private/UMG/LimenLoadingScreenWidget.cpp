@@ -4,12 +4,33 @@
 #include "UMG/LimenLoadingScreenWidget.h"
 
 #include "Engine/GameViewportClient.h"
+#include "Subsystems/LimenLevelTransitionSubsystem.h"
 
 
 ULimenLoadingScreenWidget::ULimenLoadingScreenWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	SetWidgetLevel(40);
 	bIsShowing = false;
+}
+
+void ULimenLoadingScreenWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+
+	if (auto* LevelTransition = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>())
+	{
+		LevelTransition->OnShaderCompilationUpdated.AddUniqueDynamic(this, &ThisClass::PSOBatchingUpdated);
+	}
+}
+
+void ULimenLoadingScreenWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+
+	if (auto* LevelTransition = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>())
+	{
+		LevelTransition->OnShaderCompilationUpdated.RemoveDynamic(this, &ThisClass::PSOBatchingUpdated);
+	}
 }
 
 bool ULimenLoadingScreenWidget::IsShowing() const

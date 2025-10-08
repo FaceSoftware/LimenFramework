@@ -14,6 +14,10 @@ public class LimenSaveSystem : ModuleRules
 				"Core",
 				"CoreUObject",
 				"Engine",
+				"DeveloperSettings",
+				"UMG",
+				
+				"LimenWidgets",
 			}
 		);
 		
@@ -22,6 +26,8 @@ public class LimenSaveSystem : ModuleRules
 			{
 				"Slate",
 				"SlateCore",
+				
+				"LimenWidgets",
 			}
 		);
 	}

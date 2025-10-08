@@ -25,20 +25,33 @@ class LIMENSAVESYSTEM_API ILimenSaveObjectInterface
 public:
 	/**
 	 * @brief Checks if this object's data should be saved.
-	 * @return True if can, false if it cannot.
+	 * @return True if it can, false otherwise.
 	 */
 	virtual bool ShouldSaveData() const = 0;
 	/**
 	 * @brief Checks if this object can be used for loading data.
-	 * @return True if it can, false if it cannot.
+	 * @return True if it can, false otherwise.
 	 */
 	virtual bool ShouldLoadData() const = 0;
 	/**
-	 * @brief Called when a save is requested for the object, if it passed previous validity checks.
+	 * @brief Called after a save was performed on the object.
 	 */
-	virtual void DataSaved() = 0;
+	virtual void PreDataSaved() = 0;
 	/**
-	 * @brief Called when data has been loaded into the object..
+	 * @brief Called after a save was performed on the object.
 	 */
-	virtual void DataLoaded() = 0;
+	virtual void PostDataSaved() = 0;
+	/**
+	 * @brief Called when data has been loaded into the object.
+	 */
+	virtual void PreDataLoaded() = 0;
+	/**
+	 * @brief Called when data has been loaded into the object.
+	 */
+	virtual void PostDataLoaded() = 0;
+	/**
+	 * @brief
+	 * @return 
+	 */
+	virtual FName GetUniqueDeterministicId() const = 0;
 };

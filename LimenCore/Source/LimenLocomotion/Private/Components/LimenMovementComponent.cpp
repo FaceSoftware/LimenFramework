@@ -3,17 +3,25 @@
 
 #include "Components/LimenMovementComponent.h"
 
-#include "Net/UnrealNetwork.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Serialization/MemoryReader.h"
 
 
 ULimenMovementComponent::ULimenMovementComponent(const FObjectInitializer& InObjectInitializer)
 	: Super(InObjectInitializer)
 {	
-	FastWalkSpeedMultiplier = 2.5f;
-	CrouchFastWalkSpeedMultiplier = 2.5f;
-	bFastMovementEnabledByDefault = false;
-	bIsFastMovementEnabled = false;
+	SlowWalkSpeed = 100.f;
+	MaxWalkSpeed = 400.f;
+	SprintSpeed = 800.f;
+	bSprintingEnabledByDefault = false;
+
+	CrouchSlowWalkSpeed = 50.f;
+	MaxWalkSpeedCrouched = 200.f;
+	CrouchSprintSpeed = 400.f;
+	bSlowWalkEnabledByDefault = false;
+
+	bSprintingEnabledByDefault = false;
+	WalkMode = EWalkModifier::None;
 	bEnableAirStrafing = true;
 	AirAcceleration = 10.f;
 	MaxAirStrafeSpeed = 30.f;
@@ -28,8 +36,12 @@ void ULimenMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 
 void ULimenMovementComponent::BeginPlay()
 {
+	MaxWalkSpeedCrouched_Cached = MaxWalkSpeedCrouched;
+	MaxWalkSpeed_Cached = MaxWalkSpeed;
+
 	SetupAirStrafing();
-	SetFastMovement(bFastMovementEnabledByDefault);
+	const EWalkModifier InitialWalkModifier = bSprintingEnabledByDefault ? EWalkModifier::Sprint : ( bSlowWalkEnabledByDefault ? EWalkModifier::SlowWalk : EWalkModifier::None );
+	SetWalkModifier(InitialWalkModifier);
 
 	Super::BeginPlay();
 }
@@ -41,8 +53,8 @@ void ULimenMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType
 	
 	if (bLogCurrentSpeed && GetOwner()->HasAuthority())
 	{
-		GEngine->AddOnScreenDebugMessage(FName(TEXT("Speed")).ToUnstableInt(), 0.F, FColor::Green,
-			FString::Printf(TEXT("Speed: %f"), Velocity.Size2D()));
+		LimenLog(this, FString::Printf(TEXT("Speed: %f"), Velocity.Size2D()), ELogType::Log,
+				 true, FName(TEXT("Speed")));
 	}
 }
 
@@ -57,48 +69,78 @@ FNetworkPredictionData_Client* ULimenMovementComponent::GetPredictionData_Client
 	return ClientPredictionData;
 }
 
-void ULimenMovementComponent::SetFastMovement(const bool bEnabled)
+void ULimenMovementComponent::SetSprintMode(const bool bEnabled)
 {	
-	if (bEnabled == bIsFastMovementEnabled)
-	{
-		return;
-	}
-
-	bIsFastMovementEnabled = bEnabled;
-	OnFastMovementChanged();
+	SetWalkModifier(bEnabled ? EWalkModifier::Sprint : EWalkModifier::None);
 }
 
-bool ULimenMovementComponent::IsFastMovementEnabled() const
+bool ULimenMovementComponent::IsSprinting() const
 {
-	return bIsFastMovementEnabled;
+	return IsWalking() && WalkMode == EWalkModifier::Sprint;
 }
 
-void ULimenMovementComponent::SetFastWalkSpeedMultiplier(const float Multiplier)
+void ULimenMovementComponent::SetSlowWalkMode(const bool bEnabled)
 {
-	FastWalkSpeedMultiplier = Multiplier;
+	SetWalkModifier(bEnabled ? EWalkModifier::SlowWalk : EWalkModifier::None);
 }
 
-float ULimenMovementComponent::GetFastWalkSpeedMultiplier() const
+bool ULimenMovementComponent::IsSlowWalking() const
 {
-	return FastWalkSpeedMultiplier;
+	return IsMovingOnGround() && WalkMode == EWalkModifier::SlowWalk;
 }
 
-void ULimenMovementComponent::SetCrouchFastWalkSpeedMultiplier(const float Multiplier)
+void ULimenMovementComponent::SetWalkModifier(const EWalkModifier NewModifier)
 {
-	CrouchFastWalkSpeedMultiplier = Multiplier;
+	if (WalkMode == NewModifier) return;
+
+	WalkMode = NewModifier;
+	OnWalkModeChanged(WalkMode);
 }
 
-float ULimenMovementComponent::GetCrouchFastWalkSpeedMultiplier() const
+ULimenMovementComponent::EWalkModifier ULimenMovementComponent::GetWalkModifier() const
 {
-	return CrouchFastWalkSpeedMultiplier;
+	return WalkMode;
 }
 
-void ULimenMovementComponent::UpdateFromCompressedFlags(uint8 Flags)
+void ULimenMovementComponent::SetMaxSprintSpeed(const float Multiplier)
+{
+	SprintSpeed = Multiplier;
+}
+
+float ULimenMovementComponent::GetMaxSprintSpeed() const
+{
+	return SprintSpeed;
+}
+
+void ULimenMovementComponent::SetCrouchSprintSpeed(const float Multiplier)
+{
+	CrouchSprintSpeed = Multiplier;
+}
+
+float ULimenMovementComponent::GetCrouchSprintSpeed() const
+{
+	return CrouchSprintSpeed;
+}
+
+void ULimenMovementComponent::UpdateFromCompressedFlags(const uint8 Flags)
 {
 	Super::UpdateFromCompressedFlags(Flags);
 
-	const bool bFastMovementEnabled = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
-	SetFastMovement(bFastMovementEnabled);
+	const bool bSprintEnabled = (Flags & FSavedMove_Character::FLAG_Custom_0) != 0;
+	const bool bSlowWalkEnabled = (Flags & FSavedMove_Character::FLAG_Custom_1) != 0;
+
+	if (bSprintEnabled)
+	{
+		SetWalkModifier(EWalkModifier::Sprint);
+	}
+	else if (bSlowWalkEnabled)
+	{
+		SetWalkModifier(EWalkModifier::SlowWalk);
+	}
+	else
+	{
+		SetWalkModifier(EWalkModifier::None);
+	}
 }
 
 void ULimenMovementComponent::PhysFalling(const float DeltaTime, const int32 Iterations)
@@ -133,18 +175,35 @@ bool ULimenMovementComponent::CanAttemptJump() const
 	return IsJumpAllowed() && (IsMovingOnGround() || IsFalling());
 }
 
-void ULimenMovementComponent::OnFastMovementChanged()
+void ULimenMovementComponent::OnWalkModeChanged(const EWalkModifier NewMode)
 {
-	if (bIsFastMovementEnabled)
+	check(NewMode == WalkMode)
+
+	switch (NewMode)
 	{
-		MaxWalkSpeedCrouched *= CrouchFastWalkSpeedMultiplier;
-		MaxWalkSpeed *= FastWalkSpeedMultiplier;
+	case EWalkModifier::None:
+		{
+			MaxWalkSpeedCrouched = MaxWalkSpeedCrouched_Cached;
+			MaxWalkSpeed = MaxWalkSpeed_Cached;
+		}
+		break;
+
+	case EWalkModifier::SlowWalk:
+		{
+			MaxWalkSpeedCrouched = CrouchSlowWalkSpeed;
+			MaxWalkSpeed = SlowWalkSpeed;
+		}
+		break;
+
+	case EWalkModifier::Sprint:
+		{
+			MaxWalkSpeedCrouched = CrouchSprintSpeed;
+			MaxWalkSpeed = SprintSpeed;
+		}
+		break;
 	}
-	else
-	{
-		MaxWalkSpeedCrouched /= CrouchFastWalkSpeedMultiplier;
-		MaxWalkSpeed /= FastWalkSpeedMultiplier;
-	}
+
+	OnWalkModifierChanged.Broadcast(NewMode);
 }
 
 void ULimenMovementComponent::SetupAirStrafing()

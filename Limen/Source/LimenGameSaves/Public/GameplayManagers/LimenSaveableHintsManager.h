@@ -15,10 +15,13 @@ class LIMENGAMESAVES_API ALimenSaveableHintsManager : public ALimenHintsManager,
 public:
 	virtual void BeginPlay() override;
 
-	virtual bool ShouldLoadData() const override;
 	virtual bool ShouldSaveData() const override;
-	virtual void DataLoaded() override;
-	virtual void DataSaved() override;
+	virtual bool ShouldLoadData() const override;
+	virtual void PreDataSaved() override;
+	virtual void PostDataSaved() override;
+	virtual void PreDataLoaded() override;
+	virtual void PostDataLoaded() override;
+	virtual FName GetUniqueDeterministicId() const override;
 
 private:
 	UPROPERTY(SaveGame)

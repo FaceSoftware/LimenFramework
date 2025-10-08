@@ -168,26 +168,6 @@ void ULimenThreadPoolSubsystem::AddJob(const TSharedRef<ISliceJob>& Job)
 	LIMEN_LOG(LogLimen, Log, this, TEXT("ULimenThreadPoolSubsystem::FPoolWorker::Run New job queued to thread %s. In queue: %d"), *AvailableThread->ThreadName, AvailableThread->GetQueuedJobsCount());
 }
 
-#if WITH_EDITOR
-void ULimenThreadPoolSubsystem::CreateThreadsForTest(const int32 NumberOfThreads)
-{
-	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
-	for (int i = 0; i < NumberOfThreads; ++i)
-	{
-		const FString ThreadName = FString::Printf(TEXT("PoolThread_%d"), i);
-		TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> Worker = MakeShared<FPoolWorker, ESPMode::NotThreadSafe>();
-		Worker->ThreadName = ThreadName;
-		
-		FRunnableThread* WorkerThreadRawPtr = FRunnableThread::Create(&Worker.Get(), *ThreadName, Settings->MemoryPerThreadInBytes, static_cast<EThreadPriority>(Settings->ThreadsPriority));
-		TSharedRef<FRunnableThread, ESPMode::NotThreadSafe> WorkerThread = MakeShareable(WorkerThreadRawPtr);
-
-		ThreadPool.Add(Worker, WorkerThread);
-	}
-
-	LIMEN_LOG(LogLimen, Log, this, TEXT("%d threads created successfully."), ThreadPool.Num());
-}
-#endif
-
 void ULimenThreadPoolSubsystem::CreateThreads()
 {
 	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
@@ -235,4 +215,22 @@ TSharedRef<ULimenThreadPoolSubsystem::FPoolWorker, ESPMode::NotThreadSafe> ULime
 	}
 
 	return Best;
+}
+
+void ULimenThreadPoolSubsystem::CreateThreadsForTest(const int32 NumberOfThreads)
+{
+	const ULimenThreadPoolDeveloperSettings* Settings = GetDefault<ULimenThreadPoolDeveloperSettings>();
+	for (int i = 0; i < NumberOfThreads; ++i)
+	{
+		const FString ThreadName = FString::Printf(TEXT("PoolThread_%d"), i);
+		TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> Worker = MakeShared<FPoolWorker, ESPMode::NotThreadSafe>();
+		Worker->ThreadName = ThreadName;
+		
+		FRunnableThread* WorkerThreadRawPtr = FRunnableThread::Create(&Worker.Get(), *ThreadName, Settings->MemoryPerThreadInBytes, static_cast<EThreadPriority>(Settings->ThreadsPriority));
+		TSharedRef<FRunnableThread, ESPMode::NotThreadSafe> WorkerThread = MakeShareable(WorkerThreadRawPtr);
+
+		ThreadPool.Add(Worker, WorkerThread);
+	}
+
+	LIMEN_LOG(LogLimen, Log, this, TEXT("%d threads created successfully."), ThreadPool.Num());
 }

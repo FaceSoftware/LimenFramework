@@ -91,11 +91,24 @@ bool ULimenModularSettingsSubsystem::ShouldLoadData() const
 	return true;
 }
 
-void ULimenModularSettingsSubsystem::DataLoaded()
+void ULimenModularSettingsSubsystem::PreDataSaved()
 {
 }
 
-void ULimenModularSettingsSubsystem::DataSaved()
+void ULimenModularSettingsSubsystem::PostDataLoaded()
+{
+}
+
+FName ULimenModularSettingsSubsystem::GetUniqueDeterministicId() const
+{
+	return GetClass()->GetFName();
+}
+
+void ULimenModularSettingsSubsystem::PostDataSaved()
+{
+}
+
+void ULimenModularSettingsSubsystem::PreDataLoaded()
 {
 }
 

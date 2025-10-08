@@ -32,7 +32,9 @@ ULimenSlider::ULimenSlider() : Super(),
 							   LastMousePosition(), PreviousMouseCursor(),
 							   bShouldRevertCursorIcon(false),
 							   bBroadcastValueSetDelegate(false),
-							   LastInputType(ELimenSliderInput::Undefined)
+							   LastInputType(ELimenSliderInput::Undefined),
+							   bIsBlinking(false),
+							   bIsBlinkColorActive(false)
 {
 	InitialSliderValue = SliderMinValue;
 
@@ -92,6 +94,39 @@ void ULimenSlider::SetDecimalDigitsCount(const int32 NewDecimalDigits)
 int32 ULimenSlider::GetDecimalDigitsCount() const
 {
 	return DecimalDigits;
+}
+
+void ULimenSlider::SetBlinkState(const bool bNewState)
+{
+	if (bIsBlinking == bNewState) return;
+	
+	bIsBlinking = bNewState;
+	bIsBlinkColorActive = false;
+
+	if (bIsBlinking)
+	{
+		GetWorld()->GetTimerManager().SetTimer(BlinkTimer, this, &ThisClass::SetBlink, BlinkSpeed, true);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().ClearTimer(BlinkTimer);
+		SetColorBasedOnValue(GetValue());
+	}
+}
+
+void ULimenSlider::SetBlinkColor(const FSlateColor InColor)
+{
+	BlinkColor = InColor;
+	if (bIsBlinkColorActive)
+	{
+		SetBlink();
+		bIsBlinkColorActive = true;
+	}
+}
+
+bool ULimenSlider::IsBlinking() const
+{
+	return bIsBlinking;
 }
 
 TSharedRef<SWidget> ULimenSlider::RebuildWidget()
@@ -364,20 +399,9 @@ void ULimenSlider::TextValueCommited(const FText& InText, const ETextCommit::Typ
 
 void ULimenSlider::ValueChanged(ELimenSliderInput InputType, const float NewValue)
 {
-	for (const auto& [Color, Range] : ValueColors)
+	if (!bIsBlinking && !bIsBlinkColorActive)
 	{
-		if (!Range.Contains(NewValue)) continue;
-
-		if (SliderImage.IsValid()) SliderImage->SetColorAndOpacity(Color);
-		if (SliderBackground.IsValid())
-		{
-			SliderBackground->SetColorAndOpacity(Color);
-			SliderBackground->SetColorAndOpacity(Color);
-		}
-		if (SliderTextDisplay.IsValid()) SliderTextDisplay->SetColorAndOpacity(Color);
-		if (SliderImageDisplay.IsValid()) SliderImageDisplay->SetColorAndOpacity(Color);
-
-		break;
+		SetColorBasedOnValue(NewValue);
 	}
 }
 
@@ -475,5 +499,45 @@ void ULimenSlider::WorldTick(UWorld* WorldPtr, const ELevelTick LevelTick, const
 
 		verify(FWorldDelegates::OnWorldTickEnd.Remove(WorldTickDelegate));
 		WorldTickDelegate.Reset();
+	}
+}
+
+void ULimenSlider::SetBlink()
+{
+	if (bIsBlinkColorActive)
+	{
+		SetColorBasedOnValue(GetValue());
+	}
+	else
+	{
+		if (SliderImage.IsValid()) SliderImage->SetColorAndOpacity(BlinkColor);
+		if (SliderBackground.IsValid())
+		{
+			SliderBackground->SetColorAndOpacity(BlinkColor);
+			SliderBackground->SetColorAndOpacity(BlinkColor);
+		}
+		if (SliderTextDisplay.IsValid()) SliderTextDisplay->SetColorAndOpacity(BlinkColor);
+		if (SliderImageDisplay.IsValid()) SliderImageDisplay->SetColorAndOpacity(BlinkColor);
+	}
+	bIsBlinkColorActive = !bIsBlinkColorActive;
+	OnBlink.Broadcast(bIsBlinkColorActive);
+}
+
+void ULimenSlider::SetColorBasedOnValue(const float Value)
+{
+	for (const auto& [Color, Range] : ValueColors)
+	{
+		if (!Range.Contains(Value)) continue;
+
+		if (SliderImage.IsValid()) SliderImage->SetColorAndOpacity(Color);
+		if (SliderBackground.IsValid())
+		{
+			SliderBackground->SetColorAndOpacity(Color);
+			SliderBackground->SetColorAndOpacity(Color);
+		}
+		if (SliderTextDisplay.IsValid()) SliderTextDisplay->SetColorAndOpacity(Color);
+		if (SliderImageDisplay.IsValid()) SliderImageDisplay->SetColorAndOpacity(Color);
+
+		break;
 	}
 }

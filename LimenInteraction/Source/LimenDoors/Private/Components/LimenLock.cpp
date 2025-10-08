@@ -20,6 +20,11 @@ void ULimenLock::BeginPlay()
 	bIsLocked = bStartLocked && IsActive();
 }
 
+void ULimenLock::SetStartLocked(const bool bNewLocked)
+{
+	bStartLocked = bNewLocked;
+}
+
 void ULimenLock::SetKeyword(const FName& NewKeyword)
 {
 	Keyword = NewKeyword;

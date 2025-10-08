@@ -5,8 +5,6 @@
 
 #include "EngineUtils.h"
 #include "ShaderPipelineCache.h"
-#include "TimerManager.h"
-#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "UMG/LimenLoadingScreenWidget.h"
 #include "Developer/LimenLoadingScreenSettings.h"
 #include "Engine/Engine.h"
@@ -23,7 +21,7 @@ class FLimenLoadingScreenInputPreProcessor final : public IInputProcessor
 	virtual void Tick(const float DeltaTime, FSlateApplication& SlateApp, TSharedRef<ICursor> Cursor) override {}
 
 protected:
-	bool ShouldAllowInput() { return false; }
+	constexpr bool ShouldAllowInput() { return false; }
 };
 
 ULimenLevelTransitionSubsystem::ULimenLevelTransitionSubsystem()
@@ -152,10 +150,9 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 		{
 			TotalPrecompiles = ShadersLeft;
 		}
-			
-		const float TempPercentageDone = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
-		CurrentPrecompileDonePercentage = TempPercentageDone < CurrentPrecompileDonePercentage ? CurrentPrecompileDonePercentage : TempPercentageDone;
-		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage, FShaderPipelineCache::NumPrecompilesRemaining());
+
+		CurrentPrecompileDonePercentage = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
+		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage, ShadersLeft);
 #endif
 	}
 	
@@ -169,10 +166,12 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 	{
 		bIsLoadingScreenNotifiedToHide = true;
 		TotalPrecompiles = 0;
+#if !WITH_EDITOR
 		if (!FShaderPipelineCache::IsBatchingPaused())
 		{
 			FShaderPipelineCache::PauseBatching();
 		}
+#endif
 		HideLoadingScreen();
 	}
 }
@@ -249,10 +248,12 @@ bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
 		return true;
 	}
 
+#if !WITH_EDITOR
 	if (FShaderPipelineCache::NumPrecompilesRemaining() > 0)
 	{
 		return true;
 	}
+#endif
 
 	for (FActorIterator It(GetWorld()); It; ++It)
 	{
@@ -269,7 +270,14 @@ bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
 			return true;
 		}
 	}
-	
+
+	PostCompletedSecondsShown += GetWorld()->GetDeltaSeconds();
+	if (PostCompletedSecondsShown < CurrentLoadingScreenSettings->GetPostCompleteDisplayTime())
+	{
+		return true;
+	}
+
+	PostCompletedSecondsShown = 0.f;
 	return false;
 }
 

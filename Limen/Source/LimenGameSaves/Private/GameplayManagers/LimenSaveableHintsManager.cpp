@@ -24,18 +24,31 @@ bool ALimenSaveableHintsManager::ShouldLoadData() const
 	return true;
 }
 
+void ALimenSaveableHintsManager::PreDataSaved()
+{
+}
+
 bool ALimenSaveableHintsManager::ShouldSaveData() const
 {
 	return true;
 }
 
-void ALimenSaveableHintsManager::DataLoaded()
+void ALimenSaveableHintsManager::PostDataLoaded()
 {
 	LoadSavedHints();
 	SetupRemoveStaleHints();
 }
 
-void ALimenSaveableHintsManager::DataSaved()
+FName ALimenSaveableHintsManager::GetUniqueDeterministicId() const
+{
+	return NAME_None;
+}
+
+void ALimenSaveableHintsManager::PostDataSaved()
+{
+}
+
+void ALimenSaveableHintsManager::PreDataLoaded()
 {
 }
 

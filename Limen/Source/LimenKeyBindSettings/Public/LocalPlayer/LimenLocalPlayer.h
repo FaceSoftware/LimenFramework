@@ -34,11 +34,12 @@ protected:
 private:
 	TWeakObjectPtr<APlayerController> OldPlayerController;
 	TWeakObjectPtr<APlayerController> CurrentPlayerController;
+	TWeakObjectPtr<APawn> CurrentPawn;
 	FDelegateHandle NewPawnDelegateHandle;
 	
 	void UpdateControllerBindings(APlayerController* PC);
 	void InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping);
 
 	UFUNCTION()
-	void PossessedPawnChanged(APawn* OldPawn, APawn* NewPawn);
+	void PossessedPawnChanged(APawn* NewPawn);
 };

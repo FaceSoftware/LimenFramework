@@ -145,61 +145,61 @@ public:
 	 * @brief Empties the attribute value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	FORCEINLINE void Empty();
+	void Empty();
 
 	/**
 	 * @brief Sets the attribute value to the maximum.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	FORCEINLINE void Full();
+	void Full();
 
 	/**
 	 * @brief Gets the current max value.
 	 * @return The current max value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	FORCEINLINE float GetMaxValue() const;
+	float GetMaxValue() const;
 	/**
 	 * @brief Gets the current minimum value.
 	 * @return The current minimum value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	FORCEINLINE float GetMinValue() const;
+	float GetMinValue() const;
 	/**
 	 * @brief Getter for the current value of this attribute.
 	 * @return The current value of the attribute.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	FORCEINLINE float GetCurrentValue() const;
+	float GetCurrentValue() const;
 	/**
 	 * @brief Gets the current value of this attribute but in percentage in a [0, 100] range.
 	 * @return The percentage of the current value.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	FORCEINLINE float GetCurrentValueAsPercentage() const;
+	float GetCurrentValueAsPercentage() const;
 	/**
 	 * @brief Gets the current value of this attribute but in a [0, 1] range.
 	 * @return The normalized value of this attribute.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Attributes")
-	FORCEINLINE float GetCurrentValueNormalized() const;
+	float GetCurrentValueNormalized() const;
 
 	/**
 	 * @brief Checks if thi attribute is empty.
 	 * @return True if empty, false if not.
 	 */
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE bool IsEmpty() const;
+	bool IsEmpty() const;
 	
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE bool IsFull() const;
+	bool IsFull() const;
 
 	/**
 	 * @brief Gets how much is needed to reach the maximum value.
 	 * @return How many units are needed to reach the maximum value.
 	 */
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE float GetValueUntilMax() const;
+	float GetValueUntilMax() const;
 
 	/**
 	 * @brief Checks if the current value does not exceed it's limits.

@@ -222,8 +222,8 @@ protected:
 	virtual void UpdateInteraction(const float DeltaTime);
 
 	void SetCurrentInteractableInterface(UActorComponent* InComponent);
-	TScriptInterface<ILimenInteractableComponent> GetCurrentInteractableInterface() const;
-	UActorComponent* GetCurrentInteractableComponent() const;
+	FORCEINLINE TScriptInterface<ILimenInteractableComponent> GetCurrentInteractableInterface() const;
+	FORCEINLINE UActorComponent* GetCurrentInteractableComponent() const;
 
 	virtual void Interacted(UActorComponent* Component);
 	virtual void InteractionStopped(UActorComponent* Component);

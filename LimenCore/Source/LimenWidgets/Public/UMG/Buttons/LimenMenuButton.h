@@ -26,29 +26,29 @@ public:
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Icon")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Icon")
 	bool bUseIcon;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Icon", meta=(EditCondition="bUseIcon"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Icon", meta=(EditCondition="bUseIcon"))
 	FSlateBrush IconBrush;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Icon", meta=(EditCondition="bUseIcon"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Icon", meta=(EditCondition="bUseIcon"))
 	FMargin IconMargin;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Effects")
 	FName TextureParameter;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Effects")
 	FName ToggleParameter;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Effects")
 	TObjectPtr<UMaterialInterface> EffectMaterial;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Effects")
 	float EffectDurationSeconds;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects|Hover")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Effects|Hover")
 	TObjectPtr<USoundBase> HoverSound;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects|Unhover")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Effects|Unhover")
 	TObjectPtr<USoundBase> UnhoverSound;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Effects|Click")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Menu Button|Effects|Click")
 	TObjectPtr<USoundBase> ClickSound;
 
 	TSharedPtr<SButton> ButtonWidget;

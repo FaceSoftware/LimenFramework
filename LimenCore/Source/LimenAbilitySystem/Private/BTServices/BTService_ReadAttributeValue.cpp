@@ -11,7 +11,9 @@
 UBTService_ReadAttributeValue::UBTService_ReadAttributeValue()
 {
 	NodeName = TEXT("Read Attribute Value");
+#if WITH_EDITOR
 	bCanTickOnSearchStartBeExposed = true;
+#endif
 	ReadValueMethod = EReadAttributeMethod::Fraction;
 	bNotifyBecomeRelevant = bNotifyTick = bNotifyCeaseRelevant = true;
 }

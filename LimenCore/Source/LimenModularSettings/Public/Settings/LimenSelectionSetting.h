@@ -39,7 +39,7 @@ public:
 	/// LimenSetting
 	virtual void SetDefaults() override;
 	virtual void SetDefaultValue() override final;
-	virtual void DataLoaded() override final;
+	virtual void PostDataLoaded() override final;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	bool IsEnabled() const;

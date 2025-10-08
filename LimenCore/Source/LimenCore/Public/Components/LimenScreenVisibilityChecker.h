@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "RenderGraphBuilder.h"
 #include "Components/ActorComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "LimenScreenVisibilityChecker.generated.h"
@@ -33,6 +32,9 @@ public:
 
 	int32 GetStencilMask() const;
 	bool IsVisible() const;
+
+	UFUNCTION(BlueprintCallable)
+	UTextureRenderTarget2D* GetRenderTarget() const;
 
 protected:
 #if WITH_EDITORONLY_DATA

@@ -6,7 +6,6 @@
 #include "Developer/LimenKeyBindDeveloperSettings.h"
 #include "GameFramework/PlayerController.h"
 #include "InputMappingContext.h"
-#include "PlayerMappableKeySettings.h"
 #include "GameFramework/Pawn.h"
 #include "Settings/LimenKeyBind.h"
 
@@ -118,29 +117,32 @@ UInputMappingContext* ULimenKeyBindSubsystem::GetPawnInputMappingContext(const A
 UInputMappingContext* ULimenKeyBindSubsystem::GetPlayerInputMappingContext(
 	const TSubclassOf<APlayerController>& PlayerController) const
 {
-	UInputMappingContext* const* Mapping = PlayerMappingContexts.Find(PlayerController.Get());
-	if (Mapping == nullptr)
+	if (!PlayerController) return nullptr;
+
+	for (auto& PlayerMappingContext : PlayerMappingContexts)
 	{
-		return nullptr;
+		if (PlayerController->GetDefaultObject()->IsA(PlayerMappingContext.Key.LoadSynchronous()))
+		{
+			return PlayerMappingContext.Value;
+		}
 	}
 
-	return *Mapping;
+	return nullptr;
 }
 
 UInputMappingContext* ULimenKeyBindSubsystem::GetPawnInputMappingContext(const TSubclassOf<APawn>& Pawn) const
 {
 	if (!Pawn) return nullptr;
 
-	UInputMappingContext* Mapping = nullptr;
 	for (auto& Context : PawnMappingContexts)
 	{
 		if (Pawn->GetDefaultObject()->IsA(Context.Key.LoadSynchronous()))
 		{
-			Mapping = Context.Value;
+			return Context.Value;
 		}
 	}
 
-	return Mapping;
+	return nullptr;
 }
 
 UInputMappingContext* ULimenKeyBindSubsystem::GetInputMappingByAction(const UInputAction* Action) const
@@ -153,10 +155,7 @@ UInputMappingContext* ULimenKeyBindSubsystem::GetInputMappingByAction(const UInp
 		}) != nullptr;
 	});
 
-	if (Context == nullptr)
-	{
-		return nullptr;
-	}
+	if (Context == nullptr) { return nullptr; }
 
 	return Context->Get();
 }

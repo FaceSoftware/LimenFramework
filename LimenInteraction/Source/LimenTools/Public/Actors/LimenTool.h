@@ -47,8 +47,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Tools")
 	bool IsActive() const { return bIsActive; }
 
-	virtual void DataLoaded() override;
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
 	TObjectPtr<ULimenAbilityComponent> AbilityComponent;
@@ -92,8 +90,6 @@ private:
 	TWeakObjectPtr<ALimenBattery> LastUsedBattery;
 	UPROPERTY()
 	TWeakObjectPtr<ULimenBatteryAttribute> BatteryAttribute;
-	UPROPERTY(SaveGame)
-	double CurrentBatteryPercentage;
 	
 	FTimerHandle RechargeTimer;
 	bool bIsRecharging;

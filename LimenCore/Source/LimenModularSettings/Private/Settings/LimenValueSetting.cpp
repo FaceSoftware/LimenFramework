@@ -82,11 +82,11 @@ void ULimenValueSetting::SetDefaultValue()
 	Super::SetDefaultValue();
 }
 
-void ULimenValueSetting::DataLoaded()
+void ULimenValueSetting::PostDataLoaded()
 {
 	CurrentSettingValue = FCString::Atof(*StringValue);
 	PreviousSettingValue = CurrentSettingValue;
 
-	Super::DataLoaded();
+	Super::PostDataLoaded();
 }
 

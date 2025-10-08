@@ -42,10 +42,14 @@ public:
 	virtual void StopInteraction(AController* InController, APawn* InPawn) override;
 	virtual void NotifyHover(AController* Controller, APawn* Pawn) override;
 	virtual void NotifyUnHover(AController* Controller, APawn* Pawn) override;
+
+	virtual bool AllowPhysicsInteraction() const override;
 	virtual bool IsBeingInteracted() const override;
 
 	#pragma endregion ILimenInteractableComponent
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interactable Area")
+	bool bAllowPhysicsInteraction;
 
 private:
 	TOptional<FCollisionResponseContainer> CachedCollisionResponse;

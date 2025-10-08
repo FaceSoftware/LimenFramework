@@ -68,7 +68,7 @@ void ULimenSetting::ApplyCurrentSetting(bool bUserRequest)
 {
 }
 
-void ULimenSetting::DataLoaded()
+void ULimenSetting::PostDataLoaded()
 {
 	bShouldLoadData = false;
 	ApplyCurrentSetting();

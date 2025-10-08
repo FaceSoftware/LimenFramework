@@ -87,9 +87,9 @@ void ULimenBrightnessSetting::SetDefaultValue()
 	CurrentSelection = DefaultSelection;
 }
 
-void ULimenBrightnessSetting::DataLoaded()
+void ULimenBrightnessSetting::PostDataLoaded()
 {
-	Super::DataLoaded();
+	Super::PostDataLoaded();
 
 	PreviousSelection = CurrentSelection;
 }

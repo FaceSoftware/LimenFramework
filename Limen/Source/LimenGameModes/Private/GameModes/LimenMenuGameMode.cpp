@@ -57,7 +57,7 @@ void ALimenMenuGameMode::StartLoadingGame(APlayerController* Player, const ULime
 		return;
 	}
 
-	const ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+	ULimenModalsSubsystem* ModalsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
 	check(ModalsSubsystem != nullptr);
 
 	ULimenGenericModalWidget* Modal = ModalsSubsystem->DisplayConfirmationModal(FModalParams(TEXT("Save Data Corrupted"), TEXT("Something went wrong loading the save data.")));

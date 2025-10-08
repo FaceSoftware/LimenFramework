@@ -6,11 +6,11 @@
 #include "Components/ActorComponent.h"
 #include "LimenPhysicalItemHoldComponent.generated.h"
 
+
 class ALimenPhysicalItem;
 
-
 USTRUCT()
-struct FLimenPhysicalItemHoldComponent_WeaponData
+struct FLimenPhysicalItemHoldComponent_ReplicatedWeaponData
 {
 	GENERATED_BODY()
 
@@ -40,25 +40,54 @@ public:
 	void StopHolding();
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	bool IsHoldingSomething() const;
+
 	template<typename T>
-	bool IsHoldingSomething() const
+	FORCEINLINE bool IsHoldingSomething() const
 	{
-		return Cast<T>(GetPhysicalItem()) != nullptr;
+		if (!IsHoldingSomething()) return false;
+
+		return GetPhysicalItem<T>() != nullptr;
 	}
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	ALimenPhysicalItem* GetPhysicalItem() const;
 
 	template<typename T>
-	T* GetPhysicalItem() const
+	FORCEINLINE T* GetPhysicalItem() const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenPhysicalItem>::Value, "T must be a derived from ALimenPhysicalItem");
-		return Cast<T>(GetPhysicalItem());
+
+		T* Item;
+		if constexpr (std::is_same_v<T, ALimenPhysicalItem>)
+		{
+			Item = GetPhysicalItem();
+		}
+		else
+		{
+			Item = Cast<T>(GetPhysicalItem());
+		}
+		return Item;
+	}
+	template<typename T = ALimenPhysicalItem>
+	FORCEINLINE T* GetPhysicalItemChecked() const
+	{
+		static_assert(TIsDerivedFrom<T, ALimenPhysicalItem>::Value, "T must be a derived from ALimenPhysicalItem");
+
+		T* Item;
+		if constexpr (std::is_same_v<T, ALimenPhysicalItem>)
+		{
+			Item = GetPhysicalItem();
+		}
+		else
+		{
+			Item = CastChecked<T>(GetPhysicalItem());
+		}
+		return Item;
 	}
 
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_WeaponData)
-	FLimenPhysicalItemHoldComponent_WeaponData WeaponData;
+	FLimenPhysicalItemHoldComponent_ReplicatedWeaponData WeaponData;
 
 	UFUNCTION()
 	void OnRep_WeaponData();

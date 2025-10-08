@@ -117,9 +117,6 @@ public:
 	void AddJob(const TSharedRef<ISliceJob>& Job);
 
 protected:
-#if WITH_EDITOR
-	void CreateThreadsForTest(const int32 NumberOfThreads);
-#endif
 	void CreateThreads();
 	void DestroyThreads();
 	TSharedRef<FPoolWorker, ESPMode::NotThreadSafe> GetAvailableThread() const;
@@ -127,4 +124,6 @@ protected:
 private:
 	TMap<TSharedRef<FPoolWorker, ESPMode::NotThreadSafe>, TSharedRef<FRunnableThread, ESPMode::NotThreadSafe>> ThreadPool;
 	int32 ThreadCount;
+
+	void CreateThreadsForTest(const int32 NumberOfThreads);
 };

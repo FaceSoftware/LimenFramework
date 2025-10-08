@@ -10,6 +10,7 @@ public class LimenAI : ModuleRules
             new string[]
             {
                 "Core",
+                "AIModule",
             }
         );
 
@@ -20,7 +21,6 @@ public class LimenAI : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "AIModule",
                 "NavigationSystem",
                 
                 "LimenCore",

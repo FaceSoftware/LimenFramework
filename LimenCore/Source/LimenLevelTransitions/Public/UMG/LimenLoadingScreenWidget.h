@@ -17,11 +17,15 @@ class LIMENLEVELTRANSITIONS_API ULimenLoadingScreenWidget : public ULimenWidget
 
 public:
 	explicit ULimenLoadingScreenWidget(const FObjectInitializer& ObjectInitializer);
+	virtual void NativeConstruct() override;
+	virtual void NativeDestruct() override;
 	
 	virtual bool IsShowing() const override;
 	virtual bool IsHiding() const override;
 	
 protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void PSOBatchingUpdated(const float CompletedPercentage, const int32 PSOsLeft);
 
 private:
 	/**

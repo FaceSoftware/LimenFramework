@@ -107,21 +107,6 @@ bool ALimenTool::CanActivate() const
 	return true;
 }
 
-void ALimenTool::DataLoaded()
-{
-	Super::DataLoaded();
-
-	if (BatteryAttribute.IsValid())
-	{
-		const bool bIsFrozen = BatteryAttribute->IsFrozen();
-		BatteryAttribute->FreezeAttribute(false);
-		BatteryAttribute->SetValue(CurrentBatteryPercentage);
-		BatteryAttribute->FreezeAttribute(bIsFrozen);
-		
-		OnBatteryChanged.Broadcast(BatteryAttribute->GetCurrentValue());
-	}
-}
-
 void ALimenTool::ToolActivated()
 {
 	if (BatteryAttribute.IsValid()) BatteryAttribute->FreezeAttribute(false);
@@ -151,7 +136,6 @@ void ALimenTool::RechargeFinished()
 
 void ALimenTool::CurrentBatteryCapacityChanged(ULimenAttributeBase* Attribute, const float NewValue)
 {
-	CurrentBatteryPercentage = NewValue;
 }
 
 void ALimenTool::BatteryEmpty(ULimenAttributeBase* Attribute, const float NewValue)

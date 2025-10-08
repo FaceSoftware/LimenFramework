@@ -5,11 +5,9 @@
 
 #include "Abilities/LimenAbilityBase.h"
 #include "Attributes/LimenAttributeBase.h"
-#include "Engine/ActorChannel.h"
 #include "Engine/Engine.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
-#include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"
 
 
 ULimenAbilityComponent::ULimenAbilityComponent(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -43,31 +41,16 @@ void ULimenAbilityComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void ULimenAbilityComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	DeactivateAllAbilities();
-	DeactivateAllAttributes();
+	Super::EndPlay(EndPlayReason);
 
 	if (GetOwner()->HasAuthority())
 	{
-		for (FAbilityArrayItem& Ability : Abilities.Items)
-		{
-			RemoveReplicatedSubObject(*Ability);
-			Ability.Item->MarkAsGarbage();
-			Ability.Item.Reset();
-		}
-		Abilities->Empty();
-		Abilities.MarkArrayDirty();
+		DeactivateAllAbilities();
+		DeactivateAllAttributes();
 
-		for (FAttributeArrayItem& Attribute : Attributes.Items)
-		{
-			RemoveReplicatedSubObject(*Attribute);
-			Attribute.Item->MarkAsGarbage();
-			Attribute.Item.Reset();
-		}
-		Attributes->Empty();
-		Attributes.MarkArrayDirty();
+		DestroyAllAbilities();
+		DestroyAllAttributes();
 	}
-	
-	Super::EndPlay(EndPlayReason);
 }
 
 void ULimenAbilityComponent::Activate(bool bReset)
@@ -75,11 +58,12 @@ void ULimenAbilityComponent::Activate(bool bReset)
 	Super::Activate(bReset);
 
 	if (!GetOwner()->HasAuthority()) return;
+	if (!GetWorld()->IsGameWorld()) return;
 
 	if (bReset)
 	{
-		DeactivateAllAbilities();
-		DeactivateAllAttributes();
+		DestroyAllAbilities();
+		DestroyAllAttributes();
 	}
 
 	if (!bAbilitiesInstantiated) InstantiateAbilities();
@@ -139,6 +123,24 @@ void ULimenAbilityComponent::DeactivateAllAbilities()
 	}
 }
 
+void ULimenAbilityComponent::DestroyAllAbilities()
+{
+	check(GetOwner()->HasAuthority())
+	for (FAbilityArrayItem& Ability : Abilities.Items)
+	{
+		if (!Ability.Item.IsValid()) continue;
+		Ability->ForceDeactivateAbility();
+		Ability->Deinitialize(GetOwner());
+
+		RemoveReplicatedSubObject(*Ability);
+		Ability->ConditionalBeginDestroy();
+		Ability.Item.Reset();
+	}
+	Abilities.Items.Empty();
+	Abilities.MarkArrayDirty();
+	bAbilitiesInstantiated = false;
+}
+
 void ULimenAbilityComponent::DeactivateAllAttributes()
 {
 	check(GetOwner()->HasAuthority())
@@ -150,12 +152,33 @@ void ULimenAbilityComponent::DeactivateAllAttributes()
 	}
 }
 
+void ULimenAbilityComponent::DestroyAllAttributes()
+{
+	check(GetOwner()->HasAuthority())
+	for (FAttributeArrayItem& Attribute : Attributes.Items)
+	{
+		if (!Attribute.Item.IsValid()) continue;
+		Attribute->FreezeAttribute(true);
+		Attribute->Deinitialize(GetOwner());
+
+		RemoveReplicatedSubObject(*Attribute);
+		Attribute->ConditionalBeginDestroy();
+		Attribute.Item.Reset();
+	}
+	Attributes.Items.Empty();
+	Attributes.MarkArrayDirty();
+	bAttributesInstantiated = false;
+}
+
 ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAbilityBase> AbilityClass) const
 {
-	for (const FAbilityArrayItem& Ability : Abilities.Items)
+	if (AbilityClass)
 	{
-		if (*Ability == nullptr) continue;
-		if (Ability->IsA(AbilityClass)) return *Ability;
+		for (const FAbilityArrayItem& Ability : Abilities.Items)
+		{
+			if (*Ability == nullptr) continue;
+			if (Ability->IsA(AbilityClass)) return *Ability;
+		}
 	}
 
 	return nullptr;
@@ -163,10 +186,13 @@ ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAb
 
 ULimenAttributeBase* ULimenAbilityComponent::GetAttribute(const TSubclassOf<ULimenAttributeBase> AttributeClass) const
 {
-	for (const FAttributeArrayItem& Attribute : Attributes.Items)
+	if (AttributeClass)
 	{
-		if (*Attribute == nullptr) continue;
-		if (Attribute->IsA(AttributeClass)) return *Attribute;
+		for (const FAttributeArrayItem& Attribute : Attributes.Items)
+		{
+			if (*Attribute == nullptr) continue;
+			if (Attribute->IsA(AttributeClass)) return *Attribute;
+		}
 	}
 
 	return nullptr;
@@ -229,6 +255,7 @@ void ULimenAbilityComponent::InstantiateAbilities()
 	check(GetOwner()->HasAuthority())
 	check(Abilities->IsEmpty())
 
+	Abilities->Reserve(AbilityClasses.Num());
 	for (auto& AbilityClass : AbilityClasses)
 	{
 		check(!AbilityClass.IsNull());
@@ -248,7 +275,7 @@ void ULimenAbilityComponent::InstantiateAttributes()
 	check(GetOwner()->HasAuthority())
 	check(Attributes->IsEmpty())
 
-	Attributes->Empty(AttributeClasses.Num());
+	Attributes->Reserve(AttributeClasses.Num());
 	for (auto& AttributeClass : AttributeClasses)
 	{
 		check(!AttributeClass.IsNull());

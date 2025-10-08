@@ -26,26 +26,33 @@ class LIMENCORE_API ULimenCameraComponent : public UCameraComponent
 
 public:
 	UPROPERTY(BlueprintAssignable)
-	FZoomDelegate OnZoomValueChanged;
+	FZoomDelegate OnCameraZoomValueChanged;
+	UPROPERTY(BlueprintAssignable)
+	FZoomDelegate OnFirstPersonZoomValueChanged;
 
 	ULimenCameraComponent();
 	virtual void BeginPlay() override;
 	virtual void GetCameraView(float DeltaTime, FMinimalViewInfo& DesiredView) override;
 
-	void SetTiltEnabled(const bool bEnabled);
-	void NotifyYawInput(const float InputValue);
+	FORCEINLINE void SetTiltEnabled(const bool bEnabled) { bIsTiltEnabled = bEnabled; }
+	FORCEINLINE void NotifyYawInput(const float InputValue) { CurrentTilt = TiltFunctionPtr(TiltStrength * (bInvertTilt ? -InputValue : InputValue)); }
 	UFUNCTION(BlueprintCallable)
-	virtual void Zoom(float Amount);
+	virtual void AddCameraZoom(float Amount);
+	virtual void SetCameraZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
-	FFloatRange GetZoomRange() const;
+	virtual void AddFirstPersonZoom(float Amount);
+	virtual void SetFirstPersonZoom(float Amount);
 	UFUNCTION(BlueprintCallable)
-	float GetCurrentZoom() const;
-	/**
-	 * @brief Current zoom in a [0, 1] range.
-	 * @return Zero if zoom it at minimum. One if it is at maximum. Any other value returns the corresponding value in between.
-	 */
+	FFloatRange GetCameraZoomRange() const;
 	UFUNCTION(BlueprintCallable)
-	float GetCurrentZoomNormalized() const;
+	float GetCurrentCameraZoom() const;
+	UFUNCTION(BlueprintCallable)
+	float GetCurrentFirstPersonZoom() const;
+	
+	float CameraZoomToFOV(float InZoom);
+	float FirstPersonZoomToFOV(float InZoom);
+    float CameraFOVToZoom(float InFOV);
+    float FirstPersonFOVToZoom(float InFOV);
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt", meta=(EditCondition="bEnableTilt"))
@@ -61,9 +68,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt")
 	bool bEnableTilt;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
-	FFloatRange ZoomRange;
+	FFloatRange CameraZoomRange;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
+	FFloatRange FirstPersonZoomRange;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
 	float ZoomMultiplier;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(ClampMin=0))
+	float CameraZoomInterpolationSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(ClampMin=0))
+	float FirstPersonZoomInterpolationSpeed;
 	
 private:
 	TWeakObjectPtr<APlayerController> PlayerController;
@@ -75,8 +88,16 @@ private:
 	bool bOriginalUsePawnControlRotation;
 	TFunction<float(float)> TiltFunctionPtr;
 
+	float BaseCameraFOV;
+	float TargetCameraFOV;
+	float BaseFirstPersonFOV;
+	float TargetFirstPersonFOV;
+
 	void SetTiltFunctionPtr();
 
 	float CalculateLinearTilt(const float Target = 0.f);
 	float CalculateEaseInTilt(const float Target = 0.f);
+
+	float ZoomToFOV(float InZoom, const FFloatRange& FOVRange);
+	float FOVToZoom(float InFOV, const FFloatRange& FOVRange);
 };

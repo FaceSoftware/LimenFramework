@@ -45,19 +45,46 @@ UClass* FActorSaveData::GetActorClass() const
 	return ActorClass.Get();
 }
 
+FName FActorSaveData::GetDeterministicId() const
+{
+	return DeterministicId;
+}
+
 void FActorSaveData::LoadData(AActor* Actor) const
 {
-	if (!IsValid(Actor))
-	{
-		return;
-	}
+	if (!Actor) return;
 
 	LoadActorData(Actor);
 }
 
 bool FActorSaveData::operator==(const FActorSaveData& Other) const
 {
-	return ActorClass == Other.ActorClass;
+	return DeterministicId == Other.DeterministicId;
+}
+
+bool FActorSaveData::operator==(AActor* Other) const
+{
+	if (!Other) return false;
+
+	const TScriptInterface<ILimenSaveObjectInterface> SaveInterface = Other;
+	if (!SaveInterface) return false;
+
+	return Other->IsA(ActorClass.Get()) && DeterministicId == SaveInterface->GetUniqueDeterministicId();
+}
+
+bool FActorSaveData::IsValid() const
+{
+	return ActorClass != nullptr;
+}
+
+FActorSaveData::operator bool() const
+{
+	return IsValid();
+}
+
+bool FActorSaveData::operator!() const
+{
+	return !IsValid();
 }
 
 void FActorSaveData::SetActorName(const FName& InActorName)
@@ -67,32 +94,39 @@ void FActorSaveData::SetActorName(const FName& InActorName)
 
 void FActorSaveData::SaveActorData(AActor* InActor)
 {
+	ILimenSaveObjectInterface* SaveObjectInterface = Cast<ILimenSaveObjectInterface>(InActor);
+	check(SaveObjectInterface != nullptr);
+
+	SaveObjectInterface->PreDataSaved();
+
 	TArray<uint8> NewByteData;
 	FMemoryWriter Writer(NewByteData);
 
 	FObjectAndNameAsStringProxyArchive Archive(Writer, true);
 	Archive.ArIsSaveGame = true;
-	
+
 	InActor->Serialize(Archive);
 	SetByteData(NewByteData);
 	SetActorTransform(InActor->GetTransform());
 	SetActorName(InActor->GetFName());
-	ActorClass = InActor->GetClass();
+	ActorClass = InActor->GetClass(); 
+	DeterministicId = SaveObjectInterface->GetUniqueDeterministicId();
 
-	ILimenSaveObjectInterface* SaveObjectInterface = Cast<ILimenSaveObjectInterface>(InActor);
-	check(SaveObjectInterface != nullptr);
+	SaveObjectInterface->PostDataSaved();
 }
 
 void FActorSaveData::LoadActorData(AActor* InActor) const
 {
+	ILimenSaveObjectInterface* ObjectSaveInterface = Cast<ILimenSaveObjectInterface>(InActor);
+	check(ObjectSaveInterface != nullptr);
+
 	FMemoryReader Reader(GetByteData());
 	FObjectAndNameAsStringProxyArchive Archive(Reader, true);
 	Archive.ArIsSaveGame = true;
-	InActor->Serialize(Archive);
 
-	ILimenSaveObjectInterface* ObjectSaveInterface = Cast<ILimenSaveObjectInterface>(InActor);
-	check(ObjectSaveInterface != nullptr);
-	ObjectSaveInterface->DataLoaded();
+	ObjectSaveInterface->PreDataLoaded();
+	InActor->Serialize(Archive);
+	ObjectSaveInterface->PostDataLoaded();
 }
 
 int ULimenSaveData::AddActorSaveData(const FActorSaveData& ActorSaveData)

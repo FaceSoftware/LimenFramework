@@ -57,7 +57,7 @@ public:
 	virtual void ApplyCurrentSetting(bool bUserRequest = false) override;
 	virtual void SetDefaults() override;
 	virtual void SetDefaultValue() override final;
-	virtual void DataLoaded() override final;
+	virtual void PostDataLoaded() override final;
 
 private:
 	UPROPERTY(SaveGame)

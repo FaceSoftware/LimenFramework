@@ -6,7 +6,6 @@
 #include "Components/InputComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
-#include "Kismet/KismetSystemLibrary.h"
 #include "PlayerController/LimenPlayerControllerBase.h"
 #include "Subsystems/LimenModalsSubsystem.h"
 #include "UMG/LimenGenericModalWidget.h"
@@ -44,7 +43,7 @@ void ULimenAsyncActionKeyRebind::Activate()
 	PlayerController->SetInputMode(ELimenInputMode::Game);
 	PlayerController->DisableInput(PlayerController.Get());
 
-	const ULimenModalsSubsystem* ModalsSubsystem = World->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
+	ULimenModalsSubsystem* ModalsSubsystem = World->GetGameInstance()->GetSubsystem<ULimenModalsSubsystem>();
 	DisplayModal = ModalsSubsystem->DisplayTimedModal(ModalParams);
 	UpdateModal();
 

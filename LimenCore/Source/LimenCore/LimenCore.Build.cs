@@ -12,8 +12,10 @@ public class LimenCore : ModuleRules
 			{
 				"Core",
 				"RenderCore",
+				"Renderer",
 				"Engine",
 				"AIModule",
+				"EnhancedInput",
 			}
 		);
 

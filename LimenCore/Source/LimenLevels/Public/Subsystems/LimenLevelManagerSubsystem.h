@@ -39,7 +39,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	bool OpenInitializationLevel();
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
-	void OpenMainMenu(ELevelOpenContext Context = ELevelOpenContext::Local);
+	void OpenMainMenu();
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void OpenGameEndLevel();
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")

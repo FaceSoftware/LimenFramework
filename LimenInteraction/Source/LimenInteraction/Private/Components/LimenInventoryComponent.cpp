@@ -121,6 +121,12 @@ bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 	
 	TArray<ALimenItemBase*> Instances = SpawnItemInstances(NewItem);
 	Instances.Push(NewItem);
+
+	for (ALimenItemBase*& Instance : Instances)
+	{
+		Instance->SetOwner(GetOwner());
+	}
+
 	if (IsFirstOfType(NewItem->GetClass()))
 	{
 		FItemRegistry Registry;

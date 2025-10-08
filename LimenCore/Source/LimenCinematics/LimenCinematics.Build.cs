@@ -11,9 +11,10 @@ public class LimenCinematics : ModuleRules
             {
                 "Core",
                 "CoreUObject",
+                "MovieScene",
                 
                 "LimenCore", 
-                "MovieScene",
+                "LimenSaveSystem",
             }
         );
 

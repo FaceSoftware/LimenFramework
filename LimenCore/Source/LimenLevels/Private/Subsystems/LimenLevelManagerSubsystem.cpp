@@ -3,8 +3,8 @@
 
 #include "Subsystems/LimenLevelManagerSubsystem.h"
 
+#include "GameMapsSettings.h"
 #include "Developer/LimenLevelsDeveloperSettings.h"
-#include "Engine/AssetManager.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -22,6 +22,15 @@ bool ULimenLevelManagerSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 void ULimenLevelManagerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+#if !WITH_EDITOR
+	UGameMapsSettings* Settings = GetMutableDefault<UGameMapsSettings>();
+	if (const TSoftObjectPtr<UWorld> Level = ULimenLevelsDeveloperSettings::GetInitializationLevel(); !Level.IsNull())
+	{
+		Settings->SetGameDefaultMap(Level.GetLongPackageName());
+		Settings->SaveConfig();
+	}
+#endif
 }
 
 void ULimenLevelManagerSubsystem::Deinitialize()
@@ -45,34 +54,25 @@ bool ULimenLevelManagerSubsystem::OpenInitializationLevel()
 	return true;
 }
 
-void ULimenLevelManagerSubsystem::OpenMainMenu(ELevelOpenContext Context)
+void ULimenLevelManagerSubsystem::OpenMainMenu()
 {
 	const TSoftObjectPtr<UWorld> Level = ULimenLevelsDeveloperSettings::GetMainMenuLevel();
 	if (Level.IsNull()) return;
 
 	const FString LevelPath = Level.ToSoftObjectPath().GetLongPackageName();
-	switch (Context)
-	{
-	case ELevelOpenContext::Local:
-		OpenOfflineLevel_Internal(LevelPath);
-		break;
-
-	case ELevelOpenContext::Connect:
-		ConnectToServer_Internal(LevelPath);
-		break;
-
-	case ELevelOpenContext::Server:
-		OpenServerLevel_Internal(LevelPath);
-		break;
-	}
+	OpenOfflineLevel_Internal(LevelPath);
 }
 
 void ULimenLevelManagerSubsystem::OpenGameEndLevel()
 {
-	OpenOfflineLevel_Internal(ULimenLevelsDeveloperSettings::GetGameEndLevel()->GetMapName());
+	const TSoftObjectPtr<UWorld> Level = ULimenLevelsDeveloperSettings::GetGameEndLevel();
+	if (Level.IsNull()) return;
+
+	const FString LevelPath = Level.ToSoftObjectPath().GetLongPackageName();
+	OpenOfflineLevel_Internal(LevelPath);
 }
 
-void ULimenLevelManagerSubsystem::OpenGameLevel(ELevelOpenContext Context, const int32 Index, FString Options)
+void ULimenLevelManagerSubsystem::OpenGameLevel(const ELevelOpenContext Context, const int32 Index, const FString Options)
 {
 	if (!IsGameLevelIndexValid(Index)) return;
 
@@ -129,5 +129,5 @@ void ULimenLevelManagerSubsystem::ConnectToServer_Internal(const FString& IPAddr
 
 void ULimenLevelManagerSubsystem::OpenOfflineLevel_Internal(const FString& LevelName, const FString& Options)
 {
-	GetWorld()->GetFirstPlayerController()->ClientTravel(LevelName + Options, TRAVEL_Absolute, true);
+	UGameplayStatics::OpenLevel(this, FName(LevelName), TRAVEL_Absolute, Options);
 }

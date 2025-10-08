@@ -28,10 +28,23 @@ bool ULimenStorageItem::ShouldLoadData() const
 	return true;
 }
 
-void ULimenStorageItem::DataSaved()
+void ULimenStorageItem::PreDataSaved()
 {
 }
 
-void ULimenStorageItem::DataLoaded()
+void ULimenStorageItem::PostDataSaved()
 {
+}
+
+void ULimenStorageItem::PreDataLoaded()
+{
+}
+
+void ULimenStorageItem::PostDataLoaded()
+{
+}
+
+FName ULimenStorageItem::GetUniqueDeterministicId() const
+{
+	return DevelopmentName;
 }
