@@ -27,6 +27,7 @@ ULimenMovementComponent::ULimenMovementComponent(const FObjectInitializer& InObj
 	MaxAirStrafeSpeed = 30.f;
 	bAllowJumpingWhileCrouched = true;
 	bLogCurrentSpeed = false;
+	bEnableSurfing = false;
 }
 
 void ULimenMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -146,24 +147,39 @@ void ULimenMovementComponent::UpdateFromCompressedFlags(const uint8 Flags)
 void ULimenMovementComponent::PhysFalling(const float DeltaTime, const int32 Iterations)
 {
 	Super::PhysFalling(DeltaTime, Iterations);
-	PhysAirStrafing(DeltaTime);
+	PhysAirStrafing(DeltaTime, Iterations);
+	PhysSurfing(DeltaTime, Iterations);
 }
 
-void ULimenMovementComponent::PhysAirStrafing(const float DeltaTime)
+void ULimenMovementComponent::PhysAirStrafing(const float DeltaTime, const int32 Iterations)
 {
 	if (!bEnableAirStrafing) return;
+	if (Iterations >= MaxSimulationIterations) return;
+	
 
-	const FVector WishVelocity = (IsNetMode(NM_Client) ? GetLastInputVector() : Acceleration).GetSafeNormal();
-	const float WishSpeed = FMath::Min((WishVelocity * MaxWalkSpeed).Length(), MaxAirStrafeSpeed);
+	LimenLog(this, FString::Printf(TEXT("Acceleration: %s"), *Acceleration.ToString()), ELogType::Log,
+		 true, FName(TEXT("Acceleration")));
+
+	const FVector WishVelocity = Acceleration.GetSafeNormal();
+	const float WishSpeed = FMath::Min(Acceleration.Length(), MaxAirStrafeSpeed);
 
 	const float CurrentSpeed = FVector::DotProduct(Velocity, WishVelocity);
 	const float AddSpeed = WishSpeed - CurrentSpeed;
 	if (AddSpeed <= 0.f) return;
 
-	float AccelSpeed = AirAcceleration * MaxWalkSpeed * DeltaTime;
+	float AccelSpeed = Acceleration.Length() * AirAcceleration * DeltaTime;
 	AccelSpeed = FMath::Min(AccelSpeed, AddSpeed);
 
-	Velocity += AccelSpeed * WishVelocity;
+	const FVector HorizontalWishVelocity(WishVelocity.X, WishVelocity.Y, 0.f);
+	Velocity += AccelSpeed * HorizontalWishVelocity;
+}
+
+void ULimenMovementComponent::PhysSurfing(float DeltaTime, const int32 Iterations)
+{
+	if (!bEnableAirStrafing) return;
+	if (Iterations >= MaxSimulationIterations) return;
+
+	
 }
 
 bool ULimenMovementComponent::CanAttemptJump() const
@@ -173,6 +189,21 @@ bool ULimenMovementComponent::CanAttemptJump() const
 	// Falling included for double-jump and non-zero jump hold time,
 	// but validated by character.
 	return IsJumpAllowed() && (IsMovingOnGround() || IsFalling());
+}
+
+FVector ULimenMovementComponent::ComputeSlideVector(const FVector& Delta, const float Time, const FVector& Normal,
+	const FHitResult& Hit) const
+{
+	return bEnableSurfing
+		? Super::ComputeSlideVector(Delta, Time, Normal, Hit)
+		: UPawnMovementComponent::ComputeSlideVector(Delta, Time, Normal, Hit);
+}
+
+FVector ULimenMovementComponent::HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time,
+                                                     const FVector& Normal, const FHitResult& Hit) const
+{
+	if (bEnableSurfing) { checkNoEntry() }
+	return Super::HandleSlopeBoosting(SlideResult, Delta, Time, Normal, Hit);
 }
 
 void ULimenMovementComponent::OnWalkModeChanged(const EWalkModifier NewMode)

@@ -75,10 +75,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Jumping / Falling")
 	bool bAllowJumpingWhileCrouched;
 
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Surfing")
+	bool bEnableSurfing;
+
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 	virtual void PhysFalling(float DeltaTime, int32 Iterations) override;
-	virtual void PhysAirStrafing(float DeltaTime);
+	virtual void PhysAirStrafing(float DeltaTime, const int32 Iterations);
+	virtual void PhysSurfing(float DeltaTime, const int32 Iterations);
 	virtual bool CanAttemptJump() const override;
+	virtual FVector ComputeSlideVector(const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const override;
+	virtual FVector HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const override;
 
 	virtual void OnWalkModeChanged(EWalkModifier NewMode);
 
