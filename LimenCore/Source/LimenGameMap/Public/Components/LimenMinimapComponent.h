@@ -4,12 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "LimenMinimapComponent.generated.h"
 
 
 class USpringArmComponent;
-class USceneCaptureComponent2D;
-class UMaterialInstanceDynamic;
 class UTextureRenderTarget2D;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

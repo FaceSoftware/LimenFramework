@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "UMG/LimenLoadingScreenWidget.h"
 #include "LimenLoadingScreenParameters.generated.h"
+
 
 /**
  * 

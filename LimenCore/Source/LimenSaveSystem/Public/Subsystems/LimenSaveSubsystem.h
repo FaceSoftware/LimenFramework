@@ -4,9 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Widgets/LimenSaveWidget.h"
 #include "LimenSaveSubsystem.generated.h"
 
-class ULimenSaveWidget;
+
 class USaveGame;
 class ULimenSaveData;
 

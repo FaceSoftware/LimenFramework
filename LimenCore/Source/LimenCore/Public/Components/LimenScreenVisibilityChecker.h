@@ -3,16 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "RHIGPUReadback.h"
 #include "Components/ActorComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Components/SceneCaptureComponent2D.h"
 #include "LimenScreenVisibilityChecker.generated.h"
 
 
-class FRHIGPUTextureReadback;
-class UTextureRenderTarget2D;
-class USceneCaptureComponent2D;
 class UCameraComponent;
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVisibilityUpdate, bool, bIsVisible);
 

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenSaveSystem/Public/SaveGames/LimenSaveData.h"
+#include "SaveGames/LimenSaveData.h"
 #include "LimenStorageSaveData.generated.h"
 
 /**

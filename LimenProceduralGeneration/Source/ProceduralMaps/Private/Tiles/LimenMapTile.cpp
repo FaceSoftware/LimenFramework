@@ -10,6 +10,7 @@
 #include "Engine/Engine.h"
 #include "GameFramework/Pawn.h"
 #include "LogMacros/LimenLogMacros.h"
+#include "Managers/LimenProceduralMapManager.h"
 
 
 ALimenMapTile* ALimenMapTile::GetTileOfClass(UObject* WorldContext, const TSubclassOf<ALimenMapTile> TileClass)

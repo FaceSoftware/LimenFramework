@@ -6,10 +6,9 @@
 #include "UObject/Object.h"
 #include "HAL/Runnable.h"
 #include "UObject/Linker.h"
+#include "DataAssets/ProceduralMapParameters.h"
+#include "Maps/LimenProceduralMap.h"
 #include "LimenMapAlgorithm.generated.h"
-
-class ULimenProceduralMap;
-class UProceduralMapParameters;
 
 
 /**

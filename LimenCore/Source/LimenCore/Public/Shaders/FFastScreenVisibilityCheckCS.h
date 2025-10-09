@@ -5,9 +5,9 @@
 #include "CoreMinimal.h"
 #include "GlobalShader.h"
 #include "ShaderParameterStruct.h"
-#include "RenderGraphResources.h"
-#include "SceneView.h"
 
+
+DECLARE_UNIFORM_BUFFER_STRUCT(FSceneTextureUniformParameters, ENGINE_API)
 
 class LIMENCORE_API FFastScreenVisibilityCheckCS : public FGlobalShader
 {

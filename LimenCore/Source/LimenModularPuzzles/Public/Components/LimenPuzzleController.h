@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Actors/LimenGameplayManager.h"
 #include "Utils/PuzzleHelpers.h"
+#include "DataAssets/LimenPuzzleDefinition.h"
 #include "LimenPuzzleController.generated.h"
 
 

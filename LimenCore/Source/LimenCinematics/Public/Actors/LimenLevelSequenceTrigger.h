@@ -6,11 +6,11 @@
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "Actors/LimenGameplayActor.h"
 #include "Interfaces/LimenSaveObjectInterface.h"
+#include "LevelSequencePlayer.h"
 #include "LimenLevelSequenceTrigger.generated.h"
 
 
 class ALevelSequenceActor;
-class ULevelSequencePlayer;
 class ULevelSequence;
 class UBoxComponent;
 

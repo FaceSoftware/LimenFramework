@@ -6,12 +6,12 @@
 #include "LimenStorageItem.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Templates/SubclassOf.h"
+#include "LimenStorageSaveData.h"
 #include "LimenStorageSubsystem.generated.h"
 
 
 class ULimenStorageSaveData;
 class ULimenSettingsSaveData;
-class ULimenStorageItem;
 
 /**
  * 

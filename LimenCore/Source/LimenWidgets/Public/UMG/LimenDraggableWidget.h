@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/Widget.h"
+#include "Blueprint/UserWidget.h"
 #include "LimenDraggableWidget.generated.h"
 
 

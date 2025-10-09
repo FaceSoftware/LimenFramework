@@ -11,6 +11,7 @@
 #include "Misc/FileHelper.h"
 #include "Net/UnrealNetwork.h"
 #include "Utils/PuzzleHelpers.h"
+#include "EngineUtils.h"
 
 
 ULimenPuzzleController::ULimenPuzzleController()

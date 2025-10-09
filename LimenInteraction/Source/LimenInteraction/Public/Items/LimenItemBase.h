@@ -4,14 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Interactables/LimenInteractable.h"
-#include "Interfaces/LimenSaveObjectInterface.h"
-#include "UObject/StrongObjectPtr.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "LimenItemBase.generated.h"
 
 
 enum EPixelFormat : uint8;
 class USpotLightComponent;
-class UTextureRenderTarget2D;
 class UTexture;
 class USceneCaptureComponent2D;
 class ULimenInventoryComponent;

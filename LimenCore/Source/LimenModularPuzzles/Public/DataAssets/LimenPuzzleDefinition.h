@@ -4,10 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "Utils/PuzzleHelpers.h"
 #include "LimenPuzzleDefinition.generated.h"
 
-
-struct FPuzzleConditionNode;
 
 UCLASS()
 class LIMENMODULARPUZZLES_API UPuzzleDefinition : public UDataAsset
