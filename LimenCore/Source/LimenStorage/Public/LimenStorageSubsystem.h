@@ -63,7 +63,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
 	bool HasSavedData() const;
 
-	template<typename ItemType>
+	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem", meta=(DeterminesOutputType=Class))
+	TArray<ULimenStorageItem*> GetItems(TSubclassOf<ULimenStorageItem> Class) const;
+	template<typename ItemType = ULimenStorageItem>
 	TArray<ItemType*> GetItems() const
 	{
 		static_assert(std::is_base_of_v<ULimenStorageItem, ItemType>);

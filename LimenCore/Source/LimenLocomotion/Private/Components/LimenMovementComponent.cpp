@@ -4,6 +4,7 @@
 #include "Components/LimenMovementComponent.h"
 
 #include "BlueprintLibraries/LimenCoreStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Serialization/MemoryReader.h"
 
 
@@ -33,6 +34,11 @@ ULimenMovementComponent::ULimenMovementComponent(const FObjectInitializer& InObj
 void ULimenMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bEnableAirStrafing,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bEnableSurfing,
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 }
 
 void ULimenMovementComponent::BeginPlay()
@@ -123,6 +129,16 @@ float ULimenMovementComponent::GetCrouchSprintSpeed() const
 	return CrouchSprintSpeed;
 }
 
+void ULimenMovementComponent::SetAllowAirStrafing(const bool bAllow)
+{
+	bEnableAirStrafing = bAllow;
+}
+
+void ULimenMovementComponent::SetAllowSurfing(const bool bAllow)
+{
+	bEnableSurfing = bAllow;
+}
+
 void ULimenMovementComponent::UpdateFromCompressedFlags(const uint8 Flags)
 {
 	Super::UpdateFromCompressedFlags(Flags);
@@ -148,17 +164,12 @@ void ULimenMovementComponent::PhysFalling(const float DeltaTime, const int32 Ite
 {
 	Super::PhysFalling(DeltaTime, Iterations);
 	PhysAirStrafing(DeltaTime, Iterations);
-	PhysSurfing(DeltaTime, Iterations);
 }
 
 void ULimenMovementComponent::PhysAirStrafing(const float DeltaTime, const int32 Iterations)
 {
 	if (!bEnableAirStrafing) return;
 	if (Iterations >= MaxSimulationIterations) return;
-	
-
-	LimenLog(this, FString::Printf(TEXT("Acceleration: %s"), *Acceleration.ToString()), ELogType::Log,
-		 true, FName(TEXT("Acceleration")));
 
 	const FVector WishVelocity = Acceleration.GetSafeNormal();
 	const float WishSpeed = FMath::Min(Acceleration.Length(), MaxAirStrafeSpeed);
@@ -172,14 +183,6 @@ void ULimenMovementComponent::PhysAirStrafing(const float DeltaTime, const int32
 
 	const FVector HorizontalWishVelocity(WishVelocity.X, WishVelocity.Y, 0.f);
 	Velocity += AccelSpeed * HorizontalWishVelocity;
-}
-
-void ULimenMovementComponent::PhysSurfing(float DeltaTime, const int32 Iterations)
-{
-	if (!bEnableAirStrafing) return;
-	if (Iterations >= MaxSimulationIterations) return;
-
-	
 }
 
 bool ULimenMovementComponent::CanAttemptJump() const

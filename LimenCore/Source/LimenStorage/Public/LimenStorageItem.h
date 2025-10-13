@@ -16,6 +16,13 @@ class LIMENSTORAGE_API ULimenStorageItem : public UObject, public ILimenSaveObje
 	GENERATED_BODY()
 
 public:	
+	UPROPERTY(EditAnywhere)
+	FName DevelopmentName;
+	UPROPERTY(EditAnywhere)
+	FText Category;
+	UPROPERTY(EditAnywhere)
+	FText DisplayName;
+
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
 	const FName& GetDevelopmentName() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
@@ -32,10 +39,4 @@ public:
 	virtual FName GetUniqueDeterministicId() const override;
 
 protected:
-	UPROPERTY(EditAnywhere)
-	FName DevelopmentName;
-	UPROPERTY(EditAnywhere)
-	FText Category;
-	UPROPERTY(EditAnywhere)
-	FText DisplayName;
 };

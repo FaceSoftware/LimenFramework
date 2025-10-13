@@ -15,12 +15,20 @@ class ULimenWidget;
 
 
 #define DECLARE_WIDGET_ACCESSORS(Type, WidgetVarName) \
-	inline void Show##WidgetVarName() { ShowWidget_Internal(WidgetVarName.Get()); } \
-	inline void Hide##WidgetVarName() { HideWidget_Internal(WidgetVarName.Get()); } \
-	inline bool Is##WidgetVarName##Visible() const { return WidgetVarName && WidgetVarName->IsShowing(); } \
-	inline Type* Get##WidgetVarName() const { return WidgetVarName.Get(); } \
+	FORCEINLINE void Show##WidgetVarName() { ShowWidget_Internal(WidgetVarName.Get()); } \
+	FORCEINLINE void Hide##WidgetVarName() { HideWidget_Internal(WidgetVarName.Get()); } \
+	FORCEINLINE bool Is##WidgetVarName##Visible() const { return WidgetVarName && WidgetVarName->IsShowing(); } \
+	FORCEINLINE Type* Get##WidgetVarName() const { return WidgetVarName.Get(); } \
 
 #define CREATE_MENU_WIDGET_STRONG(Typename, WidgetPtr, WidgetClass) \
+	if (WidgetClass) \
+	{ \
+		auto* Widget = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
+		WidgetPtr = TStrongObjectPtr(Widget); \
+		WidgetPtr->BindPlayerController(GetOwningPlayerController()); \
+	} \
+
+#define CREATE_HUD_WIDGET_STRONG(Typename, WidgetPtr, WidgetClass) \
 	if (WidgetClass) \
 	{ \
 		auto* Widget = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \

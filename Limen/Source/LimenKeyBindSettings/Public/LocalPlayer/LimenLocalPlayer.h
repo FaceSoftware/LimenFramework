@@ -41,5 +41,7 @@ private:
 	void InputBindUpdated(const FEnhancedActionKeyMapping& ActionKeyMapping);
 
 	UFUNCTION()
-	void PossessedPawnChanged(APawn* NewPawn);
+	void NewPawnNotify(APawn* NewPawn);
+	UFUNCTION()
+	void PossessedPawnChanged(APawn* OldPawn, APawn* NewPawn);
 };

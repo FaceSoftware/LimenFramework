@@ -56,6 +56,7 @@ void ULimenKeyBind::InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSub
 	check(InActionKeyMapping->IsPlayerMappable())
 	
 	const auto* MappableKeySettings = InActionKeyMapping->GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
+	if (!MappableKeySettings) return;
 	
 	DevelopmentName = InActionKeyMapping->GetMappingName();
 	DisplayName = InActionKeyMapping->GetDisplayName();

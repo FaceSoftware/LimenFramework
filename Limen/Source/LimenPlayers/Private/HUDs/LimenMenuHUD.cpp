@@ -95,24 +95,9 @@ void ALimenMenuHUD::DestroyWidgets()
 void ALimenMenuHUD::InitializeWidgets()
 {
 	Super::InitializeWidgets();
-	
-	if (!MainMenuWidgetClass.IsNull())
-	{
-		MainMenuWidget = ULimenWidget::IsWidgetValid<ULimenMainMenuWidget>(
-			MainMenuWidget.Get(), GetOwningPlayerController(), MainMenuWidgetClass.LoadSynchronous(), true);
 
-		MainMenuWidget->BindPlayerController(GetOwningPlayerController());
-		MainMenuWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::OnMainMenuVisibilityChanged);
-	}
-
-	if (!OptionsWidgetClass.IsNull())
-	{
-		OptionsWidget = ULimenWidget::IsWidgetValid<ULimenMenuWidget>(
-			OptionsWidget.Get(), GetOwningPlayerController(), OptionsWidgetClass.LoadSynchronous(), true);
-
-		OptionsWidget->BindPlayerController(GetOwningPlayerController());
-		OptionsWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::OnOptionsMenuVisibilityChanged);
-	}
+	CREATE_MENU_WIDGET_STRONG(ULimenMainMenuWidget, MainMenuWidget, MainMenuWidgetClass)
+	CREATE_MENU_WIDGET_STRONG(ULimenMainMenuWidget, OptionsWidget, OptionsWidgetClass)
 }
 
 void ALimenMenuHUD::OnMainMenuVisibilityChanged(const bool bIsVisible)

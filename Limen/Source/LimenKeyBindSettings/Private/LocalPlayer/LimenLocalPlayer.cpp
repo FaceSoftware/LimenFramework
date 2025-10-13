@@ -87,8 +87,11 @@ void ULimenLocalPlayer::UpdateControllerBindings(APlayerController* PC)
 			OldPlayerController->GetOnNewPawnNotifier().Remove(NewPawnDelegateHandle);
 		}
 
-		NewPawnDelegateHandle = PC->GetOnNewPawnNotifier().AddUObject(this, &ThisClass::PossessedPawnChanged);
-		PossessedPawnChanged(PC->GetPawn().Get());
+		// NewPawnDelegateHandle = PC->GetOnNewPawnNotifier().AddUObject(this, &ThisClass::NewPawnNotify);
+		// NewPawnNotify(PC->GetPawn().Get());
+
+		PC->OnPossessedPawnChanged.AddUniqueDynamic(this, &ThisClass::PossessedPawnChanged);
+		PossessedPawnChanged(nullptr, PC->GetPawn().Get());
 	}
 }
 
@@ -104,12 +107,12 @@ void ULimenLocalPlayer::InputBindUpdated(const FEnhancedActionKeyMapping& Action
 	InputSystem->RequestRebuildControlMappings(ContextOptions, EInputMappingRebuildType::RebuildWithFlush);
 }
 
-void ULimenLocalPlayer::PossessedPawnChanged(APawn* NewPawn)
+void ULimenLocalPlayer::NewPawnNotify(APawn* NewPawn)
 {
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
-	check(InputSystem != nullptr)
+	if (InputSystem == nullptr) return;
 	ULimenKeyBindSubsystem* KeyBindSubsystem = GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
-	check(KeyBindSubsystem != nullptr)
+	if (KeyBindSubsystem == nullptr) return;
 
 	if (const UInputMappingContext* PreviousPawnMappings = KeyBindSubsystem->GetPawnInputMappingContext(CurrentPawn.Get()))
 	{
@@ -131,4 +134,9 @@ void ULimenLocalPlayer::PossessedPawnChanged(APawn* NewPawn)
 	}
 
 	CurrentPawn = NewPawn;
+}
+
+void ULimenLocalPlayer::PossessedPawnChanged(APawn* OldPawn, APawn* NewPawn)
+{
+	NewPawnNotify(NewPawn);
 }

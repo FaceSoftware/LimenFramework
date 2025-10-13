@@ -129,5 +129,5 @@ void ULimenLevelManagerSubsystem::ConnectToServer_Internal(const FString& IPAddr
 
 void ULimenLevelManagerSubsystem::OpenOfflineLevel_Internal(const FString& LevelName, const FString& Options)
 {
-	UGameplayStatics::OpenLevel(this, FName(LevelName), TRAVEL_Absolute, Options);
+	UGameplayStatics::OpenLevel(this, FName(LevelName), true, Options);
 }

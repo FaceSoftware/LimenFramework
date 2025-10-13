@@ -48,6 +48,9 @@ public:
 	void SetCrouchSprintSpeed(const float NewSpeed);
 	float GetCrouchSprintSpeed() const;
 
+	void SetAllowAirStrafing(const bool bAllow);
+	void SetAllowSurfing(const bool bAllow);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Walking|Sprint")
 	float SprintSpeed;
@@ -63,7 +66,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Walking|Slow Walk", meta=(EditCondition="!bSprintingEnabledByDefault"))
 	bool bSlowWalkEnabledByDefault;
 
-	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Air Strafing")
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Air Strafing", Replicated)
 	bool bEnableAirStrafing;
 	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Air Strafing")
 	float AirAcceleration;
@@ -75,13 +78,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Jumping / Falling")
 	bool bAllowJumpingWhileCrouched;
 
-	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Surfing")
+	UPROPERTY(EditDefaultsOnly, Category="Character Movement: Surfing", Replicated)
 	bool bEnableSurfing;
 
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 	virtual void PhysFalling(float DeltaTime, int32 Iterations) override;
 	virtual void PhysAirStrafing(float DeltaTime, const int32 Iterations);
-	virtual void PhysSurfing(float DeltaTime, const int32 Iterations);
 	virtual bool CanAttemptJump() const override;
 	virtual FVector ComputeSlideVector(const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const override;
 	virtual FVector HandleSlopeBoosting(const FVector& SlideResult, const FVector& Delta, const float Time, const FVector& Normal, const FHitResult& Hit) const override;

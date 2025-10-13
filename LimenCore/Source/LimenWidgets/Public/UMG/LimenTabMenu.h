@@ -43,6 +43,17 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FButtonSelectedDelegate OnButtonUnselected;
 
+	UFUNCTION(BlueprintCallable)
+	void AddTab(const FTabData& TabData, int32 Index = -1);
+	UFUNCTION(BlueprintCallable)
+	UWidget* GetTabWidget(const FName TabId) const;
+	template<typename T>
+	T* GetTabWidget(const FName TabId) const
+	{
+		static_assert(TIsDerivedFrom<T, UWidget>::IsDerived);
+		return Cast<T>(GetTabWidget(TabId));
+	}
+
 protected:
 	UPROPERTY(EditAnywhere)
 	TArray<FTabData> Tabs;
@@ -72,14 +83,27 @@ private:
 		{
 			return Tab == TabInstance.Get();
 		}
+		bool operator==(const FName& InId) const
+		{
+			return InId == Id;
+		}
+		operator bool() const
+		{
+			return TabButtonInstance.IsValid();
+		}
 	};
 
 	TArray<FTabInstanceData> TabInstanceData;
 	TSharedPtr<SWidgetSwitcher> TabSwitcher;
 	TWeakPtr<SWidget> ActiveTabWidget;
+	TSharedPtr<SHorizontalBox> ButtonsContainer;
 
 	UFUNCTION()
 	void ButtonSelected(ULimenSelectableMenuButton* Button);
 	UFUNCTION()
 	void ButtonUnselected(ULimenSelectableMenuButton* Button);
+
+	void AddTab_Internal(const FTabData& TabData);
+	bool SetActiveTab_Internal(const int32 Index);
+	void SetFirstActiveTab_Internal();
 };

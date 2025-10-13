@@ -121,6 +121,20 @@ bool ULimenStorageSubsystem::HasSavedData() const
 	return bHasSavedData;
 }
 
+TArray<ULimenStorageItem*> ULimenStorageSubsystem::GetItems(const TSubclassOf<ULimenStorageItem> Class) const
+{
+	TArray<ULimenStorageItem*> Out;
+	Out.Reserve(StorageItems.Num());
+	for (const TStrongObjectPtr<ULimenStorageItem>& Item : StorageItems)
+	{
+		if (Item->IsA(Class))
+		{
+			Out.Push(Item.Get());
+		}
+	}
+	return Out;
+}
+
 ULimenStorageItem* ULimenStorageSubsystem::GetItem(const TSubclassOf<ULimenStorageItem>& Class) const
 {
 	check(Class.Get() != nullptr);

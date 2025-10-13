@@ -76,7 +76,8 @@ bool ULimenSteamOnlineManager::ShouldCreateSubsystem(UObject* Outer) const
 		return false;
 	}
 	
-	return SteamAPI_Init();
+	// return SteamAPI_Init();
+	return false;
 }
 
 void ULimenSteamOnlineManager::Initialize(FSubsystemCollectionBase& Collection)

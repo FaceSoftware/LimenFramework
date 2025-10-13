@@ -39,6 +39,13 @@ public:
 	const TMap<int32, UTexture2D*>& GetLevelContextBackgrounds() const;
 	
 protected:
+	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")
+	TSubclassOf<ULimenMainMenuWidget> MainMenuWidgetClass;
+	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")
+	TSubclassOf<ULimenMenuWidget> OptionsWidgetClass;
+	UPROPERTY(EditDefaultsOnly, Category="Limen")
+	TMap<int32, UTexture2D*> LevelContextBackgrounds;
+
 	virtual void DestroyWidgets() override;
 	virtual void InitializeWidgets() override;
 
@@ -48,16 +55,6 @@ protected:
 	virtual void OnOptionsMenuVisibilityChanged(const bool bIsVisible);
 
 private:
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")
-	TSoftClassPtr<ULimenMainMenuWidget> MainMenuWidgetClass;
-	UPROPERTY()
-	TObjectPtr<ULimenMainMenuWidget> MainMenuWidget;
-
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Classes")
-	TSoftClassPtr<ULimenMenuWidget> OptionsWidgetClass;
-	UPROPERTY()
-	TObjectPtr<ULimenMenuWidget> OptionsWidget;
-
-	UPROPERTY(EditDefaultsOnly, Category="Limen")
-	TMap<int32, UTexture2D*> LevelContextBackgrounds;
+	TStrongObjectPtr<ULimenMainMenuWidget> MainMenuWidget;
+	TStrongObjectPtr<ULimenMenuWidget> OptionsWidget;
 };
