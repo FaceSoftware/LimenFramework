@@ -15,6 +15,8 @@ class LIMENCORE_API ULimenTimerComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+	inline static const FDateTime InvalidTime = FDateTime(-1);
+
 	UPROPERTY(BlueprintAssignable)
 	FLimenTimerUpdate OnStart;
 	UPROPERTY(BlueprintAssignable)
@@ -40,8 +42,6 @@ public:
 protected:
 
 private:
-	inline static const FDateTime InvalidTime = FDateTime(-1);
-
 	FDateTime Start;
 	FDateTime End;
 
