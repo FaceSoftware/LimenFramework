@@ -96,8 +96,24 @@ public:
 		const TSubclassOf<ALimenItemBase> Class = T::StaticClass();
 		return Cast<T>(GetItem(Class));
 	}
+	template<typename T = ALimenItemBase>
+	TArray<T*> GetAllItems()
+	{
+		TArray<T*> Result;
+		while (true)
+		{
+			if (T* Item = GetItem<T>())
+			{
+				Result.Push(Item);
+			}
+			else
+			{
+				break;
+			}
+		}
 
-
+		return Result;
+	}
 	/**
 	 * @brief Retrieves an item of the specified type from the inventory.
 	 * @tparam T The type of the item to retrieve. Must derive from ALimenItemBase.
@@ -110,7 +126,6 @@ public:
 		static_assert(std::is_base_of_v<ALimenItemBase, T>);
 		return Cast<T>(GetItem(Class));
 	}
-
 	/**
 	 * @brief Retrieves a specified number of item instances of a given class from the inventory.
 	 * @param Class The class type of the items to retrieve from the inventory.
@@ -263,11 +278,19 @@ public:
 
 			for (ALimenItemBase* Instance : Registry.ItemInstances)
 			{
-				check(Instance != nullptr);
-				
-				T* Item = Cast<T>(Instance);
-				if (Item != nullptr)
+				check(Instance != nullptr)				
+				if constexpr (!std::is_same_v<T, ALimenItemBase>)
 				{
+					T* Item = Cast<T>(Instance);
+					if (Item != nullptr)
+					{
+						Out.Push(Item);
+					}
+				}
+				else
+				{
+					T* Item = Instance;
+					check(Item != nullptr)
 					Out.Push(Item);
 				}
 			}
