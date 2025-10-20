@@ -6,6 +6,7 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 
 ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -38,6 +39,7 @@ void ALimenGameplayActor::RemoveFromGameplay()
 	}
 
 	GameplayState = ELimenGameplayActorState::OutOfGameplay;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
 	
 	SetActorHiddenInGame(true);
 	SetActorEnableCollision(false);
@@ -53,6 +55,7 @@ void ALimenGameplayActor::AddToGameplay(const bool bEnableCollision)
 	}
 
 	GameplayState = bEnableCollision ? ELimenGameplayActorState::InGameplay : ELimenGameplayActorState::InGameplayWithCollisionDisabled;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
 	
 	SetActorHiddenInGame(false);
 	SetActorEnableCollision(bEnableCollision);

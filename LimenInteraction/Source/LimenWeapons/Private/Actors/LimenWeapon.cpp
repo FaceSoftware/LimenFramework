@@ -7,8 +7,6 @@
 #include "AISystem.h"
 #include "TimerManager.h"
 #include "Actors/LimenAmmo.h"
-#include "BlueprintLibraries/LimenCoreStatics.h"
-#include "Camera/CameraComponent.h"
 #include "Camera/CameraShakeBase.h"
 #include "Components/LimenInventoryComponent.h"
 #include "FireMethods/LimenWeaponFireMethod.h"
@@ -103,9 +101,11 @@ void ALimenWeapon::BeginPlay()
 	if (HasAuthority() && !FireMethodClass.IsNull())
 	{
 		CurrentAmmo = InitialAmmo;
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentAmmo, this)
 
 		FireMethodObject = NewObject<ULimenWeaponFireMethod>(this, FireMethodClass.LoadSynchronous());
 		AddReplicatedSubObject(FireMethodObject.Get());
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, FireMethodObject, this)
 
 		if (GetWorld()->IsGameWorld())
 		{
@@ -120,6 +120,7 @@ void ALimenWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	FireMethodObject->ConditionalBeginDestroy();
 	FireMethodObject = nullptr;
 
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, FireMethodObject, this)
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -182,12 +183,14 @@ void ALimenWeapon::StartFiring()
 {
 	check(HasAuthority())
 	bIsHoldingTrigger = true;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsHoldingTrigger, this)
 }
 
 void ALimenWeapon::StopFiring()
 {
 	check(HasAuthority())
 	bIsHoldingTrigger = false;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsHoldingTrigger, this)
 }
 
 void ALimenWeapon::StartReloading(ULimenInventoryComponent* PlayerInventory)
@@ -232,6 +235,7 @@ float ALimenWeapon::GetFireRate() const
 void ALimenWeapon::SetFireRate(const float InFireRate)
 {
 	RoundsPerSecond = InFireRate;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, BaseDamage, this)
 }
 
 float ALimenWeapon::GetReloadTime() const
@@ -286,6 +290,7 @@ float ALimenWeapon::GetBaseDamage() const
 void ALimenWeapon::SetBaseDamage(const float InNewDamage)
 {
 	BaseDamage = InNewDamage;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, BaseDamage, this)
 }
 
 float ALimenWeapon::GetWeaponRange() const
@@ -432,6 +437,7 @@ void ALimenWeapon::Fire()
 		}
 
 		bIsFiring = false;
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 		if (CurrentAmmo <= 0)
 		{
 			WeaponFiredWithoutAmmo();
@@ -456,6 +462,7 @@ void ALimenWeapon::Fire()
 			if (!bIsFiring)
 			{
 				bIsFiring = true;
+				MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 				Multicast_StartWeaponFire();
 			}
 
@@ -467,6 +474,7 @@ void ALimenWeapon::Fire()
 			Multicast_WeaponFired();
 
 			bIsFireRateCooldownOver = false;
+			MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 		}
 	}
 
@@ -487,6 +495,7 @@ void ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
 	case EInfiniteAmmoType::InfiniteMagazines:
 		{
 			CurrentAmmo = MagazineCapacity;
+			MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentAmmo, this)
 		}
 		break;
 
@@ -499,11 +508,13 @@ void ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
 			{
 				PlayerInventory->GetItems(CompatibleAmmo, AmmoMissingInMagazine);
 				CurrentAmmo = MagazineCapacity;
+				MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentAmmo, this)
 			}
 			else if (InventoryAmmo < AmmoMissingInMagazine)
 			{
 				PlayerInventory->GetItems(CompatibleAmmo, InventoryAmmo);
 				CurrentAmmo += InventoryAmmo;
+				MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentAmmo, this)
 			}
 
 			OnAmmoUpdated.Broadcast(CurrentAmmo);
@@ -527,12 +538,14 @@ void ALimenWeapon::HandleWeaponCooldown()
 	check(HasAuthority())
 
 	bIsFireRateCooldownOver = true;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 	OnWeaponCooldownOver.Broadcast(this);
 }
 
 void ALimenWeapon::SetNextShotReady()
 {
 	bIsNextShotReady = true;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsNextShotReady, this)
 }
 
 void ALimenWeapon::StartReloadTimer(ULimenInventoryComponent* PlayerInventory)
@@ -540,6 +553,7 @@ void ALimenWeapon::StartReloadTimer(ULimenInventoryComponent* PlayerInventory)
 	check(HasAuthority())
 
 	bIsReloading = true;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 	const FTimerDelegate ReloadDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::ReloadInternal, PlayerInventory);
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, ReloadDelegate, ReloadTimeInSeconds, false);
 
@@ -549,6 +563,7 @@ void ALimenWeapon::StartReloadTimer(ULimenInventoryComponent* PlayerInventory)
 void ALimenWeapon::StopReloadTimer()
 {
 	bIsReloading = false;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 	GetWorld()->GetTimerManager().ClearTimer(ReloadTimer);
 }
 

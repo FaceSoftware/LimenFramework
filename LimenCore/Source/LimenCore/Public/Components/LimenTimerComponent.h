@@ -40,13 +40,14 @@ public:
 	bool IsTimerActive() const;
 
 protected:
+	UFUNCTION()
+	virtual void OnRep_Start();
+	UFUNCTION()
+	virtual void OnRep_End();
 
 private:
+	UPROPERTY(ReplicatedUsing=OnRep_Start)
 	FDateTime Start;
+	UPROPERTY(ReplicatedUsing=OnRep_End)
 	FDateTime End;
-
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_SetStart(const int64 InStart);
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_SetEnd(const int64 InEnd);	
 };

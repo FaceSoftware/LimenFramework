@@ -14,6 +14,7 @@
 #include "ItemActions/LimenItemAction.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 
 UTexture* ALimenItemBase::GetItemImage(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
@@ -216,6 +217,7 @@ void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
 	}
 
 	bIsDropped = false;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsDropped, this)
 
 	ItemPickedUp(InController, InPawn);
 }
@@ -234,6 +236,7 @@ void ALimenItemBase::Drop(AController* InController, APawn* InPawn)
 	AddToGameplay();
 
 	bIsDropped = true;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsDropped, this)
 
 	ItemDropped(InController, InPawn);
 }

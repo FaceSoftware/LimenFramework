@@ -3,6 +3,9 @@
 
 #include "Components/LimenTimerComponent.h"
 
+#include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
+
 
 ULimenTimerComponent::ULimenTimerComponent()
 {
@@ -13,22 +16,28 @@ ULimenTimerComponent::ULimenTimerComponent()
 void ULimenTimerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Start, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, End, Params)
 }
 
 void ULimenTimerComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Start = InvalidTime;
-	End = InvalidTime;
+	ResetTimer();
 }
 
 void ULimenTimerComponent::ResetTimer()
 {
 	check(GetOwner()->HasAuthority())
 
-	Multicast_SetStart(InvalidTime.GetTicks());
-	Multicast_SetEnd(InvalidTime.GetTicks());
+	Start = End = InvalidTime;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Start, this)
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, End, this)
 }
 
 void ULimenTimerComponent::StartTimer()
@@ -36,14 +45,20 @@ void ULimenTimerComponent::StartTimer()
 	check(GetOwner()->HasAuthority())
 	ResetTimer();
 
-	Multicast_SetStart(FDateTime::Now().GetTicks());
+	Start = FDateTime::Now();
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, Start, this)
+
+	OnStart.Broadcast(this);
 }
 
 void ULimenTimerComponent::StopTimer()
 {
 	check(GetOwner()->HasAuthority())
 
-	Multicast_SetEnd(FDateTime::Now().GetTicks());
+	End = FDateTime::Now();
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, End, this)
+
+	OnStop.Broadcast(this);
 }
 
 FTimespan ULimenTimerComponent::GetCurrentTime() const
@@ -69,14 +84,12 @@ bool ULimenTimerComponent::IsTimerActive() const
 	return Start != InvalidTime && End == InvalidTime;
 }
 
-void ULimenTimerComponent::Multicast_SetStart_Implementation(const int64 InStart)
+void ULimenTimerComponent::OnRep_Start()
 {
-	Start = FDateTime(InStart);
-	if (Start != InvalidTime) OnStart.Broadcast(this);
+	if (Start != InvalidTime) { OnStart.Broadcast(this); }
 }
 
-void ULimenTimerComponent::Multicast_SetEnd_Implementation(const int64 InEnd)
+void ULimenTimerComponent::OnRep_End()
 {
-	End = FDateTime(InEnd);
 	if (End != InvalidTime) { OnStop.Broadcast(this); }
 }

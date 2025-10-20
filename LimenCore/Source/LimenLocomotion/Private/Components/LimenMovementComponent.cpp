@@ -5,6 +5,7 @@
 
 #include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 #include "Serialization/MemoryReader.h"
 
 
@@ -132,11 +133,13 @@ float ULimenMovementComponent::GetCrouchSprintSpeed() const
 void ULimenMovementComponent::SetAllowAirStrafing(const bool bAllow)
 {
 	bEnableAirStrafing = bAllow;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bEnableAirStrafing, this);
 }
 
 void ULimenMovementComponent::SetAllowSurfing(const bool bAllow)
 {
 	bEnableSurfing = bAllow;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bEnableSurfing, this);
 }
 
 void ULimenMovementComponent::UpdateFromCompressedFlags(const uint8 Flags)
