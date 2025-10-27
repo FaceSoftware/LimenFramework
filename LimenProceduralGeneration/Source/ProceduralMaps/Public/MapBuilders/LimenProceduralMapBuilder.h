@@ -21,6 +21,7 @@ public:
 	
 	explicit ALimenProceduralMapBuilder(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	void LoadMap(const FGuid& MapId);
 	void BuildMap(const FGuid& MapId);
@@ -48,8 +49,8 @@ public:
 		return Cast<T>(GetMap(MapId));
 	}
 
-	const TMap<FGuid, ULimenProceduralMap*>& GetLoadedMaps() const;
-	const TMap<FGuid, ULimenProceduralMap*>& GetBuiltMaps() const;
+	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> GetLoadedMaps() const;
+	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> GetBuiltMaps() const;
 	
 	bool IsLastLevel(const FGuid& Test) const;
 	int32 GetMapsBuilt() const;
@@ -79,14 +80,10 @@ protected:
 	virtual void MapFinishUnload(const FGuid& MapId);
 	
 private:
-	UPROPERTY(Transient)
-	TMap<FGuid, ULimenMapAlgorithm*> MapAlgorithms;
-	UPROPERTY(Transient)
-	TMap<FGuid, ULimenProceduralMap*> LoadedMaps;
-	UPROPERTY(Transient)
-	TMap<FGuid, ULimenProceduralMap*> BuiltMaps;
-	UPROPERTY(Transient)
-	TMap<FGuid, ALimenProceduralMapManager*> MapManagers;
+	TMap<FGuid, TStrongObjectPtr<ULimenMapAlgorithm>> MapAlgorithms;
+	TMap<FGuid, TStrongObjectPtr<ULimenProceduralMap>> LoadedMaps;
+	TMap<FGuid, TStrongObjectPtr<ULimenProceduralMap>> BuiltMaps;
+	TMap<FGuid, TWeakObjectPtr<ALimenProceduralMapManager>> MapManagers;
 
 	ULimenMapAlgorithm::FAlgorithmFinish AlgorithmFinishDelegate;
 
@@ -101,7 +98,6 @@ private:
 	FOnMapUpdate OnMapBeginDestroy;
 	FOnMapUpdate OnMapFinishDestroy;
 
-	UPROPERTY(Transient)
 	int32 MapsBuilt;
 
 	void LoadMap_Internal(const FGuid& MapId);

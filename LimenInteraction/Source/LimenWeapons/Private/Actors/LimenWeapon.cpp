@@ -21,13 +21,14 @@ ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Supe
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 	bAlwaysRelevant = true;
-	bReplicateUsingRegisteredSubObjectList = true;
 	SetReplicatingMovement(true);
+	SetNetUpdateFrequency(20.f);
+	SetMinNetUpdateFrequency(5.f);
 
 	FireMethodClass = ULimenDamageType::StaticClass();
 	DamageType = ULimenDamageType::StaticClass();
 	BaseDamage = 0.f;
-	RoundsPerSecond = 0.f;
+	SecondsPerShot = 0.f;
 	MagazineCapacity = 0;
 	InitialAmmo = 0;
 	bIsSilenced = false;
@@ -54,73 +55,56 @@ void ALimenWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BaseDamage,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, RoundsPerSecond,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MagazineCapacity,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReloadTimeInSeconds,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsAutomatic,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, WeaponRange,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ImpactDamageFalloffMultiplier,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, FireSoundRange,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, AINoiseEventLoudness,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsSilenced,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, InfiniteAmmoType,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	FDoRepLifetimeParams Params(COND_None, REPNOTIFY_OnChanged, true);
 
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, FireMethodObject,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentAmmo,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsHoldingTrigger,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsFireRateCooldownOver,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsFiring,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsReloading,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsNextShotReady,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BaseDamage, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, SecondsPerShot, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, MagazineCapacity, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReloadTimeInSeconds, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsAutomatic, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, WeaponRange, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ImpactDamageFalloffMultiplier, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, FireSoundRange, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, AINoiseEventLoudness, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsSilenced, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, InfiniteAmmoType, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentAmmo, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsHoldingTrigger, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsFireRateCooldownOver, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsFiring, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsReloading, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsNextShotReady, Params)
 }
 
 void ALimenWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (HasAuthority() && !FireMethodClass.IsNull())
+	if (HasAuthority())
 	{
 		CurrentAmmo = InitialAmmo;
 		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentAmmo, this)
 
-		FireMethodObject = NewObject<ULimenWeaponFireMethod>(this, FireMethodClass.LoadSynchronous());
-		AddReplicatedSubObject(FireMethodObject.Get());
-		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, FireMethodObject, this)
+		if (!FireMethodClass.IsNull())
+		{
+			FireMethodObject = TStrongObjectPtr(NewObject<ULimenWeaponFireMethod>(this, FireMethodClass.LoadSynchronous()));
+		}
 
 		if (GetWorld()->IsGameWorld())
 		{
-			ensureAlways(1 / static_cast<float>(RoundsPerSecond) > 0);
+			ensureAlways(!FMath::IsNegativeOrNegativeZero(SecondsPerShot));
 		}
 	}
 }
 
 void ALimenWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	RemoveReplicatedSubObject(FireMethodObject.Get());
-	FireMethodObject->ConditionalBeginDestroy();
-	FireMethodObject = nullptr;
+	if (FireMethodObject)
+	{
+		FireMethodObject->ConditionalBeginDestroy();
+		FireMethodObject.Reset();
+	}
 
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, FireMethodObject, this)
 	Super::EndPlay(EndPlayReason);
 }
 
@@ -128,18 +112,9 @@ void ALimenWeapon::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!HasAuthority()) return;
-
 	if (bIsHoldingTrigger)
 	{
-		if (bIsAutomatic)
-		{
-			Fire();
-		}
-		else
-		{
-			Fire();
-		}
+		Fire();
 	}
 	else
 	{
@@ -181,40 +156,39 @@ void ALimenWeapon::PickUp(AController* InController, APawn* InPawn)
 
 void ALimenWeapon::StartFiring()
 {
-	check(HasAuthority())
 	bIsHoldingTrigger = true;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsHoldingTrigger, this)
+	Server_SetFireState(bIsHoldingTrigger);
 }
 
 void ALimenWeapon::StopFiring()
 {
-	check(HasAuthority())
 	bIsHoldingTrigger = false;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsHoldingTrigger, this)
+	Server_SetFireState(bIsHoldingTrigger);
 }
 
-void ALimenWeapon::StartReloading(ULimenInventoryComponent* PlayerInventory)
+void ALimenWeapon::StartReloading()
 {
-	check(HasAuthority())
+	Server_SetReloadState(true);
 
-	if (!CanReload(PlayerInventory))
+	if (!CanReload())
 	{
 		return;
 	}
 
-	StartReloadTimer(PlayerInventory);
+	StartReloadTimer();
+	ReloadStart();
 }
 
 void ALimenWeapon::StopReloading()
 {
-	check(HasAuthority())
+	Server_SetReloadState(false);
 
 	if (bIsReloading)
 	{
 		StopReloadTimer();
 	}
 
-	Multicast_ReloadCanceled();
+	ReloadCancelled();
 }
 
 bool ALimenWeapon::IsFiring() const
@@ -224,18 +198,13 @@ bool ALimenWeapon::IsFiring() const
 
 float ALimenWeapon::GetSecondsPerShot() const
 {
-	return 1 / static_cast<float>(RoundsPerSecond);
+	return SecondsPerShot;
 }
 
-float ALimenWeapon::GetFireRate() const
+void ALimenWeapon::SetSecondsPerShot(const float NewValue)
 {
-	return RoundsPerSecond;
-}
-
-void ALimenWeapon::SetFireRate(const float InFireRate)
-{
-	RoundsPerSecond = InFireRate;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, BaseDamage, this)
+	SecondsPerShot = NewValue;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, SecondsPerShot, this)
 }
 
 float ALimenWeapon::GetReloadTime() const
@@ -243,14 +212,20 @@ float ALimenWeapon::GetReloadTime() const
 	return ReloadTimeInSeconds;
 }
 
+void ALimenWeapon::SetReloadTime(const float NewValue)
+{
+	ReloadTimeInSeconds = NewValue;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReloadTimeInSeconds, this)
+}
+
 bool ALimenWeapon::IsReloading() const
 {
 	return bIsReloading;
 }
 
-bool ALimenWeapon::CanReload(const ULimenInventoryComponent* PlayerInventory) const
+bool ALimenWeapon::CanReload() const
 {
-	return !bIsReloading && CurrentAmmo < MagazineCapacity && PlayerInventory->GetItemQuantity(CompatibleAmmo) > 0;
+	return !bIsReloading && CurrentAmmo < MagazineCapacity;
 }
 
 bool ALimenWeapon::CanFire() const
@@ -287,9 +262,9 @@ float ALimenWeapon::GetBaseDamage() const
 	return BaseDamage;
 }
 
-void ALimenWeapon::SetBaseDamage(const float InNewDamage)
+void ALimenWeapon::SetBaseDamage(const float NewValue)
 {
-	BaseDamage = InNewDamage;
+	BaseDamage = NewValue;
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, BaseDamage, this)
 }
 
@@ -298,9 +273,20 @@ float ALimenWeapon::GetWeaponRange() const
 	return WeaponRange;
 }
 
+void ALimenWeapon::SetWeaponRange(const float NewValue)
+{
+	WeaponRange = NewValue;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, WeaponRange, this)
+}
+
 TSubclassOf<ULimenDamageType> ALimenWeapon::GetDamageType() const
 {
 	return DamageType;
+}
+
+void ALimenWeapon::SetDamageType(const TSubclassOf<ULimenDamageType>& NewValue)
+{
+	DamageType = NewValue;
 }
 
 float ALimenWeapon::GetImpactDamageFalloffMultiplier() const
@@ -308,9 +294,21 @@ float ALimenWeapon::GetImpactDamageFalloffMultiplier() const
 	return ImpactDamageFalloffMultiplier;
 }
 
+void ALimenWeapon::SetImpactDamageFalloffMultiplier(const float NewValue)
+{
+	ImpactDamageFalloffMultiplier = NewValue;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ImpactDamageFalloffMultiplier, this)
+}
+
 float ALimenWeapon::GetAINoiseEventLoudness() const
 {
 	return AINoiseEventLoudness;
+}
+
+void ALimenWeapon::SetAINoiseEventLoudness(const float NewValue)
+{
+	AINoiseEventLoudness = NewValue;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, AINoiseEventLoudness, this)
 }
 
 float ALimenWeapon::GetFireSoundRange() const
@@ -318,30 +316,51 @@ float ALimenWeapon::GetFireSoundRange() const
 	return FireSoundRange;
 }
 
+void ALimenWeapon::SetFireSoundRange(const float NewValue)
+{
+	FireSoundRange = NewValue;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, FireSoundRange, this)
+}
+
 EInfiniteAmmoType ALimenWeapon::GetInfiniteAmmoType() const
 {
 	return InfiniteAmmoType;
 }
 
-const TSubclassOf<ALimenAmmo>& ALimenWeapon::GetCompatibleAmmo() const
+void ALimenWeapon::SetInfiniteAmmoType(const EInfiniteAmmoType NewValue)
+{
+	InfiniteAmmoType = NewValue;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InfiniteAmmoType, this)
+}
+
+FVector ALimenWeapon::GetFiringLocation() const
+{
+	if(!GetOwner())
+	{
+		return FVector::ZeroVector;
+	}
+
+	FVector Location;
+	FRotator Rotation;
+	GetOwner()->GetActorEyesViewPoint(Location, Rotation);
+
+	return Location;
+}
+
+TSubclassOf<ALimenAmmo> ALimenWeapon::GetCompatibleAmmo() const
 {
 	return CompatibleAmmo;
 }
 
-uint8 ALimenWeapon::GetCurrentAmmo() const
+int32 ALimenWeapon::GetCurrentAmmo() const
 {
 	return CurrentAmmo;
 }
 
-uint8 ALimenWeapon::GetAmmoCountUntilFull() const
+int32 ALimenWeapon::GetAmmoCountUntilFull() const
 {
 	check(MagazineCapacity >= CurrentAmmo);
 	return MagazineCapacity - CurrentAmmo;
-}
-
-FVector ALimenWeapon::GetFiringLocation_Implementation() const
-{
-	return FVector::ZeroVector;
 }
 
 void ALimenWeapon::OnRep_IsDropped()
@@ -360,8 +379,6 @@ void ALimenWeapon::OnRep_IsDropped()
 
 void ALimenWeapon::DecrementAmmo(const int Value)
 {
-	check(HasAuthority())
-
 	switch (InfiniteAmmoType)
 	{
 	case EInfiniteAmmoType::InfiniteMagazines:
@@ -384,13 +401,14 @@ void ALimenWeapon::DecrementAmmo(const int Value)
 	}
 }
 
-void ALimenWeapon::ReloadStart(const float ReloadTimeSeconds)
+void ALimenWeapon::ReloadStart()
 {
 	OnWeaponReload.Broadcast(this, GetReloadTime());
 }
 
-void ALimenWeapon::ReloadCancelled(const float ReloadTimeSeconds)
+void ALimenWeapon::ReloadCancelled()
 {
+	OnWeaponReloadCanceled.Broadcast(this, ReloadTimeInSeconds);
 }
 
 void ALimenWeapon::WeaponFired()
@@ -427,26 +445,32 @@ void ALimenWeapon::StopWeaponFire()
 
 void ALimenWeapon::Fire()
 {
-	check(HasAuthority())
-
 	if (!CanFire())
 	{
 		if (bIsFiring)
 		{
-			Multicast_StopWeaponFire();
+			bIsFiring = false;
+			MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFiring, this)
+
+			if (GetNetMode() != NM_Standalone && HasAuthority())
+			{
+				StopWeaponFire();
+			}
+			else
+			{
+				Multicast_StopWeaponFire();
+			}
+				
 		}
 
-		bIsFiring = false;
-		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 		if (CurrentAmmo <= 0)
 		{
 			WeaponFiredWithoutAmmo();
-			BP_WeaponFiredWithoutAmmo();
 		}
 	}
 	else
 	{
-		FireAccumulator += RoundsPerSecond * GetWorld()->GetDeltaSeconds();
+		FireAccumulator += (1.f / SecondsPerShot) * GetWorld()->GetDeltaSeconds();
 		SimulatingShotsCount = FMath::FloorToInt(FireAccumulator);\
 		if (SimulatingShotsCount == 0)
 		{
@@ -462,36 +486,60 @@ void ALimenWeapon::Fire()
 			if (!bIsFiring)
 			{
 				bIsFiring = true;
-				MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
-				Multicast_StartWeaponFire();
+				MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFiring, this)
+
+				if (GetNetMode() != NM_Standalone && HasAuthority())
+				{
+					Multicast_StartWeaponFire();
+				}
+				else
+				{
+					StartWeaponFire();
+				}
 			}
 
 			DecrementAmmo(SimulatingShotsCount);
 			ShotsInARow += SimulatingShotsCount;
 
-			check(FireMethodObject)
-			FireMethodObject->ProcessFire(this, SimulatingShotsCount);
-			Multicast_WeaponFired();
+			if (HasAuthority())
+			{
+				check(FireMethodObject)
+				FireMethodObject->ProcessFire(this, SimulatingShotsCount);
+			}
+
+			if (GetNetMode() != NM_Standalone && HasAuthority())
+			{
+				Multicast_WeaponFired();
+			}
+			else
+			{
+				WeaponFired();
+			}
 
 			bIsFireRateCooldownOver = false;
 			MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 		}
 	}
 
-	if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownTimer))
+	if (!FMath::IsNearlyZero(SecondsPerShot))
 	{
-		GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &ThisClass::HandleWeaponCooldown,
-			1.f / RoundsPerSecond, false);
+		if (!GetWorld()->GetTimerManager().IsTimerActive(CooldownTimer))
+		{
+			GetWorld()->GetTimerManager().SetTimer(CooldownTimer, this, &ThisClass::HandleWeaponCooldown,
+				SecondsPerShot, false);
+		}
+	}
+	else
+	{
+		HandleWeaponCooldown();
 	}
 }
 
-void ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
+void ALimenWeapon::Reload()
 {
-	check(HasAuthority())
-
 	switch (InfiniteAmmoType)
 	{
-	case EInfiniteAmmoType::InfiniteBullets: // Fallback
+	case EInfiniteAmmoType::InfiniteBullets:
 	case EInfiniteAmmoType::InfiniteMagazines:
 		{
 			CurrentAmmo = MagazineCapacity;
@@ -501,23 +549,6 @@ void ALimenWeapon::Reload(ULimenInventoryComponent* PlayerInventory)
 
 	case EInfiniteAmmoType::Disabled:
 		{
-			const uint8 AmmoMissingInMagazine = MagazineCapacity - CurrentAmmo;
-			const int32 InventoryAmmo = PlayerInventory->GetItemQuantity(CompatibleAmmo);
-
-			if (InventoryAmmo >= AmmoMissingInMagazine)
-			{
-				PlayerInventory->GetItems(CompatibleAmmo, AmmoMissingInMagazine);
-				CurrentAmmo = MagazineCapacity;
-				MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentAmmo, this)
-			}
-			else if (InventoryAmmo < AmmoMissingInMagazine)
-			{
-				PlayerInventory->GetItems(CompatibleAmmo, InventoryAmmo);
-				CurrentAmmo += InventoryAmmo;
-				MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentAmmo, this)
-			}
-
-			OnAmmoUpdated.Broadcast(CurrentAmmo);
 		}
 		break;
 
@@ -535,8 +566,6 @@ void ALimenWeapon::OnRep_CurrentAmmo()
 
 void ALimenWeapon::HandleWeaponCooldown()
 {
-	check(HasAuthority())
-
 	bIsFireRateCooldownOver = true;
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
 	OnWeaponCooldownOver.Broadcast(this);
@@ -548,30 +577,23 @@ void ALimenWeapon::SetNextShotReady()
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsNextShotReady, this)
 }
 
-void ALimenWeapon::StartReloadTimer(ULimenInventoryComponent* PlayerInventory)
+void ALimenWeapon::StartReloadTimer()
 {
-	check(HasAuthority())
-
 	bIsReloading = true;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
-	const FTimerDelegate ReloadDelegate = FTimerDelegate::CreateUObject(this, &ThisClass::ReloadInternal, PlayerInventory);
-	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, ReloadDelegate, ReloadTimeInSeconds, false);
-
-	Multicast_ReloadStart();
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsReloading, this)
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &ThisClass::ReloadInternal, ReloadTimeInSeconds, false);
 }
 
 void ALimenWeapon::StopReloadTimer()
 {
 	bIsReloading = false;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsFireRateCooldownOver, this)
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsReloading, this)
 	GetWorld()->GetTimerManager().ClearTimer(ReloadTimer);
 }
 
-void ALimenWeapon::ReloadInternal(ULimenInventoryComponent* PlayerInventory)
+void ALimenWeapon::ReloadInternal()
 {
-	check(HasAuthority())
-
-	Reload(PlayerInventory);
+	Reload();
 	StopReloadTimer();
 }
 
@@ -620,31 +642,84 @@ void ALimenWeapon::StopFireCameraShake()
 	}
 }
 
+void ALimenWeapon::Server_SetFireState_Implementation(const bool bEnabled)
+{
+	if (bEnabled != bIsHoldingTrigger)
+	{
+		bIsHoldingTrigger = bEnabled;
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsHoldingTrigger, this)
+	}
+}
+
+void ALimenWeapon::Server_SetReloadState_Implementation(const bool bEnabled)
+{
+	if (bEnabled)
+	{
+		if (!CanReload())
+		{
+			return;
+		}
+
+		StartReloadTimer();
+		Multicast_ReloadStart();
+	}
+	else
+	{
+		if (bIsReloading)
+		{
+			StopReloadTimer();
+		}
+
+		Multicast_ReloadCanceled();
+	}
+}
+
 void ALimenWeapon::Multicast_ReloadCanceled_Implementation()
 {
-	ReloadCancelled(ReloadTimeInSeconds);
-	BP_ReloadCancelled(ReloadTimeInSeconds);
-	OnWeaponReloadCanceled.Broadcast(this, ReloadTimeInSeconds);
+	if (const auto* OwnerPawn = GetOwner<APawn>(); OwnerPawn->IsLocallyControlled())
+	{
+		return;
+	}
+
+	ReloadCancelled();
 }
 
 void ALimenWeapon::Multicast_ReloadStart_Implementation()
 {
-	ReloadStart(ReloadTimeInSeconds);
-	BP_ReloadStart(ReloadTimeInSeconds);
+	if (const auto* OwnerPawn = GetOwner<APawn>(); OwnerPawn->IsLocallyControlled())
+	{
+		return;
+	}
+
+	ReloadStart();
 }
 
 void ALimenWeapon::Multicast_StartWeaponFire_Implementation()
 {
+	if (const auto* OwnerPawn = GetOwner<APawn>(); OwnerPawn->IsLocallyControlled())
+	{
+		return;
+	}
+
 	StartWeaponFire();
 }
 
 void ALimenWeapon::Multicast_StopWeaponFire_Implementation()
 {
+	if (const auto* OwnerPawn = GetOwner<APawn>(); OwnerPawn->IsLocallyControlled())
+	{
+		return;
+	}
+
 	StopWeaponFire();
 }
 
 void ALimenWeapon::Multicast_WeaponFired_Implementation()
 {
+	if (const auto* OwnerPawn = GetOwner<APawn>(); OwnerPawn->IsLocallyControlled())
+	{
+		return;
+	}
+
 	WeaponFired();
-	BP_WeaponFired();
 }

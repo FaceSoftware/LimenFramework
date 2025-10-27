@@ -22,13 +22,11 @@ public:
 	explicit ALimenPhysicalItem(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 
 	UFUNCTION(BlueprintCallable)
-	const FName& GetAttachmentSocket() const;
+	const FName& GetAttachmentSocketName() const;
 	
 protected:
 	UPROPERTY(EditAnywhere, Category="Limen|Animation")
-	FName AttachSocket;
+	FName AttachSocketName;
 
-private:	
-	uint32 CurrentUpgrade;
-	bool bIsHolstered;
+private:
 };

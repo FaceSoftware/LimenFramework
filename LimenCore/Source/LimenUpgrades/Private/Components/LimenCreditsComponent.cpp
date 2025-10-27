@@ -4,9 +4,10 @@
 #include "Components/LimenCreditsComponent.h"
 
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 
-ULimenCreditsComponent::ULimenCreditsComponent()
+ULimenCreditsComponent::ULimenCreditsComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	SetIsReplicatedByDefault(true);
 	SetIsReplicated(true);
@@ -14,6 +15,7 @@ ULimenCreditsComponent::ULimenCreditsComponent()
 	StartingCredits = 0;
 	CurrentCredits = 0;
 	bAllowNegativeBalance = false;
+	Multiplier = 1.f;
 }
 
 void ULimenCreditsComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -26,14 +28,18 @@ void ULimenCreditsComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void ULimenCreditsComponent::BeginPlay()
 {
-	CurrentCredits = StartingCredits;
-
 	Super::BeginPlay();
+
+	CurrentCredits = StartingCredits;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentCredits, this)
 }
 
 void ULimenCreditsComponent::DepositCredits(const int64 NewCredits)
 {
-	CurrentCredits += static_cast<uint64>(NewCredits);
+	const int64 FlooredCredits = FMath::FloorToInt64(static_cast<double>(Multiplier) * static_cast<double>(NewCredits));
+	CurrentCredits += static_cast<uint64>(FlooredCredits);
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentCredits, this)
+
 	CreditsUpdated();
 }
 
@@ -45,6 +51,7 @@ bool ULimenCreditsComponent::WithdrawCredits(const int64 OutCredits)
 	}
 
 	CurrentCredits -= OutCredits;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentCredits, this)
 	CreditsUpdated();
 	return true;
 }
@@ -63,6 +70,12 @@ void ULimenCreditsComponent::SetStartingCredits(const int32 NewStartingCredits)
 {
 	StartingCredits = NewStartingCredits;
 }
+
+void ULimenCreditsComponent::SetCreditsMultiplier(const float NewMultiplier)
+{
+	Multiplier = NewMultiplier;
+}
+
 void ULimenCreditsComponent::CreditsUpdated()
 {
 	OnCreditsUpdated.Broadcast(this, GetCreditsString());

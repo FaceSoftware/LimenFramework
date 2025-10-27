@@ -8,13 +8,10 @@
 
 ALimenPhysicalItem::ALimenPhysicalItem(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
-	PrimaryActorTick.bCanEverTick = true;
-	bIsHolstered = true;
-	CurrentUpgrade = 0;
-	AttachSocket = NAME_None;
+	AttachSocketName = NAME_None;
 }
 
-const FName& ALimenPhysicalItem::GetAttachmentSocket() const
+const FName& ALimenPhysicalItem::GetAttachmentSocketName() const
 {
-	return AttachSocket;
+	return AttachSocketName;
 }

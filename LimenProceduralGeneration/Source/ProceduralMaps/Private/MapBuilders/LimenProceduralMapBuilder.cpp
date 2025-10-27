@@ -14,6 +14,7 @@ ALimenProceduralMapBuilder::ALimenProceduralMapBuilder(const FObjectInitializer&
 	PrimaryActorTick.bTickEvenWhenPaused = false;
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = false;
+	MapsBuilt = 0;
 	
 	AlgorithmFinishDelegate.BindLambda([this] (bool bSuccess, const FGuid& MapId, ULimenProceduralMap* Map)
 	{
@@ -38,6 +39,27 @@ void ALimenProceduralMapBuilder::BeginPlay()
 	}
 
 #endif
+}
+
+void ALimenProceduralMapBuilder::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	for (const auto& Element : MapAlgorithms)
+	{
+		Element.Value->ConditionalBeginDestroy();
+	}
+	MapAlgorithms.Empty();
+	for (const auto& Element : LoadedMaps)
+	{
+		Element.Value->ConditionalBeginDestroy();
+	}
+	LoadedMaps.Empty();
+	for (const auto& Element : BuiltMaps)
+	{
+		Element.Value->ConditionalBeginDestroy();
+	}
+	BuiltMaps.Empty();
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void ALimenProceduralMapBuilder::LoadMap(const FGuid& MapId)
@@ -118,7 +140,7 @@ const FGuid* ALimenProceduralMapBuilder::GetMapId(const int32 Index) const
 
 ALimenProceduralMapManager* ALimenProceduralMapBuilder::GetMapManager(const FGuid& MapId) const
 {
-	return MapManagers[MapId];
+	return MapManagers[MapId].Get();
 }
 
 int32 ALimenProceduralMapBuilder::GetMapIndex(const FGuid& MapId) const
@@ -135,7 +157,7 @@ int32 ALimenProceduralMapBuilder::GetMapIndex(const FGuid& MapId) const
 
 ULimenMapAlgorithm* ALimenProceduralMapBuilder::GetMapAlgorithm(const FGuid& MapId) const
 {
-	return MapAlgorithms[MapId];
+	return MapAlgorithms[MapId].Get();
 }
 
 const UProceduralMapParameters* ALimenProceduralMapBuilder::GetMapGenerationParameters(const FGuid& MapId) const
@@ -145,29 +167,33 @@ const UProceduralMapParameters* ALimenProceduralMapBuilder::GetMapGenerationPara
 
 ULimenProceduralMap* ALimenProceduralMapBuilder::GetMap(const FGuid& MapId) const
 {	
-	ULimenProceduralMap* const* Map = LoadedMaps.Find(MapId);
-	if (Map != nullptr)
-	{
-		return *Map;
-	}
+	TStrongObjectPtr<ULimenProceduralMap> const* Map = LoadedMaps.Find(MapId);
+	if (Map != nullptr) { return Map->Get(); }
 	
 	Map = BuiltMaps.Find(MapId);
-	if (Map != nullptr)
-	{
-		return *Map;
-	}
+	if (Map != nullptr) { return Map->Get(); }
 
 	return nullptr;
 }
 
-const TMap<FGuid, ULimenProceduralMap*>& ALimenProceduralMapBuilder::GetLoadedMaps() const
+TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> ALimenProceduralMapBuilder::GetLoadedMaps() const
 {
-	return LoadedMaps;
+	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> Out;
+	for (const auto& LoadedMap : LoadedMaps)
+	{
+		Out.Add(LoadedMap.Key, TWeakObjectPtr(LoadedMap.Value.Get()));
+	}
+	return Out;
 }
 
-const TMap<FGuid, ULimenProceduralMap*>& ALimenProceduralMapBuilder::GetBuiltMaps() const
+TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> ALimenProceduralMapBuilder::GetBuiltMaps() const
 {
-	return BuiltMaps;
+	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> Out;
+	for (const auto& BuiltMap : BuiltMaps)
+	{
+		Out.Add(BuiltMap.Key, TWeakObjectPtr(BuiltMap.Value.Get()));
+	}
+	return Out;
 }
 
 bool ALimenProceduralMapBuilder::IsLastLevel(const FGuid& Test) const
@@ -233,7 +259,7 @@ void ALimenProceduralMapBuilder::MapBeingLoad(const FGuid& MapId)
 
 void ALimenProceduralMapBuilder::MapFinishLoad(const FGuid& MapId, ULimenProceduralMap* Map)
 {
-	LoadedMaps.Add(MapId, Map);
+	LoadedMaps.Add(MapId, TStrongObjectPtr(Map));
 	
 	GetOnMapFinishLoad().Broadcast(MapId);
 }
@@ -246,7 +272,7 @@ void ALimenProceduralMapBuilder::MapBeginBuild(const FGuid& MapId, ULimenProcedu
 void ALimenProceduralMapBuilder::MapFinishBuild(const FGuid& MapId, ULimenProceduralMap* Map)
 {
 	MapsBuilt++;
-	BuiltMaps.Add(MapId, Map);
+	BuiltMaps.Add(MapId, TStrongObjectPtr(Map));
 
 	UClass* ManagerClass = MapsParameters[MapId]->GetManagerClass();
 	ALimenProceduralMapManager* Manager = GetWorld()->SpawnActor<ALimenProceduralMapManager>(ManagerClass);
@@ -298,14 +324,14 @@ void ALimenProceduralMapBuilder::MapFinishUnload(const FGuid& MapId)
 }
 
 void ALimenProceduralMapBuilder::LoadMap_Internal(const FGuid& MapId)
-{	
+{
 	const UProceduralMapParameters* Params = MapsParameters[MapId];
 	check(Params->GetGenerationAlgorithm() != nullptr);
 	
 	ULimenMapAlgorithm* MapAlgorithm = NewObject<ULimenMapAlgorithm>(this, Params->GetGenerationAlgorithm());
 	MapAlgorithm->CreateMap(MapId, Params, AlgorithmFinishDelegate);
 	
-	MapAlgorithms.Add(MapId, MapAlgorithm);
+	MapAlgorithms.Add(MapId, TStrongObjectPtr(MapAlgorithm));
 }
 
 void ALimenProceduralMapBuilder::BuildMap_Internal(const FGuid& MapId)

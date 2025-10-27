@@ -23,6 +23,9 @@ public:
 	DECLARE_DELEGATE_ThreeParams(FAlgorithmFinish, bool /* bSuccess */,
 								 const FGuid& /* MapId */,
 								 ULimenProceduralMap* /* Map */);
+
+	ULimenMapAlgorithm();
+	virtual void BeginDestroy() override;
 	
 	void CreateMap(const FGuid& MapId, const UProceduralMapParameters* MapParameters, FAlgorithmFinish& FinishCallback);
 	ULimenProceduralMap* CreateMap(const FGuid& MapId, const UProceduralMapParameters* MapParameters);

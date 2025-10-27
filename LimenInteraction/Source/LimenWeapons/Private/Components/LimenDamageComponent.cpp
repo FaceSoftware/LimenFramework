@@ -7,7 +7,6 @@
 ULimenDamageComponent::ULimenDamageComponent()
 {
 	SetIsReplicatedByDefault(true);
-	SetIsReplicatedByDefault(true);
 	PrimaryComponentTick.bCanEverTick = true;
 	bAutoActivate = true;
 }
@@ -21,6 +20,8 @@ void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTic
 	FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (!GetOwner()->HasAuthority()) { return; }
 
 	for (int32 i = ActiveDamageInfo.Num() - 1; i >= 0; --i)
 	{
@@ -57,6 +58,8 @@ void ULimenDamageComponent::ApplyDamage(AController* Instigator, AActor* Causer,
 										const TSubclassOf<ULimenDamageType>& DamageType,
 										const FDamageParameters& DamageParams)
 {
+	check(GetOwner()->HasAuthority())
+
 	ULimenDamageType* DamageTypeInstance = nullptr;
 	if (DamageType.Get())
 	{
@@ -66,8 +69,8 @@ void ULimenDamageComponent::ApplyDamage(AController* Instigator, AActor* Causer,
 	FDamageInfo Info;
 	Info.Instigator = Instigator;
 	Info.Causer = Causer;
-	Info.DamageTypeClass = DamageTypeInstance->GetClass();
-	Info.DamageType = DamageTypeInstance;
+	Info.DamageTypeClass = DamageType;
+	Info.DamageType = TStrongObjectPtr(DamageTypeInstance);
 	Info.DamageParameters = DamageParams;
 
 	ActiveDamageInfo.Push(Info);

@@ -122,24 +122,19 @@ bool ULimenInventoryComponent::AddItem(ALimenItemBase* NewItem)
 	TArray<ALimenItemBase*> Instances = SpawnItemInstances(NewItem);
 	Instances.Push(NewItem);
 
-	for (ALimenItemBase*& Instance : Instances)
-	{
-		Instance->SetOwner(GetOwner());
-	}
-
 	if (IsFirstOfType(NewItem->GetClass()))
 	{
 		FItemRegistry Registry;
 		Registry.ItemClass = NewItem->GetClass();
 		Registry.ItemInstances.Append(MoveTemp(Instances));
 		ItemRegistries.Push(MoveTemp(Registry));
-		OnItemAdded.Broadcast(NewItem->GetClass());
+		OnItemAdded.Broadcast(NewItem);
 	}
 	else
 	{
 		FItemRegistry* Registry = FindItemRegistry(NewItem->GetClass());
 		Registry->ItemInstances.Append(MoveTemp(Instances));
-		OnItemUpdated.Broadcast(NewItem->GetClass());
+		OnItemUpdated.Broadcast(NewItem);
 	}
 	UpdateInventoryLoad();
 
@@ -192,11 +187,11 @@ bool ULimenInventoryComponent::GetItemInstance(ALimenItemBase* Instance)
 			return Test.ItemClass == Registry->ItemClass;
 		});
 		
-		OnItemRemoved.Broadcast(Registry->ItemClass.LoadSynchronous());
+		OnItemRemoved.Broadcast(Instance);
 	}
 	else
 	{
-		OnItemUpdated.Broadcast(Registry->ItemClass.LoadSynchronous());
+		OnItemUpdated.Broadcast(Instance);
 	}
 	
 	OnInventoryUpdated.Broadcast(this);

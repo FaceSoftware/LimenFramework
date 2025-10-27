@@ -25,7 +25,7 @@ struct FItemRegistry
 	TArray<TObjectPtr<ALimenItemBase>> ItemInstances;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, TSubclassOf<ALimenItemBase>, ItemClass);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, ALimenItemBase*, NewItem);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryUpdate, ULimenInventoryComponent*, Inventory);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

@@ -79,8 +79,8 @@ void ALimenPlayerCharacter::BeginPlay()
 	LimenPlayerControllerPtr = Cast<ALimenPlayerController>(GetController());
 	LimenPlayerStatePtr = Cast<ALimenPlayerState>(GetPlayerState());
 
-	CharacterInventory->OnItemAdded.AddUniqueDynamic(this, &ThisClass::ItemAdded);
-	CharacterInventory->OnItemFailedToAdd.AddUniqueDynamic(this, &ThisClass::ItemCouldNotBeAdded);
+	// CharacterInventory->OnItemAdded.AddUniqueDynamic(this, &ThisClass::ItemAdded);
+	// CharacterInventory->OnItemFailedToAdd.AddUniqueDynamic(this, &ThisClass::ItemCouldNotBeAdded);
 
 	CharacterObjectives->OnNewObjectiveAdded.AddUniqueDynamic(this, &ThisClass::ObjectiveAdded);
 	CharacterObjectives->OnObjectiveUpdated.AddUniqueDynamic(this, &ThisClass::ObjectiveUpdated);
@@ -475,7 +475,7 @@ void ALimenPlayerCharacter::ReloadInput(const FInputActionInstance& Instance)
 			return;
 		}
 		
-		GetCurrentWeapon()->StartReloading(GetInventoryComponent());
+		GetCurrentWeapon()->StartReloading();
 	}
 }
 

@@ -18,13 +18,18 @@ void ULimenFMODAudioComponent::BeginPlay()
 
 	if (GetOwner()->HasAuthority())
 	{
-		GetWorld()->GetAuthGameMode<ALimenGameModeBase>()->OnGamePauseStateChanged.AddUniqueDynamic(this, &ThisClass::GamePausedStateChanged);
+		GetWorld()->GetAuthGameMode<ALimenGameModeBase>()->OnGamePauseStateChanged.AddUniqueDynamic(
+			this, &ThisClass::GamePausedStateChanged);
 	}
 }
 
 void ULimenFMODAudioComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	GetWorld()->GetAuthGameMode<ALimenGameModeBase>()->OnGamePauseStateChanged.RemoveDynamic(this, &ThisClass::GamePausedStateChanged);
+	if (GetOwner()->HasAuthority())
+	{
+		GetWorld()->GetAuthGameMode<ALimenGameModeBase>()->OnGamePauseStateChanged.RemoveDynamic(
+			this, &ThisClass::GamePausedStateChanged);
+	}
 
 	Super::EndPlay(EndPlayReason);
 }

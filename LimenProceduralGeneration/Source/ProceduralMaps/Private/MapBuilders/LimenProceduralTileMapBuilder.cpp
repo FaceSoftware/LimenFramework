@@ -130,7 +130,7 @@ void ALimenProceduralTileMapBuilder::DespawnTilesAsync(const FGuid& MapId, const
 
 void ALimenProceduralTileMapBuilder::AssignStartAndEndTiles(const FGuid& MapId)
 {
-	ULimenProceduralMap* Map = GetLoadedMaps()[MapId];
+	const TWeakObjectPtr<ULimenProceduralMap> Map = GetLoadedMaps()[MapId];
 	const ULimenProceduralTileMap* TileMap = CastChecked<ULimenProceduralTileMap>(Map);
 
 	uint8 AssignmentCount = 0;

@@ -10,6 +10,17 @@
 #include "Maps/LimenProceduralMap.h"
 
 
+ULimenMapAlgorithm::ULimenMapAlgorithm() : Super()
+{
+}
+
+void ULimenMapAlgorithm::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	GeneratedMap.Reset();
+}
+
 void ULimenMapAlgorithm::CreateMap(const FGuid& MapId, const UProceduralMapParameters* MapParameters, FAlgorithmFinish& FinishCallback)
 {
 	if (MapGenerationThread.IsValid())

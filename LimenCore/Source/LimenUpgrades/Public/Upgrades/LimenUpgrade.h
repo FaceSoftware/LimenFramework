@@ -6,10 +6,10 @@
 #include "UObject/Object.h"
 #include "LimenUpgrade.generated.h"
 
+
 class ULimenCreditsComponent;
 class UCurveFloat;
 class AController;
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUpgradeApplied, class ULimenUpgrade*, Upgrade);
 
@@ -52,9 +52,9 @@ protected:
 	FText UpgradeDescription;
 	UPROPERTY(EditDefaultsOnly, Category="Upgrade", BlueprintReadOnly, meta=(ClampMin="0"))
 	int32 MaxLevel;
-	UPROPERTY(EditDefaultsOnly, Category="Upgrade", BlueprintReadOnly, meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, Category="Upgrade", BlueprintReadOnly)
 	TObjectPtr<UCurveFloat> CostFunction;
-	UPROPERTY(EditDefaultsOnly, Category="Upgrade", BlueprintReadOnly, meta=(ClampMin="0"))
+	UPROPERTY(EditDefaultsOnly, Category="Upgrade", BlueprintReadOnly)
 	TObjectPtr<UCurveFloat> UpgradeFunction;
 
 	virtual void ProcessUpgradeInternal(AController* InController, APawn* InPawn, float NewUpgradeValue);

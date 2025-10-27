@@ -32,6 +32,7 @@ public class LimenCore : ModuleRules
 				"RHICore",
 				"RHI",
 				"InputCore",
+				"NetCore",
 			}
 		);
 		

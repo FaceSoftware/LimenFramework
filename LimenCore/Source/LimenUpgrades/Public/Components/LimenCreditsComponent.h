@@ -18,7 +18,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FCreditsUpdate OnCreditsUpdated;
 
-	ULimenCreditsComponent();
+	explicit ULimenCreditsComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void BeginPlay() override;
 
@@ -30,6 +30,7 @@ public:
 	FString GetCreditsString() const;
 	int64 GetCredits() const;
 	void SetStartingCredits(const int32 NewStartingCredits);
+	void SetCreditsMultiplier(const float NewMultiplier);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Credits", BlueprintReadOnly)
@@ -40,6 +41,7 @@ protected:
 	virtual void CreditsUpdated();
 
 private:
+	float Multiplier;
 	UPROPERTY(ReplicatedUsing=OnRep_CurrentCredits, Transient)
 	uint64 CurrentCredits;
 

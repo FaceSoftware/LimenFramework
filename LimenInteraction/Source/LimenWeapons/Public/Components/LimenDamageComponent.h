@@ -23,9 +23,9 @@ struct FDamageInfo
 	UPROPERTY(BlueprintReadOnly)
 	TSubclassOf<ULimenDamageType> DamageTypeClass;
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<ULimenDamageType> DamageType;
-	UPROPERTY(BlueprintReadOnly)
 	FDamageParameters DamageParameters;
+
+	TStrongObjectPtr<ULimenDamageType> DamageType;
 };
 
 

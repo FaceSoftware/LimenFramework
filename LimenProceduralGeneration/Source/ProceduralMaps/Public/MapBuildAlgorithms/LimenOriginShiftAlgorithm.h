@@ -43,9 +43,8 @@ private:
 		bool bFront = false, bBack = false, bLeft = false, bRight = false;
 		int32 Count = 0;
 	};
-	
-	UPROPERTY()
-	TObjectPtr<ULimenGlobalRandomStreamSubsystem> GlobalRandStream;
+
+	TWeakObjectPtr<ULimenGlobalRandomStreamSubsystem> GlobalRandStream;
 
 	int32 SideTileLength;
 

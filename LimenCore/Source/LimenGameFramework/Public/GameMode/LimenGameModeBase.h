@@ -37,16 +37,12 @@ public:
 	T* GetManager() const
 	{
 		auto* M = ManagersList.FindByPredicate(
-			[] (const ALimenGameplayManager* Test)
+			[] (const TWeakObjectPtr<ALimenGameplayManager>& Test)
 			{
 				return Test->IsA<T>();
 			});
 
-		if (M == nullptr)
-		{
-			return nullptr;
-		}
-
+		if (M == nullptr) { return nullptr; }
 		return CastChecked<T>(*M);
 	}
 

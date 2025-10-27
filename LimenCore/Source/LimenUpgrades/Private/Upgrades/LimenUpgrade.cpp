@@ -3,12 +3,12 @@
 
 #include "Upgrades/LimenUpgrade.h"
 
-#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Components/LimenCreditsComponent.h"
 #include "Curves/CurveFloat.h"
 #include "Engine/NetDriver.h"
 #include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 
 ULimenUpgrade::ULimenUpgrade()
@@ -26,16 +26,13 @@ void ULimenUpgrade::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	UObject::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentLevel,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BoundController,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BoundPawn,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, UpgradeCostMultiplier,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, UpgradeValueMultiplier,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+	FDoRepLifetimeParams Params(COND_None, REPNOTIFY_OnChanged, true);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentLevel, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BoundController, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, BoundPawn, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, UpgradeCostMultiplier, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, UpgradeValueMultiplier, Params)
 }
 
 bool ULimenUpgrade::IsSupportedForNetworking() const
@@ -140,7 +137,9 @@ void ULimenUpgrade::ProcessUpgrade(AController* InController, APawn* InPawn, ULi
 	check(CanApplyUpgrade(InController, InPawn, CreditsComponent))
 
 	BoundController = InController;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, BoundController, this)
 	BoundPawn = InPawn;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, BoundPawn, this)
 
 	const int32 NextLevel = CurrentLevel + 1;
 	const float NewCostValue = GetCost(NextLevel);
@@ -150,6 +149,8 @@ void ULimenUpgrade::ProcessUpgrade(AController* InController, APawn* InPawn, ULi
 	Multicast_ProcessUpgrade(InController, InPawn, NewUpgradeValue);
 
 	CurrentLevel = NextLevel;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentLevel, this)
+	
 	CurrentLevelChanged();
 }
 
@@ -189,6 +190,7 @@ void ULimenUpgrade::SetCostMultiplier(const float NewMultiplier)
 	LastUpgradeCostMultiplierLevel = TPair<int32, float>(GetCurrentUpgradeLevel(), CurrentMultiplierCopy);
 	
 	UpgradeCostMultiplier = NewMultiplier;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, UpgradeCostMultiplier, this)
 }
 
 float ULimenUpgrade::GetUpgradeValue(const int32 Level) const
@@ -206,6 +208,7 @@ void ULimenUpgrade::SetValueMultiplier(const float NewMultiplier)
 	LastUpgradeCostMultiplierLevel = TPair<int32, float>(GetCurrentUpgradeLevel(), CurrentMultiplierCopy);
 
 	UpgradeValueMultiplier = NewMultiplier;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, UpgradeValueMultiplier, this)
 }
 
 void ULimenUpgrade::ProcessUpgradeInternal(AController* InController, APawn* InPawn, float NewUpgradeValue)

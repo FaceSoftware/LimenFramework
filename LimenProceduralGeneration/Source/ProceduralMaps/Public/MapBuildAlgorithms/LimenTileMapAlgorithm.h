@@ -66,9 +66,6 @@ protected:
 	const UProceduralTileMapParameters* GetGeneratedTileMapParameters() const;
 	
 private:
-	UPROPERTY()
 	TWeakObjectPtr<ULimenProceduralTileMap> GeneratedTileMap;
-	UPROPERTY()
 	TWeakObjectPtr<const UProceduralTileMapParameters> GeneratedTileMapParameters;
-	
 };

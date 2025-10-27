@@ -147,6 +147,7 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon, const uint64 S
 	if (!Weapon) return;
 
 	check(Weapon->GetOwner() != nullptr) // If a weapon is firing, it should always have an owner
+
 	FVector Start;
 	FRotator Rotation;
 	AActor* Owner = Weapon->GetOwner();
@@ -188,7 +189,6 @@ void ULimenLineTraceFireMethod::ProcessFire(ALimenWeapon* Weapon, const uint64 S
 	{
 		// Prevent hitting the same actor twice
 		AActor* ActorHit = OutHits[i].GetActor();
-		UPrimitiveComponent* ComponentHit = OutHits[i].GetComponent();
 		if (!ActorHit || HitActors.Contains(ActorHit)) continue;
 
 		ULimenDamageComponent* DamageComponent = ActorHit->GetComponentByClass<ULimenDamageComponent>();
