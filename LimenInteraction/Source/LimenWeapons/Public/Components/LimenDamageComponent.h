@@ -25,7 +25,7 @@ struct FDamageInfo
 	UPROPERTY(BlueprintReadOnly)
 	FDamageParameters DamageParameters;
 
-	TStrongObjectPtr<ULimenDamageType> DamageType;
+	TWeakObjectPtr<ULimenDamageType> DamageType;
 };
 
 
@@ -42,15 +42,12 @@ public:
 	FLimenDamageEvent OnDamageReceived;
 
 	ULimenDamageComponent();
-	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	virtual void ApplyDamage(AController* Instigator, AActor* Causer, const TSubclassOf<ULimenDamageType>& DamageType,
-		const FDamageParameters& DamageParams);
 
+	virtual void ApplyDamage(AController* Instigator, AActor* Causer, const TSubclassOf<ULimenDamageType>& DamageType, const FDamageParameters& DamageParams);
 	template<typename T>
-	void SetDamageCalculationFunction(T* Object,
-		typename TMemFunPtrType<true, T, float(const FDamageParameters&, const ULimenDamageType*)>::Type Callback);
-
+	void SetDamageCalculationFunction(T* Object,TMemFunPtrType<true, T, float(const FDamageParameters&, const ULimenDamageType*)>::Type Callback);
 	void SetDamageCalculationFunction(const TFunction<float(const FDamageParameters&, const ULimenDamageType*)>& InFunction);
 
 protected:
@@ -58,10 +55,10 @@ protected:
 private:
 	TArray<FDamageInfo> ActiveDamageInfo;
 	TFunction<float(const FDamageParameters&, const ULimenDamageType*)> DamageCalcFunc;
+	TArray<TStrongObjectPtr<ULimenDamageType>> DamageInstances;
 
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_BroadcastDamageReceived(const FDamageInfo& Info);
-
 };
 
 template <typename T>

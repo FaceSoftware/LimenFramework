@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
+#include "Utils/LimenReplicationUtils.h"
 
 
 ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -17,48 +18,33 @@ ALimenGameplayActor::ALimenGameplayActor(const FObjectInitializer& ObjectInitial
 	bAlwaysRelevant = true;
 }
 
-void ALimenGameplayActor:: BeginPlay()
-{
-	Super::BeginPlay();
-}
-
 void ALimenGameplayActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_WITH_PARAMS_FAST(ALimenGameplayActor, GameplayState, FDoRepLifetimeParams(
-		COND_None, REPNOTIFY_OnChanged, true));
+	FDoRepLifetimeParams Params(COND_None, REPNOTIFY_OnChanged, true);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ALimenGameplayActor, GameplayState, Params)
 }
 
 void ALimenGameplayActor::RemoveFromGameplay()
 {
-	check(HasAuthority())
-	if (IsRemovedFromGameplay())
+	if (SHOULD_PREDICT_NETWORK_EVENT)
 	{
-		return;
+		RemoveFromGameplayInternal();
 	}
 
-	GameplayState = ELimenGameplayActorState::OutOfGameplay;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
-	
-	SetActorHiddenInGame(true);
-	SetActorEnableCollision(false);
+	Server_RemoveFromGameplay();
 }
 
 void ALimenGameplayActor::AddToGameplay(const bool bEnableCollision)
 {
-	check(HasAuthority())
-	if (bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplay ||
-	   !bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplayWithCollisionDisabled)
+	if (SHOULD_PREDICT_NETWORK_EVENT)
 	{
-		return;
+		AddToGameplayInternal(bEnableCollision);
 	}
 
-	GameplayState = bEnableCollision ? ELimenGameplayActorState::InGameplay : ELimenGameplayActorState::InGameplayWithCollisionDisabled;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
-	
-	SetActorHiddenInGame(false);
-	SetActorEnableCollision(bEnableCollision);
+	Server_AddToGameplay(bEnableCollision);
 }
 
 bool ALimenGameplayActor::IsRemovedFromGameplay() const
@@ -68,15 +54,42 @@ bool ALimenGameplayActor::IsRemovedFromGameplay() const
 
 void ALimenGameplayActor::OnRep_GameplayState()
 {
+	GameplayStateChanged();
+}
+
+void ALimenGameplayActor::RemoveFromGameplayInternal()
+{
+	if (IsRemovedFromGameplay()) { return; }
+
+	GameplayState = ELimenGameplayActorState::OutOfGameplay;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
+	
+	GameplayStateChanged();
+}
+
+void ALimenGameplayActor::AddToGameplayInternal(const bool bEnableCollision)
+{
+	if (bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplayCollisionEnabled) { return; }
+	if (!bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplayCollisionDisabled) { return; }
+
+	GameplayState = bEnableCollision ? ELimenGameplayActorState::InGameplayCollisionEnabled
+									 : ELimenGameplayActorState::InGameplayCollisionDisabled;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
+
+	GameplayStateChanged();
+}
+
+void ALimenGameplayActor::GameplayStateChanged()
+{
 	switch (GameplayState)
 	{
-	case ELimenGameplayActorState::InGameplay:
+	case ELimenGameplayActorState::InGameplayCollisionEnabled:
 		{
 			SetActorHiddenInGame(false);
 			SetActorEnableCollision(true);	
 		}
 		break;
-	case ELimenGameplayActorState::InGameplayWithCollisionDisabled:
+	case ELimenGameplayActorState::InGameplayCollisionDisabled:
 		{
 			SetActorHiddenInGame(false);
 			SetActorEnableCollision(false);
@@ -91,4 +104,14 @@ void ALimenGameplayActor::OnRep_GameplayState()
 	default:
 		break;
 	}
+}
+
+void ALimenGameplayActor::Server_RemoveFromGameplay_Implementation()
+{
+	RemoveFromGameplayInternal();
+}
+
+void ALimenGameplayActor::Server_AddToGameplay_Implementation(const bool bEnableCollision)
+{
+	AddToGameplayInternal(bEnableCollision);
 }

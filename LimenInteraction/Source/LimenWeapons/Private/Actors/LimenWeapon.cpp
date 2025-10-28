@@ -14,6 +14,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Perception/AIPerceptionSystem.h"
 #include "Perception/AISense_Hearing.h"
+#include "Utils/LimenReplicationUtils.h"
 
 
 ALimenWeapon::ALimenWeapon(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -124,71 +125,44 @@ void ALimenWeapon::Tick(float DeltaSeconds)
 	}
 }
 
-void ALimenWeapon::Drop(AController* InController, APawn* InPawn)
-{
-	Super::Drop(InController, InPawn);
-
-	TArray<UPrimitiveComponent*> Components;
-	GetComponents<UPrimitiveComponent>(Components);	
-	for (UPrimitiveComponent*& Component : Components)
-	{
-		Component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		Component->SetSimulatePhysics(true);
-	}
-
-	OnWeaponStateUpdated.Broadcast(this, true);
-}
-
-void ALimenWeapon::PickUp(AController* InController, APawn* InPawn)
-{
-	Super::PickUp(InController, InPawn);
-
-	TArray<UPrimitiveComponent*> Components;
-	GetComponents<UPrimitiveComponent>(Components);
-	for (UPrimitiveComponent* Component : Components)
-	{
-		Component->SetSimulatePhysics(false);
-		Component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	}
-
-	OnWeaponStateUpdated.Broadcast(this, false);
-}
-
 void ALimenWeapon::StartFiring()
 {
-	bIsHoldingTrigger = true;
-	Server_SetFireState(bIsHoldingTrigger);
+	if (SHOULD_PREDICT_NETWORK_EVENT)
+	{
+		SetFireStateInternal(true);
+	}
+
+	Server_SetFireState(true);
 }
 
 void ALimenWeapon::StopFiring()
 {
-	bIsHoldingTrigger = false;
-	Server_SetFireState(bIsHoldingTrigger);
+	if (SHOULD_PREDICT_NETWORK_EVENT)
+	{
+		SetFireStateInternal(false);
+	}
+
+	Server_SetFireState(false);
 }
 
 void ALimenWeapon::StartReloading()
 {
-	Server_SetReloadState(true);
-
-	if (!CanReload())
+	if (SHOULD_PREDICT_NETWORK_EVENT)
 	{
-		return;
+		SetReloadStateInternal(true);
 	}
 
-	StartReloadTimer();
-	ReloadStart();
+	Server_SetReloadState(true);
 }
 
 void ALimenWeapon::StopReloading()
 {
-	Server_SetReloadState(false);
-
-	if (bIsReloading)
+	if (SHOULD_PREDICT_NETWORK_EVENT)
 	{
-		StopReloadTimer();
+		SetReloadStateInternal(false);
 	}
 
-	ReloadCancelled();
+	Server_SetReloadState(false);
 }
 
 bool ALimenWeapon::IsFiring() const
@@ -363,18 +337,30 @@ int32 ALimenWeapon::GetAmmoCountUntilFull() const
 	return MagazineCapacity - CurrentAmmo;
 }
 
-void ALimenWeapon::OnRep_IsDropped()
+void ALimenWeapon::Dropped(AController* InController, APawn* InPawn)
 {
-	Super::OnRep_IsDropped();
+	Super::Dropped(InController, InPawn);
+
+	TArray<UPrimitiveComponent*> Components;
+	GetComponents<UPrimitiveComponent>(Components);	
+	for (UPrimitiveComponent*& Component : Components)
+	{
+		Component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Component->SetSimulatePhysics(true);
+	}
+}
+
+void ALimenWeapon::PickedUp(AController* InController, APawn* InPawn)
+{
+	Super::PickedUp(InController, InPawn);
 
 	TArray<UPrimitiveComponent*> Components;
 	GetComponents<UPrimitiveComponent>(Components);
-	for (auto& Component : Components)
+	for (UPrimitiveComponent* Component : Components)
 	{
-		Component->SetSimulatePhysics(IsDropped());
+		Component->SetSimulatePhysics(false);
+		Component->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	}
-
-	OnWeaponStateUpdated.Broadcast(this, IsDropped());
 }
 
 void ALimenWeapon::DecrementAmmo(const int Value)
@@ -547,11 +533,6 @@ void ALimenWeapon::Reload()
 		}
 		break;
 
-	case EInfiniteAmmoType::Disabled:
-		{
-		}
-		break;
-
 	default:
 		{
 		}
@@ -644,34 +625,12 @@ void ALimenWeapon::StopFireCameraShake()
 
 void ALimenWeapon::Server_SetFireState_Implementation(const bool bEnabled)
 {
-	if (bEnabled != bIsHoldingTrigger)
-	{
-		bIsHoldingTrigger = bEnabled;
-		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsHoldingTrigger, this)
-	}
+	SetFireStateInternal(bEnabled);
 }
 
 void ALimenWeapon::Server_SetReloadState_Implementation(const bool bEnabled)
 {
-	if (bEnabled)
-	{
-		if (!CanReload())
-		{
-			return;
-		}
-
-		StartReloadTimer();
-		Multicast_ReloadStart();
-	}
-	else
-	{
-		if (bIsReloading)
-		{
-			StopReloadTimer();
-		}
-
-		Multicast_ReloadCanceled();
-	}
+	SetReloadStateInternal(bEnabled);
 }
 
 void ALimenWeapon::Multicast_ReloadCanceled_Implementation()
@@ -722,4 +681,36 @@ void ALimenWeapon::Multicast_WeaponFired_Implementation()
 	}
 
 	WeaponFired();
+}
+
+void ALimenWeapon::SetFireStateInternal(const bool bEnabled)
+{
+	if (bEnabled != bIsHoldingTrigger)
+	{
+		bIsHoldingTrigger = bEnabled;
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsHoldingTrigger, this)
+	}
+}
+
+void ALimenWeapon::SetReloadStateInternal(const bool bEnabled)
+{
+	if (bEnabled)
+	{
+		if (!CanReload())
+		{
+			return;
+		}
+
+		StartReloadTimer();
+		Multicast_ReloadStart();
+	}
+	else
+	{
+		if (bIsReloading)
+		{
+			StopReloadTimer();
+		}
+
+		Multicast_ReloadCanceled();
+	}
 }

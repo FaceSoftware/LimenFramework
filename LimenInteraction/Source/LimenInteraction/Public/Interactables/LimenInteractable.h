@@ -27,9 +27,6 @@ public:
 	explicit ALimenInteractable(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
 
-	bool HasBeenInteracted() const;
-	uint32 GetInteractionCount() const;
-
 	template<typename ComponentClass>
 	TArray<ComponentClass*> GetInteractableComponents() const
 	{
@@ -44,11 +41,10 @@ public:
 		}
 		return OutComponents;
 	}
-
 	TArray<ILimenInteractableComponent*> GetInteractableComponents() const;
 
-	UFUNCTION(BlueprintCallable)
 	bool IsBeingContinuouslyInteracted() const;
+	bool HasBeenInteracted() const;
 
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
@@ -62,26 +58,13 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interactable")
 	FName UniqueName;
-	/**
-	 * @brief Simulates an interaction.
-	 * Useful after loading to simulate previous player interactions.
-	 */
-	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
-	void SimulateInteraction();
-	
-	UFUNCTION(BlueprintImplementableEvent, DisplayName="On Interact")
-	void BP_OnInteract(AController* InController, APawn* InPawn);
-	virtual void Interact(AController* InController, APawn* InPawn);
 
-	UFUNCTION(BlueprintImplementableEvent, Category="Limne|Interaction")
-	void BP_OnInteractionStopped(AController* InController, APawn* InPawn);
+	virtual void Interact(AController* InController, APawn* InPawn);
 	virtual void InteractionStopped(AController* InController, APawn* InPawn);
 	
 private:
 	UPROPERTY(SaveGame)
 	bool bWasInteracted;
-	UPROPERTY(SaveGame)
-	int32 InteractionCount;
 	
 	bool bIsBeingContinuouslyInteracted;
 	

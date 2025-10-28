@@ -3,11 +3,23 @@
 
 #include "Components/Interactable/LimenInteractableAreaComponent.h"
 
+#include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
+
 
 ULimenInteractableAreaComponent::ULimenInteractableAreaComponent() : Super()
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	SetGenerateOverlapEvents(true);
+}
+
+void ULimenInteractableAreaComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams Params(COND_None, REPNOTIFY_OnChanged, true);
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, InteractionParams, Params)
 }
 
 void ULimenInteractableAreaComponent::OnComponentCreated()
@@ -58,7 +70,7 @@ bool ULimenInteractableAreaComponent::AllowPhysicsInteraction() const
 
 bool ULimenInteractableAreaComponent::IsBeingInteracted() const
 {
-	return bIsBeingInteracted;
+	return InteractionParams.bIsBeingInteracted;
 }
 
 FInteractableComponentDelegate* ULimenInteractableAreaComponent::GetInteractionDelegate()
@@ -88,14 +100,36 @@ UPrimitiveComponent* ULimenInteractableAreaComponent::GetPrimitiveComponent()
 
 void ULimenInteractableAreaComponent::Interact(AController* InController, APawn* InPawn)
 {
+	if (GetOwner()->HasAuthority())
+	{
+		InteractionParams = {InController, InPawn, true};
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InteractionParams, this)
+	}
+
 	OnInteract.Broadcast(InController, InPawn);
 	BP_OnInteract.Broadcast(InController, InPawn);
-	bIsBeingInteracted = true;
 }
 
 void ULimenInteractableAreaComponent::StopInteraction(AController* InController, APawn* InPawn)
 {
+	if (GetOwner()->HasAuthority())
+	{
+		InteractionParams = {InController, InPawn, false};
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InteractionParams, this)
+	}
+
 	OnInteractionStopped.Broadcast(InController, InPawn);
 	BP_OnInteractionStopped.Broadcast(InController, InPawn);
-	bIsBeingInteracted = false;
+}
+
+void ULimenInteractableAreaComponent::OnRep_IsBeingInteracted()
+{
+	if (InteractionParams.bIsBeingInteracted)
+	{
+		Interact(InteractionParams.Controller.Get(), InteractionParams.Pawn.Get());
+	}
+	else
+	{
+		StopInteraction(InteractionParams.Controller.Get(), InteractionParams.Pawn.Get());
+	}
 }

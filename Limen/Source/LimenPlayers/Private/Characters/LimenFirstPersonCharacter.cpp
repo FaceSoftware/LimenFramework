@@ -32,12 +32,12 @@ void ALimenFirstPersonCharacter::BeginPlay()
 
 void ALimenFirstPersonCharacter::Interact()
 {
-	CharacterInteraction->Interact(GetController(), this);
+	// CharacterInteraction->Interact(GetController(), this);
 }
 
 void ALimenFirstPersonCharacter::StopInteraction()
 {
-	CharacterInteraction->StopInteraction(GetController(), this);
+	// CharacterInteraction->StopInteraction(GetController(), this);
 }
 
 ULimenInteractionComponent* ALimenFirstPersonCharacter::GetInteractionComponent() const

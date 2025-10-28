@@ -147,10 +147,20 @@ void ALimenAICharacter::Interact()
 {
 	Super::Interact();
 
-	InteractionComponent->Interact(GetController(), this);
+	InteractionComponent->Interact();
 }
 
 ULimenInteractionComponent* ALimenAICharacter::GetInteractionComponent() const
 {
 	return InteractionComponent.Get();
+}
+
+void ALimenAICharacter::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+
+	if (HasAuthority() && InteractionComponent)
+	{
+		InteractionComponent->SetupInteractionParams( { GetController(), this} );
+	}
 }

@@ -30,7 +30,7 @@ class LIMENGAMEFRAMEWORK_API ALimenCharacterBase : public ACharacter
 public:	
 	explicit ALimenCharacterBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
-	virtual void PossessedBy(AController* NewController) override;
+	virtual void NotifyControllerChanged() override;
 	virtual void EnableInput(APlayerController* InPlayerController) override;
 	virtual void DisableInput(APlayerController* InPlayerController) override;
 	virtual bool CanJumpInternal_Implementation() const override;

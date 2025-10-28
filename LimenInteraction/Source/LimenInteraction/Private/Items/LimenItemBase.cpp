@@ -12,65 +12,9 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/Pawn.h"
 #include "ItemActions/LimenItemAction.h"
-#include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 
-
-UTexture* ALimenItemBase::GetItemImage(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
-{
-	if (ItemClass == nullptr) return nullptr;
-
-	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
-	if (Actor == nullptr)
-	{
-		return nullptr;
-	}
-
-	ALimenItemBase* Item = CastChecked<ALimenItemBase>(Actor);
-	Item->CaptureItemImage();
-	return Item->GetItemImage();
-}
-
-FText ALimenItemBase::GetDisplayName(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
-{
-	if (ItemClass == nullptr) return FText();
-
-	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
-	if (Actor == nullptr)
-	{
-		return FText();
-	}
-
-	return CastChecked<ALimenItemBase>(Actor)->GetDisplayName();
-}
-
-FText ALimenItemBase::GetDescription(UObject* WorldContextObject, const TSubclassOf<ALimenItemBase>& ItemClass)
-{
-	if (ItemClass == nullptr) return FText();
-
-	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
-	if (Actor == nullptr)
-	{
-		return FText();
-	}
-
-	return CastChecked<ALimenItemBase>(Actor)->GetDescription();
-}
-
-FColor ALimenItemBase::GetRenderTargetBackgroundColor(UObject* WorldContextObject,
-	const TSubclassOf<ALimenItemBase>& ItemClass)
-{
-	check(ItemClass != nullptr);
-
-	AActor* Actor = UGameplayStatics::GetActorOfClass(WorldContextObject, ItemClass);
-	if (Actor == nullptr)
-	{
-		return FColor::Transparent;
-	}
-
-	return CastChecked<ALimenItemBase>(Actor)->GetRenderTargetBackgroundColor();
-}
 
 ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -100,7 +44,7 @@ void ALimenItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 
-	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, bIsDropped, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, PickUpState, Params);
 }
 
 void ALimenItemBase::BeginPlay()
@@ -167,6 +111,20 @@ UMeshComponent* ALimenItemBase::GetMesh_Implementation() const
 	return nullptr;
 }
 
+void ALimenItemBase::OnRep_PickUpState()
+{
+	if (PickUpState.bIsDropped)
+	{
+		Dropped(PickUpState.InController.Get(), PickUpState.InPawn.Get());
+		OnDropped.Broadcast();
+	}
+	else
+	{
+		PickedUp(PickUpState.InController.Get(), PickUpState.InPawn.Get());
+		OnPickedUp.Broadcast();
+	}
+}
+
 UTexture* ALimenItemBase::GetItemImage() const
 {
 	return ItemImage.Get();
@@ -199,51 +157,31 @@ void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
 {
 	check(HasAuthority())
 
-	SetOwner(InPawn);
+	PickUpState.InController = InController;
+	PickUpState.InPawn = InPawn;
+	PickUpState.bIsDropped = false;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PickUpState, this)
 
-	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
-	{
-		InteractableComponent->Deactivate();
-	}
-
-	if (FMath::IsNearlyZero(InteractAnimationTime))
-	{
-		RemoveFromGameplay();
-	}
-	else
-	{
-		InteractAnimation(InteractAnimationTime);
-		GetWorld()->GetTimerManager().SetTimer(InteractAnimationTimerHandle, this, &ThisClass::RemoveFromGameplay, InteractAnimationTime, false);
-	}
-
-	bIsDropped = false;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsDropped, this)
-
-	ItemPickedUp(InController, InPawn);
+	PickedUp(InController, InPawn);
+	OnPickedUp.Broadcast();
 }
 
 void ALimenItemBase::Drop(AController* InController, APawn* InPawn)
 {
 	check(HasAuthority())
 
-	SetOwner(nullptr);
+	PickUpState.InController = InController;
+	PickUpState.InPawn = InPawn;
+	PickUpState.bIsDropped = true;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, PickUpState, this)
 
-	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
-	{
-		InteractableComponent->Activate(true);
-	}
-
-	AddToGameplay();
-
-	bIsDropped = true;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, bIsDropped, this)
-
-	ItemDropped(InController, InPawn);
+	Dropped(InController, InPawn);
+	OnDropped.Broadcast();
 }
 
 bool ALimenItemBase::IsDropped() const
 {
-	return bIsDropped;
+	return PickUpState.bIsDropped;
 }
 
 int32 ALimenItemBase::GetItemQuantity() const
@@ -285,10 +223,40 @@ void ALimenItemBase::InteractionStopped(AController* InController, APawn* InPawn
 	// Remove the finality of this function in case that functionality is needed.
 }
 
-void ALimenItemBase::OnRep_IsDropped()
+void ALimenItemBase::PickedUp(AController* InController, APawn* InPawn)
 {
+	if (HasAuthority()) { SetOwner(InPawn); }
+
 	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
 	{
-		InteractableComponent->Activate(bIsDropped);
+		InteractableComponent->Deactivate();
 	}
+
+	if (FMath::IsNearlyZero(PickupAnimationTime))
+	{
+		RemoveFromGameplay();
+	}
+	else
+	{
+		PickUpAnimation(PickupAnimationTime);
+		GetWorld()->GetTimerManager().SetTimer(InteractAnimationTimerHandle,
+											   this, &ThisClass::RemoveFromGameplay,
+											   PickupAnimationTime, false);
+	}
+}
+
+void ALimenItemBase::Dropped(AController* InController, APawn* InPawn)
+{
+	if (HasAuthority()) { SetOwner(nullptr); }
+
+	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
+	{
+		InteractableComponent->Activate(true);
+	}
+
+	AddToGameplay();
+}
+
+void ALimenItemBase::PickUpAnimation(const float AnimationTime)
+{
 }

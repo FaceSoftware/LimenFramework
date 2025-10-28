@@ -60,13 +60,13 @@ void ALimenCharacterBase::BeginPlay()
 	Super::BeginPlay();
 }
 
-void ALimenCharacterBase::PossessedBy(AController* NewController)
+void ALimenCharacterBase::NotifyControllerChanged()
 {
-	Super::PossessedBy(NewController);
+	Super::NotifyControllerChanged();
 
-	PlayerController = Cast<APlayerController>(NewController);
-	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(NewController);
-	LimenBasePlayerState = NewController->GetPlayerState<ALimenPlayerStateBase>();
+	PlayerController = Cast<APlayerController>(GetController());
+	LimenBasePlayerController = Cast<ALimenPlayerControllerBase>(GetController());
+	LimenBasePlayerState = GetController() ? GetController()->GetPlayerState<ALimenPlayerStateBase>() : nullptr;
 
 	SetupAbilityComponentInternal(AbilityComponent.Get());
 }
@@ -183,5 +183,5 @@ void ALimenCharacterBase::SetupAbilityComponentInternal(ULimenAbilityComponent* 
 		InAbilityComponent->OnAbilityComponentReady.AddUniqueDynamic(this, &ThisClass::SetupAbilityComponent);
 	}
 
-	if (HasAuthority()) InAbilityComponent->Activate();
+	if (HasAuthority() && GetController()) InAbilityComponent->Activate();
 }

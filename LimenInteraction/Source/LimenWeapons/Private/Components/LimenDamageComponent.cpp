@@ -8,12 +8,15 @@ ULimenDamageComponent::ULimenDamageComponent()
 {
 	SetIsReplicatedByDefault(true);
 	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bRunOnAnyThread = false;
 	bAutoActivate = true;
 }
 
-void ULimenDamageComponent::BeginPlay()
+void ULimenDamageComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::BeginPlay();
+	Super::EndPlay(EndPlayReason);
+	ActiveDamageInfo.Empty();
+	DamageInstances.Empty();
 }
 
 void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTick TickType,
@@ -23,13 +26,17 @@ void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTic
 
 	if (!GetOwner()->HasAuthority()) { return; }
 
+	TArray<FDamageInfo> TickDamageInfo;
+	TickDamageInfo.Reserve(ActiveDamageInfo.Num());
+
 	for (int32 i = ActiveDamageInfo.Num() - 1; i >= 0; --i)
 	{
+		check(ActiveDamageInfo.IsValidIndex(i))
 		const FDamageInfo& Info = ActiveDamageInfo[i];
 
 		// Process the damage with the damage type
 		float RawDamage = Info.DamageParameters.DamageValue; // Default to the damage parameter
-		if (Info.DamageType)
+		if (Info.DamageType.IsValid())
 		{
 			RawDamage = Info.DamageType->ProcessRawDamage(DeltaTime, Info.DamageParameters);
 		}
@@ -44,13 +51,21 @@ void ULimenDamageComponent::TickComponent(const float DeltaTime, const ELevelTic
 
 		NewDamageParameters.DamageValue = PostProcessedDamage;
 
-		Multicast_BroadcastDamageReceived(Info);
+		TickDamageInfo.Push(Info);
 
 		// Check if we should stop applying the damage
-		if (!Info.DamageType || Info.DamageType->ShouldStopApplyingDamage())
+		if (!Info.DamageType.IsValid() || Info.DamageType->ShouldStopApplyingDamage())
 		{
+			check(ActiveDamageInfo.IsValidIndex(i))
+
+			DamageInstances.Remove(TStrongObjectPtr(Info.DamageType.Get()));
 			ActiveDamageInfo.RemoveAt(i);
 		}
+	}
+
+	for (const FDamageInfo& Info : TickDamageInfo)
+	{
+		Multicast_BroadcastDamageReceived(Info);
 	}
 }
 
@@ -70,9 +85,10 @@ void ULimenDamageComponent::ApplyDamage(AController* Instigator, AActor* Causer,
 	Info.Instigator = Instigator;
 	Info.Causer = Causer;
 	Info.DamageTypeClass = DamageType;
-	Info.DamageType = TStrongObjectPtr(DamageTypeInstance);
+	Info.DamageType = DamageTypeInstance;
 	Info.DamageParameters = DamageParams;
 
+	DamageInstances.Push(TStrongObjectPtr(DamageTypeInstance));
 	ActiveDamageInfo.Push(Info);
 }
 

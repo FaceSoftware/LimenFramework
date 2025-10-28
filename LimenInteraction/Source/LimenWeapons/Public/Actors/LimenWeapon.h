@@ -42,7 +42,6 @@ enum class EInfiniteAmmoType : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAmmoUpdateDelegate, const int, CurrentAmmo);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponStateDelegate, ALimenWeapon*, Weapon, const bool, bIsDropped);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FWeaponReload, ALimenWeapon*, Weapon, const float, ReloadTime);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWeaponFireDelegate, ALimenWeapon*, Weapon);
 
@@ -62,8 +61,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FAmmoUpdateDelegate OnAmmoUpdated;
 	UPROPERTY(BlueprintAssignable)
-	FWeaponStateDelegate OnWeaponStateUpdated;
-	UPROPERTY(BlueprintAssignable)
 	FWeaponReload OnWeaponReload;
 	UPROPERTY(BlueprintAssignable)
 	FWeaponReload OnWeaponReloadCanceled;
@@ -77,9 +74,6 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;;
 	virtual void Tick(float DeltaSeconds) override;
-
-	virtual void Drop(AController* InController, APawn* InPawn) override;
-	virtual void PickUp(AController* InController, APawn* InPawn) override;
 	
 	void StartFiring();
 	void StopFiring();
@@ -183,8 +177,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Weapon Parameters", Replicated)
 	EInfiniteAmmoType InfiniteAmmoType;
 
-	
-	virtual void DecrementAmmo(const int Value = 1);
+	virtual void Dropped(AController* InController, APawn* InPawn) override;
+	virtual void PickedUp(AController* InController, APawn* InPawn) override;
 
 	virtual void ReloadStart();
 	virtual void ReloadCancelled();
@@ -193,11 +187,10 @@ protected:
 	virtual void StartWeaponFire();
 	virtual void StopWeaponFire();
 
+	virtual void DecrementAmmo(const int Value = 1);
 	virtual void Fire();
 	UFUNCTION()
 	virtual void Reload();
-
-	virtual void OnRep_IsDropped() override;
 	UFUNCTION()
 	virtual void OnRep_CurrentAmmo();
 	
@@ -243,6 +236,7 @@ private:
 	void Multicast_ReloadStart();
 	UFUNCTION(NetMulticast, Reliable)
 	void Multicast_ReloadCanceled();
+
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_StartWeaponFire();
 	UFUNCTION(NetMulticast, Unreliable)
@@ -250,4 +244,6 @@ private:
 	UFUNCTION(NetMulticast, Unreliable)
 	void Multicast_WeaponFired();
 
+	void SetFireStateInternal(const bool bEnabled);
+	void SetReloadStateInternal(const bool bEnabled);
 };

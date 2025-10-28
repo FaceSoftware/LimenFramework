@@ -234,7 +234,12 @@ void ALimenMapTile::BoundingBoxBeginOverlap(UPrimitiveComponent* OverlappedCompo
 
 TArray<USceneComponent*> ALimenMapTile::GetScenarios() const
 {
-	return Scenarios;
+	TArray<USceneComponent*> Out;
+	for (const auto& Scenario : Scenarios)
+	{
+		Out.Push(Scenario.Get());
+	}
+	return Out;
 }
 
 void ALimenMapTile::RecursivelyDestroyChildComponents(const USceneComponent* ParentComponent)
@@ -260,7 +265,7 @@ bool ALimenMapTile::SelectRandomScenario()
 		else
 		{
 			Scenarios[i]->SetVisibility(false, true);
-			RecursivelyDestroyChildComponents(Scenarios[i]);
+			RecursivelyDestroyChildComponents(Scenarios[i].Get());
 			Scenarios.RemoveAt(i, 1, EAllowShrinking::Yes);
 
 			if (i-- < SelectedScenarioIndex)

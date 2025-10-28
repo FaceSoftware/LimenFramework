@@ -14,8 +14,8 @@ UENUM(BlueprintType)
 enum class ELimenGameplayActorState : uint8
 {
 	Undefined,
-	InGameplay,
-	InGameplayWithCollisionDisabled,
+	InGameplayCollisionEnabled,
+	InGameplayCollisionDisabled,
 	OutOfGameplay,
 };
 
@@ -39,7 +39,6 @@ class LIMENCORE_API ALimenGameplayActor : public AActor
 	
 public:
 	explicit ALimenGameplayActor(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	virtual void BeginPlay() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/**
@@ -87,4 +86,13 @@ private:
 
 	UFUNCTION()
 	void OnRep_GameplayState();
+	UFUNCTION(Server, Reliable)
+	void Server_RemoveFromGameplay();
+	UFUNCTION(Server, Reliable)
+	void Server_AddToGameplay(const bool bEnableCollision);
+
+	void RemoveFromGameplayInternal();
+	void AddToGameplayInternal(const bool bEnableCollision);
+
+	void GameplayStateChanged();
 };

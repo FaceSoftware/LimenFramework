@@ -40,11 +40,12 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<ULimenProximityInteractionComponent> InteractionComponent;
+
+	virtual void NotifyControllerChanged() override;
 	
 private:
 	EMovementMode MovementModeBeforeFreeze;
 	bool bIsFrozen;
 	FRotator FrozenRotation;
-
-	TObjectPtr<ALimenAIControllerBase> LimenAIController;
+	TWeakObjectPtr<ALimenAIControllerBase> LimenAIController;
 };

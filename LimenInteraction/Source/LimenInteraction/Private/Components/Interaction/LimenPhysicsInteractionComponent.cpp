@@ -25,23 +25,6 @@ ULimenPhysicsInteractionComponent::ULimenPhysicsInteractionComponent()
 	GrabRotation = FRotator::ZeroRotator;
 }
 
-bool ULimenPhysicsInteractionComponent::Interact(AController* InController, APawn* InPawn)
-{
-	InteractController = InController;
-	InteractPawn = InPawn;
-	
-	if (!Super::Interact(InController, InPawn)) return false;
-	return GetCurrentInteractableInterface()->AllowPhysicsInteraction();
-}
-
-void ULimenPhysicsInteractionComponent::StopInteraction(AController* InController, APawn* InPawn)
-{
-	InteractController.Reset();
-	InteractPawn.Reset();
-
-	Super::StopInteraction(InController, InPawn);
-}
-
 void ULimenPhysicsInteractionComponent::SetupInteraction()
 {
 	Super::SetupInteraction();
@@ -88,14 +71,14 @@ void ULimenPhysicsInteractionComponent::UpdateInteraction(const float DeltaTime)
 		SetCurrentInteractableInterface(nullptr);
 	}
 
-	if (InteractPawn.IsValid() && GetCurrentInteractableInterface())
+	if (GetInteractionPawn() && GetCurrentInteractableInterface())
 	{
 		FVector EyesLocation;
 		FRotator EyesRotation;
-		InteractPawn->GetActorEyesViewPoint(EyesLocation, EyesRotation);
+		GetInteractionPawn()->GetActorEyesViewPoint(EyesLocation, EyesRotation);
 
 		const FVector TargetLocation = EyesLocation + EyesRotation.Vector() * GrabLocation.Length();
-		const FRotator TargetRotation = EyesRotation;
+		// const FRotator TargetRotation = EyesRotation;
 		if (PhysicsHandle->GetGrabbedComponent())
 		{
 			PhysicsHandle->SetTargetLocation(TargetLocation);
@@ -115,13 +98,15 @@ void ULimenPhysicsInteractionComponent::Interacted(UActorComponent* Component)
 	if (!GetCurrentInteractableInterface().GetObject()) return;
 	if (!GetCurrentInteractableInterface()->AllowPhysicsInteraction()) return;
 	if (!GetCurrentInteractableInterface()->GetPrimitiveComponent()->IsSimulatingPhysics()) return;
+	if (!GetInteractionPawn()) { return; }
+	if (!GetInteractionController()) { return; }
 
 	UPrimitiveComponent* InteractionComponent = GetCurrentInteractableInterface()->GetPrimitiveComponent();
 	if (!InteractionComponent) return;
 
 	FVector EyesLocation;
 	FRotator EyesRotation;
-	InteractPawn->GetActorEyesViewPoint(EyesLocation, EyesRotation);
+	GetInteractionPawn()->GetActorEyesViewPoint(EyesLocation, EyesRotation);
 	const FTransform EyesTransform = FTransform(EyesRotation, EyesLocation);
 
 	{
@@ -137,7 +122,7 @@ void ULimenPhysicsInteractionComponent::Interacted(UActorComponent* Component)
 	TraceQueryParams.AddIgnoredSourceObject(InteractionComponent);
 
 	const FVector TargetLocation = EyesLocation + EyesRotation.Vector() * GrabLocation.Length();
-	const FRotator TargetRotation = FRotator::ZeroRotator;
+	// const FRotator TargetRotation = FRotator::ZeroRotator;
 	PhysicsHandle->GrabComponentAtLocation(InteractionComponent, NAME_None, TargetLocation);
 	
 	Super::Interacted(Component);

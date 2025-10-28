@@ -12,6 +12,17 @@ class ALimenInteractable;
 class ULimenInteractableComponent;
 class ILimenInteractableComponent;
 
+USTRUCT()
+struct FRepInteractionParams
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<AController> Controller;
+	UPROPERTY()
+	TObjectPtr<APawn> Pawn;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInteractableHover, AActor*, InteractableActor, const TScriptInterface<ILimenInteractableComponent>&, Interactable);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBPInteractionDelegate, AActor*, InteractableActor, const TScriptInterface<ILimenInteractableComponent>&, Interactable);
 
@@ -80,10 +91,12 @@ public:
 	static bool IsInteractableComponent(const UActorComponent* InComponent);
 
 	explicit ULimenInteractionComponent(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnComponentCreated() override;
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	void SetupInteractionParams(const FRepInteractionParams& InParams);
 	/**
 	 * @brief Retrieves the interaction range for this component.
 	 *
@@ -91,12 +104,12 @@ public:
 	 *
 	 * @return The interaction range as a floating-point value.
 	 */
-	float GetInteractionRange() const;
+	FORCEINLINE float GetInteractionRange() const;
 	/**
 	 * 
 	 * @return 
 	 */
-	bool DebugMode() const;
+	FORCEINLINE bool DebugMode() const;
 
 	/**
 	 * @brief Virtual function to restart interaction logic.
@@ -114,11 +127,8 @@ public:
 	 * This method verifies the interaction state and triggers the interaction process if applicable.
 	 * It notifies the interactable interface and broadcasts relevant interaction events.
 	 *
-	 * @param InController The controller initiating the interaction.
-	 * @param InPawn The pawn associated with the interaction.
-	 * @return True if the interaction is successfully initiated, false otherwise.
 	 */
-	virtual bool Interact(AController* InController, APawn* InPawn);
+	virtual void Interact();
 	/**
 	 * @brief Attempts to perform an interaction with a specific interactable actor.
 	 *
@@ -128,12 +138,10 @@ public:
 	 * passing relevant interaction information.
 	 * The interaction logic can be customized by overriding or extending this method in derived classes.
 	 *
-	 * @param InController The controller initiating the interaction, typically representing the player or AI.
-	 * @param InPawn The pawn associated with the controller, providing the perspective or ownership context for the interaction.
 	 * @param SpecificInteractable The specific actor being targeted for interaction.
 	 * @return True if the interaction was successfully performed, otherwise false.
 	 */
-	virtual bool Interact(AController* InController, APawn* InPawn, const AActor* SpecificInteractable);
+	virtual bool Interact(const AActor* SpecificInteractable);
 	/**
 	 * @brief Attempts to perform an interaction with a specified interactable component.
 	 *
@@ -142,13 +150,11 @@ public:
 	 * This method triggers the OnInteract delegate upon successful interaction
 	 * and returns a boolean status based on the result.
 	 *
-	 * @param InController The controller associated with the initiating actor or player.
-	 * @param InPawn The pawn representing the entity attempting the interaction.
 	 * @param SpecificInteractableComponent The specific component to interact with, expected to implement the ILimenInteractableComponent interface.
 	 * @return true if the interaction is successful, false otherwise (e.g.,
 	 * if the component does not implement the required interface).
 	 */
-	virtual bool Interact(AController* InController, APawn* InPawn, UActorComponent* SpecificInteractableComponent);
+	virtual bool Interact(UActorComponent* SpecificInteractableComponent);
 
 	/**
 	 * @brief Stops the current interaction process by notifying the interactable component and updating interaction states.
@@ -157,10 +163,11 @@ public:
 	 * It ensures that the stop logic is executed for the previous interactable component, if applicable,
 	 * and resets the interaction state of the component.
 	 *
-	 * @param InController The controller associated with the interaction, usually representing the player or AI controlling the pawn.
-	 * @param InPawn The pawn involved in the interaction process, typically the one under the control of the provided controller.
 	 */
-	virtual void StopInteraction(AController* InController, APawn* InPawn);
+	virtual void StopInteraction();
+
+	AController* GetInteractionController() const;
+	APawn* GetInteractionPawn() const;
 
 protected:
 #if WITH_EDITORONLY_DATA
@@ -185,7 +192,7 @@ protected:
 	 * can detect and interact with interactable objects.
 	 * It allows customization for different gameplay interaction scenarios, ensuring appropriate proximity thresholds.
 	 */
-	UPROPERTY(EditAnywhere, Category="Limen")
+	UPROPERTY(EditAnywhere, Category="Limen", meta=(ClampMin=0))
 	float InteractionRange;
 
 	/**
@@ -235,10 +242,22 @@ private:
 
 	bool bIsInteracting;
 
+	UPROPERTY(Replicated)
+	FRepInteractionParams InteractionParams;
+
 	UFUNCTION(Client, Reliable)
 	void Client_InteractableComponentHoveredChanged(UActorComponent* Component);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_Interact();
+	UFUNCTION(Server, Reliable)
+	void Server_StopInteract();
+
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Interacted(UActorComponent* Component);
+	void Multicast_Interact(UActorComponent* Component);
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_InteractionStopped(UActorComponent* Component);
+	void Multicast_StopInteract(UActorComponent* Component);
+
+	void InteractInternal();
+	void StopInteractInternal();
 };

@@ -36,6 +36,8 @@ void ULimenCreditsComponent::BeginPlay()
 
 void ULimenCreditsComponent::DepositCredits(const int64 NewCredits)
 {
+	check(GetOwner() && GetOwner()->HasAuthority())
+
 	const int64 FlooredCredits = FMath::FloorToInt64(static_cast<double>(Multiplier) * static_cast<double>(NewCredits));
 	CurrentCredits += static_cast<uint64>(FlooredCredits);
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, CurrentCredits, this)
@@ -45,6 +47,8 @@ void ULimenCreditsComponent::DepositCredits(const int64 NewCredits)
 
 bool ULimenCreditsComponent::WithdrawCredits(const int64 OutCredits)
 {
+	check(GetOwner() && GetOwner()->HasAuthority())
+
 	if (!bAllowNegativeBalance && CurrentCredits < static_cast<uint64>(OutCredits))
 	{
 		return false;
@@ -68,11 +72,13 @@ int64 ULimenCreditsComponent::GetCredits() const
 
 void ULimenCreditsComponent::SetStartingCredits(const int32 NewStartingCredits)
 {
+	check(GetOwner() && GetOwner()->HasAuthority())
 	StartingCredits = NewStartingCredits;
 }
 
 void ULimenCreditsComponent::SetCreditsMultiplier(const float NewMultiplier)
 {
+	check(GetOwner() && GetOwner()->HasAuthority())
 	Multiplier = NewMultiplier;
 }
 

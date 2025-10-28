@@ -8,6 +8,19 @@
 #include "LimenInteractableAreaComponent.generated.h"
 
 
+USTRUCT()
+struct FInteractionParams
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TObjectPtr<AController> Controller;
+	UPROPERTY()
+	TObjectPtr<APawn> Pawn;
+	UPROPERTY()
+	bool bIsBeingInteracted;
+};
+
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENINTERACTION_API ULimenInteractableAreaComponent : public UBoxComponent, public ILimenInteractableComponent
 {
@@ -26,6 +39,7 @@ public:
 	FInteractableComponentDelegate OnInteractionStopped;
 	
 	ULimenInteractableAreaComponent();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnComponentCreated() override;
 	virtual void Activate(bool bReset) override;
 	virtual void Deactivate() override;
@@ -54,5 +68,10 @@ protected:
 private:
 	TOptional<FCollisionResponseContainer> CachedCollisionResponse;
 	TOptional<ECollisionEnabled::Type> CachedCollisionEnabledType;
-	bool bIsBeingInteracted;
+
+	UPROPERTY(ReplicatedUsing=OnRep_IsBeingInteracted)
+	FInteractionParams InteractionParams;
+
+	UFUNCTION()
+	void OnRep_IsBeingInteracted();
 };

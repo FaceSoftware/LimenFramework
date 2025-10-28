@@ -10,7 +10,6 @@
 ALimenInteractable::ALimenInteractable(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
 {
 	bWasInteracted = false;
-	InteractionCount = 0;
 	bIsBeingContinuouslyInteracted = false;
 }
 
@@ -28,11 +27,6 @@ void ALimenInteractable::BeginPlay()
 bool ALimenInteractable::HasBeenInteracted() const
 {
 	return bWasInteracted;
-}
-
-uint32 ALimenInteractable::GetInteractionCount() const
-{
-	return InteractionCount;
 }
 
 TArray<ILimenInteractableComponent*> ALimenInteractable::GetInteractableComponents() const
@@ -92,15 +86,8 @@ bool ALimenInteractable::IsBeingContinuouslyInteracted() const
 	return bIsBeingContinuouslyInteracted;
 }
 
-void ALimenInteractable::SimulateInteraction()
-{
-	Interact(GetWorld()->GetFirstPlayerController(), GetWorld()->GetFirstPlayerController()->GetPawn());
-	BP_OnInteract(GetWorld()->GetFirstPlayerController(), GetWorld()->GetFirstPlayerController()->GetPawn());
-}
-
 void ALimenInteractable::Interact(AController* InController, APawn* InPawn)
 {
-	check(HasAuthority())
 	bWasInteracted = true;
 	bIsBeingContinuouslyInteracted = true;
 }
@@ -112,15 +99,12 @@ void ALimenInteractable::InteractionStopped(AController* InController, APawn* In
 
 void ALimenInteractable::OnInteract_Internal(AController* InController, APawn* InPawn)
 {
-	InteractionCount++;
 	Interact(InController, InPawn);
-	BP_OnInteract(InController, InPawn);
 	OnInteract.Broadcast(InController, InPawn);
 }
 
 void ALimenInteractable::OnInteractionStopped_Internal(AController* InController, APawn* InPawn)
 {
 	InteractionStopped(InController, InPawn);
-	BP_OnInteractionStopped(InController, InPawn);
 	OnInteractionStopped.Broadcast(InController, InPawn);
 }

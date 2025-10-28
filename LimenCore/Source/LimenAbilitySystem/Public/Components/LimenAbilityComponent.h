@@ -21,14 +21,15 @@ struct FAbilityArrayItem : public FFastArraySerializerItem
 	FAbilityArrayItem() = default;
 	explicit FAbilityArrayItem(ULimenAbilityBase* Ability)
 	{
-		Item = TStrongObjectPtr(Ability);
+		Item = Ability;
 	}
 
-	TStrongObjectPtr<ULimenAbilityBase> Item;
+	UPROPERTY()
+	TObjectPtr<ULimenAbilityBase> Item;
 
 	FAbilityArrayItem& operator=(ULimenAbilityBase* Ability)
 	{
-		Item = TStrongObjectPtr(Ability);
+		Item = Ability;
 		return *this;
 	}
 	ULimenAbilityBase* operator->()
@@ -113,14 +114,15 @@ struct FAttributeArrayItem : public FFastArraySerializerItem
 	FAttributeArrayItem() = default;
 	explicit FAttributeArrayItem(ULimenAttributeBase* Attribute)
 	{
-		Item = TStrongObjectPtr(Attribute);
+		Item = Attribute;
 	}
 
-	TStrongObjectPtr<ULimenAttributeBase> Item;
+	UPROPERTY()
+	TObjectPtr<ULimenAttributeBase> Item;
 
 	FAttributeArrayItem& operator=(ULimenAttributeBase* Attribute)
 	{
-		Item = TStrongObjectPtr(Attribute);
+		Item = Attribute;
 		return *this;
 	}
 	bool operator==(const FAttributeArrayItem& Other) const

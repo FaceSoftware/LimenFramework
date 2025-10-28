@@ -14,7 +14,6 @@ ULimenAbilityComponent::ULimenAbilityComponent(const FObjectInitializer& InObjec
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
-	SetIsReplicated(true);
 	bAutoActivate = true;
 	bReplicateUsingRegisteredSubObjectList = true;
 
@@ -30,9 +29,9 @@ void ULimenAbilityComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Abilities,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, false))
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, Attributes,
-		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
+		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, false))
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, AuthAbilityCount,
 		FDoRepLifetimeParams(COND_None, REPNOTIFY_OnChanged, true))
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, AuthAttributeCount,
@@ -117,7 +116,7 @@ void ULimenAbilityComponent::DeactivateAllAbilities()
 	check(GetOwner()->HasAuthority())
 	for (const FAbilityArrayItem& Ability : Abilities.Items)
 	{
-		if (!Ability.Item.IsValid()) continue;
+		if (!Ability.Item) continue;
 		Ability->ForceDeactivateAbility();
 		Ability->Deinitialize(GetOwner());
 	}
@@ -128,13 +127,13 @@ void ULimenAbilityComponent::DestroyAllAbilities()
 	check(GetOwner()->HasAuthority())
 	for (FAbilityArrayItem& Ability : Abilities.Items)
 	{
-		if (!Ability.Item.IsValid()) continue;
+		if (!Ability.Item) continue;
 		Ability->ForceDeactivateAbility();
 		Ability->Deinitialize(GetOwner());
 
 		RemoveReplicatedSubObject(*Ability);
 		Ability->ConditionalBeginDestroy();
-		Ability.Item.Reset();
+		Ability.Item = nullptr;
 	}
 	Abilities.Items.Empty();
 	Abilities.MarkArrayDirty();
@@ -146,7 +145,7 @@ void ULimenAbilityComponent::DeactivateAllAttributes()
 	check(GetOwner()->HasAuthority())
 	for (const FAttributeArrayItem& Attribute : Attributes.Items)
 	{
-		if (!Attribute.Item.IsValid()) continue;
+		if (!Attribute.Item) continue;
 		Attribute->FreezeAttribute(true);
 		Attribute->Deinitialize(GetOwner());
 	}
@@ -157,13 +156,13 @@ void ULimenAbilityComponent::DestroyAllAttributes()
 	check(GetOwner()->HasAuthority())
 	for (FAttributeArrayItem& Attribute : Attributes.Items)
 	{
-		if (!Attribute.Item.IsValid()) continue;
+		if (!Attribute.Item) continue;
 		Attribute->FreezeAttribute(true);
 		Attribute->Deinitialize(GetOwner());
 
 		RemoveReplicatedSubObject(*Attribute);
 		Attribute->ConditionalBeginDestroy();
-		Attribute.Item.Reset();
+		Attribute.Item = nullptr;
 	}
 	Attributes.Items.Empty();
 	Attributes.MarkArrayDirty();
@@ -236,7 +235,7 @@ void ULimenAbilityComponent::InitializeAbilities()
 {
 	for (auto& Ability : Abilities.Items)
 	{
-		if (Ability.Item.IsValid()) Ability->Initialize(GetOwner());
+		if (Ability.Item) Ability->Initialize(GetOwner());
 	}
 	bAbilitiesLoaded = true;
 }
@@ -245,7 +244,7 @@ void ULimenAbilityComponent::InitializeAttributes()
 {
 	for (auto& Attribute : Attributes.Items)
 	{
-		if (Attribute.Item.IsValid()) Attribute->Initialize(GetOwner());
+		if (Attribute.Item) Attribute->Initialize(GetOwner());
 	}
 	bAttributesLoaded = true;
 }

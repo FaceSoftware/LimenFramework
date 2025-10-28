@@ -21,9 +21,6 @@ class LIMENINTERACTION_API ULimenPhysicsInteractionComponent : public ULimenInte
 public:
 	ULimenPhysicsInteractionComponent();
 
-	virtual bool Interact(AController* InController, APawn* InPawn) override;
-	virtual void StopInteraction(AController* InController, APawn* InPawn) override;
-
 protected:
 	UPROPERTY(EditAnywhere, Category="Interaction")
 	TEnumAsByte<ECollisionChannel> TraceChannel;
@@ -46,9 +43,6 @@ protected:
 	virtual void InteractionStopped(UActorComponent* Component) override;
 
 private:
-	TWeakObjectPtr<AController> InteractController;
-	TWeakObjectPtr<APawn> InteractPawn;
-
 	TWeakObjectPtr<UPhysicsHandleComponent> PhysicsHandle;
 	FHitResult OutHit;
 	FCollisionQueryParams TraceQueryParams;
