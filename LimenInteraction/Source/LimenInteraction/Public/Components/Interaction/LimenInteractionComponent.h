@@ -17,6 +17,11 @@ struct FRepInteractionParams
 {
 	GENERATED_BODY()
 
+	FRepInteractionParams() = default;
+	explicit FRepInteractionParams(AController* InController) : Controller(InController), Pawn(InController ? InController->GetPawn() : nullptr) {}
+	explicit FRepInteractionParams(APawn* InPawn) : Controller(InPawn ? InPawn->GetController() : nullptr), Pawn(InPawn) {}
+	FRepInteractionParams(AController* InController, APawn* InPawn) : Controller(InController), Pawn(InPawn) {}
+
 	UPROPERTY()
 	TObjectPtr<AController> Controller;
 	UPROPERTY()

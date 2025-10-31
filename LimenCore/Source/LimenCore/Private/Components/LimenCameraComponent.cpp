@@ -31,6 +31,10 @@ ULimenCameraComponent::ULimenCameraComponent()
 
 	CameraZoomInterpolationSpeed = 10.f;
 	FirstPersonZoomInterpolationSpeed = 10.f;
+	
+	BaseCameraFOV = TargetCameraFOV = FieldOfView;
+	BaseFirstPersonFOV = TargetFirstPersonFOV = FirstPersonFieldOfView;
+	bOriginalUsePawnControlRotation = bUsePawnControlRotation;
 }
 
 void ULimenCameraComponent::BeginPlay()
@@ -39,7 +43,6 @@ void ULimenCameraComponent::BeginPlay()
 
 	BaseCameraFOV = TargetCameraFOV = FieldOfView;
 	BaseFirstPersonFOV = TargetFirstPersonFOV = FirstPersonFieldOfView;
-
 	bOriginalUsePawnControlRotation = bUsePawnControlRotation;
 	
 	bIsTiltEnabled = bEnableTilt;
