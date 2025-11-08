@@ -140,12 +140,7 @@ void ULimenInteractionComponent::RestartInteraction()
 
 void ULimenInteractionComponent::Interact()
 {
-	if (SHOULD_PREDICT_NETWORK_EVENT_COMP)
-	{
-		InteractInternal();
-	}
-
-	Server_Interact();
+	NETWORK_PREDICTION(InteractInternal(), Server_Interact())
 }
 
 bool ULimenInteractionComponent::Interact(const AActor* SpecificInteractable)
@@ -196,12 +191,7 @@ bool ULimenInteractionComponent::Interact(UActorComponent* SpecificInteractableC
 
 void ULimenInteractionComponent::StopInteraction()
 {
-	if (SHOULD_PREDICT_NETWORK_EVENT_COMP)
-	{
-		StopInteractInternal();
-	}
-
-	Server_StopInteract();
+	NETWORK_PREDICTION(StopInteractInternal(), Server_StopInteract())
 }
 
 AController* ULimenInteractionComponent::GetInteractionController() const
@@ -214,23 +204,36 @@ APawn* ULimenInteractionComponent::GetInteractionPawn() const
 	return InteractionParams.Pawn.Get();
 }
 
+TScriptInterface<ILimenInteractableComponent> ULimenInteractionComponent::GetCurrentInteractableInterface() const
+{
+	return CurrentInteractableInterface;
+}
+
+UActorComponent* ULimenInteractionComponent::GetCurrentInteractableComponent() const
+{
+	return Cast<UActorComponent>(CurrentInteractableInterface.GetObject());
+}
+
 bool ULimenInteractionComponent::GetOwnerViewPoint(FVector& Start, FVector& End) const
 {
-	const auto* Pawn = Cast<APawn>(GetOwner());
-	if (!Pawn)
+	TOptional<FRotator> EyesRotation;
+	
+	if (const auto* Pawn = Cast<APawn>(GetOwner()))
 	{
-		return false;
+		FRotator Temp;
+		Pawn->GetActorEyesViewPoint(Start, Temp);
+		EyesRotation = Temp;
+	}
+	else if (const auto* Controller = Cast<AController>(GetOwner()))
+	{
+		FRotator Temp;
+		Controller->GetPlayerViewPoint(Start, Temp);
+		EyesRotation = Temp;
 	}
 
-	const auto* Controller = Cast<AController>(Pawn->GetController());
-	if (!Controller)
-	{
-		return false;
-	}
-	
-	FRotator EyesRotation;
-	Controller->GetPlayerViewPoint(Start, EyesRotation);
-	End = Start + EyesRotation.Vector() * InteractionRange;
+	if (!EyesRotation.IsSet()) return false;
+
+	End = Start + EyesRotation.GetValue().Vector() * InteractionRange;
 	return true;
 }
 
@@ -253,16 +256,6 @@ void ULimenInteractionComponent::SetCurrentInteractableInterface(UActorComponent
 	{
 		CurrentInteractableInterface = nullptr;
 	}
-}
-
-TScriptInterface<ILimenInteractableComponent> ULimenInteractionComponent::GetCurrentInteractableInterface() const
-{
-	return CurrentInteractableInterface;
-}
-
-UActorComponent* ULimenInteractionComponent::GetCurrentInteractableComponent() const
-{
-	return Cast<UActorComponent>(CurrentInteractableInterface.GetObject());
 }
 
 void ULimenInteractionComponent::Interacted(UActorComponent* Component)
@@ -296,19 +289,11 @@ void ULimenInteractionComponent::Server_StopInteract_Implementation()
 
 void ULimenInteractionComponent::Multicast_Interact_Implementation(UActorComponent* Component)
 {
-	// Don't run on the client again since it predicted the interaction
-	// If the local client owns the actor that contains this component, skip because it already predicted.
-	if (IS_COMP_LOCAL_CLIENT_COPY) { return; }
-
 	Interacted(Component);
 }
 
 void ULimenInteractionComponent::Multicast_StopInteract_Implementation(UActorComponent* Component)
 {
-	// Don't run on the client again since it predicted the interaction
-	// If the local client owns the actor that contains this component, skip because it already predicted.
-	if (IS_COMP_LOCAL_CLIENT_COPY) { return; }
-
 	InteractionStopped(Component);
 }
 

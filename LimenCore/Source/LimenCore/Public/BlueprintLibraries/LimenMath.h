@@ -71,7 +71,14 @@ public:
 	static bool IsInteger(const double Test);
 
 	template<typename T>
-	static T WrappedClamp(T Value, T Min, T Max);
+	static T WrappedClamp(T Value, T Min, T Max)
+	{
+		static_assert(TIsArithmetic<T>());
+		check(Min <= Max);
+	
+		T Range = Max - Min;
+		return Min + ((Value - Min) % Range + Range) % Range;
+	}
 	
 	/**
 	 * @brief Clamp a rotator to the nearest major axis (10deg = 0deg; 150deg == 180deg).
@@ -87,12 +94,23 @@ public:
 	static float SignedAngleAroundAxis(const FVector& From, const FVector& To, const FVector& Axis);
 };
 
-template <typename T>
-T ULimenMath::WrappedClamp(T Value, T Min, T Max)
+
+namespace FLimenMath
 {
-	static_assert(TIsArithmetic<T>());
-	check(Min <= Max);
-	
-	T Range = Max - Min;
-	return Min + ((Value - Min) % Range + Range) % Range;
+	FORCEINLINE bool IsNearlyEqualByULP(const FVector& A, const FVector& B, int32 Units = 4)
+	{
+		return FMath::IsNearlyEqualByULP(A.X, B.X, Units) &&
+			   FMath::IsNearlyEqualByULP(A.Y, B.Y, Units) &&
+			   FMath::IsNearlyEqualByULP(A.Z, B.Z, Units);
+	}
+	FORCEINLINE bool IsNearlyEqualByULP(const FQuat& A, const FQuat& B, int32 Units = 4)
+	{
+		return A.Equals(B, FMath::Pow(10.f, static_cast<float>(-Units)));
+	}
+	FORCEINLINE bool IsNearlyEqualByULP(const FRotator& A, const FRotator& B, int32 Units = 4)
+	{
+		return FMath::IsNearlyEqualByULP(A.Roll, B.Roll, Units) &&
+			   FMath::IsNearlyEqualByULP(A.Pitch, B.Pitch, Units) &&
+			   FMath::IsNearlyEqualByULP(A.Yaw, B.Yaw, Units);
+	}
 }

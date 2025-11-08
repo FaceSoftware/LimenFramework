@@ -84,26 +84,34 @@ void ULimenAbilityComponent::Deactivate()
 	Super::Deactivate();
 }
 
-void ULimenAbilityComponent::AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass)
+ULimenAbilityBase* ULimenAbilityComponent::AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass)
 {
 	check(AbilityClass != nullptr);
 	
 	AbilityClasses.Push(TSoftClassPtr<ULimenAbilityBase>(AbilityClass));
 
 	ULimenAbilityBase* Ability = NewObject<ULimenAbilityBase>(this, AbilityClass);
+	Ability->Initialize(GetOwner());
+
 	const int32 Index = Abilities->Add(FAbilityArrayItem(Ability));
 	Abilities.MarkItemDirty(Abilities[Index]);
+
+	return Ability;
 }
 
-void ULimenAbilityComponent::AddAttribute(const TSubclassOf<ULimenAttributeBase>& AttributeClass)
+ULimenAttributeBase* ULimenAbilityComponent::AddAttribute(const TSubclassOf<ULimenAttributeBase>& AttributeClass)
 {
 	check(AttributeClass != nullptr);
 	
 	AttributeClasses.Push(TSoftClassPtr<ULimenAttributeBase>(AttributeClass));
 
 	ULimenAttributeBase* Attribute = NewObject<ULimenAttributeBase>(this, AttributeClass);
+	Attribute->Initialize(GetOwner());
+
 	const int32 Index = Attributes->Add(FAttributeArrayItem(Attribute));
 	Attributes.MarkItemDirty(Attributes[Index]);
+
+	return Attribute;
 }
 
 bool ULimenAbilityComponent::IsReadyForGameplay() const

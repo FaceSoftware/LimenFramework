@@ -17,6 +17,7 @@ class LIMENHINTS_API ALimenHintsManager : public ALimenGameplayManager
 
 public:
 	ALimenHintsManager();
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	void SetHintWidgetClass(const TSubclassOf<ULimenHintWidget>& InClass);
 	void InitializeHints();
@@ -29,10 +30,9 @@ public:
 	{
 		static_assert(std::is_base_of_v<ULimenHint, HintClass>);
 		
-		for (ULimenHint* Hint : Hints)
+		for (const TStrongObjectPtr<ULimenHint>& Hint : Hints)
 		{
-			HintClass* Test = Cast<HintClass>(Hint);
-			if (Test != nullptr)
+			if (HintClass* Test = Cast<HintClass>(Hint.Get()))
 			{
 				return Test;
 			}
@@ -45,8 +45,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Limen")
 	TArray<TSoftClassPtr<ULimenHint>> HintClasses;
 
-	UPROPERTY()
-	TArray<ULimenHint*> Hints;
+	TArray<TStrongObjectPtr<ULimenHint>> Hints;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Limen")
 	TSoftClassPtr<ULimenHintWidget> HintWidgetClass;

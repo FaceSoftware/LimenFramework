@@ -15,24 +15,22 @@
 #include "LogMacros/LimenLogMacros.h"
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
 #include "UMG/LimenLoadingScreenWidget.h"
+#include "EngineUtils.h"
 
 
 ALimenPlayerControllerBase* ALimenPlayerControllerBase::GetLimenPlayerControllerBase(UObject* Caller, int32 PlayerIndex)
 {
 	const UWorld* World = GEngine->GetWorldFromContextObject(Caller, EGetWorldErrorMode::ReturnNull);
-	if (World == nullptr)
+	if (!World) { return nullptr; }
+
+	int32 Index = 0;
+	for (TActorIterator<ALimenPlayerControllerBase> It(World); It; ++It)
 	{
-		return nullptr;
+		if (Index == PlayerIndex) return *It;
+		Index++;
 	}
 
-	FConstPlayerControllerIterator It = World->GetPlayerControllerIterator();
-	for (int i = 0; i < PlayerIndex; ++i) ++It;
-	if (It.GetIndex() != PlayerIndex)
-	{
-		return nullptr;
-	}
-
-	return Cast<ALimenPlayerControllerBase>(*It);
+	return nullptr;
 }
 
 ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)

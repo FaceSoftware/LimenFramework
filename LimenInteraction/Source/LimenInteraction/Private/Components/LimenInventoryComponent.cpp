@@ -40,11 +40,11 @@ void ULimenInventoryComponent::BeginPlay()
 
 		for (auto& Item : StartingItems)
 		{
-			auto* ItemInst = GetWorld()->SpawnActor<ALimenItemBase>(Item);
-			check(ItemInst)
-
-			ItemInst->RemoveFromGameplay();
-			AddItem(ItemInst);
+			if (auto* ItemInst = GetWorld()->SpawnActor<ALimenItemBase>(Item); ensureAlways(ItemInst))
+			{
+				ItemInst->RemoveFromGameplay();
+				AddItem(ItemInst);
+			}
 		}
 	}
 

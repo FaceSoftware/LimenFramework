@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS(Abstract, NotBlueprintable)
+UCLASS(Abstract, Blueprintable, BlueprintType)
 class LIMENWIDGETS_API ULimenBaseHudWidget : public ULimenWidget
 {
 	GENERATED_BODY()

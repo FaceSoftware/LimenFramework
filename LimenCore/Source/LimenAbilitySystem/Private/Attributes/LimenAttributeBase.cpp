@@ -3,11 +3,11 @@
 
 #include "Attributes/LimenAttributeBase.h"
 
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Components/LimenAbilityComponent.h"
 #include "Engine/NetDriver.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
-#include "Iris/ReplicationSystem/ReplicationSystem.h"
 #include "Net/UnrealNetwork.h"
 
 
@@ -20,6 +20,9 @@ ULimenAttributeBase::ULimenAttributeBase() : Super()
 	bIsInitialized = false;
 	bIsFrozen = false;
 	bShouldFreezeWhenValueIsReached = false;
+#if WITH_EDITORONLY_DATA
+	bLogValue = false;
+#endif
 }
 
 void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -166,6 +169,14 @@ bool ULimenAttributeBase::IsInitialized() const
 
 void ULimenAttributeBase::Tick(float DeltaTime)
 {
+#if WITH_EDITORONLY_DATA
+	if (bLogValue)
+	{
+		const FString Value = FString::SanitizeFloat(CurrentValue, 2);
+		LimenLog(this, Value, ELogType::Log, true, GetFName());
+	}
+#endif
+
 	if (!HasAuthority() || FMath::IsNearlyZero(RechargeRate)) return;
 
 	ModifyValueBy(RechargeRate * DeltaTime);

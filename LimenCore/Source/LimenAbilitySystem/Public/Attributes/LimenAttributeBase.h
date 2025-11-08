@@ -16,7 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAttributeUpdate, class ULimenAttri
  * This class behaves as a meter,
  * normally used as health or stamina for a player.
  */
-UCLASS(Abstract)
+UCLASS()
 class LIMENABILITYSYSTEM_API ULimenAttributeBase : public ULimenStorageItem, public FTickableGameObject
 {
 	GENERATED_BODY()
@@ -218,6 +218,12 @@ public:
 
 	ULimenAbilityComponent* GetOwnerAbilityComponent() const;	
 	AActor* GetOwner() const;
+	template<typename T>
+	T* GetOwner() const
+	{
+		return Cast<T>(GetOwner());
+	}
+
 	/**
 	 * @brief Freezing an attribute essentially freezing the value not allowing any modifications
 	 * @param bShouldFreeze Whether to freeze the attribute
@@ -239,6 +245,10 @@ protected:
 	float MaxValue;
 	UPROPERTY(EditAnywhere, Category="Attribute")
 	float InitialValue;
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category="Attribute")
+	bool bLogValue;
+#endif WITH_EDITORONLY_DATA
 
 	virtual void AttributeEmpty();
 	virtual void AttributeFull();

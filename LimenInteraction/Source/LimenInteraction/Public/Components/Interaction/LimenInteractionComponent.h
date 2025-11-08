@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Interfaces/LimenInteractableComponent.h"
 #include "LimenInteractionComponent.generated.h"
 
 
@@ -173,6 +174,8 @@ public:
 
 	AController* GetInteractionController() const;
 	APawn* GetInteractionPawn() const;
+	FORCEINLINE TScriptInterface<ILimenInteractableComponent> GetCurrentInteractableInterface() const;
+	FORCEINLINE UActorComponent* GetCurrentInteractableComponent() const;
 
 protected:
 #if WITH_EDITORONLY_DATA
@@ -234,8 +237,6 @@ protected:
 	virtual void UpdateInteraction(const float DeltaTime);
 
 	void SetCurrentInteractableInterface(UActorComponent* InComponent);
-	FORCEINLINE TScriptInterface<ILimenInteractableComponent> GetCurrentInteractableInterface() const;
-	FORCEINLINE UActorComponent* GetCurrentInteractableComponent() const;
 
 	virtual void Interacted(UActorComponent* Component);
 	virtual void InteractionStopped(UActorComponent* Component);

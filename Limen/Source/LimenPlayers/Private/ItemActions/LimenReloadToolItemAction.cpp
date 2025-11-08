@@ -30,7 +30,7 @@ void ULimenReloadToolItemAction::ActivateAction()
 	ULimenInventoryComponent* InventoryComponent = Tool->GetOwner()->GetComponentByClass<ULimenInventoryComponent>();
 	ALimenBattery* Battery = InventoryComponent->GetItem<ALimenBattery>();
 	check(Battery != nullptr);
-	Tool->Recharge(Battery);
+	// Tool->Recharge(Battery);
 	Battery->RemoveFromGameplay();
 }
 

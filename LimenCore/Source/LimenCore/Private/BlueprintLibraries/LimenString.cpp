@@ -12,7 +12,7 @@ void ULimenString::SplitStringAtIndex(const FString& InString, const int32 Index
 	{
 		return;
 	}
-	
+
 	// Left side
 	OutLeftPart.Empty();
 	for (int i = 0; i < Index; ++i)

@@ -37,7 +37,7 @@ void ULimenHint::Enable()
 	}
 	
 	bIsEnabled = true;
-	if (bHasTriedToShowHint)
+	if (!bHasTriedToShowHint)
 	{
 		ShowHint();
 	}

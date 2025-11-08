@@ -12,6 +12,13 @@ ALimenHintsManager::ALimenHintsManager()
 	bHintsEnabled = false;
 }
 
+void ALimenHintsManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	Hints.Empty();
+}
+
 void ALimenHintsManager::SetHintWidgetClass(const TSubclassOf<ULimenHintWidget>& InClass)
 {
 	HintWidgetClass = InClass;
@@ -28,11 +35,11 @@ void ALimenHintsManager::InitializeHints()
 
 		ULimenHint* Hint = NewObject<ULimenHint>(this, HintClass.LoadSynchronous());
 		check(IsValid(Hint));		
-		Hints.Push(Hint);
+		Hints.Push(TStrongObjectPtr(Hint));
 	}	
 	
 	check(HintWidgetClass != nullptr);
-	for (ULimenHint* Hint : Hints)
+	for (const TStrongObjectPtr<ULimenHint>& Hint : Hints)
 	{
 		Hint->SetHintWidgetClass(HintWidgetClass.LoadSynchronous());
 		Hint->Initialize();
@@ -47,7 +54,7 @@ void ALimenHintsManager::EnableHints()
 		return;
 	}
 
-	for (auto* Hint : Hints)
+	for (const auto& Hint : Hints)
 	{
 		Hint->Enable();
 	}
@@ -62,7 +69,7 @@ void ALimenHintsManager::DisableHints()
 		return;
 	}
 
-	for (auto* Hint : Hints)
+	for (const auto& Hint : Hints)
 	{
 		Hint->Disable();
 	}

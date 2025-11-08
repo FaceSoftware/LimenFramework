@@ -97,13 +97,6 @@ protected:
 	virtual void InitializeWidgets();
 
 	virtual void HudInitialized(APlayerController* PlayerController);
-	UFUNCTION(BlueprintImplementableEvent, Category="Limen|HUD", DisplayName="Hud Initialized")
-	void BP_HudInitialized(APlayerController* PlayerController);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnPostProcessEnabled();
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnPostProcessDisabled();
 
 	UFUNCTION(BlueprintCallable)
 	virtual bool CanSwitchWidgetVisibility(UWidget* InWidget) const;

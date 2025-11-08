@@ -235,14 +235,25 @@ public:
 	 *
 	 * @param AbilityClass The class type of the ability being added. This defines the behavior and properties of the new ability.
 	 */
-	void AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass);
+	ULimenAbilityBase* AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass);
+	template<typename T>
+	T* AddAbility()
+	{
+		static_assert(TIsDerivedFrom<T, ULimenAbilityBase>::Value);
+		return Cast<T>(AddAbility(T::StaticClass()));
+	}
 	/**
 	 * Adds a new attribute to the component and initializes it.
 	 *
 	 * @param AttributeClass The class type of the attribute being added. This defines the properties and behavior of the new attribute.
 	 */
-	void AddAttribute(const TSubclassOf<ULimenAttributeBase>& AttributeClass);
-
+	ULimenAttributeBase* AddAttribute(const TSubclassOf<ULimenAttributeBase>& AttributeClass);
+	template<typename T>
+	T* AddAttribute()
+	{
+		static_assert(TIsDerivedFrom<T, ULimenAttributeBase>::Value);
+		return Cast<T>(AddAttribute(T::StaticClass()));
+	}
 	/**
 	 * Determines whether the ability component is ready for gameplay.
 	 *

@@ -156,6 +156,8 @@ void ULimenCameraComponent::GetCameraView(float DeltaTime, FMinimalViewInfo& Des
 
 void ULimenCameraComponent::AddCameraZoom(const float Amount)
 {
+	if (!bEnableZoom) return;
+
 	const float PreviousZoom = TargetCameraFOV;
 	TargetCameraFOV = ZoomToFOV(FOVToZoom(TargetCameraFOV + Amount * ZoomMultiplier, CameraZoomRange), CameraZoomRange);
 	TargetCameraFOV = FMath::Clamp(TargetCameraFOV, CameraZoomRange.GetLowerBoundValue(),
@@ -166,6 +168,8 @@ void ULimenCameraComponent::AddCameraZoom(const float Amount)
 
 void ULimenCameraComponent::SetCameraZoom(const float Amount)
 {
+	if (!bEnableZoom) return;
+
 	const float PreviousZoom = TargetCameraFOV;
 	TargetCameraFOV = ZoomToFOV(Amount, CameraZoomRange);
 
@@ -174,6 +178,8 @@ void ULimenCameraComponent::SetCameraZoom(const float Amount)
 
 void ULimenCameraComponent::AddFirstPersonZoom(const float Amount)
 {
+	if (!bEnableZoom) return;
+
 	const float PreviousZoom = TargetFirstPersonFOV;
 	TargetFirstPersonFOV = ZoomToFOV(FOVToZoom(TargetFirstPersonFOV + Amount * ZoomMultiplier, FirstPersonZoomRange), FirstPersonZoomRange);
 	TargetFirstPersonFOV = FMath::Clamp(TargetFirstPersonFOV, FirstPersonZoomRange.GetLowerBoundValue(),
@@ -184,6 +190,8 @@ void ULimenCameraComponent::AddFirstPersonZoom(const float Amount)
 
 void ULimenCameraComponent::SetFirstPersonZoom(float Amount)
 {
+	if (!bEnableZoom) return;
+
 	const float PreviousZoom = TargetFirstPersonFOV;
 	TargetFirstPersonFOV = ZoomToFOV(Amount, FirstPersonZoomRange);
 

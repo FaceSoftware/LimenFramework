@@ -18,7 +18,7 @@ struct FInteractionParams
 	UPROPERTY()
 	TObjectPtr<APawn> Pawn;
 	UPROPERTY()
-	bool bIsBeingInteracted;
+	bool bIsBeingInteracted = false;
 };
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))

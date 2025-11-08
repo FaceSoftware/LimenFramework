@@ -127,42 +127,22 @@ void ALimenWeapon::Tick(float DeltaSeconds)
 
 void ALimenWeapon::StartFiring()
 {
-	if (SHOULD_PREDICT_NETWORK_EVENT)
-	{
-		SetFireStateInternal(true);
-	}
-
-	Server_SetFireState(true);
+	NETWORK_PREDICTION(SetFireStateInternal(true), Server_SetFireState(true))
 }
 
 void ALimenWeapon::StopFiring()
 {
-	if (SHOULD_PREDICT_NETWORK_EVENT)
-	{
-		SetFireStateInternal(false);
-	}
-
-	Server_SetFireState(false);
+	NETWORK_PREDICTION(SetFireStateInternal(false), Server_SetFireState(false))
 }
 
 void ALimenWeapon::StartReloading()
 {
-	if (SHOULD_PREDICT_NETWORK_EVENT)
-	{
-		SetReloadStateInternal(true);
-	}
-
-	Server_SetReloadState(true);
+	NETWORK_PREDICTION(SetReloadStateInternal(true), Server_SetReloadState(true))
 }
 
 void ALimenWeapon::StopReloading()
 {
-	if (SHOULD_PREDICT_NETWORK_EVENT)
-	{
-		SetReloadStateInternal(false);
-	}
-
-	Server_SetReloadState(false);
+	NETWORK_PREDICTION(SetReloadStateInternal(false), Server_SetReloadState(false))
 }
 
 bool ALimenWeapon::IsFiring() const

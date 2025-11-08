@@ -29,22 +29,12 @@ void ALimenGameplayActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 void ALimenGameplayActor::RemoveFromGameplay()
 {
-	if (SHOULD_PREDICT_NETWORK_EVENT)
-	{
-		RemoveFromGameplayInternal();
-	}
-
-	Server_RemoveFromGameplay();
+	NETWORK_PREDICTION(RemoveFromGameplayInternal(), Server_RemoveFromGameplay())
 }
 
 void ALimenGameplayActor::AddToGameplay(const bool bEnableCollision)
 {
-	if (SHOULD_PREDICT_NETWORK_EVENT)
-	{
-		AddToGameplayInternal(bEnableCollision);
-	}
-
-	Server_AddToGameplay(bEnableCollision);
+	NETWORK_PREDICTION(AddToGameplayInternal(bEnableCollision), Server_AddToGameplay(bEnableCollision))
 }
 
 bool ALimenGameplayActor::IsRemovedFromGameplay() const

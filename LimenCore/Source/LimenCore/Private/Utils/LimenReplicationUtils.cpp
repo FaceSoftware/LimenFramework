@@ -6,8 +6,7 @@
 
 bool FLimenReplicationUtils::ShouldPerformNetworkPrediction(const AActor* InActor)
 {
-	if (InActor && !InActor->HasAuthority()) { return true; }
-	return false;
+	return InActor && InActor->GetNetMode() == NM_Client;
 }
 
 bool FLimenReplicationUtils::IsComponentLocalClientCopy(const UActorComponent* InComponent)

@@ -14,7 +14,7 @@ class ALimenTool;
  * 
  */
 UCLASS()
-class LIMENPLAYERS_API ULimenReloadToolItemAction : public ULimenItemAction
+class UE_DEPRECATED(5.6, "") LIMENPLAYERS_API ULimenReloadToolItemAction : public ULimenItemAction
 {
 	GENERATED_BODY()
 

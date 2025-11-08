@@ -16,11 +16,7 @@ ALimenTool::ALimenTool()
 	PrimaryActorTick.TickInterval = 0.f;
 	
 	bStartActive = false;
-	BatteryRechargeDelaySeconds = 1.f;
-	CompatibleBatteryClass = nullptr;
-	bIsRecharging = false;
 	bIsActive = false;
-	bWasActiveBeforeRecharge = false;
 	
 	AbilityComponent = CreateDefaultSubobject<ULimenAbilityComponent>(TEXT("AbilityComponent"));
 	AbilityComponent->bAutoActivate = true;
@@ -29,15 +25,6 @@ ALimenTool::ALimenTool()
 void ALimenTool::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	BatteryAttribute = AbilityComponent->GetAttribute<ULimenBatteryAttribute>();
-
-	if (BatteryAttribute.IsValid())
-	{
-		BatteryAttribute->SetRechargeRate(DrainPerSecond > 0 ? -DrainPerSecond : DrainPerSecond);
-		BatteryAttribute->OnAttributeEmpty.AddUniqueDynamic(this, &ThisClass::BatteryEmpty);
-		BatteryAttribute->OnAttributeChanged.AddUniqueDynamic(this, &ThisClass::CurrentBatteryCapacityChanged);
-	}
 
 	if (bStartActive)
 	{
@@ -58,7 +45,6 @@ bool ALimenTool::ActivateTool()
 	
 	bIsActive = true;
 	ToolActivated();
-	BP_OnToolActivated();
 
 	OnToolActiveStateChanged.Broadcast(true);
 	return true;
@@ -66,79 +52,34 @@ bool ALimenTool::ActivateTool()
 
 void ALimenTool::DeactivateTool()
 {
+	if (!IsActive()) { return; }
+
 	bIsActive = false;
 	ToolDeactivated();
-	BP_OnToolDeactivated();
 
 	OnToolActiveStateChanged.Broadcast(false);
 }
 
-bool ALimenTool::Recharge(ALimenBattery* NewBattery)
+bool ALimenTool::ToggleTool()
 {
-	check(NewBattery != nullptr);
-	LastUsedBattery = NewBattery;
-
-	bWasActiveBeforeRecharge = IsActive();
-	
-	DeactivateTool();
-	OnBatteryRecharge(BatteryRechargeDelaySeconds);
-	bIsRecharging = true;
-	GetWorld()->GetTimerManager().SetTimer(RechargeTimer, this, &ThisClass::RechargeFinished, BatteryRechargeDelaySeconds);
-	
-	return true;
-}
-
-float ALimenTool::GetCurrentBatteryPercentage() const
-{
-	return BatteryAttribute.IsValid() ?  BatteryAttribute->GetCurrentValueAsPercentage() : 100.f;
+	if (IsActive()) { DeactivateTool(); } else { ActivateTool(); }
+	return IsActive();
 }
 
 bool ALimenTool::CanActivate() const
 {
-	if (BatteryAttribute.IsValid() && BatteryAttribute->IsEmpty())
-	{
-		return false;
-	}
-	if (bIsRecharging)
-	{
-		return false;
-	}
+	return !IsActive();
+}
 
-	return true;
+bool ALimenTool::IsActive() const
+{
+	return bIsActive;
 }
 
 void ALimenTool::ToolActivated()
 {
-	if (BatteryAttribute.IsValid()) BatteryAttribute->FreezeAttribute(false);
 }
 
 void ALimenTool::ToolDeactivated()
 {
-	if (BatteryAttribute.IsValid()) BatteryAttribute->FreezeAttribute(true);
-}
-
-void ALimenTool::RechargeFinished()
-{
-	check(BatteryAttribute->IsFrozen())
-	
-	BatteryAttribute->FreezeAttribute(false);
-	BatteryAttribute->SetCurrentValueAsMax();
-	BatteryAttribute->FreezeAttribute(true);
-	
-	bIsRecharging = false;
-	OnBatteryChanged.Broadcast(BatteryAttribute->GetCurrentValue());
-
-	if (bWasActiveBeforeRecharge)
-	{
-		ActivateTool();
-	}
-}
-
-void ALimenTool::CurrentBatteryCapacityChanged(ULimenAttributeBase* Attribute, const float NewValue)
-{
-}
-
-void ALimenTool::BatteryEmpty(ULimenAttributeBase* Attribute, const float NewValue)
-{
-	DeactivateTool();
 }

@@ -33,6 +33,12 @@ public:
 	virtual FBPInteractableComponentDelegate* GetBlueprintInteractionDelegate() = 0;
 	virtual FBPInteractableComponentDelegate* GetBlueprintInteractionStoppedDelegate() = 0;
 	virtual UPrimitiveComponent* GetPrimitiveComponent() = 0;
+	template<typename T>
+	T* GetPrimitiveComponent()
+	{
+		static_assert(TIsDerivedFrom<T, UPrimitiveComponent>::Value);
+		return Cast<T>(GetPrimitiveComponent());
+	}
 
 	virtual void NotifyHover(AController* Controller, APawn* Pawn) = 0;
 	virtual void NotifyUnHover(AController* Controller, APawn* Pawn) = 0;

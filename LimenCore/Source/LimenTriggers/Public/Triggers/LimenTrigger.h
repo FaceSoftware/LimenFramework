@@ -35,13 +35,6 @@ protected:
 	                          FVector NormalImpulse, const FHitResult& Hit);
 
 private:
-	UPROPERTY(EditDefaultsOnly, Category="Limen|Rules")
-	bool bDestroyAfterFirstTrigger;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintGetter="GetCollisionComponent", Category="Limen|Components")
 	TObjectPtr<UBoxComponent> CollisionComponent;
-
-	FTimerHandle DestroyTimer;
-	void SetDestroyTimer();
-	void DestroyHandler();
 };

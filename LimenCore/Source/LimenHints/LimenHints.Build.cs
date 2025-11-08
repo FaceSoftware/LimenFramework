@@ -12,6 +12,7 @@ public class LimenHints : ModuleRules
                 "Core", 
                 "LimenCore",
                 "LimenWidgets",
+                "LimenTriggers",
             }
         );
 

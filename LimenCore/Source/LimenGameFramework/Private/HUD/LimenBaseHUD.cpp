@@ -104,7 +104,6 @@ void ALimenBaseHUD::UpdateWidgets(APlayerController* PlayerController, APawn* Pa
 	
 	bAreWidgetsInitialized = true;
 	HudInitialized(PlayerController); // C++ call (priority)
-	BP_HudInitialized(PlayerController); // Blueprint events call
 }
 
 bool ALimenBaseHUD::CanSwitchWidgetVisibility(UWidget* InWidget) const

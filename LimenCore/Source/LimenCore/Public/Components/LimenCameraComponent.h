@@ -67,15 +67,18 @@ protected:
 	bool bInvertTilt;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tilt")
 	bool bEnableTilt;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
+	bool bEnableZoom;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(EditCondition="bEnableZoom"))
 	FFloatRange CameraZoomRange;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(EditCondition="bEnableZoom"))
 	FFloatRange FirstPersonZoomRange;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(EditCondition="bEnableZoom"))
 	float ZoomMultiplier;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(ClampMin=0))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(ClampMin=0), meta=(EditCondition="bEnableZoom"))
 	float CameraZoomInterpolationSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(ClampMin=0))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Zoom", meta=(ClampMin=0), meta=(EditCondition="bEnableZoom"))
 	float FirstPersonZoomInterpolationSpeed;
 	
 private:

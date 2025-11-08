@@ -23,29 +23,19 @@ class LIMENTOOLS_API ALimenTool : public ALimenPhysicalItem
 {
 	GENERATED_BODY()
 
-public:
-	UPROPERTY(BlueprintAssignable)
-	FBatteryChanged OnBatteryChanged;
-	
+public:	
 	UPROPERTY(BlueprintAssignable)
 	FToolActivationDelegate OnToolActiveStateChanged;
 	
 	ALimenTool();
 	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable)
 	bool ActivateTool();
-	UFUNCTION(BlueprintCallable)
 	void DeactivateTool();
-
-	UFUNCTION(BlueprintCallable)
-	bool Recharge(ALimenBattery* NewBattery);
-	UFUNCTION(BlueprintCallable)
-	float GetCurrentBatteryPercentage() const;
+	bool ToggleTool();
 
 	virtual bool CanActivate() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Tools")
-	bool IsActive() const { return bIsActive; }
+	bool IsActive() const;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
@@ -53,53 +43,19 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
 	bool bStartActive;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
-	float DrainPerSecond;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
-	float BatteryRechargeDelaySeconds;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen")
-	TSubclassOf<ALimenBattery> CompatibleBatteryClass;
 
 	/**
 	 * @brief Called after a request to activate this tool is made, should be overriden to implement the specific tool's logic.
-	 * Eg. Make light visible for a flashlight.
+	 * E.g. Make light visible for a flashlight.
 	 */
 	virtual void ToolActivated();
 	/**
 	 * @brief Called after a request to deactivate this tool is made, should be overriden to implement the specific tool's logic.
-	 * Eg. Make light invisible for a flashlight.
+	 * E.g. Make light invisible for a flashlight.
 	 */
 	virtual void ToolDeactivated();
-	
-	/**
-	 * @brief Called after a request to deactivate this tool is made.
-	 */
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, DisplayName="On Tool Activated")
-	void BP_OnToolActivated();
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCosmetic, DisplayName="On Tool Deactivated")
-	void BP_OnToolDeactivated();
-	
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnBatteryRecharge(const float RechargeTime);
 
 private:
-	UPROPERTY()
-	TWeakObjectPtr<ALimenBattery> LastUsedBattery;
-	UPROPERTY()
-	TWeakObjectPtr<ULimenBatteryAttribute> BatteryAttribute;
-	
-	FTimerHandle RechargeTimer;
-	bool bIsRecharging;
+	UPROPERTY(SaveGame, Transient)
 	bool bIsActive;
-	bool bWasActiveBeforeRecharge;
-	
-	void RechargeFinished();
-
-	UFUNCTION()
-	void CurrentBatteryCapacityChanged(ULimenAttributeBase* Attribute, const float NewValue);
-	UFUNCTION()
-	void BatteryEmpty(ULimenAttributeBase* Attribute, const float NewValue);
 };

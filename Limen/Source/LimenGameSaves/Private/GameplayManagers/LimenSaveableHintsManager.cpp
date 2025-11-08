@@ -64,7 +64,7 @@ void ALimenSaveableHintsManager::LoadSavedHints()
 	
 	InitializeHints();
 	
-	for (ULimenHint* Hint : Hints)
+	for (TStrongObjectPtr<ULimenHint>& Hint : Hints)
 	{
 		Hint->OnHintDismissed.AddLambda([this, Hint]
 		{
@@ -88,7 +88,7 @@ void ALimenSaveableHintsManager::SaveHints()
 
 void ALimenSaveableHintsManager::SetupRemoveStaleHints()
 {
-	for (ULimenHint* Hint : Hints)
+	for (TStrongObjectPtr<ULimenHint>& Hint : Hints)
 	{
 		Hint->OnHintDismissed.AddLambda([this, Hint]
 		{
