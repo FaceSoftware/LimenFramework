@@ -18,7 +18,7 @@ FLimenTickCheck::~FLimenTickCheck()
 
 void FLimenTickCheck::AddLambda(const TFunction<bool()>& InFunc)
 {
-	InFunc.CheckCallable();
+	check(InFunc);
 
 	if (World == nullptr)
 	{

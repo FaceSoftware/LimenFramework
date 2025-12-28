@@ -88,7 +88,7 @@ void ALimenProceduralTileMapBuilder::SpawnTilesAsync(const FGuid& MapId, const F
 		if (CurrentTileSpawnIndex >= Map->Count() - 1)
 		{
 			CurrentTileSpawnIndex = 0;
-			FinishCallback.CheckCallable();
+			check(FinishCallback)
 			FinishCallback(true, Map);
 			
 			GetWorld()->GetTimerManager().ClearTimer(TileSpawnTimer);
@@ -116,7 +116,7 @@ void ALimenProceduralTileMapBuilder::DespawnTilesAsync(const FGuid& MapId, const
 		if (CurrentTileDespawnIndex >= Map->Count() - 1)
 		{
 			CurrentTileDespawnIndex = 0;
-			FinishCallback.CheckCallable();
+			check(FinishCallback)
 			FinishCallback(true, Map);
 
 			GetWorld()->GetTimerManager().ClearTimer(TileDespawnTimer);
@@ -171,7 +171,7 @@ void ALimenProceduralTileMapBuilder::StartBuildingMap(const FGuid& MapId, const 
 	{		
 		AssignStartAndEndTiles(MapId);
 
-		FinishCallback.CheckCallable();
+		check(FinishCallback)
 		FinishCallback(bSuccess, BuiltMap);
 	});
 }
@@ -182,7 +182,7 @@ void ALimenProceduralTileMapBuilder::StartDestroyingMap(const FGuid& MapId, cons
 	{
 		DeAssignStartAndEndTiles(MapId);
 
-		FinishCallback.CheckCallable();
+		check(FinishCallback)
 		FinishCallback(true, DestroyedMap);
 	});
 }

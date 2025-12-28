@@ -43,6 +43,16 @@ void SMouseDetector::Construct(const FArguments& InArgs)
 		MouseDragHandler = InArgs._OnMouseDrag;
 	}
 
+	if (InArgs._OnDragOver.IsBound())
+	{
+		DragOverHandler = InArgs._OnDragOver;
+	}
+
+	if (InArgs._OnDrop.IsBound())
+	{
+		DropHandler = InArgs._OnDrop;
+	}
+
 	ChildSlot
 	.HAlign(HAlign_Fill)
 	.VAlign(VAlign_Fill)
@@ -56,5 +66,23 @@ FReply SMouseDetector::OnDragDetected(const FGeometry& MyGeometry, const FPointe
 		return MouseDragHandler.Execute(MyGeometry, MouseEvent);
 	}
 
+	return FReply::Unhandled();
+}
+
+FReply SMouseDetector::OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent)
+{
+	if (DragOverHandler.IsBound())
+	{
+		return DragOverHandler.Execute(MyGeometry, DragDropEvent);
+	}
+	return FReply::Unhandled();
+}
+
+FReply SMouseDetector::OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent)
+{
+	if (DropHandler.IsBound())
+	{
+		return DropHandler.Execute(MyGeometry, DragDropEvent);
+	}
 	return FReply::Unhandled();
 }

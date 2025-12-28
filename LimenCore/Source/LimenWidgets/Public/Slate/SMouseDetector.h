@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
 
+DECLARE_DELEGATE_RetVal_TwoParams(FReply, FDragDropEventHandler, const FGeometry&, const FDragDropEvent&);
+
 /**
  * 
  */
@@ -12,10 +14,6 @@ class LIMENWIDGETS_API SMouseDetector : public SCompoundWidget
 {
 public:
 	SLATE_BEGIN_ARGS(SMouseDetector)
-		: _OnMouseButtonDown()
-		, _OnMouseButtonUp()
-		, _OnMouseMove()
-		, _OnMouseDoubleClick()
 	{
 	}
 		
@@ -26,6 +24,8 @@ public:
 		SLATE_EVENT( FPointerEventHandler, OnMouseDrag )
 		SLATE_EVENT( FNoReplyPointerEventHandler, OnMouseHover )
 		SLATE_EVENT( FSimpleNoReplyPointerEventHandler, OnMouseUnHover )
+		SLATE_EVENT( FDragDropEventHandler, OnDragOver )
+		SLATE_EVENT( FDragDropEventHandler, OnDrop )
 
 	SLATE_END_ARGS()
 
@@ -34,7 +34,11 @@ public:
 
 protected:
 	virtual FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
+	virtual FReply OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& MouseEvent) override;
+	virtual FReply OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
 	
 private:
 	FPointerEventHandler MouseDragHandler;
+	FDragDropEventHandler DragOverHandler;
+	FDragDropEventHandler DropHandler;
 };

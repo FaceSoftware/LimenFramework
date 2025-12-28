@@ -58,7 +58,7 @@ private:
 		}
 		virtual bool ExecuteSlice(const double BudgetSeconds) override
 		{
-			Job.CheckCallable();
+			check(Job)
 			return Job(BudgetSeconds);
 		}
 
@@ -73,7 +73,7 @@ private:
 		}
 		virtual bool ExecuteSlice(const double BudgetSeconds) override
 		{
-			Job.CheckCallable();
+			check(Job)
 			Job();
 			return true;
 		}
