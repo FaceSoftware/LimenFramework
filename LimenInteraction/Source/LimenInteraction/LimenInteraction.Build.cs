@@ -41,6 +41,8 @@ public class LimenInteraction : ModuleRules
 				"Slate",
 				"SlateCore",
 				"UMG",
+				"InputCore",
+				
 				"LimenWidgets",
 				"LimenSaveSystem",
 				"NetCore",
