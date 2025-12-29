@@ -6,14 +6,13 @@
 #include "Components/LimenGridInventoryComponent.h"
 #include "Widgets/LimenWidget.h"
 #include "Widgets/SCompoundWidget.h"
-#include "LimenGridInventory.generated.h"
+#include "LimenGridInventoryEntryWidget.generated.h"
 
 
 struct FInventoryCellUpdate;
 class ULimenGridItemComponent;
 class ALimenItemBase;
 class ULimenGridInventoryComponent;
-
 
 UENUM(BlueprintType)
 enum class EGridCellHighlightCase : uint8
@@ -23,6 +22,23 @@ enum class EGridCellHighlightCase : uint8
 	ValidPlacement,
 };
 
+USTRUCT(BlueprintType)
+struct FInventoryGridCellData
+{
+	GENERATED_BODY()
+	
+	FInventoryGridCellData();
+	
+	UPROPERTY(BlueprintReadOnly)
+	bool bHasItem;
+	UPROPERTY(BlueprintReadOnly)
+	int32 StackNumber;
+	UPROPERTY(BlueprintReadOnly)
+	FSlateBrush Icon;
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<ULimenGridInventoryComponent> Inventory;
+};
+
 
 UCLASS()
 class LIMENINTERACTION_API ULimenGridCellWidget : public ULimenWidget
@@ -30,16 +46,17 @@ class LIMENINTERACTION_API ULimenGridCellWidget : public ULimenWidget
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintImplementableEvent)
-	void StackNumberUpdated(int32 NewStackNumber);
-	UFUNCTION(BlueprintImplementableEvent)
-	void PlacementHighlightCaseChanged(EGridCellHighlightCase NewCase);
-	UFUNCTION(BlueprintImplementableEvent)
-	void ItemIconChanged(const FSlateBrush& InIcon);
+	virtual void SetPlacementHighlightCase(EGridCellHighlightCase NewCase);
+	virtual void SetCellData(const FInventoryGridCellData& InData);
 	
 protected:
+	const FInventoryGridCellData& GetCellData() const;
 	
 private:
+	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess = true))
+	FInventoryGridCellData CellData;
+	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess = true))
+	EGridCellHighlightCase CurrentHighlightCase;
 };
 
 
@@ -118,52 +135,4 @@ private:
 	virtual FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	
 	void CreateWidgetInternal();
-};
-
-
-class LIMENINTERACTION_API SLimenGridInventory : public SCompoundWidget
-{	
-	SLATE_DECLARE_WIDGET(SLimenGridInventory, SCompoundWidget)
-
-public:	
-	
-	SLATE_BEGIN_ARGS(SLimenGridInventory)
-		{
-		}
-
-		SLATE_ARGUMENT(ULimenGridInventoryComponent*, Inventory)
-		SLATE_ARGUMENT(FVector2D, CellSize)
-		SLATE_ARGUMENT(TSubclassOf<ULimenGridCellWidget>, CellWidget)
-
-	SLATE_END_ARGS()
-	
-	SLimenGridInventory();
-	void Construct(const FArguments& InArgs);
-	
-	void SetInventory(ULimenGridInventoryComponent* InInventory);
-
-private:
-	TWeakObjectPtr<ULimenGridInventoryComponent> InventoryComponent;
-	
-	FIntVector2 InventorySize;
-	FVector2D CellSize;
-	TSubclassOf<ULimenGridCellWidget> CellWidget;
-
-	TSharedPtr<SGridPanel> GridPanel;
-	FDelegateHandle CellUpdateDelegateHandle;
-	TSet<FIntVector2> HighlightedCells;
-	TArray<TSharedPtr<SLimenGridInventoryEntry>> GridCellWidgets;
-	
-	virtual FReply OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
-	virtual FReply OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
-	virtual void OnDragLeave(const FDragDropEvent& DragDropEvent) override;
-	
-	virtual void InventoryCellUpdate(const TArray<FInventoryCellUpdate>& Updates);
-	
-	FIntVector2 CursorPositionToCellCoordinate(const FGeometry& MyGeometry, const FVector2D& ScreenCursorPosition) const;
-	TOptional<FIntVector2> GetRootCellCoordinates(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) const;
-	static TSet<FIntVector2> GetPlacementCells(const FIntVector2& RootCell, const FDragDropEvent& DragDropEvent);
-	
-	void CreateInventoryGrid();
-	void ClearHighlightedCells();
 };
