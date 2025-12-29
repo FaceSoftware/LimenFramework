@@ -4,38 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "DataAssets/LimenGridItemDatabase.h"
 #include "Interfaces/LimenInventory.h"
 #include "LimenGridInventoryComponent.generated.h"
 
 
-class ALimenItemBase;
+class ULimenGridItemDatabase;
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class ULimenGridItemComponent : public UActorComponent
-{
-	GENERATED_BODY()
-
-public:
-	ULimenGridItemComponent();
-	
-	FIntVector2 GetSize() const;
-	bool CanStack() const;
-	FSlateBrush GetIcon();
-	
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grid Item")
-	FIntVector2 Size;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grid Item")
-	bool bCanStack;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grid Item")
-	FSlateBrush ItemBrush;
-};
-
-
-class FGridInventoryCell
+struct FGridInventoryCell
 {
 public:
-	static FGridInventoryCell MakeParent(ULimenGridItemComponent* InItem = nullptr);
+	static FGridInventoryCell MakeParent();
+	static FGridInventoryCell MakeParent(const FGridItemDefinition& Definition, ALimenItemBase* InItem);
+	static FGridInventoryCell MakeParent(const FGridItemDefinition& Definition, const TArray<TWeakObjectPtr<ALimenItemBase>>& InItems);
 	static FGridInventoryCell MakeChild(FGridInventoryCell* Parent);
 	
 	FGridInventoryCell();
@@ -43,14 +24,19 @@ public:
 	bool IsOccupied() const;
 	FGridInventoryCell* GetParent() const;
 	const TArray<FGridInventoryCell*>& GetChildren() const;
-	ULimenGridItemComponent* GetItem();
-	ULimenGridItemComponent* PeekItem() const;
+	TWeakObjectPtr<ALimenItemBase> GetItem();
+	TArray<TWeakObjectPtr<ALimenItemBase>> GetItems();
+	const TArray<TWeakObjectPtr<ALimenItemBase>>& PeekItems() const;
+	TSubclassOf<ALimenItemBase> GetItemClass() const;
 	void AddChild(FGridInventoryCell* Child);
+	const FGridItemDefinition* GetDefinition() const;
+	void AddItem(ALimenItemBase* Item);
 
 private:
 	FGridInventoryCell* ParentCell;
 	TArray<FGridInventoryCell*> ChildCells;
-	TWeakObjectPtr<ULimenGridItemComponent> Item;
+	TArray<TWeakObjectPtr<ALimenItemBase>> Items;
+	FGridItemDefinition GridItemDefinition;
 };
 
 struct FInventoryCellUpdate
@@ -75,19 +61,28 @@ public:
 	ULimenGridInventoryComponent();
 	virtual void BeginPlay() override;
 	
-	bool CanPutItemAt(const ULimenGridItemComponent* GridItem, const FIntVector2& Coordinates) const;
-	void AddItem(ULimenGridItemComponent* GridItem, const FIntVector2& Coordinates);
-	bool AddItem(ULimenGridItemComponent* GridItem);
-	void MoveItem(ULimenGridItemComponent* GridItem, const FIntVector2& NewCoordinates);
-	ULimenGridItemComponent* GetItem(const FIntVector2& Coordinates);
-	void GetItem(const ULimenGridItemComponent* Item);
-	ULimenGridItemComponent* PeekItem(const FIntVector2& Coordinates) const;
-	bool ContainsItem(const ULimenGridItemComponent* GridItem) const;
-	FIntVector2 GetItemCoordinates(const ULimenGridItemComponent* GridItem) const;
-	
+	bool CanPutItemAt(const ALimenItemBase* Item, const FIntVector2& Coordinates) const;
+	bool CanPutStackAt(const TArray<ALimenItemBase*>& Items, const FIntVector2& Coordinates) const;
+	bool CanPutStackAt(const TArray<TWeakObjectPtr<ALimenItemBase>>& Items, const FIntVector2& Coordinates) const;
+	void AddItem(ALimenItemBase* Item, const FIntVector2& Coordinates);
+	bool AddItem(ALimenItemBase* Item);
+	void AddItems(TArray<ALimenItemBase*>& Items, const FIntVector2& Coordinates);
+	void MoveItem(ALimenItemBase* Item, const FIntVector2& NewCoordinates);
+	void MoveItemStack(const FIntVector2& From, const FIntVector2& To);
+	ALimenItemBase* GetItem(const FIntVector2& Coordinates);
+	TArray<ALimenItemBase*> GetItemStack(const FIntVector2& Coordinates);
+	void GetItem(const ALimenItemBase* Item);
+	TArray<ALimenItemBase*> PeekItems(const FIntVector2& Coordinates) const;
+	bool ContainsItem(const ALimenItemBase* Item) const;
+	FIntVector2 GetItemCoordinates(const ALimenItemBase* Item) const;
 	FIntVector2 GetSize() const;
+	ULimenGridItemDatabase* GetItemDatabase() const;
+	
+	const FGridInventoryCell* GetCell(const FIntVector2& Coordinates) const;
 
 protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Inventory")
+	TObjectPtr<ULimenGridItemDatabase> ItemDatabase;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Inventory")
 	FIntVector2 Size;
 	

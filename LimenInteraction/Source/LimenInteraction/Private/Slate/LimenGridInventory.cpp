@@ -4,22 +4,19 @@
 #include "Slate/LimenGridInventory.h"
 
 #include "Components/LimenGridInventoryComponent.h"
+#include "Items/LimenItemBase.h"
 
 
 BEGIN_SLATE_FUNCTION_BUILD_OPTIMIZATION
 
-FGridEntryDragDropOperation::FGridEntryDragDropOperation(const FSlateBrush& InItemBrush, 
-														 const FIntVector2& Coordinates,
-														 const FIntVector2& ItemGridSize,
-														 ULimenGridItemComponent* BoundItem,
-														 const FVector2D& GridCellSize,
-														 ULimenGridInventoryComponent* BoundInventoryComponent)
-														 :
-														 ItemBrush(InItemBrush),
+FGridEntryDragDropOperation::FGridEntryDragDropOperation(const FIntVector2& Coordinates,
+                                                         const FVector2D& GridCellSize,
+                                                         const FGridInventoryCell* InGridInventoryCell,
+                                                         ULimenGridInventoryComponent* BoundInventoryComponent)
+															 : 
 														 Coordinates(Coordinates),
-														 ItemGridSize(ItemGridSize),
 														 GridCellSize(GridCellSize),
-														 BoundItem(BoundItem),
+														 GridCell(InGridInventoryCell),
 														 BoundInventoryComponent(BoundInventoryComponent)
 {
 	bCreateNewWindow = false;
@@ -34,16 +31,16 @@ void FGridEntryDragDropOperation::OnDragged(const FDragDropEvent& DragDropEvent)
 TSharedPtr<SWidget> FGridEntryDragDropOperation::GetDefaultDecorator() const
 {
 	return SNew(SBox)
-		.WidthOverride(GridCellSize.X * ItemGridSize.X)
-		.HeightOverride(GridCellSize.Y * ItemGridSize.Y)
+		.WidthOverride(GridCellSize.X * GetItemGridSize().X)
+		.HeightOverride(GridCellSize.Y * GetItemGridSize().Y)
 		[
-			SNew(SImage).Image(&ItemBrush)
+			SNew(SImage).Image(&GetItemBrush())
 		];
 }
 
 FVector2D FGridEntryDragDropOperation::GetDecoratorPosition() const
 {
-	return CursorPosition - GridCellSize * FVector2D(ItemGridSize.X, ItemGridSize.Y) * 0.5f;
+	return CursorPosition - GridCellSize * FVector2D(GetItemGridSize().X, GetItemGridSize().Y) * 0.5f;
 }
 
 SLATE_IMPLEMENT_WIDGET(SLimenGridInventoryEntry)
@@ -52,49 +49,44 @@ void SLimenGridInventoryEntry::PrivateRegisterAttributes(FSlateAttributeInitiali
 {
 }
 
-SLimenGridInventoryEntry::SLimenGridInventoryEntry()
+SLimenGridInventoryEntry::SLimenGridInventoryEntry() : GridCell(nullptr)
 {
 }
 
 void SLimenGridInventoryEntry::Construct(const FArguments& InArgs)
-{
-	DefaultBackgroundBrush = InArgs._DefaultBackgroundBrush;
-	InvalidPlacementHighlightBrush = InArgs._InvalidPlacementHighlightBrush;
-	ValidPlacementHighlightBrush = InArgs._ValidPlacementHighlightBrush;
+{	
+	GridCell = InArgs._GridCell;
 
-	ItemBrush = InArgs._ItemBrush;
-	
-	BoundItem = InArgs._BoundItem;
 	BoundInventoryComponent = InArgs._BoundInventoryComponent;
+
 	Coordinates = InArgs._Coordinates;
 	GridCellSize = InArgs._GridCellSize;
+	CellWidget = InArgs._CellWidget;
 	
-	CreateWidget();
+	CreateWidgetInternal();
 }
 
 void SLimenGridInventoryEntry::RemoveHighlight()
 {
-	if (HighlightImage.IsValid())
+	if (CellWidgetPtr.IsValid())
 	{
-		HighlightImage->SetVisibility(EVisibility::Hidden);
+		CellWidgetPtr->PlacementHighlightCaseChanged(EGridCellHighlightCase::None);
 	}
 }
 
 void SLimenGridInventoryEntry::SetInvalidPlacementHighlight()
 {
-	if (HighlightImage.IsValid())
+	if (CellWidgetPtr.IsValid())
 	{
-		HighlightImage->SetImage(&InvalidPlacementHighlightBrush);
-		HighlightImage->SetVisibility(EVisibility::Visible);
+		CellWidgetPtr->PlacementHighlightCaseChanged(EGridCellHighlightCase::InvalidPlacement);
 	}
 }
 
 void SLimenGridInventoryEntry::SetValidPlacementHighlight()
 {
-	if (HighlightImage.IsValid())
+	if (CellWidgetPtr.IsValid())
 	{
-		HighlightImage->SetImage(&ValidPlacementHighlightBrush);
-		HighlightImage->SetVisibility(EVisibility::Visible);
+		CellWidgetPtr->PlacementHighlightCaseChanged(EGridCellHighlightCase::ValidPlacement);
 	}
 }
 
@@ -110,52 +102,25 @@ FReply SLimenGridInventoryEntry::OnMouseButtonDown(const FGeometry& MyGeometry, 
 
 FReply SLimenGridInventoryEntry::OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
 {
-	if (!BoundItem.IsValid()) { return FReply::Unhandled(); }
-	const TSharedRef Op = MakeShared<FGridEntryDragDropOperation>(ItemBrush,
-																  Coordinates,
-																  BoundItem->GetSize(),
-																  BoundItem.Get(),
-																  GridCellSize,
-																  BoundInventoryComponent.Get());
+	if (GridCell->PeekItems().IsEmpty()) { return FReply::Unhandled(); }
+	const TSharedRef Op = MakeShared<FGridEntryDragDropOperation>(Coordinates, GridCellSize, GridCell, BoundInventoryComponent.Get());
 	return FReply::Handled().BeginDragDrop(Op);
 }
 
-void SLimenGridInventoryEntry::CreateWidget()
-{
-	TSharedRef BackgroundImage = SNew(SImage)
-			.Image(&DefaultBackgroundBrush);
+void SLimenGridInventoryEntry::CreateWidgetInternal()
+{	
+	if (!CellWidget) { return; }
 	
-	HighlightImage = SNew(SImage)
-		.Visibility(EVisibility::Hidden);
-
-	const TSharedRef<SOverlay> Root = SNew(SOverlay)
-		+SOverlay::Slot()
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			BackgroundImage
-		]
-		+SOverlay::Slot()
-		.HAlign(HAlign_Fill)
-		.VAlign(VAlign_Fill)
-		[
-			HighlightImage.ToSharedRef()
-		];
+	APlayerController* PlayerController = BoundInventoryComponent->GetWorld()->GetFirstPlayerController();
+	CellWidgetPtr = TStrongObjectPtr(CreateWidget<ULimenGridCellWidget>(PlayerController, CellWidget));
+	if (!CellWidgetPtr.IsValid()) { checkNoEntry() return; }
 	
-	if (BoundItem.IsValid())
-	{
-		Root->AddSlot()
-			.HAlign(HAlign_Fill)
-			.VAlign(VAlign_Fill)
-			[
-				SNew(SImage)
-				.Image(&ItemBrush)
-			];
-	}
+	CellWidgetPtr->ItemIconChanged(GridCell->GetDefinition()->Icon);
+	CellWidgetPtr->StackNumberUpdated(GridCell->PeekItems().Num());
 	
 	ChildSlot
 	[
-		Root
+		CellWidgetPtr->TakeWidget()
 	];
 }
 
@@ -173,9 +138,9 @@ void SLimenGridInventory::Construct(const FArguments& InArgs)
 {	
 	SetInventory(InArgs._Inventory);
 	CellSize = InArgs._CellSize;
-	CellBackgroundBrush = InArgs._CellBackgroundBrush;
-	InvalidPlacementHighlightBrush = InArgs._InvalidPlacementHighlightBrush;
-	ValidPlacementHighlightBrush = InArgs._ValidPlacementHighlightBrush;
+	CellWidget = InArgs._CellWidget;
+	
+	
 	
 	CreateInventoryGrid();
 	
@@ -219,9 +184,9 @@ FReply SLimenGridInventory::OnDragOver(const FGeometry& MyGeometry, const FDragD
 	const TSharedPtr Operation = DragDropEvent.GetOperationAs<FGridEntryDragDropOperation>();
 	if (!Operation.IsValid()) { return FReply::Unhandled(); }
 	
-	if (const ULimenGridItemComponent* GridItem = Operation->GetBoundItem())
+	if (const TArray<TWeakObjectPtr<ALimenItemBase>>& GridItems = Operation->GetBoundItems(); !GridItems.IsEmpty())
 	{
-		const bool bCanAdd = InventoryComponent.Get()->CanPutItemAt(GridItem, RootCellCoordinates.GetValue());
+		const bool bCanAdd = InventoryComponent.Get()->CanPutStackAt(GridItems, RootCellCoordinates.GetValue()) != 0;
 		
 		for (const FIntVector2& Cell : PlacementCells)
 		{
@@ -252,15 +217,14 @@ FReply SLimenGridInventory::OnDrop(const FGeometry& MyGeometry, const FDragDropE
 	const TSharedPtr Operation = DragDropEvent.GetOperationAs<FGridEntryDragDropOperation>();
 	if (!Operation.IsValid()) { return FReply::Unhandled(); }
 
-	if (ULimenGridItemComponent* GridItem = Operation->GetBoundInventoryComponent()->GetItem(Operation->GetCoordinates()))
+	if (InventoryComponent->CanPutStackAt(Operation->GetBoundItems(), RootCellCoordinates.GetValue()))
 	{
-		if (InventoryComponent.Get()->CanPutItemAt(GridItem, RootCellCoordinates.GetValue()))
+		auto Stack = Operation->GetBoundInventoryComponent()->GetItemStack(Operation->GetCoordinates());
+		InventoryComponent->AddItems(Stack, RootCellCoordinates.GetValue());
+		
+		if (!Stack.IsEmpty()) // return left over items from the stack
 		{
-			InventoryComponent->AddItem(GridItem, RootCellCoordinates.GetValue());
-		}
-		else
-		{
-			InventoryComponent.Get()->AddItem(GridItem, Operation->GetCoordinates());
+			Operation->GetBoundInventoryComponent()->AddItems(Stack, Operation->GetCoordinates());
 		}
 	}
 
@@ -288,25 +252,22 @@ void SLimenGridInventory::InventoryCellUpdate(const TArray<FInventoryCellUpdate>
 FIntVector2 SLimenGridInventory::CursorPositionToCellCoordinate(const FGeometry& MyGeometry,
 	const FVector2D& ScreenCursorPosition) const
 {
-	// Screen → local space
+	// Screen to local space
 	const FVector2D LocalPos = MyGeometry.AbsoluteToLocal(ScreenCursorPosition);
 
-	// Local → cell coordinates
-	const FVector2D CellSizePx = CellSize;
-	if (CellSizePx.X <= 0.f || CellSizePx.Y <= 0.f)
-	{
-		return FIntVector2(-1, -1);
-	}
+	// Local to cell coordinates
+	if (CellSize.X <= 0.f || CellSize.Y <= 0.f) { return FIntVector2(INDEX_NONE); }
 
-	int32 CellX = FMath::FloorToInt(LocalPos.X / CellSizePx.X);
-	int32 CellY = FMath::FloorToInt(LocalPos.Y / CellSizePx.Y);
+	// Rounding so it matches the closes position to the mouse cursor
+	const int32 DesiredCellX = FMath::RoundHalfFromZero(LocalPos.X / CellSize.X);
+	const int32 DesiredCellY = FMath::RoundHalfFromZero(LocalPos.Y / CellSize.Y);
 
 	// Clamp to inventory bounds
 	const FIntVector2 Size = InventorySize;
-	CellX = FMath::Clamp(CellX, 0, Size.X - 1);
-	CellY = FMath::Clamp(CellY, 0, Size.Y - 1);
+	const int32 TargetCellX = FMath::Clamp(DesiredCellX, 0, Size.X - 1);
+	const int32 TargetCellY = FMath::Clamp(DesiredCellY, 0, Size.Y - 1);
 
-	return FIntVector2(CellX, CellY);
+	return FIntVector2(TargetCellX, TargetCellY);
 }
 
 TOptional<FIntVector2> SLimenGridInventory::GetRootCellCoordinates(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) const
@@ -356,19 +317,17 @@ void SLimenGridInventory::CreateInventoryGrid()
 			const FIntVector2 CurrentCoordinates(X, Y);
 			if (SkipCoordinates.Contains(CurrentCoordinates)) { continue; }
 			
-			ULimenGridItemComponent* GridItem = InventoryComponent.Get()->PeekItem(CurrentCoordinates);
+			TArray<ALimenItemBase*> GridItems = InventoryComponent.Get()->PeekItems(CurrentCoordinates);
+			const FGridInventoryCell* Cell = InventoryComponent->GetCell(CurrentCoordinates);
 
 			TSharedRef<SLimenGridInventoryEntry> WidgetEntry = SNew(SLimenGridInventoryEntry)
-				.DefaultBackgroundBrush(CellBackgroundBrush)
-				.InvalidPlacementHighlightBrush(InvalidPlacementHighlightBrush)
-				.ValidPlacementHighlightBrush(ValidPlacementHighlightBrush)
-				.ItemBrush(GridItem ? GridItem->GetIcon() : FSlateBrush())
-				.BoundItem(GridItem)
+				.GridCell(Cell)
 				.BoundInventoryComponent(InventoryComponent.Get())
 				.Coordinates(CurrentCoordinates)
-				.GridCellSize(CellSize);
+				.GridCellSize(CellSize)
+				.CellWidget(CellWidget);
 			
-			const FIntVector2 ItemSize = GridItem ? GridItem->GetSize() : FIntVector2(1, 1);
+			const FIntVector2 ItemSize = Cell->GetDefinition()->Size;
 			
 			GridPanel->AddSlot(X, Y)
 				.HAlign(HAlign_Fill)

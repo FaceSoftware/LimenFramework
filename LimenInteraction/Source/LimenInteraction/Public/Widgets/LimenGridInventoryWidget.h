@@ -7,8 +7,10 @@
 #include "LimenGridInventoryWidget.generated.h"
 
 
+class ULimenGridCellWidget;
 class ULimenGridInventoryComponent;
 class SLimenGridInventory;
+
 
 /**
  * 
@@ -28,11 +30,7 @@ public:
 	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grid Inventory")
-	FSlateBrush CellBackgroundBrush;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grid Inventory")
-	FSlateBrush InvalidPlacementHighlightBrush;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grid Inventory")
-	FSlateBrush ValidPlacementHighlightBrush;
+	TSubclassOf<ULimenGridCellWidget> CellWidget;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grid Inventory")
 	FVector2D CellSize;
 

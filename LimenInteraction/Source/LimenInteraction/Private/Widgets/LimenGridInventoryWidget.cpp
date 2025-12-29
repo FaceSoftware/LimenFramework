@@ -13,11 +13,9 @@ ULimenGridInventoryWidget::ULimenGridInventoryWidget()
 TSharedRef<SWidget> ULimenGridInventoryWidget::RebuildWidget()
 {
 	GridInventory = SNew(SLimenGridInventory)
-		.CellBackgroundBrush(CellBackgroundBrush)
-		.InvalidPlacementHighlightBrush(InvalidPlacementHighlightBrush)
-		.ValidPlacementHighlightBrush(ValidPlacementHighlightBrush)
 		.CellSize(CellSize)
-		.Inventory(GridInventoryComponent.Get());
+		.Inventory(GridInventoryComponent.Get())
+		.CellWidget(CellWidget);
 	
 	return GridInventory.ToSharedRef();
 }

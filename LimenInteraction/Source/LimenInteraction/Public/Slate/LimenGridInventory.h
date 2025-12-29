@@ -3,7 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/LimenGridInventoryComponent.h"
+#include "Widgets/LimenWidget.h"
 #include "Widgets/SCompoundWidget.h"
+#include "LimenGridInventory.generated.h"
 
 
 struct FInventoryCellUpdate;
@@ -12,34 +15,61 @@ class ALimenItemBase;
 class ULimenGridInventoryComponent;
 
 
+UENUM(BlueprintType)
+enum class EGridCellHighlightCase : uint8
+{
+	None,
+	InvalidPlacement,
+	ValidPlacement,
+};
+
+
+UCLASS()
+class LIMENINTERACTION_API ULimenGridCellWidget : public ULimenWidget
+{
+	GENERATED_BODY()
+	
+public:
+	UFUNCTION(BlueprintImplementableEvent)
+	void StackNumberUpdated(int32 NewStackNumber);
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlacementHighlightCaseChanged(EGridCellHighlightCase NewCase);
+	UFUNCTION(BlueprintImplementableEvent)
+	void ItemIconChanged(const FSlateBrush& InIcon);
+	
+protected:
+	
+private:
+};
+
+
 class FGridEntryDragDropOperation : public FDragDropOperation
 {
 public:
 	DRAG_DROP_OPERATOR_TYPE(FGridEntryDragDropOperation, FDragDropOperation)
 
-	explicit FGridEntryDragDropOperation(const FSlateBrush& InItemBrush,
-										 const FIntVector2& Coordinates,
-										 const FIntVector2& ItemGridSize,
-										 ULimenGridItemComponent* BoundItem,
+	explicit FGridEntryDragDropOperation(const FIntVector2& Coordinates,
 										 const FVector2D& GridCellSize,
+										 const FGridInventoryCell* InGridInventoryCell,
 										 ULimenGridInventoryComponent* BoundInventoryComponent);
+
 	virtual void OnDragged(const FDragDropEvent& DragDropEvent) override;
 	virtual TSharedPtr<SWidget> GetDefaultDecorator() const override;
 	virtual FVector2D GetDecoratorPosition() const override;
 		
-	FSlateBrush GetItemBrush() const { return ItemBrush; }
+	const FSlateBrush& GetItemBrush() const { return GridCell->GetDefinition()->Icon; }
 	FIntVector2 GetCoordinates() const { return Coordinates; }
-	FIntVector2 GetItemGridSize() const { return ItemGridSize; }
-	ULimenGridItemComponent* GetBoundItem() const { return BoundItem.Get(); }
+	FIntVector2 GetItemGridSize() const { return GridCell->GetDefinition()->Size; }
+	const TArray<TWeakObjectPtr<ALimenItemBase>>& GetBoundItems() const { return GridCell->PeekItems(); }
 	ULimenGridInventoryComponent* GetBoundInventoryComponent() const { return BoundInventoryComponent.Get(); }
 		
 private:
 	FVector2D CursorPosition;
-	FSlateBrush ItemBrush;
 	FIntVector2 Coordinates;
-	FIntVector2 ItemGridSize;
 	FVector2D GridCellSize;
-	TWeakObjectPtr<ULimenGridItemComponent> BoundItem;
+
+	const FGridInventoryCell* GridCell;
+	
 	TWeakObjectPtr<ULimenGridInventoryComponent> BoundInventoryComponent;
 };
 
@@ -56,16 +86,14 @@ public:
 		{
 		}
 
-		SLATE_ARGUMENT(ULimenGridItemComponent*, BoundItem)
+		SLATE_ARGUMENT(TArray<TWeakObjectPtr<ULimenGridItemComponent>>, BoundItems)
 		SLATE_ARGUMENT(ULimenGridInventoryComponent*, BoundInventoryComponent)
 
-		SLATE_ARGUMENT(FSlateBrush, DefaultBackgroundBrush)
-		SLATE_ARGUMENT(FSlateBrush, InvalidPlacementHighlightBrush)
-		SLATE_ARGUMENT(FSlateBrush, ValidPlacementHighlightBrush)
-
-		SLATE_ARGUMENT(FSlateBrush, ItemBrush)
+		SLATE_ARGUMENT(const FGridInventoryCell*, GridCell)
 		SLATE_ARGUMENT(FIntVector2, Coordinates)
 		SLATE_ARGUMENT(FVector2D, GridCellSize)
+
+		SLATE_ARGUMENT(TSubclassOf<ULimenGridCellWidget>, CellWidget)
 
 	SLATE_END_ARGS()
 	
@@ -77,24 +105,19 @@ public:
 	void SetValidPlacementHighlight();
 
 private:
-	FSlateBrush DefaultBackgroundBrush;
-
-	FSlateBrush InvalidPlacementHighlightBrush;
-	FSlateBrush ValidPlacementHighlightBrush;
-
-	FSlateBrush ItemBrush;
+	const FGridInventoryCell* GridCell;
 	
-	TWeakObjectPtr<ULimenGridItemComponent> BoundItem;
 	TWeakObjectPtr<ULimenGridInventoryComponent> BoundInventoryComponent;
+	
 	FIntVector2 Coordinates;
 	FVector2D GridCellSize;
-	
-	TSharedPtr<SImage> HighlightImage;
+	TSubclassOf<ULimenGridCellWidget> CellWidget;
+	TStrongObjectPtr<ULimenGridCellWidget> CellWidgetPtr;
 	
 	virtual FReply OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	virtual FReply OnDragDetected(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent) override;
 	
-	void CreateWidget();
+	void CreateWidgetInternal();
 };
 
 
@@ -110,9 +133,7 @@ public:
 
 		SLATE_ARGUMENT(ULimenGridInventoryComponent*, Inventory)
 		SLATE_ARGUMENT(FVector2D, CellSize)
-		SLATE_ARGUMENT(FSlateBrush, CellBackgroundBrush)
-		SLATE_ARGUMENT(FSlateBrush, InvalidPlacementHighlightBrush)
-		SLATE_ARGUMENT(FSlateBrush, ValidPlacementHighlightBrush)
+		SLATE_ARGUMENT(TSubclassOf<ULimenGridCellWidget>, CellWidget)
 
 	SLATE_END_ARGS()
 	
@@ -126,17 +147,11 @@ private:
 	
 	FIntVector2 InventorySize;
 	FVector2D CellSize;
+	TSubclassOf<ULimenGridCellWidget> CellWidget;
 
-	FSlateBrush CellBackgroundBrush;
-	FSlateBrush InvalidPlacementHighlightBrush;
-	FSlateBrush ValidPlacementHighlightBrush;
-	
 	TSharedPtr<SGridPanel> GridPanel;
-	
 	FDelegateHandle CellUpdateDelegateHandle;
-	
 	TSet<FIntVector2> HighlightedCells;
-	
 	TArray<TSharedPtr<SLimenGridInventoryEntry>> GridCellWidgets;
 	
 	virtual FReply OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;

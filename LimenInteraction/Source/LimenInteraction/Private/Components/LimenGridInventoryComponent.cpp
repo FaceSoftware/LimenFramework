@@ -3,30 +3,36 @@
 
 #include "Components/LimenGridInventoryComponent.h"
 
+#include "DataAssets/LimenGridItemDatabase.h"
+#include "Items/LimenItemBase.h"
 
-ULimenGridItemComponent::ULimenGridItemComponent()
+
+FGridInventoryCell FGridInventoryCell::MakeParent()
 {
+	return FGridInventoryCell();
 }
 
-FIntVector2 ULimenGridItemComponent::GetSize() const
-{
-	return Size;
-}
-
-bool ULimenGridItemComponent::CanStack() const
-{
-	return bCanStack;
-}
-
-FSlateBrush ULimenGridItemComponent::GetIcon()
-{
-	return ItemBrush;
-}
-
-FGridInventoryCell FGridInventoryCell::MakeParent(ULimenGridItemComponent* InItem)
+FGridInventoryCell FGridInventoryCell::MakeParent(const FGridItemDefinition& Definition, ALimenItemBase* InItem)
 {
 	FGridInventoryCell Out;
-	Out.Item = InItem;
+	Out.Items.Push(InItem);
+	Out.GridItemDefinition = Definition;
+	return Out;
+}
+
+FGridInventoryCell FGridInventoryCell::MakeParent(const FGridItemDefinition& Definition, const TArray<TWeakObjectPtr<ALimenItemBase>>& InItems)
+{
+	FGridInventoryCell Out;
+	Out.Items.Append(InItems);
+
+	UClass* Class = nullptr;
+	for (const auto& Item : InItems)
+	{
+		if (!Class) { Class = Item->GetOwner()->GetClass(); }
+		check(Class == Item->GetOwner()->GetClass());
+	}
+	Out.GridItemDefinition = Definition;
+	
 	return Out;
 }
 
@@ -51,12 +57,8 @@ bool FGridInventoryCell::IsParent() const
 
 bool FGridInventoryCell::IsOccupied() const
 {
-	if (IsParent())
-	{
-		return Item != nullptr;
-	}
-	
-	return ParentCell->IsOccupied();
+	if (ParentCell) { return ParentCell->IsOccupied(); }
+	return !Items.IsEmpty();
 }
 
 FGridInventoryCell* FGridInventoryCell::GetParent() const
@@ -66,25 +68,55 @@ FGridInventoryCell* FGridInventoryCell::GetParent() const
 
 const TArray<FGridInventoryCell*>& FGridInventoryCell::GetChildren() const
 {
+	if (ParentCell) { return ParentCell->GetChildren(); }
 	return ChildCells;
 }
 
-ULimenGridItemComponent* FGridInventoryCell::GetItem()
+TWeakObjectPtr<ALimenItemBase> FGridInventoryCell::GetItem()
 {
-	ULimenGridItemComponent* Temp = Item.Get();
-	Item.Reset();
-	return Temp;
+	if (ParentCell) { return ParentCell->GetItem(); }
+	return Items.Pop();
 }
 
-ULimenGridItemComponent* FGridInventoryCell::PeekItem() const
+TArray<TWeakObjectPtr<ALimenItemBase>> FGridInventoryCell::GetItems()
 {
-	if (!ParentCell) { return Item.Get(); }
-	return ParentCell->PeekItem();
+	if (ParentCell) { return ParentCell->GetItems(); }
+
+	auto ItemsTemp = MoveTemp(Items);
+	check(Items.IsEmpty())
+	return ItemsTemp;
+}
+
+const TArray<TWeakObjectPtr<ALimenItemBase>>& FGridInventoryCell::PeekItems() const
+{
+	if (!ParentCell) { return Items; }
+	return ParentCell->PeekItems();
+}
+
+TSubclassOf<ALimenItemBase> FGridInventoryCell::GetItemClass() const
+{
+	if (ParentCell) { return ParentCell->GetItemClass(); }
+	return GridItemDefinition.Class;
 }
 
 void FGridInventoryCell::AddChild(FGridInventoryCell* Child)
 {
+	if (ParentCell) { ParentCell->AddChild(Child); return; }
 	ChildCells.Push(Child);
+}
+
+const FGridItemDefinition* FGridInventoryCell::GetDefinition() const
+{
+	return &GridItemDefinition;
+}
+
+void FGridInventoryCell::AddItem(ALimenItemBase* Item)
+{
+	if (ParentCell) { ParentCell->AddItem(Item); return; }
+	
+	check(Item)
+	check(Item->GetClass() == GridItemDefinition.Class)
+	Items.Push(Item);
 }
 
 FInventoryCellUpdate::FInventoryCellUpdate(const FIntVector2& InCoord, const FGridInventoryCell* InCell)
@@ -103,24 +135,35 @@ void ULimenGridInventoryComponent::BeginPlay()
 	Cells.AddDefaulted(Size.X * Size.Y);
 }
 
-bool ULimenGridInventoryComponent::CanPutItemAt(const ULimenGridItemComponent* GridItem, const FIntVector2& Coordinates) const
+bool ULimenGridInventoryComponent::CanPutItemAt(const ALimenItemBase* Item, const FIntVector2& Coordinates) const
 {
-	check(GridItem)
+	check(Item)
 	
-	const FIntVector2 ItemSize = GridItem->GetSize();
-	if (!IsRegionValid(Coordinates, ItemSize)) { return false; }
-
+	if (!ItemDatabase) { return false; }
+	
+	const FGridItemDefinition& ItemDefinition = ItemDatabase->GetItemDefinitionChecked(Item);
+	const FIntVector2 ItemSize = ItemDefinition.Size;
+	if (!IsRegionValid(Coordinates, ItemSize)) { return false; }	
+	
 	for (int X = Coordinates.X; X < Coordinates.X + ItemSize.X; ++X)
 	{
 		for (int Y = Coordinates.Y; Y < Coordinates.Y + ItemSize.Y; ++Y)
 		{
 			const FIntVector2 CurrentCoordinates(X, Y);
 			const int32 CurrentIndex = CoordinateToIndex(CurrentCoordinates);
+
 			check(Cells.IsValidIndex(CurrentIndex));
 			
-			if (Cells[CurrentIndex].IsOccupied() && Cells[CurrentIndex].PeekItem() != GridItem)
+			const FGridInventoryCell& CurrentCell = Cells[CurrentIndex];
+			const auto& CurrentCellItems = CurrentCell.PeekItems();
+			
+			const bool bIsFree = !CurrentCell.IsOccupied();
+			const bool bIsSameItem = CurrentCellItems.Contains(Item);
+			const bool bCanStack = CurrentCell.GetDefinition()->Class == ItemDefinition.Class && ItemDefinition.bCanStack;
+
+			if (!bIsFree && !bIsSameItem)
 			{
-				return false;
+				return bCanStack && CurrentCoordinates == Coordinates && CurrentCellItems.Num() < CurrentCell.GetDefinition()->StackLimit;
 			}
 		}
 	}
@@ -128,51 +171,80 @@ bool ULimenGridInventoryComponent::CanPutItemAt(const ULimenGridItemComponent* G
 	return true;
 }
 
-void ULimenGridInventoryComponent::AddItem(ULimenGridItemComponent* GridItem, const FIntVector2& Coordinates)
+bool ULimenGridInventoryComponent::CanPutStackAt(const TArray<ALimenItemBase*>& Items, const FIntVector2& Coordinates) const
 {
-	check(CanPutItemAt(GridItem, Coordinates))
+	for (const ALimenItemBase* const& Item : Items)
+	{
+		check(Item)
+		return CanPutItemAt(Item, Coordinates);
+	}
 	
-	const FIntVector2 ItemSize = GridItem->GetSize();
+	return false;
+}
+
+bool ULimenGridInventoryComponent::CanPutStackAt(const TArray<TWeakObjectPtr<ALimenItemBase>>& Items, const FIntVector2& Coordinates) const
+{
+	for (const TWeakObjectPtr<ALimenItemBase>& Item : Items)
+	{
+		check(Item.IsValid())
+		return CanPutItemAt(Item.Get(), Coordinates);
+	}
+	
+	return false;
+}
+
+void ULimenGridInventoryComponent::AddItem(ALimenItemBase* Item, const FIntVector2& Coordinates)
+{
+	if (!ItemDatabase) { return; }
+	
+	check(CanPutItemAt(Item, Coordinates))
+
+	const FGridItemDefinition ItemDefinition = ItemDatabase->GetItemDefinitionChecked(Item);
+	const FIntVector2 ItemSize = ItemDefinition.Size;
 	check(IsRegionValid(Coordinates, ItemSize))
 
+	TArray<FInventoryCellUpdate> UpdatedCells;
 	const int32 ParentCellIndex = CoordinateToIndex(Coordinates);
 	
-	TArray<FInventoryCellUpdate> UpdatedCells;
+	if (Cells[ParentCellIndex].IsOccupied())
+	{
+		Cells[ParentCellIndex].AddItem(Item);
+	}
+	else
+	{
+		Cells[ParentCellIndex] = FGridInventoryCell::MakeParent(ItemDefinition, Item);
+	}
+	UpdatedCells.Push(FInventoryCellUpdate(Coordinates, &Cells[ParentCellIndex]));
+	
 	
 	for (int X = Coordinates.X; X < Coordinates.X + ItemSize.X; ++X)
 	{
 		for (int Y = Coordinates.Y; Y < Coordinates.Y + ItemSize.Y; ++Y)
 		{
 			const FIntVector2 CurrentCoordinates(X, Y);
+			if (CurrentCoordinates == Coordinates) { continue; }
+			
 			const int32 CurrentIndex = CoordinateToIndex(CurrentCoordinates);
 			check(Cells.IsValidIndex(CurrentIndex));
 			
+			Cells[CurrentIndex] = FGridInventoryCell::MakeChild(&Cells[ParentCellIndex]);
+			Cells[ParentCellIndex].AddChild(&Cells[CurrentIndex]);
 			UpdatedCells.Push(FInventoryCellUpdate(CurrentCoordinates, &Cells[CurrentIndex]));
-			
-			if (CurrentIndex == ParentCellIndex) // Is the parent cell
-			{
-				Cells[ParentCellIndex] = FGridInventoryCell::MakeParent(GridItem);
-			}
-			else // Child cells
-			{
-				Cells[CurrentIndex] = FGridInventoryCell::MakeChild(&Cells[ParentCellIndex]);
-				Cells[ParentCellIndex].AddChild(&Cells[CurrentIndex]);
-			}
 		}
 	}
 	
 	OnCellUpdated.Broadcast(UpdatedCells);
 }
 
-bool ULimenGridInventoryComponent::AddItem(ULimenGridItemComponent* GridItem)
+bool ULimenGridInventoryComponent::AddItem(ALimenItemBase* Item)
 {
 	for (int X = 0; X < Size.X; ++X)
 	{
 		for (int Y = 0; Y < Size.Y; ++Y)
 		{
-			if (const FIntVector2 CurrentCoordinates(X, Y); CanPutItemAt(GridItem, CurrentCoordinates))
+			if (const FIntVector2 CurrentCoordinates(X, Y); CanPutItemAt(Item, CurrentCoordinates))
 			{
-				AddItem(GridItem, CurrentCoordinates);
+				AddItem(Item, CurrentCoordinates);
 				return true;
 			}
 		}
@@ -180,62 +252,121 @@ bool ULimenGridInventoryComponent::AddItem(ULimenGridItemComponent* GridItem)
 	return false;
 }
 
-void ULimenGridInventoryComponent::MoveItem(ULimenGridItemComponent* GridItem, const FIntVector2& NewCoordinates)
+void ULimenGridInventoryComponent::AddItems(TArray<ALimenItemBase*>& Items, const FIntVector2& Coordinates)
 {
-	check(ContainsItem(GridItem))
-	check(CanPutItemAt(GridItem, NewCoordinates))
-	
-	GetItem(GridItem);
-	AddItem(GridItem, NewCoordinates);
+	while (true)
+	{
+		if (Items.IsEmpty()) { break; }
+		auto* Item = Items.Pop();
+
+		check(!ContainsItem(Item))
+		if (!CanPutItemAt(Item, Coordinates))
+		{
+			Items.Push(Item);
+			break;
+		}
+		AddItem(Item, Coordinates);
+	}
 }
 
-ULimenGridItemComponent* ULimenGridInventoryComponent::GetItem(const FIntVector2& Coordinates)
+void ULimenGridInventoryComponent::MoveItem(ALimenItemBase* Item, const FIntVector2& NewCoordinates)
 {
+	check(ContainsItem(Item))
+	check(CanPutItemAt(Item, NewCoordinates))
+	
+	GetItem(Item);
+	AddItem(Item, NewCoordinates);
+}
+
+void ULimenGridInventoryComponent::MoveItemStack(const FIntVector2& From, const FIntVector2& To)
+{
+	for (const TWeakObjectPtr<ALimenItemBase>& Item : Cells[CoordinateToIndex(From)].PeekItems())
+	{
+		if (!CanPutItemAt(Item.Get(), To)) { break; }
+		GetItem(Item.Get());
+		AddItem(Item.Get(), To);
+	}
+}
+
+ALimenItemBase* ULimenGridInventoryComponent::GetItem(const FIntVector2& Coordinates)
+{
+	if (!ItemDatabase) { return nullptr; }
+	
 	const int32 CellIndex = CoordinateToIndex(Coordinates);
 	FGridInventoryCell* ParentCell = Cells[CellIndex].IsParent() ? &Cells[CellIndex] : Cells[CellIndex].GetParent();
 	check(ParentCell)
 	
-	ULimenGridItemComponent* OutGridItem = ParentCell->GetItem();
+	if (!ParentCell->IsOccupied()) { return nullptr; }
 	
-	for (auto* Child : ParentCell->GetChildren())
-	{
-		check(Child)
-		*Child = FGridInventoryCell::MakeParent();
-	}
-	*ParentCell = FGridInventoryCell::MakeParent();
+	TWeakObjectPtr<ALimenItemBase> OutGridItem = ParentCell->GetItem();
+	const FGridItemDefinition& Definition = ItemDatabase->GetItemDefinitionChecked(OutGridItem.Get());
 	
 	TArray<FInventoryCellUpdate> UpdatedCells;
-	for (int Y = Coordinates.Y; Y < Coordinates.Y + OutGridItem->GetSize().Y; ++Y)
-	for (int X = Coordinates.X; X < Coordinates.X + OutGridItem->GetSize().X; ++X)
+	if (!ParentCell->IsOccupied())
 	{
-		const FIntVector2 CurrentCoordinates(X, Y);
-		UpdatedCells.Push(FInventoryCellUpdate(CurrentCoordinates, &Cells[CoordinateToIndex(CurrentCoordinates)]));
+		for (auto* Child : ParentCell->GetChildren())
+		{
+			check(Child)
+			*Child = FGridInventoryCell::MakeParent();
+		}
+		*ParentCell = FGridInventoryCell::MakeParent();
+
+		for (int Y = Coordinates.Y; Y < Coordinates.Y + Definition.Size.Y; ++Y)
+		for (int X = Coordinates.X; X < Coordinates.X + Definition.Size.X; ++X)
+		{
+			const FIntVector2 CurrentCoordinates(X, Y);
+			UpdatedCells.Push(FInventoryCellUpdate(CurrentCoordinates, &Cells[CoordinateToIndex(CurrentCoordinates)]));
+		}
+		OnCellUpdated.Broadcast(UpdatedCells);
 	}
-	OnCellUpdated.Broadcast(UpdatedCells);
+	else
+	{
+		const int32 Index = Cells.IndexOfByPredicate([&ParentCell] (const FGridInventoryCell& Test)
+		{
+			return &Test == ParentCell;
+		});
+		check(Index != INDEX_NONE)
+
+		UpdatedCells.Push(FInventoryCellUpdate(IndexToCoordinate(Index), ParentCell));
+		OnCellUpdated.Broadcast(UpdatedCells);
+	}
 	
-	return OutGridItem;
+	return OutGridItem.Get();
 }
 
-void ULimenGridInventoryComponent::GetItem(const ULimenGridItemComponent* Item)
+TArray<ALimenItemBase*> ULimenGridInventoryComponent::GetItemStack(const FIntVector2& Coordinates)
+{
+	TArray<ALimenItemBase*> Out;
+	while (auto* Item = GetItem(Coordinates)) { Out.Push(Item); }
+	return Out;
+}
+
+void ULimenGridInventoryComponent::GetItem(const ALimenItemBase* Item)
 {
 	check(ContainsItem(Item))
 	GetItem(GetItemCoordinates(Item));
 }
 
-ULimenGridItemComponent* ULimenGridInventoryComponent::PeekItem(const FIntVector2& Coordinates) const
+TArray<ALimenItemBase*> ULimenGridInventoryComponent::PeekItems(const FIntVector2& Coordinates) const
 {
 	const int32 CellIndex = CoordinateToIndex(Coordinates);
 	const FGridInventoryCell* ParentCell = Cells[CellIndex].IsParent() ? &Cells[CellIndex] : Cells[CellIndex].GetParent();
 	check(ParentCell)
 	
-	return ParentCell->PeekItem();
+	TArray<ALimenItemBase*> Out;
+	for (const auto& Item : ParentCell->PeekItems())
+	{
+		Out.Push(Item.Get());
+	}
+	
+	return Out;
 }
 
-bool ULimenGridInventoryComponent::ContainsItem(const ULimenGridItemComponent* GridItem) const
+bool ULimenGridInventoryComponent::ContainsItem(const ALimenItemBase* Item) const
 {
 	for (const FGridInventoryCell& Cell : Cells)
 	{
-		if (Cell.PeekItem() == GridItem)
+		if (Cell.PeekItems().Contains(Item))
 		{
 			return true;
 		}
@@ -243,12 +374,12 @@ bool ULimenGridInventoryComponent::ContainsItem(const ULimenGridItemComponent* G
 	return false;
 }
 
-FIntVector2 ULimenGridInventoryComponent::GetItemCoordinates(const ULimenGridItemComponent* GridItem) const
+FIntVector2 ULimenGridInventoryComponent::GetItemCoordinates(const ALimenItemBase* Item) const
 {
 	int32 Index = 0;
 	for (const FGridInventoryCell& Cell : Cells)
 	{
-		if (Cell.PeekItem() == GridItem)
+		if (Cell.PeekItems().Contains(Item))
 		{
 			return IndexToCoordinate(Index);
 		}
@@ -263,6 +394,16 @@ FIntVector2 ULimenGridInventoryComponent::GetSize() const
 	return Size;
 }
 
+ULimenGridItemDatabase* ULimenGridInventoryComponent::GetItemDatabase() const
+{
+	return ItemDatabase.Get();
+}
+
+const FGridInventoryCell* ULimenGridInventoryComponent::GetCell(const FIntVector2& Coordinates) const
+{
+	return &Cells[CoordinateToIndex(Coordinates)];
+}
+
 int32 ULimenGridInventoryComponent::CoordinateToIndex(const FIntVector2& Coordinate) const
 {
 	check(Coordinate.X >= 0)
@@ -274,6 +415,7 @@ int32 ULimenGridInventoryComponent::CoordinateToIndex(const FIntVector2& Coordin
 
 FIntVector2 ULimenGridInventoryComponent::IndexToCoordinate(const int32 Index) const
 {
+	check(Index >= 0)
 	return FIntVector2(Index % Size.X, Index / Size.X);
 }
 
