@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interactables/LimenInteractable.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Interfaces/LimenInventoryItem.h"
 #include "LimenItemBase.generated.h"
 
 
@@ -33,13 +34,11 @@ struct FLimenItemBase_PickUpState
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FItemActionRequest, TSubclassOf<ALimenItemBase>, Item, AController*, InController, APawn*, InPawn);
 
 UCLASS(Abstract, Blueprintable, BlueprintType)
-class LIMENINTERACTION_API ALimenItemBase : public ALimenInteractable
+class LIMENINTERACTION_API ALimenItemBase : public ALimenInteractable, public ILimenInventoryItem
 {
 	GENERATED_BODY()
 
 public:
-	inline static const FName ItemImageSceneCaptureName = TEXT("ItemImageSceneCapture");
-
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDropStateChange);
 	UPROPERTY(BlueprintAssignable)
 	FDropStateChange OnPickedUp;
@@ -58,22 +57,23 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="Limen|Items")
 	UMeshComponent* GetMesh() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Items")
-	UTexture* GetItemImage() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Items")
-	const FText& GetDisplayName() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Items")
-	const FText& GetDescription() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Items")
-	const FColor& GetRenderTargetBackgroundColor() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Items")
-	TArray<ULimenItemAction*> GetItemActions() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Items")
 	bool IsDropped() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Items")
-	int32 GetItemQuantity() const;
 
+	// ILimenInventoryItem
 	UFUNCTION(BlueprintCallable, Category="Limen|Items")
-	void CaptureItemImage();
+	virtual UTexture* GetItemImage() const override;
+	UFUNCTION(BlueprintCallable, Category="Limen|Items")
+	virtual const FText& GetDisplayName() const override;
+	UFUNCTION(BlueprintCallable, Category="Limen|Items")
+	virtual const FText& GetDescription() const override;
+	UFUNCTION(BlueprintCallable, Category="Limen|Items")
+	virtual int32 GetItemQuantity() const override;
+	UFUNCTION(BlueprintCallable, Category="Limen|Items")
+	virtual TArray<ULimenItemAction*> GetItemActions() const override;
+	UFUNCTION(BlueprintCallable, Category="Limen|Items")
+	virtual AActor* GetActor() override;
+	// ILimenInventoryItem
+
 	void PickUp(AController* InController, APawn* InPawn);
 	void Drop(AController* InController, APawn* InPawn);
 	void SetItemQuantity(const int32 InItemQuantity);
@@ -89,20 +89,8 @@ protected:
 	FText DisplayName;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters")
 	FText Description;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "!bUseSceneCaptureForImage"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters")
 	TObjectPtr<UTexture> ItemImage;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "ItemImageSceneCapture != nullptr"))
-	bool bUseSceneCaptureForImage;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
-	FColor RenderTargetBackgroundColor;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
-	FIntPoint RenderTargetResolution;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
-	TEnumAsByte<EPixelFormat> RenderTargetPixelFormat;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Item Parameters", meta=(EditCondition = "bUseSceneCaptureForImage"))
-	bool bForceRenderTargetLinearGamma;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Item Parameters")
-	TObjectPtr<USceneCaptureComponent2D> ItemImageSceneCapture;
 
 	virtual void Interact(AController* InController, APawn* InPawn) override final;
 	virtual void InteractionStopped(AController* InController, APawn* InPawn) override final;
@@ -118,7 +106,6 @@ private:
 	UPROPERTY(ReplicatedUsing=OnRep_PickUpState)
 	FLimenItemBase_PickUpState PickUpState;
 	TArray<TStrongObjectPtr<ULimenItemAction>> ItemActions;
-	TStrongObjectPtr<UTextureRenderTarget2D> ItemImageRenderTarget2D;
 	FTimerHandle InteractAnimationTimerHandle;
 
 	UFUNCTION()

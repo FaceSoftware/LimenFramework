@@ -25,7 +25,6 @@ public class LimenGameSettings : ModuleRules
                 "SlateCore", 
                 
                 "LimenCore",
-                "LimenPlayers",
                 "LimenNotifications",
                 "LimenSaveSystem",
                 "LimenStorage", 

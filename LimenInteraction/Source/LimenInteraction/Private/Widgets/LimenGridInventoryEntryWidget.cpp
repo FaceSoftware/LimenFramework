@@ -18,16 +18,26 @@ FInventoryGridCellData::FInventoryGridCellData()
 
 void ULimenGridCellWidget::SetPlacementHighlightCase(EGridCellHighlightCase NewCase)
 {
+	PlacementHighlightCaseChanged(NewCase);
 }
 
 void ULimenGridCellWidget::SetCellData(const FInventoryGridCellData& InData)
 {
 	CellData = InData;
+	CellDataSet(InData);
 }
 
 const FInventoryGridCellData& ULimenGridCellWidget::GetCellData() const
 {
 	return CellData;
+}
+
+void ULimenGridCellWidget::CellDataSet_Implementation(const FInventoryGridCellData& InData)
+{
+}
+
+void ULimenGridCellWidget::PlacementHighlightCaseChanged_Implementation(EGridCellHighlightCase NewCase)
+{
 }
 
 FGridEntryDragDropOperation::FGridEntryDragDropOperation(const FIntVector2& Coordinates,
@@ -141,6 +151,7 @@ void SLimenGridInventoryEntry::CreateWidgetInternal()
 	Data.StackNumber = GridCell->PeekItems().Num();
 	Data.Icon = GridCell->GetDefinition()->Icon;
 	Data.Inventory = BoundInventoryComponent.Get();
+	Data.Item = GridCell->IsOccupied() ? GridCell->PeekItems()[0].Get() : nullptr;
 	CellWidgetPtr->SetCellData(Data);
 	
 	ChildSlot

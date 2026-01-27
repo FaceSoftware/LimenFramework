@@ -36,6 +36,8 @@ struct FInventoryGridCellData
 	UPROPERTY(BlueprintReadOnly)
 	FSlateBrush Icon;
 	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<ALimenItemBase> Item;
+	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<ULimenGridInventoryComponent> Inventory;
 };
 
@@ -52,6 +54,11 @@ public:
 protected:
 	const FInventoryGridCellData& GetCellData() const;
 	
+	UFUNCTION(BlueprintNativeEvent)
+	void PlacementHighlightCaseChanged(EGridCellHighlightCase NewCase);
+	UFUNCTION(BlueprintNativeEvent)
+	void CellDataSet(const FInventoryGridCellData& InData);
+
 private:
 	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess = true))
 	FInventoryGridCellData CellData;

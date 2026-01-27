@@ -5,7 +5,6 @@
 
 #include "TimerManager.h"
 #include "Camera/CameraComponent.h"
-#include "Characters/LimenPlayerCharacter.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -65,23 +64,16 @@ void ULimenCameraDistortionSetting::GlobalPostProcessFound(APostProcessVolume* P
 void ULimenCameraDistortionSetting::ApplySettingInternal()
 {
 	if (GetWorld() != nullptr)
+	if (const APlayerController* PlayerController = GetWorld()->GetFirstPlayerController(); PlayerController != nullptr)
+	if (const APawn* Pawn = PlayerController->GetPawn())
+	if (UCameraComponent* CameraComponent = Pawn->GetComponentByClass<UCameraComponent>())
 	{
-		if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController(); PlayerController != nullptr)
+		TArray<FWeightedBlendable>& Blendables = CameraComponent->PostProcessSettings.WeightedBlendables.Array;
+		if (!Blendables.IsEmpty())
 		{
-			if (const ALimenPlayerCharacter* PlayerPawn = PlayerController->GetPawn<ALimenPlayerCharacter>(); PlayerPawn != nullptr)
-			{
-				if (UCameraComponent* PlayerCamera = PlayerPawn->GetPlayerCamera(); PlayerCamera != nullptr)
-				{
-					TArray<FWeightedBlendable>& Blendables = PlayerCamera->PostProcessSettings.WeightedBlendables.Array;
-					if (!Blendables.IsEmpty())
-					{
-						Blendables[0].Weight = GetCurrentValue() == Enabled ? 1.f : 0.f;
-					}
-
-					return;
-				}
-			}
+			Blendables[0].Weight = GetCurrentValue() == Enabled ? 1.f : 0.f;
 		}
+		return;
 	}
 
 	GetWorld()->GetTimerManager().SetTimerForNextTick(this, &ThisClass::ApplySettingInternal);

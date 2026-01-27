@@ -135,6 +135,42 @@ void ULimenGridInventoryComponent::BeginPlay()
 	Cells.AddDefaulted(Size.X * Size.Y);
 }
 
+FInventoryUpdate& ULimenGridInventoryComponent::GetOnInventoryUpdated()
+{
+	static FInventoryUpdate Temp;
+	return Temp;
+}
+
+FInventoryUpdate& ULimenGridInventoryComponent::GetOnInventoryRefreshed()
+{
+	static FInventoryUpdate Temp;
+	return Temp;
+}
+
+FInventoryItemUpdate& ULimenGridInventoryComponent::GetOnItemFailedToAdd()
+{
+	static FInventoryItemUpdate Temp;
+	return Temp;
+}
+
+FInventoryItemUpdate& ULimenGridInventoryComponent::GetOnItemAdded()
+{
+	static FInventoryItemUpdate Temp;
+	return Temp;
+}
+
+FInventoryItemUpdate& ULimenGridInventoryComponent::GetOnItemRemoved()
+{
+	static FInventoryItemUpdate Temp;
+	return Temp;
+}
+
+FInventoryItemUpdate& ULimenGridInventoryComponent::GetOnItemUpdated()
+{
+	static FInventoryItemUpdate Temp;
+	return Temp;
+}
+
 bool ULimenGridInventoryComponent::CanPutItemAt(const ALimenItemBase* Item, const FIntVector2& Coordinates) const
 {
 	check(Item)

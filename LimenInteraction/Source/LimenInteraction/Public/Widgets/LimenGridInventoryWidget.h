@@ -7,6 +7,7 @@
 #include "LimenGridInventoryWidget.generated.h"
 
 
+struct FInventoryCellUpdate;
 class ULimenGridCellWidget;
 class ULimenGridInventoryComponent;
 class SLimenGridInventory;

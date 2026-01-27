@@ -41,13 +41,13 @@ public:
 	FLimenReplicationUtils::IsComponentLocalClientCopy(this) \
 
 /**
- * @brief Use only with SERVER RPC!!!! This will always execute the LocalFunction.
+ * @brief This will always execute the AgnosticFunction.
  * The ServerRPCFunction will only execute on NM_Client.
- * @param LocalFunction The actual event to predict.
+ * @param AgnosticFunction The actual functionality to predict.
  * @param ServerRPCFunction The RPC wrapper for the LocalFunction
  */
-#define NETWORK_PREDICTION(LocalFunction, ServerRPCFunction) \
-	LocalFunction; \
+#define NETWORK_PREDICTION(AgnosticFunction, ServerRPCFunction) \
+	AgnosticFunction; \
 	if (FLimenReplicationUtils::ShouldCallRPC(this)) \
 	{ \
 		ServerRPCFunction; \

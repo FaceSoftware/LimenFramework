@@ -61,6 +61,13 @@ public:
 	ULimenGridInventoryComponent();
 	virtual void BeginPlay() override;
 	
+	virtual FInventoryUpdate& GetOnInventoryUpdated() override;
+	virtual FInventoryUpdate& GetOnInventoryRefreshed() override;
+	virtual FInventoryItemUpdate& GetOnItemFailedToAdd() override;
+	virtual FInventoryItemUpdate& GetOnItemAdded() override;
+	virtual FInventoryItemUpdate& GetOnItemRemoved() override;
+	virtual FInventoryItemUpdate& GetOnItemUpdated() override;
+	
 	bool CanPutItemAt(const ALimenItemBase* Item, const FIntVector2& Coordinates) const;
 	bool CanPutStackAt(const TArray<ALimenItemBase*>& Items, const FIntVector2& Coordinates) const;
 	bool CanPutStackAt(const TArray<TWeakObjectPtr<ALimenItemBase>>& Items, const FIntVector2& Coordinates) const;

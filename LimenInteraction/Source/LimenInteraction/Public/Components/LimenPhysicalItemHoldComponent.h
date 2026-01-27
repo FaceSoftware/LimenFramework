@@ -45,7 +45,6 @@ public:
 	FORCEINLINE bool IsHoldingSomething() const
 	{
 		if (!IsHoldingSomething()) return false;
-
 		return GetPhysicalItem<T>() != nullptr;
 	}
 
@@ -90,5 +89,13 @@ private:
 	FLimenPhysicalItemHoldComponent_ReplicatedWeaponData WeaponData;
 
 	UFUNCTION()
-	void OnRep_WeaponData();
+	void OnRep_WeaponData(const FLimenPhysicalItemHoldComponent_ReplicatedWeaponData& OldWeaponData);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_Hold(ALimenPhysicalItem* InPhysicalItem);
+	UFUNCTION(Server, Reliable)
+	void Server_StopHolding();
+	
+	void Agnostic_Hold(ALimenPhysicalItem* InPhysicalItem);
+	void Agnostic_StopHolding();
 };

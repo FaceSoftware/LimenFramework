@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Items/LimenItemBase.h"
 #include "LimenPhysicalItem.generated.h"
 
@@ -20,6 +21,8 @@ class LIMENINTERACTION_API ALimenPhysicalItem : public ALimenItemBase
 
 public:
 	explicit ALimenPhysicalItem(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
+	
+	virtual void SetTagState(const FGameplayTag& InTag, bool bEnable);
 
 	UFUNCTION(BlueprintCallable)
 	const FName& GetAttachmentSocketName() const;
@@ -27,6 +30,12 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, Category="Limen|Animation")
 	FName AttachSocketName;
+	
+	virtual void TagStateChanged(const FGameplayTag& Tag, bool bState);
+	virtual bool CanSetTagState(const FGameplayTag& InTag, bool bState);
+	
+	FGameplayTagContainer& GetItemStateTags();
 
 private:
+	FGameplayTagContainer ItemStateTags;
 };

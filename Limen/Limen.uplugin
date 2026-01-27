@@ -49,16 +49,6 @@
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "LimenPlayers",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
-			"Name": "LimenGameModes",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		},
-		{
 			"Name": "LimenAI",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"

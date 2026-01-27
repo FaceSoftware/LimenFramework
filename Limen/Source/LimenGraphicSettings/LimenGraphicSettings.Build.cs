@@ -31,7 +31,6 @@ public class LimenGraphicSettings : ModuleRules
                 "LimenStorage", 
                 "LimenModals",
                 "LimenWidgets",
-                "LimenPlayers",
             }
         );
     }

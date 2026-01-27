@@ -3,8 +3,10 @@
 
 #include "Components/LimenPhysicalItemHoldComponent.h"
 
+#include "Utils/LimenReplicationUtils.h"
 #include "Items/LimenPhysicalItem.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 
 ULimenPhysicalItemHoldComponent::ULimenPhysicalItemHoldComponent()
@@ -22,32 +24,17 @@ void ULimenPhysicalItemHoldComponent::GetLifetimeReplicatedProps(TArray<FLifetim
 
 void ULimenPhysicalItemHoldComponent::Hold(ALimenPhysicalItem* InPhysicalItem)
 {
-	check(GetOwner()->HasAuthority())
-
-	if (InPhysicalItem == WeaponData.PhysicalItem.Get() || InPhysicalItem == nullptr)
-	{
-		return;
-	}
-	
-	WeaponData.PreviousPhysicalItem = WeaponData.PhysicalItem.Get();
-	WeaponData.PhysicalItem = InPhysicalItem;
-
-	OnItemChanged.Broadcast(WeaponData.PreviousPhysicalItem.Get(), WeaponData.PhysicalItem.Get());
+	NETWORK_PREDICTION(Agnostic_Hold(InPhysicalItem), Server_Hold(InPhysicalItem));
 }
 
 void ULimenPhysicalItemHoldComponent::StopHolding()
 {
-	check(GetOwner()->HasAuthority())
-
-	WeaponData.PreviousPhysicalItem = WeaponData.PhysicalItem.Get();
-	WeaponData.PhysicalItem = nullptr;
-
-	OnItemChanged.Broadcast(WeaponData.PreviousPhysicalItem.Get(), WeaponData.PhysicalItem.Get());
+	NETWORK_PREDICTION(Agnostic_StopHolding(), Server_StopHolding());
 }
 
 bool ULimenPhysicalItemHoldComponent::IsHoldingSomething() const
 {
-	return IsValid(WeaponData.PhysicalItem.Get());
+	return WeaponData.PhysicalItem.Get() != nullptr;
 }
 
 ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
@@ -55,7 +42,51 @@ ALimenPhysicalItem* ULimenPhysicalItemHoldComponent::GetPhysicalItem() const
 	return WeaponData.PhysicalItem.Get();
 }
 
-void ULimenPhysicalItemHoldComponent::OnRep_WeaponData()
+void ULimenPhysicalItemHoldComponent::OnRep_WeaponData(
+	const FLimenPhysicalItemHoldComponent_ReplicatedWeaponData& OldWeaponData)
 {
+	if (WeaponData.PhysicalItem != OldWeaponData.PhysicalItem)
+	{
+		OnItemChanged.Broadcast(WeaponData.PreviousPhysicalItem.Get(), WeaponData.PhysicalItem.Get());
+	}
+}
+
+void ULimenPhysicalItemHoldComponent::Server_Hold_Implementation(ALimenPhysicalItem* InPhysicalItem)
+{
+	Agnostic_Hold(InPhysicalItem);
+}
+
+void ULimenPhysicalItemHoldComponent::Server_StopHolding_Implementation()
+{
+	Agnostic_StopHolding();
+}
+
+void ULimenPhysicalItemHoldComponent::Agnostic_Hold(ALimenPhysicalItem* InPhysicalItem)
+{
+	if (InPhysicalItem == nullptr || InPhysicalItem == WeaponData.PhysicalItem.Get())
+	{
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, WeaponData, this)
+		return;
+	}
+	
+	WeaponData.PreviousPhysicalItem = WeaponData.PhysicalItem.Get();
+	WeaponData.PhysicalItem = InPhysicalItem;
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, WeaponData, this)
+	}
+
+	OnItemChanged.Broadcast(WeaponData.PreviousPhysicalItem.Get(), WeaponData.PhysicalItem.Get());
+}
+
+void ULimenPhysicalItemHoldComponent::Agnostic_StopHolding()
+{
+	WeaponData.PreviousPhysicalItem = WeaponData.PhysicalItem.Get();
+	WeaponData.PhysicalItem = nullptr;
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, WeaponData, this)
+	}
+
 	OnItemChanged.Broadcast(WeaponData.PreviousPhysicalItem.Get(), WeaponData.PhysicalItem.Get());
 }

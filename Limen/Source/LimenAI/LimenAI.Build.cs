@@ -24,7 +24,6 @@ public class LimenAI : ModuleRules
                 "NavigationSystem",
                 
                 "LimenCore",
-                "LimenPlayers",
                 "LimenDoors",
                 "LimenInteraction",
                 "Limen",

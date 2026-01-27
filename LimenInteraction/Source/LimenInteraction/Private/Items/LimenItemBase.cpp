@@ -18,23 +18,7 @@
 
 ALimenItemBase::ALimenItemBase(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	RenderTargetBackgroundColor = FColor::Transparent;
 	ItemQuantity = 1;
-	RenderTargetResolution = { 512, 512 };
-	RenderTargetPixelFormat = EPixelFormat::PF_R8G8B8A8;
-	bForceRenderTargetLinearGamma = false;
-
-	ItemImageSceneCapture = CreateOptionalDefaultSubobject<USceneCaptureComponent2D>(ItemImageSceneCaptureName);
-	bUseSceneCaptureForImage = ItemImageSceneCapture != nullptr;
-	if (bUseSceneCaptureForImage)
-	{
-		ItemImageSceneCapture->SetupAttachment(GetRootComponent());
-		ItemImageSceneCapture->SetMobility(EComponentMobility::Movable);
-		ItemImageSceneCapture->bCaptureEveryFrame = false;
-		ItemImageSceneCapture->bCaptureOnMovement = false;
-		ItemImageSceneCapture->CaptureSource = ESceneCaptureSource::SCS_BaseColor;
-		ItemImageSceneCapture->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
-	}
 }
 
 void ALimenItemBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -62,32 +46,12 @@ void ALimenItemBase::BeginPlay()
 		Action->SetupAction(this);
 		ItemActions.Push(TStrongObjectPtr(Action));
 	}
-
-	if (bUseSceneCaptureForImage && ItemImageSceneCapture)
-	{
-		ItemImageRenderTarget2D = TStrongObjectPtr(NewObject<UTextureRenderTarget2D>());
-		ItemImageRenderTarget2D->InitCustomFormat(RenderTargetResolution.X, RenderTargetResolution.Y, RenderTargetPixelFormat, bForceRenderTargetLinearGamma);
-		ItemImageRenderTarget2D->ClearColor = RenderTargetBackgroundColor;
-
-		if (!ItemImageSceneCapture->ShowOnlyActors.Contains(TObjectPtr<AActor>(this)))
-		{
-			ItemImageSceneCapture->ShowOnlyActors.Push(TObjectPtr<AActor>(this));
-		}
-
-		ItemImage = ItemImageRenderTarget2D.Get();
-		ItemImageSceneCapture->TextureTarget = ItemImageRenderTarget2D.Get();
-	}
 }
 
 void ALimenItemBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	if (ItemImageRenderTarget2D.IsValid())
-	{
-		ItemImageRenderTarget2D.Reset();
-	}
-
-	ItemActions.Empty();
 	Super::EndPlay(EndPlayReason);
+	ItemActions.Empty();
 }
 
 UStaticMeshComponent* ALimenItemBase::GetStaticMesh_Implementation() const
@@ -102,13 +66,8 @@ USkeletalMeshComponent* ALimenItemBase::GetSkeletalMesh_Implementation() const
 
 UMeshComponent* ALimenItemBase::GetMesh_Implementation() const
 {
-	UMeshComponent* SkeletalMesh = GetSkeletalMesh();
-	UMeshComponent* StaticMesh = GetStaticMesh();
-
-	if (SkeletalMesh && StaticMesh) return StaticMesh;
-	if (StaticMesh) return StaticMesh;
-	if (SkeletalMesh) return SkeletalMesh;
-	return nullptr;
+	if (UMeshComponent* StaticMesh = GetStaticMesh()) { return StaticMesh; }
+	return GetSkeletalMesh();
 }
 
 void ALimenItemBase::OnRep_PickUpState()
@@ -153,6 +112,11 @@ TArray<ULimenItemAction*> ALimenItemBase::GetItemActions() const
 	return Out;
 }
 
+AActor* ALimenItemBase::GetActor()
+{
+	return this;
+}
+
 void ALimenItemBase::PickUp(AController* InController, APawn* InPawn)
 {
 	check(HasAuthority())
@@ -192,22 +156,6 @@ int32 ALimenItemBase::GetItemQuantity() const
 void ALimenItemBase::SetItemQuantity(const int32 InItemQuantity)
 {
 	ItemQuantity = InItemQuantity;
-}
-
-const FColor& ALimenItemBase::GetRenderTargetBackgroundColor() const
-{
-	return RenderTargetBackgroundColor;
-}
-
-void ALimenItemBase::CaptureItemImage()
-{
-	if (bUseSceneCaptureForImage && ItemImageSceneCapture)
-	{
-		const bool bShouldHide = IsHidden();
-		SetActorHiddenInGame(false);
-		ItemImageSceneCapture->CaptureScene();
-		SetActorHiddenInGame(bShouldHide);
-	}
 }
 
 void ALimenItemBase::Interact(AController* InController, APawn* InPawn)
