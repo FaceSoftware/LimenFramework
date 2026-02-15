@@ -14,7 +14,7 @@ ALimenPhysicalItem::ALimenPhysicalItem(const FObjectInitializer& InObjectInitial
 void ALimenPhysicalItem::SetTagState(const FGameplayTag& InTag, bool bEnable)
 {
 	if (!CanSetTagState(InTag, bEnable)) { return; }
-	bEnable ? ItemStateTags.AddTag(InTag) : ItemStateTags.RemoveTag(InTag);
+	if (bEnable) { ItemStateTags.AddTag(InTag); } else { ItemStateTags.RemoveTag(InTag); }
 	TagStateChanged(InTag, bEnable);
 }
 

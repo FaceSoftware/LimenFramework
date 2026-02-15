@@ -42,10 +42,11 @@ public class LimenInteraction : ModuleRules
 				"SlateCore",
 				"UMG",
 				"InputCore",
+				"GameplayTags",
+				"NetCore",
 				
 				"LimenWidgets",
 				"LimenSaveSystem",
-				"NetCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
