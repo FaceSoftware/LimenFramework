@@ -18,6 +18,7 @@ class PROCEDURALMAPS_API ALimenProceduralMapManager : public AInfo
 
 public:
 	DECLARE_MULTICAST_DELEGATE(FMapComplete)
+	DECLARE_MULTICAST_DELEGATE(FMapEnter)
 
 	/**
 	 * @brief Called from the map builder class to notify the manager that the map has been built.
@@ -30,6 +31,7 @@ public:
 	void NotifyMapComplete();
 
 	FMapComplete& GetMapCompleteDelegate();
+	FMapEnter& GetMapEnteredDelegate();
 	template<typename T = ALimenProceduralMapBuilder>
 	T* GetMapBuilder()
 	{
@@ -44,5 +46,6 @@ protected:
 
 private:
 	FMapComplete OnMapComplete;
+	FMapEnter OnMapEntered;
 	
 };

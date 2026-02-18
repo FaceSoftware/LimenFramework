@@ -18,3 +18,8 @@ ALimenProceduralMapManager::FMapComplete& ALimenProceduralMapManager::GetMapComp
 {
 	return OnMapComplete;
 }
+
+ALimenProceduralMapManager::FMapEnter& ALimenProceduralMapManager::GetMapEnteredDelegate()
+{
+	return OnMapEntered;
+}

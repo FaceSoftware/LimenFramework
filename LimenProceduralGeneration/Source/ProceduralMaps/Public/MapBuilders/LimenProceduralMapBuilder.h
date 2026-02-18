@@ -107,5 +107,4 @@ private:
 	
 	virtual void StartBuildingMap(const FGuid& MapId, const FMapBuildCallback& FinishCallback);
 	virtual void StartDestroyingMap(const FGuid& MapId, const FMapBuildCallback& FinishCallback);
-	
 };
