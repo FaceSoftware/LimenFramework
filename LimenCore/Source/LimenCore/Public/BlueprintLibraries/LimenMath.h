@@ -12,6 +12,28 @@ struct FHitResult;
 struct FCollisionResponseParams;
 struct FConeData;
 
+UENUM(BlueprintType)
+enum EDirection3D : uint8
+{
+	None		= 0,
+	Forward		= 1,
+	Backward	= 2,
+	Left		= 3,
+	Right		= 4,
+	Up			= 5,
+	Down		= 6,
+
+	MAX UMETA(Hidden),
+};
+
+FORCEINLINE static EDirection3D GetOppositeDirection(EDirection3D Direction)
+{
+	const uint8 DirectionValue = Direction;
+	const bool bIsEven = DirectionValue % 2u == 0.f;
+	const uint8 Result = bIsEven ? DirectionValue - 1 : DirectionValue + 1;
+	return static_cast<EDirection3D>(Result);
+}
+
 /**
  * 
  */
