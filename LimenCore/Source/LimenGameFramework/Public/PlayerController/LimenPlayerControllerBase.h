@@ -57,7 +57,6 @@ public:
 
 	explicit ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void BeginPlay() override;
-	virtual void SetupInputComponent() override;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Controller")
 	void RequestPause(const EPauseReason Reason);

@@ -4,9 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/LimenSaveObjectInterface.h"
-#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "Engine/World.h"
-#include "LimenStorage/Public/LimenStorageSubsystem.h"
+#include "LimenStorageSubsystem.h"
 #include "Settings/LimenSetting.h"
 #include "LimenModularSettingsSubsystem.generated.h"
 
@@ -16,7 +15,7 @@ class ULimenSettingsSaveData;
 
 /**
  * Base class for settings subsystems. A settings subsystem is essentially a manager for a specific set of settings.
- * It handles things like saving them, their lifetime and it should act as a wrapper for the settings.
+ * It handles things like saving them, their lifetime, and it should act as a wrapper for the settings.
  * It should not contain any specific information regarding a setting. 
  */
 UCLASS(Abstract, BlueprintType)

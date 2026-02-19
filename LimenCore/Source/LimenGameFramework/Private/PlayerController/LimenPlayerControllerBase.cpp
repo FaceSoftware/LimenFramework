@@ -64,11 +64,6 @@ void ALimenPlayerControllerBase::BeginPlay()
 	}
 }
 
-void ALimenPlayerControllerBase::SetupInputComponent()
-{
-	Super::SetupInputComponent();
-}
-
 void ALimenPlayerControllerBase::RequestPause(const EPauseReason Reason)
 {
 	if (GetWorld()->IsPaused())

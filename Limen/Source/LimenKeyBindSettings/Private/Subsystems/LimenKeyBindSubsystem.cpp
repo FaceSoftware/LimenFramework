@@ -115,13 +115,13 @@ UInputMappingContext* ULimenKeyBindSubsystem::GetPawnInputMappingContext(const A
 }
 
 UInputMappingContext* ULimenKeyBindSubsystem::GetPlayerInputMappingContext(
-	const TSubclassOf<APlayerController>& PlayerController) const
+	const TSubclassOf<APlayerController>& PlayerControllerClass) const
 {
-	if (!PlayerController) return nullptr;
+	if (!PlayerControllerClass) return nullptr;
 
 	for (auto& PlayerMappingContext : PlayerMappingContexts)
 	{
-		if (PlayerController->GetDefaultObject()->IsA(PlayerMappingContext.Key.LoadSynchronous()))
+		if (PlayerControllerClass->IsChildOf(PlayerMappingContext.Key.LoadSynchronous()))
 		{
 			return PlayerMappingContext.Value;
 		}

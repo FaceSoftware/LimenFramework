@@ -41,7 +41,7 @@ public:
 	UInputMappingContext* GetPawnInputMappingContext() const;
 	UInputMappingContext* GetPlayerInputMappingContext(const APlayerController* PlayerController) const;
 	UInputMappingContext* GetPawnInputMappingContext(const APawn* Pawn) const;
-	UInputMappingContext* GetPlayerInputMappingContext(const TSubclassOf<APlayerController>& PlayerController) const;
+	UInputMappingContext* GetPlayerInputMappingContext(const TSubclassOf<APlayerController>& PlayerControllerClass) const;
 	UInputMappingContext* GetPawnInputMappingContext(const TSubclassOf<APawn>& Pawn) const;
 
 	UInputMappingContext* GetInputMappingByAction(const UInputAction* Action) const;

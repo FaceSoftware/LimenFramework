@@ -1,27 +1,22 @@
-﻿// Copyright © 2024 FaceSoftware. All rights reserved.
+﻿// Copyright FaceSoftware. All rights reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EnhancedInputSubsystemInterface.h"
-#include "Engine/LocalPlayer.h"
-#include "LimenLocalPlayer.generated.h"
+#include "Subsystems/LocalPlayerSubsystem.h"
+#include "LimenInputBindingsLocalPlayerSubsystem.generated.h"
 
-struct FModifyContextOptions;
-class UInputMappingContext;
 struct FEnhancedActionKeyMapping;
-
-
 /**
  * 
  */
 UCLASS()
-class LIMENKEYBINDSETTINGS_API ULimenLocalPlayer : public ULocalPlayer
+class LIMENKEYBINDSETTINGS_API ULimenInputBindingsLocalPlayerSubsystem : public ULocalPlayerSubsystem
 {
 	GENERATED_BODY()
-
+	
 public:
-	ULimenLocalPlayer();
+	ULimenInputBindingsLocalPlayerSubsystem();
 	void AddPawnMappingContext();
 	void RemovePawnMappingContext();
 
@@ -29,7 +24,7 @@ protected:
 	int32 PawnMappingContextPriority;
 	int32 PlayerControllerMappingContextPriority;
 
-	virtual void ReceivedPlayerController(APlayerController* NewController) override;
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 	
 private:
 	TWeakObjectPtr<APlayerController> OldPlayerController;
