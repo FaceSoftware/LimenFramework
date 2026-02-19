@@ -13,28 +13,33 @@ struct FCollisionResponseParams;
 struct FConeData;
 
 UENUM(BlueprintType)
-enum EDirection3D
+enum class EDirection3D : uint8
 {
-	None		= 0,
-	Forward		= 1,
-	Backward	= 2,
-	Left		= 3,
-	Right		= 4,
-	Up			= 5,
-	Down		= 6,
+	None		= 0u,
+	Forward		= 1u,
+	Backward	= 2u,
+	Left		= 3u,
+	Right		= 4u,
+	Up			= 5u,
+	Down		= 6u,
 
 	MAX UMETA(Hidden),
 };
 
-FORCEINLINE LIMENCORE_API static EDirection3D GetOppositeDirection(EDirection3D Direction)
+FORCEINLINE static uint8 DirectionAsInt(const EDirection3D Direction)
 {
-	const uint8 DirectionValue = Direction;
+	return static_cast<uint8>(Direction);
+}
+
+FORCEINLINE static EDirection3D GetOppositeDirection(const EDirection3D Direction)
+{
+	const uint8 DirectionValue = DirectionAsInt(Direction);
 	const bool bIsEven = DirectionValue % 2u == 0.f;
 	const uint8 Result = bIsEven ? DirectionValue - 1 : DirectionValue + 1;
 	return static_cast<EDirection3D>(Result);
 }
 
-FORCEINLINE LIMENCORE_API static EDirection3D GetDirectionFromOrientation(const FRotator& Orientation)
+FORCEINLINE static EDirection3D GetDirectionFromOrientation(const FRotator& Orientation)
 {
 	const FVector Direction = Orientation.Vector();
 	
