@@ -60,6 +60,14 @@ FORCEINLINE static EDirection3D GetDirectionFromOrientation(const FRotator& Orie
 	{
 		Result = EDirection3D::Left;
 	}
+	else if (Direction == FVector::UpVector)
+	{
+		Result = EDirection3D::Up;
+	}
+	else if (Direction == FVector::DownVector)
+	{
+		Result = EDirection3D::Down;
+	}
 	
 	return Result;
 }
