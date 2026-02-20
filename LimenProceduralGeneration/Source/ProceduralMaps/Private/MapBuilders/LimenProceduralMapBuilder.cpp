@@ -279,7 +279,6 @@ void ALimenProceduralMapBuilder::MapFinishBuild(const FGuid& MapId, ULimenProced
 	check(Manager != nullptr);
 	MapManagers.Add(MapId, Manager);
 	Manager->MapBuilt(Map);
-
 }
 
 void ALimenProceduralMapBuilder::MapBeginDestroy(const FGuid& MapId, ULimenProceduralMap* Map)

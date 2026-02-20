@@ -33,7 +33,13 @@ public:
 	bool DoesMapExist(const FGuid& MapId) const;
 	
 	const FGuid* GetMapId(const int32 Index) const;
-	ALimenProceduralMapManager* GetMapManager(const FGuid& MapId) const;
+	FORCEINLINE ALimenProceduralMapManager* GetMapManager(const FGuid& MapId) const;
+	template<typename T>
+	FORCEINLINE T* GetMapManager(const FGuid& MapId) const
+	{
+		static_assert(TIsDerivedFrom<T, ALimenProceduralMapManager>::Value);
+		return Cast<T>(GetMapManager(MapId));
+	}
 	int32 GetMapIndex(const FGuid& MapId) const;
 	ULimenMapAlgorithm* GetMapAlgorithm(const FGuid& MapId) const;
 	const UProceduralMapParameters* GetMapGenerationParameters(const FGuid& MapId) const;
