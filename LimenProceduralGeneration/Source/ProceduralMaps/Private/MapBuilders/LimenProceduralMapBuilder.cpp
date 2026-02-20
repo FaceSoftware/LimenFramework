@@ -265,7 +265,12 @@ void ALimenProceduralMapBuilder::MapFinishLoad(const FGuid& MapId, ULimenProcedu
 }
 
 void ALimenProceduralMapBuilder::MapBeginBuild(const FGuid& MapId, ULimenProceduralMap* Map)
-{
+{	
+	UClass* ManagerClass = MapsParameters[MapId]->GetManagerClass();
+	ALimenProceduralMapManager* Manager = GetWorld()->SpawnActor<ALimenProceduralMapManager>(ManagerClass);
+	check(Manager != nullptr);
+	MapManagers.Add(MapId, TWeakObjectPtr(Manager));
+	
 	GetOnMapBeginBuild().Broadcast(MapId);
 }
 
@@ -273,12 +278,8 @@ void ALimenProceduralMapBuilder::MapFinishBuild(const FGuid& MapId, ULimenProced
 {
 	MapsBuilt++;
 	BuiltMaps.Add(MapId, TStrongObjectPtr(Map));
-
-	UClass* ManagerClass = MapsParameters[MapId]->GetManagerClass();
-	ALimenProceduralMapManager* Manager = GetWorld()->SpawnActor<ALimenProceduralMapManager>(ManagerClass);
-	check(Manager != nullptr);
-	MapManagers.Add(MapId, Manager);
-	Manager->MapBuilt(Map);
+	
+	MapManagers[MapId]->MapBuilt(Map);
 }
 
 void ALimenProceduralMapBuilder::MapBeginDestroy(const FGuid& MapId, ULimenProceduralMap* Map)
