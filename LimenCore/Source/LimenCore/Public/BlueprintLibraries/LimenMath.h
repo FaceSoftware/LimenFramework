@@ -44,27 +44,27 @@ FORCEINLINE static EDirection3D GetDirectionFromOrientation(const FRotator& Orie
 	const FVector Direction = Orientation.Vector();
 	
 	EDirection3D Result = EDirection3D::None;
-	if (Direction == FVector::ForwardVector)
+	if (Direction.Equals(FVector::ForwardVector))
 	{
 		Result = EDirection3D::Forward;
 	}
-	else if (Direction == FVector::BackwardVector)
+	else if (Direction.Equals(FVector::BackwardVector))
 	{
 		Result = EDirection3D::Backward;
 	}
-	else if (Direction == FVector::RightVector)
+	else if (Direction.Equals(FVector::RightVector))
 	{
 		Result = EDirection3D::Right;
 	}
-	else if (Direction == FVector::LeftVector)
+	else if (Direction.Equals(FVector::LeftVector))
 	{
 		Result = EDirection3D::Left;
 	}
-	else if (Direction == FVector::UpVector)
+	else if (Direction.Equals(FVector::UpVector))
 	{
 		Result = EDirection3D::Up;
 	}
-	else if (Direction == FVector::DownVector)
+	else if (Direction.Equals(FVector::DownVector))
 	{
 		Result = EDirection3D::Down;
 	}
