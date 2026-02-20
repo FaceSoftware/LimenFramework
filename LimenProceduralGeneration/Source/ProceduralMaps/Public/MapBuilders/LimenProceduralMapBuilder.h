@@ -5,11 +5,25 @@
 #include "CoreMinimal.h"
 #include "Actors/LimenGameplayManager.h"
 #include "MapBuildAlgorithms/LimenMapAlgorithm.h"
+#include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 #include "LimenProceduralMapBuilder.generated.h"
 
 
 class ALimenProceduralMapManager;
 class UProceduralMapParameters;
+
+USTRUCT(BlueprintType)
+struct FProceduralMapGroup
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Maps")
+	FName GroupName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Maps")
+	TMap<FGuid, TSoftObjectPtr<UProceduralMapParameters>> GroupMaps;
+};
+
 
 UCLASS(Abstract, NotBlueprintable)
 class PROCEDURALMAPS_API ALimenProceduralMapBuilder : public ALimenGameplayManager
@@ -32,7 +46,9 @@ public:
 	bool IsMapBuilt(const FGuid& MapId) const;
 	bool DoesMapExist(const FGuid& MapId) const;
 	
-	const FGuid* GetMapId(const int32 Index) const;
+	const FGuid* GetMapFromCollection(const FName& CollectionName, const FRandomStreamRef& InRandomStream) const;
+	int32 GetCollectionMapCount(const FName& CollectionName) const;
+	
 	FORCEINLINE ALimenProceduralMapManager* GetMapManager(const FGuid& MapId) const;
 	template<typename T>
 	FORCEINLINE T* GetMapManager(const FGuid& MapId) const
@@ -40,7 +56,6 @@ public:
 		static_assert(TIsDerivedFrom<T, ALimenProceduralMapManager>::Value);
 		return Cast<T>(GetMapManager(MapId));
 	}
-	int32 GetMapIndex(const FGuid& MapId) const;
 	ULimenMapAlgorithm* GetMapAlgorithm(const FGuid& MapId) const;
 	const UProceduralMapParameters* GetMapGenerationParameters(const FGuid& MapId) const;
 	template<typename T>
@@ -57,8 +72,7 @@ public:
 
 	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> GetLoadedMaps() const;
 	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> GetBuiltMaps() const;
-	
-	bool IsLastLevel(const FGuid& Test) const;
+
 	int32 GetMapsBuilt() const;
 
 	FOnMapUpdate& GetOnMapBeginBuild();
@@ -74,7 +88,7 @@ protected:
 	typedef TFunction<void(bool, ULimenProceduralMap*)> FMapBuildCallback;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Maps")
-	TMap<FGuid, const UProceduralMapParameters*> MapsParameters;
+	TArray<FProceduralMapGroup> MapCollections;
 
 	virtual void MapBeingLoad(const FGuid& MapId);
 	virtual void MapFinishLoad(const FGuid& MapId, ULimenProceduralMap* Map);
@@ -105,6 +119,8 @@ private:
 	FOnMapUpdate OnMapFinishDestroy;
 
 	int32 MapsBuilt;
+	
+	TMap<FGuid, TSoftObjectPtr<const UProceduralMapParameters>> MapsParameters;
 
 	void LoadMap_Internal(const FGuid& MapId);
 	void BuildMap_Internal(const FGuid& MapId);

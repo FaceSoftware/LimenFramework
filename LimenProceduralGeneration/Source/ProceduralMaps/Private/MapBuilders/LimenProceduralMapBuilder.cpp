@@ -30,6 +30,14 @@ ALimenProceduralMapBuilder::ALimenProceduralMapBuilder(const FObjectInitializer&
 void ALimenProceduralMapBuilder::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	for (int32 CollectionIdx = 0; CollectionIdx < MapCollections.Num(); ++CollectionIdx)
+	{
+		for (const auto& MapData : MapCollections[CollectionIdx].GroupMaps)
+		{
+			MapsParameters.Add(MapData.Key, MapData.Value.LoadSynchronous());
+		}
+	}
 
 #if WITH_EDITOR
 
@@ -114,45 +122,43 @@ bool ALimenProceduralMapBuilder::DoesMapExist(const FGuid& MapId) const
 	return MapsParameters.Contains(MapId);
 }
 
-const FGuid* ALimenProceduralMapBuilder::GetMapId(const int32 Index) const
+const FGuid* ALimenProceduralMapBuilder::GetMapFromCollection(const FName& CollectionName,
+	const FRandomStreamRef& InRandomStream) const
 {
-#if !UE_BUILD_SHIPPING
+	const FProceduralMapGroup* TargetGroup = MapCollections.FindByPredicate([&CollectionName](const FProceduralMapGroup& Group)
 	{
-		TArray<FGuid> Ids;
-		MapsParameters.GetKeys(Ids);
-		check(Ids.IsValidIndex(Index));
-	}
-#endif
+		return Group.GroupName == CollectionName;
+	});
+	
+	if (!TargetGroup) { return nullptr; }
 
-	uint32 CurrentIndex = 0;
-	for (auto& Map : MapsParameters)
+	const int32 RandomIndex = InRandomStream->RandRange(0, TargetGroup->GroupMaps.Num() - 1);
+	int32 CurrentIndex = 0;
+	for (auto It = TargetGroup->GroupMaps.CreateConstIterator(); It; ++It)
 	{
-		if (CurrentIndex == Index)
+		if (CurrentIndex == RandomIndex)
 		{
-			return &Map.Key;
+			return &It.Key();
 		}
-		
 		CurrentIndex++;
 	}
 
 	return nullptr;
 }
 
+int32 ALimenProceduralMapBuilder::GetCollectionMapCount(const FName& CollectionName) const
+{
+	const FProceduralMapGroup* TargetGroup = MapCollections.FindByPredicate([&CollectionName](const FProceduralMapGroup& Group)
+	{
+		return Group.GroupName == CollectionName;
+	});
+	
+	return TargetGroup->GroupMaps.Num();
+}
+
 ALimenProceduralMapManager* ALimenProceduralMapBuilder::GetMapManager(const FGuid& MapId) const
 {
 	return MapManagers[MapId].Get();
-}
-
-int32 ALimenProceduralMapBuilder::GetMapIndex(const FGuid& MapId) const
-{
-	check(DoesMapExist(MapId));
-
-	TArray<FGuid> Ids;
-	MapsParameters.GenerateKeyArray(Ids);
-	
-	int32 Index;
-	Ids.Find(MapId, Index);
-	return Index;
 }
 
 ULimenMapAlgorithm* ALimenProceduralMapBuilder::GetMapAlgorithm(const FGuid& MapId) const
@@ -162,7 +168,7 @@ ULimenMapAlgorithm* ALimenProceduralMapBuilder::GetMapAlgorithm(const FGuid& Map
 
 const UProceduralMapParameters* ALimenProceduralMapBuilder::GetMapGenerationParameters(const FGuid& MapId) const
 {
-	return MapsParameters[MapId];
+	return MapsParameters[MapId].LoadSynchronous();
 }
 
 ULimenProceduralMap* ALimenProceduralMapBuilder::GetMap(const FGuid& MapId) const
@@ -194,17 +200,6 @@ TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> ALimenProceduralMapBuilder::Get
 		Out.Add(BuiltMap.Key, TWeakObjectPtr(BuiltMap.Value.Get()));
 	}
 	return Out;
-}
-
-bool ALimenProceduralMapBuilder::IsLastLevel(const FGuid& Test) const
-{
-	check(!MapsParameters.IsEmpty());
-	check(MapsParameters.Contains(Test));
-
-	TArray<FGuid> Ids;
-	MapsParameters.GenerateKeyArray(Ids);
-	
-	return Ids[Ids.Num() - 1] == Test;
 }
 
 int32 ALimenProceduralMapBuilder::GetMapsBuilt() const
@@ -266,7 +261,7 @@ void ALimenProceduralMapBuilder::MapFinishLoad(const FGuid& MapId, ULimenProcedu
 
 void ALimenProceduralMapBuilder::MapBeginBuild(const FGuid& MapId, ULimenProceduralMap* Map)
 {	
-	UClass* ManagerClass = MapsParameters[MapId]->GetManagerClass();
+	UClass* ManagerClass = MapsParameters[MapId].LoadSynchronous()->GetManagerClass();
 	ALimenProceduralMapManager* Manager = GetWorld()->SpawnActor<ALimenProceduralMapManager>(ManagerClass);
 	check(Manager != nullptr);
 	MapManagers.Add(MapId, TWeakObjectPtr(Manager));
@@ -325,7 +320,7 @@ void ALimenProceduralMapBuilder::MapFinishUnload(const FGuid& MapId)
 
 void ALimenProceduralMapBuilder::LoadMap_Internal(const FGuid& MapId)
 {
-	const UProceduralMapParameters* Params = MapsParameters[MapId];
+	const UProceduralMapParameters* Params = MapsParameters[MapId].LoadSynchronous();
 	check(Params->GetGenerationAlgorithm() != nullptr);
 	
 	ULimenMapAlgorithm* MapAlgorithm = NewObject<ULimenMapAlgorithm>(this, Params->GetGenerationAlgorithm());
