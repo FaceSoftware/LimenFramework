@@ -43,7 +43,7 @@ void ALimenProceduralMapBuilder::BeginPlay()
 
 	for (const auto& MapDataAsset : MapsParameters)
 	{
-		ensureMsgf(MapDataAsset.Value != nullptr, TEXT("Map builder contains an invalid data asset"));
+		ensureMsgf(!MapDataAsset.Value.IsNull(), TEXT("Map builder contains an invalid data asset"));
 	}
 
 #endif
