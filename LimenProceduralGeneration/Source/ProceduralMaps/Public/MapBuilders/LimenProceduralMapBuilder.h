@@ -104,6 +104,7 @@ private:
 	TMap<FGuid, TStrongObjectPtr<ULimenProceduralMap>> LoadedMaps;
 	TMap<FGuid, TStrongObjectPtr<ULimenProceduralMap>> BuiltMaps;
 	TMap<FGuid, TWeakObjectPtr<ALimenProceduralMapManager>> MapManagers;
+	TMap<FGuid, TStrongObjectPtr<const UProceduralMapParameters>> ActiveMapParameters;
 
 	ULimenMapAlgorithm::FAlgorithmFinish AlgorithmFinishDelegate;
 

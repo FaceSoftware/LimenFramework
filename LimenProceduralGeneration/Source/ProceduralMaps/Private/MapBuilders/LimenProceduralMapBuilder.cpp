@@ -35,7 +35,7 @@ void ALimenProceduralMapBuilder::BeginPlay()
 	{
 		for (const auto& MapData : MapCollections[CollectionIdx].GroupMaps)
 		{
-			MapsParameters.Add(MapData.Key, MapData.Value.LoadSynchronous());
+			MapsParameters.Add(MapData.Key, MapData.Value);
 		}
 	}
 
@@ -255,6 +255,8 @@ void ALimenProceduralMapBuilder::MapBeingLoad(const FGuid& MapId)
 void ALimenProceduralMapBuilder::MapFinishLoad(const FGuid& MapId, ULimenProceduralMap* Map)
 {
 	LoadedMaps.Add(MapId, TStrongObjectPtr(Map));
+	const int32 RemoveCount = ActiveMapParameters.Remove(MapId);
+	check(RemoveCount > 0)
 	
 	GetOnMapFinishLoad().Broadcast(MapId);
 }
@@ -320,11 +322,13 @@ void ALimenProceduralMapBuilder::MapFinishUnload(const FGuid& MapId)
 
 void ALimenProceduralMapBuilder::LoadMap_Internal(const FGuid& MapId)
 {
-	const UProceduralMapParameters* Params = MapsParameters[MapId].LoadSynchronous();
-	check(Params->GetGenerationAlgorithm() != nullptr);
+	const TStrongObjectPtr Params(MapsParameters[MapId].LoadSynchronous());
+	ActiveMapParameters.Add(MapId, Params);
+
+	check(Params->GetGenerationAlgorithm());
 	
 	ULimenMapAlgorithm* MapAlgorithm = NewObject<ULimenMapAlgorithm>(this, Params->GetGenerationAlgorithm());
-	MapAlgorithm->CreateMap(MapId, Params, AlgorithmFinishDelegate);
+	MapAlgorithm->CreateMap(MapId, Params.Get(), AlgorithmFinishDelegate);
 	
 	MapAlgorithms.Add(MapId, TStrongObjectPtr(MapAlgorithm));
 }
