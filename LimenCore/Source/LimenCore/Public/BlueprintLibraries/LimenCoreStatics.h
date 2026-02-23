@@ -136,39 +136,11 @@ public:
 };
 
 static void LimenLog(const UObject* Caller, const FString& LogText, const ELogType Verbosity = ELogType::Log,
-					 const bool bPrintToScreen = true, FName Key = NAME_None)
+					 const bool bPrintToScreen = true, const FName& Key = NAME_None)
 {
 	ULimenCoreStatics::LimenLog(Caller, LogText, Verbosity, bPrintToScreen, Key);
 }
 
-template<typename... TArgs>
-static void LimenLog(const UObject* Caller, const ELogType Verbosity, const bool bPrintToScreen, FName Key,
-					 const FString& LogText, TArgs&&... Args)
-{
-	const FString FormattedLogString = FString::Printf(*LogText, Forward<TArgs>(Args)...);
-	ULimenCoreStatics::LimenLog(Caller, FormattedLogString, Verbosity, bPrintToScreen, Key);
-}
-
-template<typename... TArgs>
-static void LimenLog(const UObject* Caller, const FString& LogText, TArgs&&... Args)
-{
-	const FString FormattedLogString = FString::Printf(*LogText, Forward<TArgs>(Args)...);
-	ULimenCoreStatics::LimenLog(Caller, FormattedLogString, ELogType::Log, true, NAME_None);
-}
-
-template<typename... TArgs>
-static void LimenWarning(const UObject* Caller, const FString& LogText, TArgs&&... Args)
-{
-	const FString FormattedLogString = FString::Printf(*LogText, Forward<TArgs>(Args)...);
-	ULimenCoreStatics::LimenLog(Caller, FormattedLogString, ELogType::Warning, true, NAME_None);
-}
-
-template<typename... TArgs>
-static void LimenError(const UObject* Caller, const FString& LogText, TArgs&&... Args)
-{
-	const FString FormattedLogString = FString::Printf(*LogText, Forward<TArgs>(Args)...);
-	ULimenCoreStatics::LimenLog(Caller, FormattedLogString, ELogType::Error, true, NAME_None);
-}
 
 UENUM(BlueprintType)
 enum class EComparisonOperator : uint8
