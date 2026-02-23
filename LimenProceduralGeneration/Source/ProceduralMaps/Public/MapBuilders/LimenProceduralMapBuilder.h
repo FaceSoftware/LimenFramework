@@ -21,7 +21,12 @@ struct FProceduralMapGroup
 	FName GroupName;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Maps")
-	TMap<FGuid, TSoftObjectPtr<UProceduralMapParameters>> GroupMaps;
+	TArray<TSoftObjectPtr<UProceduralMapParameters>> GroupMaps;
+	
+	bool operator==(const FName& InGroupName) const
+	{
+		return GroupName == InGroupName;
+	}
 };
 
 
@@ -37,16 +42,15 @@ public:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	void LoadMap(const FGuid& MapId);
+	FGuid LoadMap(const FName GroupName, const int32 Index);
 	void BuildMap(const FGuid& MapId);
 	void DestroyMap(const FGuid& MapId);
 	void UnloadMap(const FGuid& MapId);
 
 	bool IsMapLoaded(const FGuid& MapId) const;
 	bool IsMapBuilt(const FGuid& MapId) const;
-	bool DoesMapExist(const FGuid& MapId) const;
-	
-	const FGuid* GetMapFromCollection(const FName& CollectionName, const FRandomStreamRef& InRandomStream) const;
+	bool DoesMapExist(const FName GroupName, const int32 Index) const;
+
 	int32 GetCollectionMapCount(const FName& CollectionName) const;
 	
 	FORCEINLINE ALimenProceduralMapManager* GetMapManager(const FGuid& MapId) const;
@@ -63,15 +67,15 @@ public:
 	{
 		return Cast<T>(GetMapGenerationParameters(MapId));
 	}
-	ULimenProceduralMap* GetMap(const FGuid& MapId) const;
+	ULimenProceduralMap* GetMapData(const FGuid& MapId) const;
 	template<typename T>
-	T* GetMap(const FGuid& MapId) const
+	T* GetMapData(const FGuid& MapId) const
 	{
-		return Cast<T>(GetMap(MapId));
+		return Cast<T>(GetMapData(MapId));
 	}
 
-	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> GetLoadedMaps() const;
-	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> GetBuiltMaps() const;
+	TArray<TWeakObjectPtr<ULimenProceduralMap>> GetLoadedMapsData() const;
+	TArray<TWeakObjectPtr<ULimenProceduralMap>> GetBuiltMapsData() const;
 
 	int32 GetMapsBuilt() const;
 
@@ -100,13 +104,33 @@ protected:
 	virtual void MapFinishUnload(const FGuid& MapId);
 	
 private:
-	TMap<FGuid, TStrongObjectPtr<ULimenMapAlgorithm>> MapAlgorithms;
-	TMap<FGuid, TStrongObjectPtr<ULimenProceduralMap>> LoadedMaps;
-	TMap<FGuid, TStrongObjectPtr<ULimenProceduralMap>> BuiltMaps;
-	TMap<FGuid, TWeakObjectPtr<ALimenProceduralMapManager>> MapManagers;
-	TMap<FGuid, TStrongObjectPtr<const UProceduralMapParameters>> ActiveMapParameters;
+	struct FMapInstance
+	{
+		FMapInstance() = default;
+		explicit FMapInstance(const FName& InMapGroup, const int32 InMapIndex)
+		{
+			MapGroup = InMapGroup;
+			MapIndex = InMapIndex;
+			bIsLoaded = false;
+			bIsBuilt = false;
+		}
+		
+		FName MapGroup;
+		int32 MapIndex;
+
+		TStrongObjectPtr<const UProceduralMapParameters> MapParameters;
+		TStrongObjectPtr<ULimenMapAlgorithm> MapAlgorithm;
+		TStrongObjectPtr<ULimenProceduralMap> MapData;
+		TWeakObjectPtr<ALimenProceduralMapManager> MapManager;
+		
+		bool bIsLoaded;
+		bool bIsBuilt;
+	};
+	
+	TMap<FGuid, FMapInstance> MapInstances;
 
 	ULimenMapAlgorithm::FAlgorithmFinish AlgorithmFinishDelegate;
+	FDelegateHandle AlgorithmFinishDelegateHandle;
 
 	bool bIsWorkingFlag;
 
@@ -120,13 +144,13 @@ private:
 	FOnMapUpdate OnMapFinishDestroy;
 
 	int32 MapsBuilt;
-	
-	TMap<FGuid, TSoftObjectPtr<const UProceduralMapParameters>> MapsParameters;
 
 	void LoadMap_Internal(const FGuid& MapId);
 	void BuildMap_Internal(const FGuid& MapId);
 	void DestroyMap_Internal(const FGuid& MapId);
 	void UnloadMap_Internal(const FGuid& MapId);
+	
+	void AlgorithmFinish(bool bSuccess, const FGuid& MapId, ULimenProceduralMap* Map);
 	
 	virtual void StartBuildingMap(const FGuid& MapId, const FMapBuildCallback& FinishCallback);
 	virtual void StartDestroyingMap(const FGuid& MapId, const FMapBuildCallback& FinishCallback);

@@ -16,34 +16,21 @@ ALimenProceduralMapBuilder::ALimenProceduralMapBuilder(const FObjectInitializer&
 	bReplicates = false;
 	MapsBuilt = 0;
 	
-	AlgorithmFinishDelegate.BindLambda([this] (bool bSuccess, const FGuid& MapId, ULimenProceduralMap* Map)
-	{
-		if (!bSuccess)
-		{
-			return;
-		}
-		
-		MapFinishLoad(MapId, Map);
-	});
+	AlgorithmFinishDelegate.BindUObject(this, &ThisClass::AlgorithmFinish);
 }
 
 void ALimenProceduralMapBuilder::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	for (int32 CollectionIdx = 0; CollectionIdx < MapCollections.Num(); ++CollectionIdx)
-	{
-		for (const auto& MapData : MapCollections[CollectionIdx].GroupMaps)
-		{
-			MapsParameters.Add(MapData.Key, MapData.Value);
-		}
-	}
 
 #if WITH_EDITOR
 
-	for (const auto& MapDataAsset : MapsParameters)
+	for (const FProceduralMapGroup& Collection : MapCollections)
 	{
-		ensureMsgf(!MapDataAsset.Value.IsNull(), TEXT("Map builder contains an invalid data asset"));
+		for (auto& Map : Collection.GroupMaps)
+		{
+			ensureMsgf(!Map.IsNull(), TEXT("Map builder contains an invalid data asset"));
+		}
 	}
 
 #endif
@@ -51,99 +38,71 @@ void ALimenProceduralMapBuilder::BeginPlay()
 
 void ALimenProceduralMapBuilder::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	for (const auto& Element : MapAlgorithms)
-	{
-		Element.Value->ConditionalBeginDestroy();
-	}
-	MapAlgorithms.Empty();
-	for (const auto& Element : LoadedMaps)
-	{
-		Element.Value->ConditionalBeginDestroy();
-	}
-	LoadedMaps.Empty();
-	for (const auto& Element : BuiltMaps)
-	{
-		Element.Value->ConditionalBeginDestroy();
-	}
-	BuiltMaps.Empty();
+	MapInstances.Empty();
+	
+	AlgorithmFinishDelegate.Unbind();
 
 	Super::EndPlay(EndPlayReason);
 }
 
-void ALimenProceduralMapBuilder::LoadMap(const FGuid& MapId)
+FGuid ALimenProceduralMapBuilder::LoadMap(const FName GroupName, const int32 Index)
 {
-	check(DoesMapExist(MapId));
+	check(DoesMapExist(GroupName, Index));
 
+	const FGuid MapId = FGuid::NewGuid();
+
+	MapInstances.Add(MapId, FMapInstance(GroupName, Index));
+	
 	MapBeingLoad(MapId);
 	LoadMap_Internal(MapId);
+	return MapId;
 }
 
 void ALimenProceduralMapBuilder::BuildMap(const FGuid& MapId)
 {
-	check(DoesMapExist(MapId));
-	check(IsMapLoaded(MapId));
-	check(!IsMapBuilt(MapId));
+	check(IsMapLoaded(MapId))
+	check(!IsMapBuilt(MapId))
 	
-	MapBeginBuild(MapId, GetMap(MapId));
+	MapBeginBuild(MapId, GetMapData(MapId));
 	BuildMap_Internal(MapId);
 }
 
 void ALimenProceduralMapBuilder::DestroyMap(const FGuid& MapId)
 {
-	check(DoesMapExist(MapId));
-	check(IsMapBuilt(MapId));
+	check(IsMapBuilt(MapId))
 
-	
 	DestroyMap_Internal(MapId);
 }
 
 void ALimenProceduralMapBuilder::UnloadMap(const FGuid& MapId)
 {
-	check(DoesMapExist(MapId));
 	check(IsMapLoaded(MapId));
-
 	
 	UnloadMap_Internal(MapId);
 }
 
 bool ALimenProceduralMapBuilder::IsMapLoaded(const FGuid& MapId) const
 {
-	return LoadedMaps.Contains(MapId);
+	const FMapInstance* Instance = MapInstances.Find(MapId);
+	if (!Instance) { return false; }
+	
+	return Instance->bIsLoaded;
 }
 
 bool ALimenProceduralMapBuilder::IsMapBuilt(const FGuid& MapId) const
 {
-	check(MapsParameters.Contains(MapId));
-	return BuiltMaps.Contains(MapId);
-}
-
-bool ALimenProceduralMapBuilder::DoesMapExist(const FGuid& MapId) const
-{
-	return MapsParameters.Contains(MapId);
-}
-
-const FGuid* ALimenProceduralMapBuilder::GetMapFromCollection(const FName& CollectionName,
-	const FRandomStreamRef& InRandomStream) const
-{
-	const FProceduralMapGroup* TargetGroup = MapCollections.FindByPredicate([&CollectionName](const FProceduralMapGroup& Group)
-	{
-		return Group.GroupName == CollectionName;
-	});
+	const FMapInstance* Instance = MapInstances.Find(MapId);
+	if (!Instance) { return false; }
 	
-	if (!TargetGroup) { return nullptr; }
+	return Instance->bIsBuilt;
+}
 
-	const int32 RandomIndex = InRandomStream->RandRange(0, TargetGroup->GroupMaps.Num() - 1);
-	int32 CurrentIndex = 0;
-	for (auto It = TargetGroup->GroupMaps.CreateConstIterator(); It; ++It)
+bool ALimenProceduralMapBuilder::DoesMapExist(const FName GroupName, const int32 Index) const
+{
+	return MapCollections.FindByPredicate([&GroupName, &Index] (const FProceduralMapGroup& Test)
 	{
-		if (CurrentIndex == RandomIndex)
-		{
-			return &It.Key();
-		}
-		CurrentIndex++;
-	}
-
-	return nullptr;
+		return Test.GroupName == GroupName && Test.GroupMaps.IsValidIndex(Index);
+	}) != nullptr;
 }
 
 int32 ALimenProceduralMapBuilder::GetCollectionMapCount(const FName& CollectionName) const
@@ -158,46 +117,58 @@ int32 ALimenProceduralMapBuilder::GetCollectionMapCount(const FName& CollectionN
 
 ALimenProceduralMapManager* ALimenProceduralMapBuilder::GetMapManager(const FGuid& MapId) const
 {
-	return MapManagers[MapId].Get();
+	const FMapInstance* Instance = MapInstances.Find(MapId);
+	if (!Instance) { return nullptr; }
+	
+	return Instance->MapManager.Get();
 }
 
 ULimenMapAlgorithm* ALimenProceduralMapBuilder::GetMapAlgorithm(const FGuid& MapId) const
 {
-	return MapAlgorithms[MapId].Get();
+	const FMapInstance* Instance = MapInstances.Find(MapId);
+	if (!Instance) { return nullptr; }
+	
+	return Instance->MapAlgorithm.Get();
 }
 
 const UProceduralMapParameters* ALimenProceduralMapBuilder::GetMapGenerationParameters(const FGuid& MapId) const
 {
-	return MapsParameters[MapId].LoadSynchronous();
-}
-
-ULimenProceduralMap* ALimenProceduralMapBuilder::GetMap(const FGuid& MapId) const
-{	
-	TStrongObjectPtr<ULimenProceduralMap> const* Map = LoadedMaps.Find(MapId);
-	if (Map != nullptr) { return Map->Get(); }
+	const FMapInstance* Instance = MapInstances.Find(MapId);
+	if (!Instance) { return nullptr; }
 	
-	Map = BuiltMaps.Find(MapId);
-	if (Map != nullptr) { return Map->Get(); }
-
-	return nullptr;
+	return Instance->MapParameters.Get();
 }
 
-TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> ALimenProceduralMapBuilder::GetLoadedMaps() const
+ULimenProceduralMap* ALimenProceduralMapBuilder::GetMapData(const FGuid& MapId) const
 {
-	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> Out;
-	for (const auto& LoadedMap : LoadedMaps)
+	const FMapInstance* Instance = MapInstances.Find(MapId);
+	if (!Instance) { return nullptr; }
+	
+	return Instance->MapData.Get();
+}
+
+TArray<TWeakObjectPtr<ULimenProceduralMap>> ALimenProceduralMapBuilder::GetLoadedMapsData() const
+{
+	TArray<TWeakObjectPtr<ULimenProceduralMap>> Out;
+	for (const auto& Map : MapInstances)
 	{
-		Out.Add(LoadedMap.Key, TWeakObjectPtr(LoadedMap.Value.Get()));
+		if (Map.Value.bIsLoaded)
+		{
+			Out.Add(TWeakObjectPtr(Map.Value.MapData.Get()));
+		}
 	}
 	return Out;
 }
 
-TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> ALimenProceduralMapBuilder::GetBuiltMaps() const
+TArray<TWeakObjectPtr<ULimenProceduralMap>> ALimenProceduralMapBuilder::GetBuiltMapsData() const
 {
-	TMap<FGuid, TWeakObjectPtr<ULimenProceduralMap>> Out;
-	for (const auto& BuiltMap : BuiltMaps)
+	TArray<TWeakObjectPtr<ULimenProceduralMap>> Out;
+	for (const auto& Map : MapInstances)
 	{
-		Out.Add(BuiltMap.Key, TWeakObjectPtr(BuiltMap.Value.Get()));
+		if (Map.Value.bIsBuilt)
+		{
+			Out.Add(TWeakObjectPtr(Map.Value.MapData.Get()));
+		}
 	}
 	return Out;
 }
@@ -249,128 +220,147 @@ ALimenProceduralMapBuilder::FOnMapUpdate& ALimenProceduralMapBuilder::GetOnMapFi
 
 void ALimenProceduralMapBuilder::MapBeingLoad(const FGuid& MapId)
 {
+	check(!IsMapLoaded(MapId));
 	GetOnMapBeginLoad().Broadcast(MapId);
 }
 
 void ALimenProceduralMapBuilder::MapFinishLoad(const FGuid& MapId, ULimenProceduralMap* Map)
 {
-	LoadedMaps.Add(MapId, TStrongObjectPtr(Map));
-	const int32 RemoveCount = ActiveMapParameters.Remove(MapId);
-	check(RemoveCount > 0)
-	
-	GetOnMapFinishLoad().Broadcast(MapId);
+	check(!IsMapLoaded(MapId));
+	FMapInstance& Instance = MapInstances.FindChecked(MapId);
+	Instance.MapData = TStrongObjectPtr(Map);
+	Instance.bIsLoaded = true;
 }
 
 void ALimenProceduralMapBuilder::MapBeginBuild(const FGuid& MapId, ULimenProceduralMap* Map)
-{	
-	UClass* ManagerClass = MapsParameters[MapId].LoadSynchronous()->GetManagerClass();
+{
+	check(!IsMapBuilt(MapId))
+	
+	FMapInstance& Instance = MapInstances.FindChecked(MapId);
+	
+	UClass* ManagerClass = Instance.MapParameters->GetManagerClass();
 	ALimenProceduralMapManager* Manager = GetWorld()->SpawnActor<ALimenProceduralMapManager>(ManagerClass);
-	check(Manager != nullptr);
-	MapManagers.Add(MapId, TWeakObjectPtr(Manager));
+	
+	Instance.MapManager = TWeakObjectPtr(Manager);
 	
 	GetOnMapBeginBuild().Broadcast(MapId);
 }
 
 void ALimenProceduralMapBuilder::MapFinishBuild(const FGuid& MapId, ULimenProceduralMap* Map)
 {
+	check(!IsMapBuilt(MapId))
+
 	MapsBuilt++;
-	BuiltMaps.Add(MapId, TStrongObjectPtr(Map));
-	
-	MapManagers[MapId]->MapBuilt(Map);
+
+	FMapInstance& Instance = MapInstances.FindChecked(MapId);
+	Instance.bIsBuilt = true;
 }
 
 void ALimenProceduralMapBuilder::MapBeginDestroy(const FGuid& MapId, ULimenProceduralMap* Map)
 {
+	check(IsMapBuilt(MapId))
 	GetOnMapBeginDestroy().Broadcast(MapId);
 }
 
 void ALimenProceduralMapBuilder::MapFinishDestroy(const FGuid& MapId, ULimenProceduralMap* Map)
 {
-	verify(MapManagers[MapId]->Destroy());
-	MapManagers.Remove(MapId);
-		
-	if (!LoadedMaps.Contains(MapId))
-	{
-		verify(BuiltMaps[MapId]->ConditionalBeginDestroy());
-	}
+	check(IsMapBuilt(MapId))
 	
-	BuiltMaps.Remove(MapId);
+	FMapInstance& Instance = MapInstances.FindChecked(MapId);
+	Instance.bIsBuilt = false;
 
-	GetOnMapFinishDestroy().Broadcast(MapId);
+	check(Instance.MapManager.IsValid())
+	Instance.MapManager->Destroy();
+	Instance.MapManager.Reset();
 }
 
 void ALimenProceduralMapBuilder::MapBeginUnload(const FGuid& MapId)
 {
+	check(IsMapLoaded(MapId));
+	
 	GetOnMapBeginUnload().Broadcast(MapId);
 }
 
 void ALimenProceduralMapBuilder::MapFinishUnload(const FGuid& MapId)
 {
-	check(LoadedMaps.Contains(MapId));
+	check(IsMapLoaded(MapId));
 
-	if (!BuiltMaps.Contains(MapId))
-	{
-		verify(LoadedMaps[MapId]->ConditionalBeginDestroy());
-	}
-	LoadedMaps.Remove(MapId);
-	
-	verify(MapAlgorithms[MapId]->ConditionalBeginDestroy());
-	MapAlgorithms.Remove(MapId);
-
-	GetOnMapFinishUnload().Broadcast(MapId);
+	MapInstances.Remove(MapId);
 }
 
 void ALimenProceduralMapBuilder::LoadMap_Internal(const FGuid& MapId)
 {
-	const TStrongObjectPtr Params(MapsParameters[MapId].LoadSynchronous());
-	ActiveMapParameters.Add(MapId, Params);
+	FMapInstance& Instance = MapInstances.FindChecked(MapId);
+	const FName MapGroupName = Instance.MapGroup;
+	const int32 MapIndex = Instance.MapIndex;
+	
+	FProceduralMapGroup* Group = MapCollections.FindByKey(MapGroupName);
+	check(Group)
+	
+	UProceduralMapParameters* Parameters = Group->GroupMaps[MapIndex].LoadSynchronous();
+	check(Parameters)
+	check(Parameters->ValidateParameters());
 
-	check(Params->GetGenerationAlgorithm());
+	const TSubclassOf<ULimenMapAlgorithm> AlgorithmClass = Parameters->GetGenerationAlgorithm();
+	check(AlgorithmClass);
 	
-	ULimenMapAlgorithm* MapAlgorithm = NewObject<ULimenMapAlgorithm>(this, Params->GetGenerationAlgorithm());
-	MapAlgorithm->CreateMap(MapId, Params.Get(), AlgorithmFinishDelegate);
+	ULimenMapAlgorithm* Algorithm = NewObject<ULimenMapAlgorithm>(this, AlgorithmClass);
+	check(Algorithm)
+
+	Instance.MapParameters = TStrongObjectPtr(Parameters);
+	Instance.MapAlgorithm = TStrongObjectPtr(Algorithm);
 	
-	MapAlgorithms.Add(MapId, TStrongObjectPtr(MapAlgorithm));
+	Algorithm->CreateMap(MapId, Parameters, AlgorithmFinishDelegate);
 }
 
 void ALimenProceduralMapBuilder::BuildMap_Internal(const FGuid& MapId)
 {
-	StartBuildingMap(MapId, [this, MapId] (const bool bSuccess,
+	TWeakObjectPtr WeakThis = this;
+	StartBuildingMap(MapId, [WeakThis, MapId] (const bool bSuccess,
 										   ULimenProceduralMap* Map)
 	{
-		if (!bSuccess)
-		{
-			return;
-		}
+		if (!WeakThis.IsValid() || !bSuccess) { return; }
 		
-		MapFinishBuild(MapId, Map);
-		GetOnMapFinishBuild().Broadcast(MapId);
+		WeakThis->MapFinishBuild(MapId, Map);
+		WeakThis->GetOnMapFinishBuild().Broadcast(MapId);
 	});
 }
 
 void ALimenProceduralMapBuilder::DestroyMap_Internal(const FGuid& MapId)
 {
-	check(BuiltMaps.Contains(MapId));
+	check(IsMapBuilt(MapId));
 
-	StartDestroyingMap(MapId, [this, MapId] (const bool bSuccess,
+	TWeakObjectPtr WeakThis = this;
+	StartDestroyingMap(MapId, [WeakThis, MapId] (const bool bSuccess,
 										   ULimenProceduralMap* Map)
 	{
-		if (!bSuccess)
-		{
-			return;
-		}
+		if (!WeakThis.IsValid() || !bSuccess) { return; }
 
-		MapFinishDestroy(MapId, Map);
+		WeakThis->MapFinishDestroy(MapId, Map);
+		WeakThis->GetOnMapFinishDestroy().Broadcast(MapId);
 	});
 }
 
 void ALimenProceduralMapBuilder::UnloadMap_Internal(const FGuid& MapId)
 {
 	MapFinishUnload(MapId);
+	GetOnMapFinishUnload().Broadcast(MapId);
+}
+
+void ALimenProceduralMapBuilder::AlgorithmFinish(const bool bSuccess, const FGuid& MapId, ULimenProceduralMap* Map)
+{
+	if (!bSuccess)
+	{
+		MapInstances.Remove(MapId);
+		return;
+	}
+		
+	MapFinishLoad(MapId, Map);
+	GetOnMapFinishLoad().Broadcast(MapId);
 }
 
 void ALimenProceduralMapBuilder::StartBuildingMap(const FGuid& MapId,
-	const FMapBuildCallback& FinishCallback)
+                                                  const FMapBuildCallback& FinishCallback)
 {
 	PURE_VIRTUAL(ALimenProceduralMapBuilder::StartBuildingMap);
 }
