@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Actors/LimenGameplayManager.h"
 #include "MapBuildAlgorithms/LimenMapAlgorithm.h"
-#include "Subsystems/LimenGlobalRandomStreamSubsystem.h"
 #include "LimenProceduralMapBuilder.generated.h"
 
 
@@ -118,7 +117,7 @@ private:
 		FName MapGroup;
 		int32 MapIndex;
 
-		TStrongObjectPtr<const UProceduralMapParameters> MapParameters;
+		TStrongObjectPtr<UProceduralMapParameters> MapParameters;
 		TStrongObjectPtr<ULimenMapAlgorithm> MapAlgorithm;
 		TStrongObjectPtr<ULimenProceduralMap> MapData;
 		TWeakObjectPtr<ALimenProceduralMapManager> MapManager;

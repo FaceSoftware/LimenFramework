@@ -54,8 +54,7 @@ ULimenProceduralMap* ULimenMapAlgorithm::CreateMap(const FGuid& MapId, const UPr
 	}
 	
 	GeneratedMap = TStrongObjectPtr(NewObject<ULimenProceduralMap>(this, GetGeneratedMapClass()));
-	ULimenProceduralMap* Map = GeneratedMap.Get();
-	GenerateMap(GeneratedMapParameters.Get(), Map);
+	GenerateMap(GeneratedMapParameters.Get(), GeneratedMap.Get());
 
 	return GeneratedMap.Get();
 }
@@ -66,7 +65,7 @@ TSubclassOf<ULimenProceduralMap> ULimenMapAlgorithm::GetGeneratedMapClass() cons
 	return nullptr;
 }
 
-void ULimenMapAlgorithm::GenerateMap(const UProceduralMapParameters* MapParameters, ULimenProceduralMap*& OutGeneratedMap)
+void ULimenMapAlgorithm::GenerateMap(const UProceduralMapParameters* MapParameters, ULimenProceduralMap* OutGeneratedMap)
 {
 	PURE_VIRTUAL(ULimenMapAlgorithm::GenerateMap);
 }
@@ -110,6 +109,7 @@ void ULimenMapAlgorithm::Exit()
 		if (!OnAlgorithmFinished) return;
 
 		OnAlgorithmFinished->Execute(true, GeneratedMapId, GeneratedMap.Get());
+		GeneratedMap.Reset();
 		LIMEN_LOG(LogLimen, Log, this, TEXT("Finished algorithm"));
 	});
 }

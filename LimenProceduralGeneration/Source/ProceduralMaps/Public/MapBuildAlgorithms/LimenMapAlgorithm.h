@@ -45,7 +45,7 @@ protected:
 	 * @param MapParameters The parameters for the map generation.
 	 * @param OutGeneratedMap A pointer to the generated map.
 	 */
-	virtual void GenerateMap(const UProceduralMapParameters* MapParameters, ULimenProceduralMap*& OutGeneratedMap);
+	virtual void GenerateMap(const UProceduralMapParameters* MapParameters, ULimenProceduralMap* OutGeneratedMap);
 
 	virtual bool Init() override;
 	virtual uint32 Run() override;
