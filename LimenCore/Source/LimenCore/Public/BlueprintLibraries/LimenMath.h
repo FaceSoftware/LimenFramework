@@ -26,6 +26,29 @@ enum class EDirection3D : uint8
 	MAX UMETA(Hidden),
 };
 
+inline static TArray AllDirections = {
+	EDirection3D::Forward,
+	EDirection3D::Backward,
+	EDirection3D::Left,
+	EDirection3D::Right,
+	EDirection3D::Up,
+	EDirection3D::Down
+};
+
+inline static TArray TopViewDirections = {
+	EDirection3D::Forward,
+	EDirection3D::Backward,
+	EDirection3D::Left,
+	EDirection3D::Right
+};
+
+inline static TArray SideViewDirections = {
+	EDirection3D::Left,
+	EDirection3D::Right,
+	EDirection3D::Up,
+	EDirection3D::Down
+};
+
 FORCEINLINE static uint8 DirectionAsInt(const EDirection3D Direction)
 {
 	return static_cast<uint8>(Direction);
@@ -70,6 +93,21 @@ FORCEINLINE static EDirection3D GetDirectionFromOrientation(const FRotator& Orie
 	}
 	
 	return Result;
+}
+
+FORCEINLINE static FVector GetDirectionVector(const EDirection3D Direction)
+{	
+	switch (Direction)
+	{
+	case EDirection3D::Forward: return FVector::ForwardVector;
+	case EDirection3D::Backward: return FVector::BackwardVector;
+	case EDirection3D::Left: return FVector::LeftVector;
+	case EDirection3D::Right: return FVector::RightVector;
+	case EDirection3D::Up:	return FVector::UpVector;
+	case EDirection3D::Down: return FVector::DownVector;
+	default: break;
+	}
+	return FVector::ZeroVector;
 }
 
 /**
