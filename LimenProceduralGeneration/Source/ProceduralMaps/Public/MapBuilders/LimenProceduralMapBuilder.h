@@ -51,26 +51,45 @@ public:
 	bool DoesMapExist(const FName GroupName, const int32 Index) const;
 
 	int32 GetCollectionMapCount(const FName& CollectionName) const;
-	
-	FORCEINLINE ALimenProceduralMapManager* GetMapManager(const FGuid& MapId) const;
-	template<typename T>
+
+	template<typename T = ALimenProceduralMapManager>
 	FORCEINLINE T* GetMapManager(const FGuid& MapId) const
 	{
 		static_assert(TIsDerivedFrom<T, ALimenProceduralMapManager>::Value);
-		return Cast<T>(GetMapManager(MapId));
+		
+		const FMapInstance* Instance = MapInstances.Find(MapId);
+		if (!Instance) { return nullptr; }
+		return Cast<T>(Instance->MapManager.Get());
 	}
-	ULimenMapAlgorithm* GetMapAlgorithm(const FGuid& MapId) const;
-	const UProceduralMapParameters* GetMapGenerationParameters(const FGuid& MapId) const;
-	template<typename T>
-	const T* GetMapGenerationParameters(const FGuid& MapId) const
+	
+	template<typename T = ULimenMapAlgorithm>
+	FORCEINLINE T* GetMapAlgorithm(const FGuid& MapId) const
 	{
-		return Cast<T>(GetMapGenerationParameters(MapId));
+		static_assert(TIsDerivedFrom<T, ULimenMapAlgorithm>::Value);
+		
+		const FMapInstance* Instance = MapInstances.Find(MapId);
+		if (!Instance) { return nullptr; }
+		return Cast<T>(Instance->MapAlgorithm.Get());
 	}
-	ULimenProceduralMap* GetMapData(const FGuid& MapId) const;
-	template<typename T>
-	T* GetMapData(const FGuid& MapId) const
+
+	template<typename T = UProceduralMapParameters>
+	FORCEINLINE T* GetMapGenerationParameters(const FGuid& MapId) const
 	{
-		return Cast<T>(GetMapData(MapId));
+		static_assert(TIsDerivedFrom<T, UProceduralMapParameters>::Value);
+		
+		const FMapInstance* Instance = MapInstances.Find(MapId);
+		if (!Instance) { return nullptr; }
+		return Cast<T>(Instance->MapParameters.Get());
+	}
+
+	template<typename T = ULimenProceduralMap>
+	FORCEINLINE T* GetMapData(const FGuid& MapId) const
+	{
+		static_assert(TIsDerivedFrom<T, ULimenProceduralMap>::Value);
+		
+		const FMapInstance* Instance = MapInstances.Find(MapId);
+		if (!Instance) { return nullptr; }
+		return Cast<T>(Instance->MapData.Get());
 	}
 
 	TArray<TWeakObjectPtr<ULimenProceduralMap>> GetLoadedMapsData() const;

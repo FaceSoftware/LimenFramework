@@ -115,38 +115,6 @@ int32 ALimenProceduralMapBuilder::GetCollectionMapCount(const FName& CollectionN
 	return TargetGroup->GroupMaps.Num();
 }
 
-ALimenProceduralMapManager* ALimenProceduralMapBuilder::GetMapManager(const FGuid& MapId) const
-{
-	const FMapInstance* Instance = MapInstances.Find(MapId);
-	if (!Instance) { return nullptr; }
-	
-	return Instance->MapManager.Get();
-}
-
-ULimenMapAlgorithm* ALimenProceduralMapBuilder::GetMapAlgorithm(const FGuid& MapId) const
-{
-	const FMapInstance* Instance = MapInstances.Find(MapId);
-	if (!Instance) { return nullptr; }
-	
-	return Instance->MapAlgorithm.Get();
-}
-
-const UProceduralMapParameters* ALimenProceduralMapBuilder::GetMapGenerationParameters(const FGuid& MapId) const
-{
-	const FMapInstance* Instance = MapInstances.Find(MapId);
-	if (!Instance) { return nullptr; }
-	
-	return Instance->MapParameters.Get();
-}
-
-ULimenProceduralMap* ALimenProceduralMapBuilder::GetMapData(const FGuid& MapId) const
-{
-	const FMapInstance* Instance = MapInstances.Find(MapId);
-	if (!Instance) { return nullptr; }
-	
-	return Instance->MapData.Get();
-}
-
 TArray<TWeakObjectPtr<ULimenProceduralMap>> ALimenProceduralMapBuilder::GetLoadedMapsData() const
 {
 	TArray<TWeakObjectPtr<ULimenProceduralMap>> Out;
