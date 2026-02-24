@@ -276,6 +276,11 @@ void ALimenPlayerControllerBase::BlendViewTargetSet(AActor* NewViewTarget)
 {
 }
 
+void ALimenPlayerControllerBase::SetCurrentInputMode(const ELimenInputMode InInputMode)
+{
+	CurrentInputMode = InInputMode;
+}
+
 void ALimenPlayerControllerBase::SetPawn(APawn* InPawn)
 {
 	APawn* PrevPawn = GetPawn();

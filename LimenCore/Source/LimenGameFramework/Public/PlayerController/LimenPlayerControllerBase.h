@@ -110,6 +110,8 @@ protected:
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
 	virtual void BlendViewTargetSet(AActor* NewViewTarget);
 	
+	void SetCurrentInputMode(const ELimenInputMode InInputMode);
+	
 private:
 	bool bPawnBeginPlayBound;
 	ELimenInputMode CurrentInputMode;
