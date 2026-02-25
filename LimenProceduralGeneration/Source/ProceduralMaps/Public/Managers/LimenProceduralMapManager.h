@@ -11,7 +11,7 @@ class ULimenProceduralMap;
 class ALimenProceduralMapBuilder;
 class UProceduralMapParameters;
 
-UCLASS()
+UCLASS(Blueprintable)
 class PROCEDURALMAPS_API ALimenProceduralMapManager : public AInfo
 {
 	GENERATED_BODY()
