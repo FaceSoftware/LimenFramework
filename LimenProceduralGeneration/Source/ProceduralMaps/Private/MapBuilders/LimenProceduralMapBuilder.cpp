@@ -217,6 +217,8 @@ void ALimenProceduralMapBuilder::MapBeginBuild(const FGuid& MapId, ULimenProcedu
 void ALimenProceduralMapBuilder::MapFinishBuild(const FGuid& MapId, ULimenProceduralMap* Map)
 {
 	check(!IsMapBuilt(MapId))
+	
+	GetMapManager(MapId)->MapBuilt(Map);
 
 	MapsBuilt++;
 

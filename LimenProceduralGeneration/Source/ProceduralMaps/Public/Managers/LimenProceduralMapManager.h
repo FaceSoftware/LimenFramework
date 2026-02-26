@@ -27,8 +27,8 @@ public:
 	 */
 	virtual void MapBuilt(ULimenProceduralMap* Map);
 
-	UFUNCTION(BlueprintCallable)
-	void NotifyMapComplete();
+	virtual void NotifyMapComplete();
+	virtual void NotifyMapEntered();
 
 	FMapComplete& GetMapCompleteDelegate();
 	FMapEnter& GetMapEnteredDelegate();

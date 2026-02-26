@@ -14,6 +14,11 @@ void ALimenProceduralMapManager::NotifyMapComplete()
 	OnMapComplete.Broadcast();
 }
 
+void ALimenProceduralMapManager::NotifyMapEntered()
+{
+	OnMapEntered.Broadcast();
+}
+
 ALimenProceduralMapManager::FMapComplete& ALimenProceduralMapManager::GetMapCompleteDelegate()
 {
 	return OnMapComplete;
