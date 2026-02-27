@@ -26,9 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, Config, meta=(ClampMin="0"))
 	float DialogueDelay;
 	UPROPERTY(EditAnywhere, Config)
-	TSubclassOf<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass = ULimenSubtitleDisplay::StaticClass();
+	TSubclassOf<ULimenSubtitleDisplay> SubtitleDisplayWidgetClass;
 	UPROPERTY(EditAnywhere, Config)
-	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass = ULimenSubtitle::StaticClass();
+	TSubclassOf<ULimenSubtitle> SubtitleWidgetClass;
 	UPROPERTY(EditAnywhere, Config)
 	TSubclassOf<UDialoguePlayerBase> DialoguePlayerClass;
 	

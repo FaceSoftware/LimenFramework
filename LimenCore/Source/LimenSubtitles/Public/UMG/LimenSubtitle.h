@@ -15,7 +15,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FSubtitleDelegate, ULimenSubtitle* /* Subtit
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract)
 class LIMENSUBTITLES_API ULimenSubtitle : public ULimenWidget
 {
 	GENERATED_BODY()

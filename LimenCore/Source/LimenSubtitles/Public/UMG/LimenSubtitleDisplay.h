@@ -15,7 +15,7 @@ typedef TPair<ULimenSubtitle*, FTimerHandle> FSubtitlesPair;
 /**
  * 
  */
-UCLASS()
+UCLASS(Abstract)
 class LIMENSUBTITLES_API ULimenSubtitleDisplay : public ULimenWidget
 {
 	GENERATED_BODY()
