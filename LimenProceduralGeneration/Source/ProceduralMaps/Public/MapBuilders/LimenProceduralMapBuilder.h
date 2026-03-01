@@ -139,7 +139,7 @@ private:
 		TStrongObjectPtr<UProceduralMapParameters> MapParameters;
 		TStrongObjectPtr<ULimenMapAlgorithm> MapAlgorithm;
 		TStrongObjectPtr<ULimenProceduralMap> MapData;
-		TWeakObjectPtr<ALimenProceduralMapManager> MapManager;
+		TStrongObjectPtr<ALimenProceduralMapManager> MapManager;
 		
 		bool bIsLoaded;
 		bool bIsBuilt;

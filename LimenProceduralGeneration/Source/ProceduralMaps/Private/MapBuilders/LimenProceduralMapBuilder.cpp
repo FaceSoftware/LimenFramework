@@ -209,7 +209,7 @@ void ALimenProceduralMapBuilder::MapBeginBuild(const FGuid& MapId, ULimenProcedu
 	UClass* ManagerClass = Instance.MapParameters->GetManagerClass();
 	ALimenProceduralMapManager* Manager = GetWorld()->SpawnActor<ALimenProceduralMapManager>(ManagerClass);
 	
-	Instance.MapManager = TWeakObjectPtr(Manager);
+	Instance.MapManager = TStrongObjectPtr(Manager);
 	
 	GetOnMapBeginBuild().Broadcast(MapId);
 }
@@ -239,6 +239,7 @@ void ALimenProceduralMapBuilder::MapFinishDestroy(const FGuid& MapId, ULimenProc
 	FMapInstance& Instance = MapInstances.FindChecked(MapId);
 	Instance.bIsBuilt = false;
 
+	// For some reason this check is hit so the map manager was promoted to a strong object ptr
 	check(Instance.MapManager.IsValid())
 	Instance.MapManager->Destroy();
 	Instance.MapManager.Reset();
