@@ -19,7 +19,7 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     FSceneViewExtensionBase::PostRenderBasePassDeferred_RenderThread(GraphBuilder, InView, RenderTargets, SceneTextures);
 
     if (!Owner.IsValid()) return;
-    if (InView.ViewActor.Actor != Owner->GetOwner()) return;
+    // if (InView.ViewActor.Actor != Owner->GetOwner()) return;
     if (MaximumFrameBuffering > 0 && Readbacks.Num() >= MaximumFrameBuffering) return;
 
     // 1) 1-uint buffer + UAV (flag)
@@ -42,7 +42,8 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
         GraphBuilder.AllocParameters<FFastScreenVisibilityCheckCS::FParameters>();
     Params->View            = InView.ViewUniformBuffer;
     Params->SceneTextures   = CreateSceneTextureUniformBuffer(GraphBuilder, InView,
-                                                                 ESceneTextureSetupMode::All);
+                                                                 ESceneTextureSetupMode::SceneDepth |
+                                                                 ESceneTextureSetupMode::CustomDepth);
     Params->ViewRectMin     = ViewRect.Min;
     Params->ViewRectSize    = ViewRect.Size();
     Params->Mask            = MaskToCheck;
@@ -90,11 +91,11 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
             const TSharedPtr<FRHIGPUBufferReadback> MostUpToDateReadbackReady = Readbacks[i];
 
             const void* Ptr = MostUpToDateReadbackReady->Lock(sizeof(uint32));
-            const uint32 v = *static_cast<const uint32*>(Ptr);
+            const uint32 Value = *static_cast<const uint32*>(Ptr);
             MostUpToDateReadbackReady->Unlock();
 
-            // const bool bStencilMaskHit = (v & 0x1) != 0;
-            const bool bVisible = (v & 0x2) != 0;
+            // const bool bRendered = (Value & 0x1) != 0;
+            const bool bVisible = (Value & 0x2) != 0;
 
             auto LocalOwner = Owner;
             AsyncTask(ENamedThreads::GameThread, [LocalOwner, bVisible]
@@ -191,9 +192,15 @@ UTextureRenderTarget2D* ULimenFastScreenVisibilityChecker::GetDebugRenderTarget(
     return DebugOutputRT.Get();
 }
 
+void ULimenFastScreenVisibilityChecker::SetStencilMask(const uint8 NewMask)
+{
+    StencilMask = NewMask;
+    if (ViewExt.IsValid()) { ViewExt->MaskToCheck = StencilMask; }
+}
+
 void ULimenFastScreenVisibilityChecker::VisibilityResultFromRender(const bool bIsVisible)
 {
-    check(IsInGameThread());
+    check(IsInGameThread())
 
     if (!IsActive()) return;
 

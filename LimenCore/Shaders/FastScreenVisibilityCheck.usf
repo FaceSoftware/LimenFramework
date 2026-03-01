@@ -33,7 +33,7 @@ void MainCS(uint3 Tid:SV_GroupThreadID, uint3 DTid:SV_DispatchThreadID)
 
 		// UE reversed-Z -> linear increases with distance; occluded if custom is further
 		const float Bias = 1e-4; // small bias in linear space
-		bool bOccluded = (CustomLinearDepth > SceneLinearDepth + Bias);
+		bool bOccluded = CustomLinearDepth > (SceneLinearDepth + Bias);
 
 		// Stencil
 		uint s = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;

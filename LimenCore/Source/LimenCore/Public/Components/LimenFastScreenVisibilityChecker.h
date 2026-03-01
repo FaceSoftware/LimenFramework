@@ -47,7 +47,7 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 	};
 
 public:
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FVisibilityUpdate, bool, bIsVisible);
+	DECLARE_MULTICAST_DELEGATE_OneParam(FVisibilityUpdate, bool /* bIsVisible */);
 
 	FVisibilityUpdate OnVisibilityUpdated;
 
@@ -61,6 +61,8 @@ public:
 	bool IsVisible() const;
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
 	UTextureRenderTarget2D* GetDebugRenderTarget() const;
+	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
+	void SetStencilMask(uint8 NewMask);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
