@@ -30,6 +30,9 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     FSceneViewExtensionBase::PostRenderBasePassDeferred_RenderThread(GraphBuilder, InView, RenderTargets, SceneTextures);
     
     if (ShouldSkip.load(std::memory_order::acquire)) { return; }
+   
+    ViewRect = InView.CameraConstrainedViewRect;
+    if (ViewRect.IsEmpty()) { return; }
 
     if (!Owner.IsValid()) return;
     // if (InView.ViewActor.Actor != Owner->GetOwner()) return;
@@ -41,7 +44,6 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     const FRDGBufferUAVRef OutFlagUAV = GraphBuilder.CreateUAV(OutFlagBuf, PF_R32_UINT);
     AddClearUAVPass(GraphBuilder, OutFlagUAV, 0u);
 
-    ViewRect = InView.CameraConstrainedViewRect;
     FRDGTextureDesc DebugDesc = FRDGTextureDesc::Create2D(ViewRect.Size(),
         PF_R8G8B8A8, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_UAV);
     const FRDGTextureRef DebugTex = GraphBuilder.CreateTexture(DebugDesc, TEXT("Limen.DebugStencilOut"));
