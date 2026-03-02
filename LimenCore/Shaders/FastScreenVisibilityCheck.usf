@@ -1,59 +1,47 @@
 #include "/Engine/Private/Common.ush"
 #include "/Engine/Private/SceneTexturesCommon.ush"
 
-
 // Parameters
 int2 ViewRectMin;
 int2 ViewRectSize;
-uint Mask;
-
-// Out
-RWBuffer<uint> OutFlag;
+StructuredBuffer<uint> Masks;      // array of mask IDs
+RWStructuredBuffer<uint> OutFlag;  // one element per mask
 RWTexture2D<float4> DebugOut;
 
-groupshared uint GroupFlags;       // bit0 = hit, bit1 = visible
+groupshared uint GroupFlags;       // bit1 = rendered, bit2 = visible
 
 [numthreads(8,8,1)]
-void MainCS(uint3 Tid:SV_GroupThreadID, uint3 DTid:SV_DispatchThreadID)
+void MainCS(uint3 Tid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID)
 {
-	if (Tid.x == 0 && Tid.y == 0) GroupFlags = 0;
+	if (Tid.x == 0 && Tid.y == 0) { GroupFlags = 0; }
 	GroupMemoryBarrierWithGroupSync();
 
-	const int2 LocalPixel = int2(DTid.xy);
+	const int2 LocalPixel  = int2(DTid.xy);
 	const int2 GlobalPixel = ViewRectMin + LocalPixel;
 
-	// Bounds check FIRST (avoids OOB loads on edge tiles)
+	// Bounds check
 	if (LocalPixel.x < ViewRectSize.x && LocalPixel.y < ViewRectSize.y)
 	{
 		// Depths
-		float SceneZ   = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
-		float CustomZ  = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
-		float SceneLinearDepth = ConvertFromDeviceZ(SceneZ);
-		float CustomLinearDepth  = ConvertFromDeviceZ(CustomZ);
+		const float SceneZ  = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
+		const float CustomZ = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
 
-		// UE reversed-Z -> linear increases with distance; occluded if custom is further
+		const float SceneLinearDepth  = ConvertFromDeviceZ(SceneZ);
+		const float CustomLinearDepth = ConvertFromDeviceZ(CustomZ);
+
 		const float Bias = 1e-4; // small bias in linear space
-		bool bOccluded = CustomLinearDepth > (SceneLinearDepth + Bias);
+		const bool bOccluded = CustomLinearDepth > (SceneLinearDepth + Bias);
 
 		// Stencil
-		uint s = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
-		bool bHit      = ((s & Mask) != 0u);
-		bool bVisible  = bHit && !bOccluded;
+		const uint StencilValue = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
 
-		// Visualize (white when visible match; blue when occluded; black otherwise)
-		DebugOut[LocalPixel] = bHit ? (bVisible ? float4(1.f, 1.f, 1.f, 1.f) : float4(0.f, 0.f, 1.f, 1.f)) : float4(.0f, .0f, .0f, 1.f);
-		// DebugOut[LocalPixel] =  SceneTexturesStruct.SceneColorTexture.Load(int3(GlobalPixel, 0));
-
-		// Accumulate flags in this thread group
-		if (bHit)     InterlockedOr(GroupFlags, 0x1);
-		if (bVisible) InterlockedOr(GroupFlags, 0x2);
-	}
-
-	GroupMemoryBarrierWithGroupSync();
-
-	// One thread per group ORs group results into global flag
-	if (Tid.x == 0 && Tid.y == 0 && GroupFlags != 0)
-	{
-		InterlockedOr(OutFlag[0], GroupFlags);
+		const bool bRendered = StencilValue > 0 && StencilValue < 256;
+		if (bRendered)
+		{
+			// We don't care if this is in our "Masks" list yet. 
+			// We just mark it. The CPU will only read the ones it asked for.
+			InterlockedOr(OutFlag[StencilValue], 0x1);
+			if (!bOccluded) { InterlockedOr(OutFlag[StencilValue], 0x2); }
+		}
 	}
 }

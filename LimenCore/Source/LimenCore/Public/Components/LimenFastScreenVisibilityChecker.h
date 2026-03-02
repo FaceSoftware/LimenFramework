@@ -23,31 +23,30 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		FFastScreenVisibilityCheckViewExtension(
 			const FAutoRegister& AutoReg,
 			const TWeakObjectPtr<ULimenFastScreenVisibilityChecker> InOwner,
-			const uint32 InMask,
-			int32 InMaximumFrameBuffering)
-			: FSceneViewExtensionBase(AutoReg)
-			, Owner(InOwner)
-			, MaskToCheck(InMask)
-			, MaximumFrameBuffering(InMaximumFrameBuffering)
-		{
-		}
+			const TSet<uint32>& InMasks,
+			const int32 InMaximumFrameBuffering);
 
 		virtual void PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& InView, const FRenderTargetBindingSlots& RenderTargets, TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures) override;
 		virtual void PostRenderViewFamily_RenderThread(FRDGBuilder& GraphBuilder, FSceneViewFamily& ViewFamily) override;
 
 		FORCEINLINE FIntRect GetViewRect() const { return ViewRect; }
+		
+		void Deactivate();
+		void Activate();
 
 	private:
 		TWeakObjectPtr<ULimenFastScreenVisibilityChecker> Owner; // read only on RT
-		uint8 MaskToCheck = 1u;
+		TArray<uint32> MasksToCheck;
 
 		TArray<TSharedPtr<FRHIGPUBufferReadback>> Readbacks;
 		int32 MaximumFrameBuffering;
 		FIntRect ViewRect;
+		TArray<uint32> VisibilityStates;
+		bool bShouldSkip;
 	};
 
 public:
-	DECLARE_MULTICAST_DELEGATE_OneParam(FVisibilityUpdate, bool /* bIsVisible */);
+	DECLARE_MULTICAST_DELEGATE_TwoParams(FVisibilityUpdate, uint8 /* Mask */, bool /* bIsVisible */);
 
 	FVisibilityUpdate OnVisibilityUpdated;
 
@@ -56,17 +55,22 @@ public:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
 							   FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void Activate(bool bReset = false) override;
+	virtual void Deactivate() override;
+	virtual bool ShouldActivate() const override;
 
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
-	bool IsVisible() const;
+	bool IsVisible(uint8 Mask) const;
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
 	UTextureRenderTarget2D* GetDebugRenderTarget() const;
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
-	void SetStencilMask(uint8 NewMask);
+	void AddStencilMask(uint8 InMask);
+	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
+	void RemoveStencilMask(uint8 InMask);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
-	uint8 StencilMask;
+	TSet<uint8> StencilMasks;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
 	bool bEnableDebug;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
@@ -74,9 +78,9 @@ protected:
 
 private:
 	TSharedPtr<FFastScreenVisibilityCheckViewExtension> ViewExt; 
-	bool bCurrentIsVisible;
+	TMap<uint32, bool> VisibilityStates;
 	TStrongObjectPtr<UTextureRenderTarget2D> DebugOutputRT;
 	uint64 UpdatesThisTick;
 
-	void VisibilityResultFromRender(const bool bIsVisible);
+	void VisibilityResultFromRender(uint8 Mask, bool bIsVisible);
 };
