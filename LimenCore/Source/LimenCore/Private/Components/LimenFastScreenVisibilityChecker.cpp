@@ -18,7 +18,7 @@ ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::FFas
                                                                              , Owner(InOwner)
                                                                              , MasksToCheck(InMasks.Array())
                                                                              , MaximumFrameBuffering(InMaximumFrameBuffering)
-                                                                             , bShouldSkip(false)
+                                                                             , ShouldSkip(false)
 {
     VisibilityStates.AddZeroed(256);
 }
@@ -29,9 +29,7 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
 {
     FSceneViewExtensionBase::PostRenderBasePassDeferred_RenderThread(GraphBuilder, InView, RenderTargets, SceneTextures);
     
-    ViewRect = InView.CameraConstrainedViewRect;
-    
-    if (bShouldSkip) { return; }
+    if (ShouldSkip.load(std::memory_order::acquire)) { return; }
 
     if (!Owner.IsValid()) return;
     // if (InView.ViewActor.Actor != Owner->GetOwner()) return;
@@ -43,9 +41,9 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     const FRDGBufferUAVRef OutFlagUAV = GraphBuilder.CreateUAV(OutFlagBuf, PF_R32_UINT);
     AddClearUAVPass(GraphBuilder, OutFlagUAV, 0u);
 
+    ViewRect = InView.CameraConstrainedViewRect;
     FRDGTextureDesc DebugDesc = FRDGTextureDesc::Create2D(ViewRect.Size(),
-                                                  PF_R8G8B8A8, FClearValueBinding::Black,
-                                                  TexCreate_ShaderResource | TexCreate_UAV);
+        PF_R8G8B8A8, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_UAV);
     const FRDGTextureRef DebugTex = GraphBuilder.CreateTexture(DebugDesc, TEXT("Limen.DebugStencilOut"));
     const FRDGTextureUAVRef DebugUAV = GraphBuilder.CreateUAV(FRDGTextureUAVDesc(DebugTex));
     AddClearUAVPass(GraphBuilder, DebugUAV, FUintVector4(0,0,0,255));
@@ -101,7 +99,7 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
 {
     FSceneViewExtensionBase::PostRenderViewFamily_RenderThread(GraphBuilder, ViewFamily);
     
-    if (bShouldSkip) { return; }
+    if (ShouldSkip) { return; }
 
     for (int32 i = Readbacks.Num() - 1; i >= 0; --i)
     {
@@ -136,13 +134,14 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
 
 void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::Deactivate()
 {
-    bShouldSkip = true;
+    ShouldSkip.store(true, std::memory_order::release);
     Readbacks.Empty();
 }
 
 void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::Activate()
 {
-    bShouldSkip = false;
+    ShouldSkip.store(true, std::memory_order::release);
+    ShouldSkip = false;
     VisibilityStates.AddZeroed(256);
 }
 

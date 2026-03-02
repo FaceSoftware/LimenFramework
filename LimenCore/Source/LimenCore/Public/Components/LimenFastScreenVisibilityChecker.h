@@ -42,7 +42,7 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		int32 MaximumFrameBuffering;
 		FIntRect ViewRect;
 		TArray<uint32> VisibilityStates;
-		bool bShouldSkip;
+		std::atomic<bool> ShouldSkip;
 	};
 
 public:
