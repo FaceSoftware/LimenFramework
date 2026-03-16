@@ -416,9 +416,7 @@ void ULimenAttributeBase::SetCurrentValueAsMin()
 
 void ULimenAttributeBase::SetCurrentValueAs(const float Value)
 {
-	if (IsFrozen() || FMath::IsNearlyEqual(CurrentValue, Value)) return;
-	{
-	}
+	if (IsFrozen() || FMath::IsNearlyEqual(CurrentValue, Value)) { return; }
 	
 	CurrentValue = Value;
 	if (bShouldFreezeWhenValueIsReached && FreezeRange.Contains(CurrentValue)) FreezeAttribute(true);
@@ -444,6 +442,18 @@ void ULimenAttributeBase::FreezeAttribute(const bool bShouldFreeze)
 bool ULimenAttributeBase::IsFrozen() const
 {
 	return bIsFrozen;
+}
+
+ULimenAttributeBase& ULimenAttributeBase::operator+=(const float Value)
+{
+	ModifyValueBy(Value);
+	return *this;
+}
+
+ULimenAttributeBase& ULimenAttributeBase::operator-=(const float Value)
+{
+	ModifyValueBy(-Value);
+	return *this;
 }
 
 void ULimenAttributeBase::AttributeEmpty()

@@ -230,6 +230,9 @@ public:
 	 */
 	void FreezeAttribute(const bool bShouldFreeze);
 	bool IsFrozen() const;
+	
+	ULimenAttributeBase& operator+=(const float Value);
+	ULimenAttributeBase& operator-=(const float Value);
 
 protected:
 	/**
