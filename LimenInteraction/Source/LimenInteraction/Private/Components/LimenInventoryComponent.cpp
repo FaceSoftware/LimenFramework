@@ -154,7 +154,7 @@ bool ULimenInventoryComponent::AddItem(const TScriptInterface<ILimenInventoryIte
 	{
 		FItemRegistry Registry;
 		Registry.ItemClass = NewItem.GetObject()->GetClass();
-		Registry.ItemInstances.Append(MoveTemp(Instances));
+		Registry.ItemInstances.Append(Instances);
 		ItemRegistries.Push(MoveTemp(Registry));
 		
 		for (const auto& Item : Instances)
