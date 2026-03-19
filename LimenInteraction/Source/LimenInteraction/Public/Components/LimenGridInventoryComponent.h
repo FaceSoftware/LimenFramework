@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "DataAssets/LimenGridItemDatabase.h"
 #include "Interfaces/LimenInventory.h"
+#include "Items/LimenItemBase.h"
 #include "LimenGridInventoryComponent.generated.h"
 
 
@@ -80,6 +81,8 @@ public:
 	TArray<ALimenItemBase*> GetItemStack(const FIntVector2& Coordinates);
 	void GetItem(const ALimenItemBase* Item);
 	TArray<ALimenItemBase*> PeekItems(const FIntVector2& Coordinates) const;
+	TArray<ALimenItemBase*> PeekItems(const TSubclassOf<ALimenItemBase>& Class) const;
+	template <typename T> TArray<T*> PeekItems() const;
 	bool ContainsItem(const ALimenItemBase* Item) const;
 	FIntVector2 GetItemCoordinates(const ALimenItemBase* Item) const;
 	FIntVector2 GetSize() const;
@@ -102,3 +105,26 @@ private:
 	bool IsRegionValid(const FIntVector2& Origin, const FIntVector2& Extent) const;
 	bool IsIndexValid(int32 Index) const;
 };
+
+template <typename T>
+TArray<T*> ULimenGridInventoryComponent::PeekItems() const
+{
+	static_assert(TIsDerivedFrom<T, ALimenItemBase>::Value);
+	TSet<T*> Out;
+	for (int X = 0; X < Size.X; ++X)
+		for (int Y = 0; Y < Size.Y; ++Y)
+		{
+			TArray Items = PeekItems(FIntVector2(X, Y));
+			if (Items.IsEmpty()) { continue; }
+		
+			if (Items[0]->IsA<T>())
+			{
+				for (auto& Item : Items)
+				{
+					Out.Add(CastChecked<T>(Item));
+				}
+			}
+		}
+	
+	return Out.Array();
+}

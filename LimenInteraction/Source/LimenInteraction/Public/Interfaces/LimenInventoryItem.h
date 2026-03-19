@@ -31,4 +31,11 @@ public:
 	virtual TArray<ULimenItemAction*> GetItemActions() const = 0;
 	virtual int32 GetItemQuantity() const = 0;
 	virtual AActor* GetActor() = 0;
+	
+	template<typename T>
+	T* GetActor()
+	{
+		static_assert(TIsDerivedFrom<T, AActor>::Value);
+		return Cast<T>(GetActor());
+	}
 };

@@ -4,7 +4,6 @@
 #include "Components/LimenGridInventoryComponent.h"
 
 #include "DataAssets/LimenGridItemDatabase.h"
-#include "Items/LimenItemBase.h"
 
 
 FGridInventoryCell FGridInventoryCell::MakeParent()
@@ -396,6 +395,24 @@ TArray<ALimenItemBase*> ULimenGridInventoryComponent::PeekItems(const FIntVector
 	}
 	
 	return Out;
+}
+
+TArray<ALimenItemBase*> ULimenGridInventoryComponent::PeekItems(const TSubclassOf<ALimenItemBase>& Class) const
+{
+	TSet<ALimenItemBase*> Out;
+	for (int X = 0; X < Size.X; ++X)
+	for (int Y = 0; Y < Size.Y; ++Y)
+	{
+		TArray Items = PeekItems(FIntVector2(X, Y));
+		if (Items.IsEmpty()) { continue; }
+		
+		if (Items[0]->IsA(Class))
+		{
+			Out.Append(Items);
+		}
+	}
+	
+	return Out.Array();
 }
 
 bool ULimenGridInventoryComponent::ContainsItem(const ALimenItemBase* Item) const
