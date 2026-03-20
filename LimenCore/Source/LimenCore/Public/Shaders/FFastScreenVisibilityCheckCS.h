@@ -24,6 +24,7 @@ public:
 		SHADER_PARAMETER(FIntPoint, ViewRectMin)
 		SHADER_PARAMETER(FIntPoint, ViewRectSize)
 		SHADER_PARAMETER_RDG_BUFFER_SRV(StructuredBuffer<uint32>, Masks)
+		SHADER_PARAMETER(float, LuminanceThreshold)
 
 		// Output flag (1 uint)
 		SHADER_PARAMETER_RDG_BUFFER_UAV(RWStructuredBuffer<uint32>, OutFlag)

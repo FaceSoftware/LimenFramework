@@ -35,7 +35,7 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		void Activate();
 
 	private:
-		TWeakObjectPtr<ULimenFastScreenVisibilityChecker> Owner; // read only on RT
+		TWeakObjectPtr<ULimenFastScreenVisibilityChecker> Owner; // read-only on RT
 		TArray<uint32> MasksToCheck;
 
 		TArray<TSharedPtr<FRHIGPUBufferReadback>> Readbacks;
@@ -43,11 +43,28 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		FIntRect ViewRect;
 		TArray<uint32> VisibilityStates;
 		std::atomic<bool> ShouldSkip;
+		std::atomic<bool> TakeLuminanceIntoAccount;
+		std::atomic<float> LuminanceThreshold;
 	};
 
 public:
-	DECLARE_MULTICAST_DELEGATE_TwoParams(FVisibilityUpdate, uint8 /* Mask */, bool /* bIsVisible */);
+	struct FData
+	{
+		FData() = default;
+		explicit FData(uint32 Flags);
 
+		bool bIsRendered;
+		bool bIsOccluded;
+		bool bIsDark;
+		
+		bool IsVisible() const { return bIsRendered && !bIsOccluded && !bIsDark; }
+		bool operator==(const FData& Other) const
+		{
+			return bIsRendered == Other.bIsRendered && bIsOccluded == Other.bIsOccluded && bIsDark == Other.bIsDark;
+		}
+	};
+	
+	DECLARE_MULTICAST_DELEGATE_TwoParams(FVisibilityUpdate, uint8 /* Mask */, const FData& /* VisibilityData */);
 	FVisibilityUpdate OnVisibilityUpdated;
 
 	explicit ULimenFastScreenVisibilityChecker(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
@@ -75,12 +92,19 @@ protected:
 	bool bEnableDebug;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
 	int32 MaximumFrameBuffering;
+	/**
+	 * @brief Recommended to disable auto exposure if this is enabled.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
+	bool bTakeLuminanceIntoAccount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker", meta=(EditCondition="bTakeLuminanceIntoAccount", ClampMin="0", ClampMax="1"))
+	float LuminanceThreshold;
 
 private:
 	TSharedPtr<FFastScreenVisibilityCheckViewExtension> ViewExt; 
-	TMap<uint32, bool> VisibilityStates;
+	TMap<uint32, FData> VisibilityStates;
 	TStrongObjectPtr<UTextureRenderTarget2D> DebugOutputRT;
 	uint64 UpdatesThisTick;
 
-	void VisibilityResultFromRender(uint8 Mask, bool bIsVisible);
+	void VisibilityResultFromRender(uint8 Mask, uint32 VisibilityFlags);
 };

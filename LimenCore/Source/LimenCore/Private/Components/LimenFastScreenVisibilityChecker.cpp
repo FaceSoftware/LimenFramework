@@ -56,7 +56,8 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     Params->View            = InView.ViewUniformBuffer;
     Params->SceneTextures   = CreateSceneTextureUniformBuffer(GraphBuilder, InView,
                                                                  ESceneTextureSetupMode::SceneDepth |
-                                                                 ESceneTextureSetupMode::CustomDepth);
+                                                                 ESceneTextureSetupMode::CustomDepth |
+                                                                 ESceneTextureSetupMode::SceneColor);
     Params->ViewRectMin     = ViewRect.Min;
     Params->ViewRectSize    = ViewRect.Size();
     {
@@ -67,6 +68,7 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     }
     Params->OutFlag = OutFlagUAV;
     Params->DebugOut = DebugUAV;
+    Params->LuminanceThreshold = TakeLuminanceIntoAccount.load(std::memory_order_relaxed) ? LuminanceThreshold.load(std::memory_order_relaxed) : 0.0f;
 
     // 4) Dispatch compute
     TShaderMapRef<FFastScreenVisibilityCheckCS> CS(GetGlobalShaderMap(InView.GetFeatureLevel()));
@@ -115,15 +117,12 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
         {
             const uint32& VisibilityFlags = Flags[Mask];
             
-            // const bool bIsRendered  = (VisibilityFlags & 0x1) != 0;
-            const bool bIsVisible   = (VisibilityFlags & 0x2) != 0;
-            
-            auto LocalOwner = Owner;
-            AsyncTask(ENamedThreads::GameThread, [LocalOwner, Mask, bIsVisible]
+            TWeakObjectPtr WeakOwner = Owner;
+            AsyncTask(ENamedThreads::GameThread, [WeakOwner, Mask, VisibilityFlags]
             {
-                if (LocalOwner.IsValid())
+                if (WeakOwner.IsValid())
                 {
-                    LocalOwner->VisibilityResultFromRender(Mask, bIsVisible);
+                    WeakOwner->VisibilityResultFromRender(Mask, VisibilityFlags);
                 }
             });
         }
@@ -151,6 +150,13 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
 ///
 ///
 
+ULimenFastScreenVisibilityChecker::FData::FData(const uint32 Flags)
+{
+    bIsRendered = (Flags & 1) != 0;
+    bIsOccluded = (Flags & 2) != 0;
+    bIsDark = (Flags & 4) != 0;
+}
+
 ULimenFastScreenVisibilityChecker::ULimenFastScreenVisibilityChecker(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
@@ -159,6 +165,8 @@ ULimenFastScreenVisibilityChecker::ULimenFastScreenVisibilityChecker(const FObje
     bAutoActivate = true;
     bEnableDebug = false;
     MaximumFrameBuffering = 1;
+    bTakeLuminanceIntoAccount = false;
+    LuminanceThreshold = 0.03f;
 }
 
 void ULimenFastScreenVisibilityChecker::BeginPlay()
@@ -241,7 +249,8 @@ void ULimenFastScreenVisibilityChecker::Activate(bool bReset)
             ViewExt = FSceneViewExtensions::NewExtension<FFastScreenVisibilityCheckViewExtension>(
                 this, MasksToCheck32, MaximumFrameBuffering);
         }
-        
+        ViewExt->TakeLuminanceIntoAccount.store(bTakeLuminanceIntoAccount, std::memory_order::relaxed);
+        ViewExt->LuminanceThreshold.store(LuminanceThreshold, std::memory_order::relaxed);
         ViewExt->Activate();
         
         
@@ -274,7 +283,7 @@ bool ULimenFastScreenVisibilityChecker::ShouldActivate() const
 
 bool ULimenFastScreenVisibilityChecker::IsVisible(const uint8 Mask) const
 {
-    return VisibilityStates[Mask];
+    return VisibilityStates[Mask].bIsRendered && !VisibilityStates[Mask].bIsOccluded && !VisibilityStates[Mask].bIsDark;
 }
 
 UTextureRenderTarget2D* ULimenFastScreenVisibilityChecker::GetDebugRenderTarget() const
@@ -285,7 +294,7 @@ UTextureRenderTarget2D* ULimenFastScreenVisibilityChecker::GetDebugRenderTarget(
 void ULimenFastScreenVisibilityChecker::AddStencilMask(const uint8 InMask)
 {
     StencilMasks.Add(InMask);
-    VisibilityStates.Add(InMask, false);
+    VisibilityStates.Add(InMask, FData(0u));
     if (ViewExt.IsValid()) { ViewExt->MasksToCheck.Add(InMask); }
 }
 
@@ -296,7 +305,7 @@ void ULimenFastScreenVisibilityChecker::RemoveStencilMask(const uint8 InMask)
     if (ViewExt.IsValid()) { ViewExt->MasksToCheck.Remove(InMask); }
 }
 
-void ULimenFastScreenVisibilityChecker::VisibilityResultFromRender(const uint8 Mask, const bool bIsVisible)
+void ULimenFastScreenVisibilityChecker::VisibilityResultFromRender(const uint8 Mask, const uint32 VisibilityFlags)
 {
     check(IsInGameThread())
     check(VisibilityStates.Contains(Mask))
@@ -304,9 +313,12 @@ void ULimenFastScreenVisibilityChecker::VisibilityResultFromRender(const uint8 M
     if (!IsActive()) return;
 
     UpdatesThisTick++;
-    bool& bWasVisibleRef = VisibilityStates[Mask];
-    if (bWasVisibleRef == bIsVisible) { return; }
+    
+    const FData NewData(VisibilityFlags);
+    
+    FData& OldDataRef = VisibilityStates[Mask];
+    if (NewData == OldDataRef) { return; }
 
-    bWasVisibleRef = bIsVisible;
-    OnVisibilityUpdated.Broadcast(Mask, bWasVisibleRef);
+    OldDataRef = NewData;
+    OnVisibilityUpdated.Broadcast(Mask, OldDataRef);
 }

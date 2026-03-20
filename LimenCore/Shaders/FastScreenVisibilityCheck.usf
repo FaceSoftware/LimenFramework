@@ -5,24 +5,29 @@
 int2 ViewRectMin;
 int2 ViewRectSize;
 StructuredBuffer<uint> Masks;      // array of mask IDs
-RWStructuredBuffer<uint> OutFlag;  // one element per mask
+RWStructuredBuffer<uint> OutFlag;  // one element per mask - bit1 = rendered, bit2 = NOT occluded, bit3 = NOT dark
 RWTexture2D<float4> DebugOut;
+float LuminanceThreshold;
 
-groupshared uint GroupFlags;       // bit1 = rendered, bit2 = visible
+groupshared uint LocalFlags[256]; // one per stencil ID - bit1 = rendered, bit2 = NOT occluded, bit3 = NOT dark
 
 [numthreads(8,8,1)]
 void MainCS(uint3 Tid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID)
 {
-	if (Tid.x == 0 && Tid.y == 0) { GroupFlags = 0; }
-	GroupMemoryBarrierWithGroupSync();
-
 	const int2 LocalPixel  = int2(DTid.xy);
 	const int2 GlobalPixel = ViewRectMin + LocalPixel;
+	
+	const int LinearTid = Tid.y * 8 + Tid.x; // 0..63
+	for (int i = LinearTid; i < 256; i += 64)
+	{
+		LocalFlags[i] = 0;
+	}
+	GroupMemoryBarrierWithGroupSync();
 
 	// Bounds check
 	if (LocalPixel.x < ViewRectSize.x && LocalPixel.y < ViewRectSize.y)
 	{
-		// Depths
+		// Occlusion
 		const float SceneZ  = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
 		const float CustomZ = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
 
@@ -32,16 +37,28 @@ void MainCS(uint3 Tid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID)
 		const float Bias = 1e-4; // small bias in linear space
 		const bool bOccluded = CustomLinearDepth > (SceneLinearDepth + Bias);
 
-		// Stencil
+		// Render
 		const uint StencilValue = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
-
-		const bool bRendered = StencilValue > 0 && StencilValue < 256;
+		const bool bRendered = StencilValue > 0;
+		
+		// Luminance
+		const float3 SceneColor = SceneTexturesStruct.SceneColorTexture.Load(int3(GlobalPixel, 0)).rgb;
+		const bool bIsDark = dot(SceneColor, float3(0.2126, 0.7152, 0.0722)) < LuminanceThreshold;
+		
 		if (bRendered)
 		{
-			// We don't care if this is in our "Masks" list yet. 
-			// We just mark it. The CPU will only read the ones it asked for.
-			InterlockedOr(OutFlag[StencilValue], 0x1);
-			if (!bOccluded) { InterlockedOr(OutFlag[StencilValue], 0x2); }
+			uint Flags = 0x1;
+			Flags |= (bOccluded) << 1;
+			Flags |= (bIsDark) << 2;
+			
+			InterlockedOr(LocalFlags[StencilValue], Flags);
 		}
+	}
+	
+	GroupMemoryBarrierWithGroupSync();
+	
+	for (int i = LinearTid; i < 256; i += 64)
+	{
+		if (LocalFlags[i] != 0) { InterlockedOr(OutFlag[i], LocalFlags[i]); }
 	}
 }
