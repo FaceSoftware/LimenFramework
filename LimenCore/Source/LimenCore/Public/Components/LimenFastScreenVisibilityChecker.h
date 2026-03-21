@@ -24,10 +24,7 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 			const FAutoRegister& AutoReg,
 			const TWeakObjectPtr<ULimenFastScreenVisibilityChecker> InOwner,
 			const TSet<uint32>& InMasks,
-			const int32 InMaximumFrameBuffering,
-			bool bInTakeLuminanceIntoAccount,
-			float InLuminanceThreshold,
-			float InLuminanceDecayFactorPerSecond);
+			const int32 InMaximumFrameBuffering);
 		
 		virtual void PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& InView, const FPostProcessingInputs& Inputs) override;
 
@@ -36,7 +33,7 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		void Deactivate();
 		void Activate();
 
-	private:
+	private:		
 		TWeakObjectPtr<ULimenFastScreenVisibilityChecker> Owner; // read-only on RT
 		TArray<uint32> MasksToCheck;
 
@@ -44,10 +41,9 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		int32 MaximumFrameBuffering;
 		FIntRect ViewRect;
 		TArray<uint32> VisibilityStates;
-		std::atomic<bool> ShouldSkip;
-		bool bTakeLuminanceIntoAccount;
-		float LuminanceThreshold;
-		float LuminanceDecayFactorPerSecond;
+		bool bShouldSkip;
+		
+		mutable FCriticalSection ActiveSection;
 		
 		void DispatchVisibilityCheck(FRDGBuilder& GraphBuilder, const FSceneView& InView);
 		void ReadbackVisibilityFlags();
@@ -63,12 +59,11 @@ public:
 
 		bool bIsRendered;
 		bool bIsOccluded;
-		bool bIlluminated;
 		
-		bool IsVisible() const { return bIsRendered && !bIsOccluded && bIlluminated; }
+		bool IsVisible() const { return bIsRendered && !bIsOccluded; }
 		bool operator==(const FData& Other) const
 		{
-			return bIsRendered == Other.bIsRendered && bIsOccluded == Other.bIsOccluded && bIlluminated == Other.bIlluminated;
+			return bIsRendered == Other.bIsRendered && bIsOccluded == Other.bIsOccluded;
 		}
 	};
 	
@@ -87,8 +82,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
 	bool IsVisible(uint8 Mask) const;
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
-	UTextureRenderTarget2D* GetDebugRenderTarget() const;
-	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
 	void AddStencilMask(uint8 InMask);
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
 	void RemoveStencilMask(uint8 InMask);
@@ -100,20 +93,10 @@ protected:
 	bool bEnableDebug;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
 	int32 MaximumFrameBuffering;
-	/**
-	 * @brief Recommended to disable auto exposure if this is enabled.
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
-	bool bTakeLuminanceIntoAccount;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker", meta=(EditCondition="bTakeLuminanceIntoAccount", ClampMin="0", ClampMax="1"))
-	float LuminanceThreshold;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker", meta=(EditCondition="bTakeLuminanceIntoAccount", ClampMin="0", ClampMax="1"))
-	float LuminanceDecayFactorPerSecond;
-
+	
 private:
 	TSharedPtr<FFastScreenVisibilityCheckViewExtension> ViewExt; 
 	TMap<uint32, FData> VisibilityStates;
-	TStrongObjectPtr<UTextureRenderTarget2D> DebugOutputRT;
 	uint64 UpdatesThisTick;
 	FDateTime LastUpdate;
 	FTimespan TimeSinceLastUpdate;
