@@ -102,6 +102,7 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
 
     check(MaximumFrameBuffering <= 0 || Readbacks.Num() < MaximumFrameBuffering)
 
+    Readbacks.Push(MakeShared<FRHIGPUBufferReadback>(TEXT("Limen.StencilFlagRB")));
     AddEnqueueCopyPass(GraphBuilder, Readbacks.Last().Get(), OutFlagBuf, sizeof(uint32) * 256);
 }
 
