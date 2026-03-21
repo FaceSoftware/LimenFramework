@@ -24,10 +24,12 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 			const FAutoRegister& AutoReg,
 			const TWeakObjectPtr<ULimenFastScreenVisibilityChecker> InOwner,
 			const TSet<uint32>& InMasks,
-			const int32 InMaximumFrameBuffering);
-
-		virtual void PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& InView, const FRenderTargetBindingSlots& RenderTargets, TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures) override;
-		virtual void PostRenderViewFamily_RenderThread(FRDGBuilder& GraphBuilder, FSceneViewFamily& ViewFamily) override;
+			const int32 InMaximumFrameBuffering,
+			bool bInTakeLuminanceIntoAccount,
+			float InLuminanceThreshold,
+			float InLuminanceDecayFactorPerSecond);
+		
+		virtual void PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& InView, const FPostProcessingInputs& Inputs) override;
 
 		FORCEINLINE FIntRect GetViewRect() const { return ViewRect; }
 		
@@ -43,8 +45,14 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		FIntRect ViewRect;
 		TArray<uint32> VisibilityStates;
 		std::atomic<bool> ShouldSkip;
-		std::atomic<bool> TakeLuminanceIntoAccount;
-		std::atomic<float> LuminanceThreshold;
+		bool bTakeLuminanceIntoAccount;
+		float LuminanceThreshold;
+		float LuminanceDecayFactorPerSecond;
+		
+		void DispatchVisibilityCheck(FRDGBuilder& GraphBuilder, const FSceneView& InView);
+		void ReadbackVisibilityFlags();
+		
+		virtual bool IsActiveThisFrame_Internal(const FSceneViewExtensionContext& Context) const override;
 	};
 
 public:
@@ -55,12 +63,12 @@ public:
 
 		bool bIsRendered;
 		bool bIsOccluded;
-		bool bIsDark;
+		bool bIlluminated;
 		
-		bool IsVisible() const { return bIsRendered && !bIsOccluded && !bIsDark; }
+		bool IsVisible() const { return bIsRendered && !bIsOccluded && bIlluminated; }
 		bool operator==(const FData& Other) const
 		{
-			return bIsRendered == Other.bIsRendered && bIsOccluded == Other.bIsOccluded && bIsDark == Other.bIsDark;
+			return bIsRendered == Other.bIsRendered && bIsOccluded == Other.bIsOccluded && bIlluminated == Other.bIlluminated;
 		}
 	};
 	
@@ -99,12 +107,16 @@ protected:
 	bool bTakeLuminanceIntoAccount;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker", meta=(EditCondition="bTakeLuminanceIntoAccount", ClampMin="0", ClampMax="1"))
 	float LuminanceThreshold;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker", meta=(EditCondition="bTakeLuminanceIntoAccount", ClampMin="0", ClampMax="1"))
+	float LuminanceDecayFactorPerSecond;
 
 private:
 	TSharedPtr<FFastScreenVisibilityCheckViewExtension> ViewExt; 
 	TMap<uint32, FData> VisibilityStates;
 	TStrongObjectPtr<UTextureRenderTarget2D> DebugOutputRT;
 	uint64 UpdatesThisTick;
+	FDateTime LastUpdate;
+	FTimespan TimeSinceLastUpdate;
 
 	void VisibilityResultFromRender(uint8 Mask, uint32 VisibilityFlags);
 };

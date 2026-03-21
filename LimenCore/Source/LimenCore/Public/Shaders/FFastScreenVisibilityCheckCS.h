@@ -25,8 +25,9 @@ public:
 		SHADER_PARAMETER(FIntPoint, ViewRectSize)
 		SHADER_PARAMETER_RDG_BUFFER_SRV(StructuredBuffer<uint32>, Masks)
 		SHADER_PARAMETER(float, LuminanceThreshold)
+		SHADER_PARAMETER(float, LuminanceDecayFactor)
 
-		// Output flag (1 uint)
+		// Output flag (uint)
 		SHADER_PARAMETER_RDG_BUFFER_UAV(RWStructuredBuffer<uint32>, OutFlag)
 		SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D<float4>, DebugOut)
 	END_SHADER_PARAMETER_STRUCT()

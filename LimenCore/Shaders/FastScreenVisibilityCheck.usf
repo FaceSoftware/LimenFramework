@@ -5,11 +5,13 @@
 int2 ViewRectMin;
 int2 ViewRectSize;
 StructuredBuffer<uint> Masks;      // array of mask IDs
-RWStructuredBuffer<uint> OutFlag;  // one element per mask - bit1 = rendered, bit2 = NOT occluded, bit3 = NOT dark
-RWTexture2D<float4> DebugOut;
 float LuminanceThreshold;
+float LuminanceDecayFactor;
 
-groupshared uint LocalFlags[256]; // one per stencil ID - bit1 = rendered, bit2 = NOT occluded, bit3 = NOT dark
+RWStructuredBuffer<uint> OutFlag;  // one element per mask - bit1 = Rendered, bit2 = Occluded, bit3 = Illuminated
+RWTexture2D<float4> DebugOut;
+
+groupshared uint LocalFlags[256]; // one per stencil ID - bit1 = Rendered, bit2 = Occluded, bit3 = Illuminated
 
 [numthreads(8,8,1)]
 void MainCS(uint3 Tid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID)
@@ -22,43 +24,55 @@ void MainCS(uint3 Tid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID)
 	{
 		LocalFlags[i] = 0;
 	}
+
 	GroupMemoryBarrierWithGroupSync();
 
 	// Bounds check
-	if (LocalPixel.x < ViewRectSize.x && LocalPixel.y < ViewRectSize.y)
+	if (LocalPixel.x >= ViewRectSize.x || LocalPixel.y >= ViewRectSize.y)
 	{
-		// Occlusion
-		const float SceneZ  = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
-		const float CustomZ = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
-
-		const float SceneLinearDepth  = ConvertFromDeviceZ(SceneZ);
-		const float CustomLinearDepth = ConvertFromDeviceZ(CustomZ);
-
-		const float Bias = 1e-4; // small bias in linear space
-		const bool bOccluded = CustomLinearDepth > (SceneLinearDepth + Bias);
-
-		// Render
-		const uint StencilValue = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
-		const bool bRendered = StencilValue > 0;
-		
-		// Luminance
-		const float3 SceneColor = SceneTexturesStruct.SceneColorTexture.Load(int3(GlobalPixel, 0)).rgb;
-		const bool bIsDark = dot(SceneColor, float3(0.2126, 0.7152, 0.0722)) < LuminanceThreshold;
-		
-		if (bRendered)
-		{
-			uint Flags = 0x1;
-			Flags |= (bOccluded) << 1;
-			Flags |= (bIsDark) << 2;
-			
-			InterlockedOr(LocalFlags[StencilValue], Flags);
-		}
+		GroupMemoryBarrierWithGroupSync();
+		return;
 	}
 	
+	// Render
+	const uint StencilValue = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
+	const bool bRendered = StencilValue > 0;
+	if (!bRendered)
+	{
+		GroupMemoryBarrierWithGroupSync();
+		return;
+	}
+	uint Flags = 0x1;
+
+	// Occlusion
+	const float SceneZ  = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
+	const float CustomZ = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
+
+	const float SceneLinearDepth  = ConvertFromDeviceZ(SceneZ);
+	const float CustomLinearDepth = ConvertFromDeviceZ(CustomZ);
+
+	const float Bias = 1e-4; // small bias in linear space
+	const bool bOccluded = CustomLinearDepth > (SceneLinearDepth + Bias);
+	Flags |= (bOccluded) << 1;
+
+	if (!bOccluded)
+	{
+		// Luminance
+		float3 SceneColor = SceneTexturesStruct.SceneColorTexture.Load(int3(GlobalPixel, 0)).rgb;
+		SceneColor *= View.PreExposure;
+		const float Luminance = dot(SceneColor, float3(0.2126, 0.7152, 0.0722));
+		const bool bIsIlluminated = Luminance >= (LuminanceThreshold * View.PreExposure);
+		Flags |= bIsIlluminated << 2;
+	}
+	
+	InterlockedOr(LocalFlags[StencilValue], Flags);
 	GroupMemoryBarrierWithGroupSync();
 	
 	for (int i = LinearTid; i < 256; i += 64)
 	{
-		if (LocalFlags[i] != 0) { InterlockedOr(OutFlag[i], LocalFlags[i]); }
+		if (LocalFlags[i] != 0)
+		{
+			InterlockedOr(OutFlag[i], LocalFlags[i]);
+		}
 	}
 }

@@ -7,29 +7,51 @@
 #include "RenderGraphResources.h"
 #include "RenderGraphUtils.h"
 #include "SceneRenderTargetParameters.h"
-// #include "BlueprintLibraries/LimenCoreStatics.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Shaders/FFastScreenVisibilityCheckCS.h"
 
 
 ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::FFastScreenVisibilityCheckViewExtension(
     const FAutoRegister& AutoReg, const TWeakObjectPtr<ULimenFastScreenVisibilityChecker> InOwner,
-    const TSet<uint32>& InMasks, const int32 InMaximumFrameBuffering): FSceneViewExtensionBase(AutoReg)
-                                                                             , Owner(InOwner)
-                                                                             , MasksToCheck(InMasks.Array())
-                                                                             , MaximumFrameBuffering(InMaximumFrameBuffering)
-                                                                             , ShouldSkip(false)
+    const TSet<uint32>& InMasks, const int32 InMaximumFrameBuffering, const bool bInTakeLuminanceIntoAccount,
+    const float InLuminanceThreshold, const float InLuminanceDecayFactorPerSecond) : FSceneViewExtensionBase(AutoReg)
+                                                                        , Owner(InOwner)
+                                                                        , MasksToCheck(InMasks.Array())
+                                                                        , MaximumFrameBuffering(InMaximumFrameBuffering)
+                                                                        , ShouldSkip(false)
+                                                                        , bTakeLuminanceIntoAccount(bInTakeLuminanceIntoAccount)
+                                                                        , LuminanceThreshold(InLuminanceThreshold)
+                                                                        , LuminanceDecayFactorPerSecond(InLuminanceDecayFactorPerSecond)
 {
     VisibilityStates.AddZeroed(256);
 }
 
-void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::
-PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& InView,
-    const FRenderTargetBindingSlots& RenderTargets, TRDGUniformBufferRef<FSceneTextureUniformParameters> SceneTextures)
+void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::PrePostProcessPass_RenderThread(
+    FRDGBuilder& GraphBuilder, const FSceneView& InView, const FPostProcessingInputs& Inputs)
 {
-    FSceneViewExtensionBase::PostRenderBasePassDeferred_RenderThread(GraphBuilder, InView, RenderTargets, SceneTextures);
+    FSceneViewExtensionBase::PrePostProcessPass_RenderThread(GraphBuilder, InView, Inputs);
     
-    if (ShouldSkip.load(std::memory_order::acquire)) { return; }
+    DispatchVisibilityCheck(GraphBuilder, InView);
+    ReadbackVisibilityFlags();
+}
+
+void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::Deactivate()
+{
+    ShouldSkip.store(true, std::memory_order::release);
+    Readbacks.Empty();
+}
+
+void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::Activate()
+{
+    ShouldSkip.store(true, std::memory_order::release);
+    ShouldSkip = false;
+    VisibilityStates.AddZeroed(256);
+}
+
+void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::DispatchVisibilityCheck(FRDGBuilder& GraphBuilder, const FSceneView& InView)
+{
+    check(!ShouldSkip.load(std::memory_order::acquire))
    
     ViewRect = InView.CameraConstrainedViewRect;
     if (ViewRect.IsEmpty()) { return; }
@@ -49,7 +71,7 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     const FRDGTextureRef DebugTex = GraphBuilder.CreateTexture(DebugDesc, TEXT("Limen.DebugStencilOut"));
     const FRDGTextureUAVRef DebugUAV = GraphBuilder.CreateUAV(FRDGTextureUAVDesc(DebugTex));
     AddClearUAVPass(GraphBuilder, DebugUAV, FUintVector4(0,0,0,255));
-
+    
     // 3) Fill params
     auto* Params =
         GraphBuilder.AllocParameters<FFastScreenVisibilityCheckCS::FParameters>();
@@ -68,7 +90,12 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     }
     Params->OutFlag = OutFlagUAV;
     Params->DebugOut = DebugUAV;
-    Params->LuminanceThreshold = TakeLuminanceIntoAccount.load(std::memory_order_relaxed) ? LuminanceThreshold.load(std::memory_order_relaxed) : 0.0f;
+    Params->LuminanceThreshold = bTakeLuminanceIntoAccount ? LuminanceThreshold : 0.0f;
+    {
+        const float DeltaTime = InView.Family->Time.GetDeltaWorldTimeSeconds();
+        const float DecayThisFrame = FMath::Pow(LuminanceDecayFactorPerSecond, DeltaTime);
+        Params->LuminanceDecayFactor = DeltaTime * (bTakeLuminanceIntoAccount ? DecayThisFrame : 0.f);
+    }
 
     // 4) Dispatch compute
     TShaderMapRef<FFastScreenVisibilityCheckCS> CS(GetGlobalShaderMap(InView.GetFeatureLevel()));
@@ -80,6 +107,7 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     // --- 5) Queue GPU->CPU copy **right here** (buffer path)
     check(MaximumFrameBuffering <= 0 || Readbacks.Num() < MaximumFrameBuffering)
     Readbacks.Push(MakeShared<FRHIGPUBufferReadback>(TEXT("Limen.StencilFlagRB")));
+    Readbacks.Push(MakeShared<FRHIGPUBufferReadback>(TEXT("Limen.LuminanceRB")));
 
     // Buffer overload takes a byte size (sizeof(uint32) for one element)
     AddEnqueueCopyPass(GraphBuilder, Readbacks.Last().Get(), OutFlagBuf, sizeof(uint32) * 256);
@@ -98,20 +126,17 @@ PostRenderBasePassDeferred_RenderThread(FRDGBuilder& GraphBuilder, FSceneView& I
     }
 }
 
-void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::PostRenderViewFamily_RenderThread(
-    FRDGBuilder& GraphBuilder, FSceneViewFamily& ViewFamily)
+void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::ReadbackVisibilityFlags()
 {
-    FSceneViewExtensionBase::PostRenderViewFamily_RenderThread(GraphBuilder, ViewFamily);
-    
-    if (ShouldSkip) { return; }
+    check(!ShouldSkip.load(std::memory_order::acquire))
 
     for (int32 i = Readbacks.Num() - 1; i >= 0; --i)
     {
         if (!Readbacks[i].IsValid() || !Readbacks[i]->IsReady()) { continue; }
         
-        const TSharedPtr<FRHIGPUBufferReadback> Readback = Readbacks[i];
-
-        const void* Ptr = Readback->Lock(256 * sizeof(uint32));
+        const TSharedPtr<FRHIGPUBufferReadback> VisibilityReadback = Readbacks[i];
+        
+        const void* Ptr = VisibilityReadback->Lock(256 * sizeof(uint32));
         const uint32* Flags = static_cast<const uint32*>(Ptr);
         for (const uint8& Mask : MasksToCheck)
         {
@@ -126,24 +151,17 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
                 }
             });
         }
-        Readback->Unlock();
+        VisibilityReadback->Unlock();
 
         Readbacks.RemoveAt(0, i + 1, EAllowShrinking::Yes);
         break;
     }
 }
 
-void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::Deactivate()
+bool ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::IsActiveThisFrame_Internal(
+    const FSceneViewExtensionContext& Context) const
 {
-    ShouldSkip.store(true, std::memory_order::release);
-    Readbacks.Empty();
-}
-
-void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::Activate()
-{
-    ShouldSkip.store(true, std::memory_order::release);
-    ShouldSkip = false;
-    VisibilityStates.AddZeroed(256);
+    return !ShouldSkip.load(std::memory_order::acquire);
 }
 
 ///
@@ -154,19 +172,20 @@ ULimenFastScreenVisibilityChecker::FData::FData(const uint32 Flags)
 {
     bIsRendered = (Flags & 1) != 0;
     bIsOccluded = (Flags & 2) != 0;
-    bIsDark = (Flags & 4) != 0;
+    bIlluminated = (Flags & 4) != 0;
 }
 
 ULimenFastScreenVisibilityChecker::ULimenFastScreenVisibilityChecker(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     PrimaryComponentTick.bCanEverTick = true;
-    PrimaryComponentTick.TickInterval = 1.f;
+    PrimaryComponentTick.TickInterval = .2f;
     bAutoActivate = true;
     bEnableDebug = false;
     MaximumFrameBuffering = 1;
     bTakeLuminanceIntoAccount = false;
     LuminanceThreshold = 0.03f;
+    LuminanceDecayFactorPerSecond = .5f;
 }
 
 void ULimenFastScreenVisibilityChecker::BeginPlay()
@@ -222,6 +241,12 @@ void ULimenFastScreenVisibilityChecker::TickComponent(float DeltaTime, enum ELev
     //          true,
     //          TEXT("ULimenFastScreenVisibilityChecker UpdatesThisTick"));
 
+    if (bEnableDebug)
+    {
+        TimeSinceLastUpdate += FTimespan::FromSeconds(DeltaTime);
+        const FString Log = FString::Printf(TEXT("Time since last update: %fs"), TimeSinceLastUpdate.GetTotalSeconds());
+        LimenLog(this, Log, ELogType::Log, true, TEXT("ULimenFastScreenVisibilityChecker TimeSinceLastUpdate"));
+    }
     UpdatesThisTick = 0;
 }
 
@@ -246,11 +271,10 @@ void ULimenFastScreenVisibilityChecker::Activate(bool bReset)
             }
 
             // Pass MasksToCheck32 to NewExtension
-            ViewExt = FSceneViewExtensions::NewExtension<FFastScreenVisibilityCheckViewExtension>(
-                this, MasksToCheck32, MaximumFrameBuffering);
+            ViewExt = FSceneViewExtensions::NewExtension<FFastScreenVisibilityCheckViewExtension>(this,
+                MasksToCheck32, MaximumFrameBuffering, bTakeLuminanceIntoAccount,
+                LuminanceThreshold, LuminanceDecayFactorPerSecond);
         }
-        ViewExt->TakeLuminanceIntoAccount.store(bTakeLuminanceIntoAccount, std::memory_order::relaxed);
-        ViewExt->LuminanceThreshold.store(LuminanceThreshold, std::memory_order::relaxed);
         ViewExt->Activate();
         
         
@@ -283,7 +307,7 @@ bool ULimenFastScreenVisibilityChecker::ShouldActivate() const
 
 bool ULimenFastScreenVisibilityChecker::IsVisible(const uint8 Mask) const
 {
-    return VisibilityStates[Mask].bIsRendered && !VisibilityStates[Mask].bIsOccluded && !VisibilityStates[Mask].bIsDark;
+    return VisibilityStates[Mask].IsVisible();
 }
 
 UTextureRenderTarget2D* ULimenFastScreenVisibilityChecker::GetDebugRenderTarget() const
@@ -313,6 +337,12 @@ void ULimenFastScreenVisibilityChecker::VisibilityResultFromRender(const uint8 M
     if (!IsActive()) return;
 
     UpdatesThisTick++;
+    
+    if (bEnableDebug)
+    {
+        LastUpdate = FDateTime::Now();
+        TimeSinceLastUpdate = FTimespan(0);
+    }
     
     const FData NewData(VisibilityFlags);
     
