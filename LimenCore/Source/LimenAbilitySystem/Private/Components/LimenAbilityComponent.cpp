@@ -84,6 +84,18 @@ void ULimenAbilityComponent::Deactivate()
 	Super::Deactivate();
 }
 
+void ULimenAbilityComponent::AddAbilityClass(const TSubclassOf<ULimenAbilityBase>& AbilityClass)
+{
+	check(AbilityClass)
+	AbilityClasses.Push(TSoftClassPtr<ULimenAbilityBase>(AbilityClass));
+}
+
+void ULimenAbilityComponent::AddAttributeClass(const TSubclassOf<ULimenAttributeBase>& AttributeClass)
+{
+	check(AttributeClass)
+	AbilityClasses.Push(TSoftClassPtr<ULimenAbilityBase>(AttributeClass));
+}
+
 ULimenAbilityBase* ULimenAbilityComponent::AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass)
 {
 	check(AbilityClass != nullptr);

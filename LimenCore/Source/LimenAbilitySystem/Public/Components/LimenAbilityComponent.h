@@ -231,13 +231,40 @@ public:
 	virtual void Deactivate() override;
 	
 	/**
+	 * Adds a new ability to the abilities list. Does not initialize it. Used for component default values.
+	 *
+	 * @param AbilityClass The class type of the ability being added. This defines the behavior and properties of the new ability.
+	 */
+	void AddAbilityClass(const TSubclassOf<ULimenAbilityBase>& AbilityClass);
+	template<typename T>
+	FORCEINLINE void AddAbilityClass()
+	{
+		static_assert(TIsDerivedFrom<T, ULimenAbilityBase>::Value);
+		AddAbilityClass(T::StaticClass());
+	}
+	
+	
+	/**
+	 * Adds a new attribute to the attributes list. Does not initialize it. Used for component default values.
+	 *
+	 * @param AttributeClass The class type of the ability being added. This defines the behavior and properties of the new ability.
+	 */
+	void AddAttributeClass(const TSubclassOf<ULimenAttributeBase>& AttributeClass);
+	template<typename T>
+	FORCEINLINE void AddAttributeClass()
+	{
+		static_assert(TIsDerivedFrom<T, ULimenAbilityBase>::Value);
+		AddAttributeClass(T::StaticClass());
+	}
+	
+	/**
 	 * Adds a new ability to the component and initializes it.
 	 *
 	 * @param AbilityClass The class type of the ability being added. This defines the behavior and properties of the new ability.
 	 */
 	ULimenAbilityBase* AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass);
 	template<typename T>
-	T* AddAbility()
+	FORCEINLINE T* AddAbility()
 	{
 		static_assert(TIsDerivedFrom<T, ULimenAbilityBase>::Value);
 		return Cast<T>(AddAbility(T::StaticClass()));
@@ -249,7 +276,7 @@ public:
 	 */
 	ULimenAttributeBase* AddAttribute(const TSubclassOf<ULimenAttributeBase>& AttributeClass);
 	template<typename T>
-	T* AddAttribute()
+	FORCEINLINE T* AddAttribute()
 	{
 		static_assert(TIsDerivedFrom<T, ULimenAttributeBase>::Value);
 		return Cast<T>(AddAttribute(T::StaticClass()));
