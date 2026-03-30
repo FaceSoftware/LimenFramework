@@ -253,7 +253,7 @@ public:
 	template<typename T>
 	FORCEINLINE void AddAttributeClass()
 	{
-		static_assert(TIsDerivedFrom<T, ULimenAbilityBase>::Value);
+		static_assert(TIsDerivedFrom<T, ULimenAttributeBase>::Value);
 		AddAttributeClass(T::StaticClass());
 	}
 	
