@@ -93,7 +93,7 @@ void ULimenAbilityComponent::AddAbilityClass(const TSubclassOf<ULimenAbilityBase
 void ULimenAbilityComponent::AddAttributeClass(const TSubclassOf<ULimenAttributeBase>& AttributeClass)
 {
 	check(AttributeClass)
-	AbilityClasses.Push(TSoftClassPtr<ULimenAbilityBase>(AttributeClass));
+	AttributeClasses.Push(TSoftClassPtr<ULimenAttributeBase>(AttributeClass));
 }
 
 ULimenAbilityBase* ULimenAbilityComponent::AddAbility(const TSubclassOf<ULimenAbilityBase>& AbilityClass)
