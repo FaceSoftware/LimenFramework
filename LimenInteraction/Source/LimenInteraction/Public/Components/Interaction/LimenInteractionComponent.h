@@ -102,7 +102,7 @@ public:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void SetupInteractionParams(const FRepInteractionParams& InParams);
+	void SetupInteractionParams(AController* Controller, APawn* Pawn);
 	/**
 	 * @brief Retrieves the interaction range for this component.
 	 *

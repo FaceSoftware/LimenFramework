@@ -96,13 +96,13 @@ public:
 	T* PeekItemFromSlot(const FName& SlotName)
 	{
 		static_assert(TIsDerivedFrom<T, UObject>::Value);		
-		return Cast<T>(PeekItemFromSlot(SlotName));
+		return Cast<T>(PeekItemFromSlot(SlotName).GetObject());
 	}
 	template<typename T>
 	TScriptInterface<T> PeekItemInterfaceFromSlot(const FName& SlotName)
 	{
 		static_assert(TIsIInterface<T>::Value);		
-		return TScriptInterface<T>(PeekItemFromSlot(SlotName)).GetObject();
+		return TScriptInterface<T>(PeekItemFromSlot(SlotName).GetObject());
 	}
 
 protected:

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "LimenItemHoldComponent.generated.h"
+#include "LimenHoldComponent.generated.h"
 
 
 class ILimenHoldableItem;
@@ -15,15 +15,15 @@ struct FLimenItemHoldComponent_ReplicatedData
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TObjectPtr<AActor> PhysicalItem;
+	TObjectPtr<AActor> Current;
 	UPROPERTY()
-	TObjectPtr<AActor> PreviousPhysicalItem;
+	TObjectPtr<AActor> Previous;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPhysicalItemChange, TScriptInterface<ILimenHoldableItem>, Old, TScriptInterface<ILimenHoldableItem>, New);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPhysicalItemChange, AActor*, Old, AActor*, New);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LIMENINTERACTION_API ULimenItemHoldComponent : public UActorComponent
+class LIMENINTERACTION_API ULimenHoldComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -31,11 +31,11 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FPhysicalItemChange OnItemChanged;
 
-	ULimenItemHoldComponent();
+	ULimenHoldComponent();
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
-	void Hold(const TScriptInterface<ILimenHoldableItem>& InPhysicalItem);
+	void Hold(AActor* InActor);
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
 	void StopHolding();
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
@@ -45,27 +45,21 @@ public:
 	FORCEINLINE bool IsHoldingSomething() const
 	{
 		if (!IsHoldingSomething()) return false;
-		return GetItem<T>() != nullptr;
+		return GetActor<T>() != nullptr;
 	}
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Interaction")
-	TScriptInterface<ILimenHoldableItem> GetItem() const;
+	AActor* GetActor() const;
 
 	template<typename T>
-	FORCEINLINE T* GetItem() const
+	FORCEINLINE T* GetActor() const
 	{
-		return Cast<T>(GetItem());
+		return Cast<T>(GetActor());
 	}
 	template<typename T>
-	FORCEINLINE T* GetItemChecked() const
+	FORCEINLINE T* GetActorChecked() const
 	{
-		return CastChecked<T>(GetItem());
-	}
-	template<typename T>
-	FORCEINLINE T* GetItemInterface() const
-	{
-		static_assert(TIsIInterface<T>::Value);
-		return TScriptInterface<T>(GetItem().GetObject());
+		return CastChecked<T>(GetActor());
 	}
 
 private:

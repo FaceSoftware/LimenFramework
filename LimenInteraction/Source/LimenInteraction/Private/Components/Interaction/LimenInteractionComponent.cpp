@@ -113,10 +113,10 @@ void ULimenInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	}
 }
 
-void ULimenInteractionComponent::SetupInteractionParams(const FRepInteractionParams& InParams)
+void ULimenInteractionComponent::SetupInteractionParams(AController* Controller, APawn* Pawn)
 {
 	check(GetOwner()->HasAuthority());
-	InteractionParams = InParams;
+	InteractionParams = FRepInteractionParams(Controller, Pawn);
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InteractionParams, this)
 }
 

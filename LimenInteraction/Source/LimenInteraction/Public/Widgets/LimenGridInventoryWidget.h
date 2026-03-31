@@ -7,6 +7,7 @@
 #include "LimenGridInventoryWidget.generated.h"
 
 
+class SLimenGridInventoryEntry;
 struct FInventoryCellUpdate;
 class ULimenGridCellWidget;
 class ULimenGridInventoryComponent;
@@ -35,6 +36,10 @@ SLimenGridInventory();
 	void Construct(const FArguments& InArgs);
 	
 	void SetInventory(ULimenGridInventoryComponent* InInventory);
+	
+	virtual FReply OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
+	virtual FReply OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
+	virtual void OnDragLeave(const FDragDropEvent& DragDropEvent) override;
 
 private:
 	TWeakObjectPtr<ULimenGridInventoryComponent> InventoryComponent;
@@ -47,10 +52,6 @@ private:
 	FDelegateHandle CellUpdateDelegateHandle;
 	TSet<FIntVector2> HighlightedCells;
 	TArray<TSharedPtr<SLimenGridInventoryEntry>> GridCellWidgets;
-	
-	virtual FReply OnDragOver(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
-	virtual FReply OnDrop(const FGeometry& MyGeometry, const FDragDropEvent& DragDropEvent) override;
-	virtual void OnDragLeave(const FDragDropEvent& DragDropEvent) override;
 	
 	virtual void InventoryCellUpdate(const TArray<FInventoryCellUpdate>& Updates);
 	
@@ -72,7 +73,6 @@ class LIMENINTERACTION_API ULimenGridInventoryWidget : public UWidget
 	
 public:
 	ULimenGridInventoryWidget();
-	virtual TSharedRef<SWidget> RebuildWidget() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 	
 	UFUNCTION(BlueprintCallable)
@@ -83,6 +83,8 @@ protected:
 	TSubclassOf<ULimenGridCellWidget> CellWidget;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Grid Inventory")
 	FVector2D CellSize;
+	
+	virtual TSharedRef<SWidget> RebuildWidget() override;
 
 private:
 	TSharedPtr<SLimenGridInventory> GridInventory;
