@@ -5,6 +5,7 @@
 
 #include "Async/Async.h"
 #include "Components/LimenInventoryComponent.h"
+#include "Components/LimenSlotInventoryComponent.h"
 
 
 FLimenReplicatedInventoryItemRegistry::FLimenReplicatedInventoryItemRegistry(AActor* InItem)
@@ -91,7 +92,9 @@ void FLimenReplicatedInventoryItemRegistryArray::PostReplicatedChange(const TArr
 {
 }
 
-
+///
+///
+///
 
 FLimenReplicatedInventorySlot::FLimenReplicatedInventorySlot()
 {
@@ -101,18 +104,15 @@ FLimenReplicatedInventorySlot::FLimenReplicatedInventorySlot(const FName& InSlot
 {
 }
 
-void FLimenReplicatedInventorySlot::PreReplicatedRemove(
-	const FLimenReplicatedInventorySlotsArray& InArraySerializer)
+void FLimenReplicatedInventorySlot::PreReplicatedRemove(const FLimenReplicatedInventorySlotsArray& InArraySerializer)
 {
 }
 
-void FLimenReplicatedInventorySlot::PostReplicatedAdd(
-	const FLimenReplicatedInventorySlotsArray& InArraySerializer)
+void FLimenReplicatedInventorySlot::PostReplicatedAdd(const FLimenReplicatedInventorySlotsArray& InArraySerializer)
 {
 }
 
-void FLimenReplicatedInventorySlot::PostReplicatedChange(
-	const FLimenReplicatedInventorySlotsArray& InArraySerializer)
+void FLimenReplicatedInventorySlot::PostReplicatedChange(const FLimenReplicatedInventorySlotsArray& InArraySerializer)
 {
 }
 
@@ -138,12 +138,43 @@ bool FLimenReplicatedInventorySlot::operator==(const TScriptInterface<ILimenSlot
 
 void FLimenReplicatedInventorySlotsArray::PreReplicatedRemove(const TArrayView<int32>& RemovedIndices, int32 FinalSize)
 {
+	for (const int32 Idx : RemovedIndices)
+	{
+		const FName SlotName = Items[Idx].SlotName;
+		const TWeakObjectPtr OwnerCopy = Owner;
+		AsyncTask(ENamedThreads::GameThread, [OwnerCopy, SlotName]
+		{
+			if (!OwnerCopy.IsValid()) { return; }
+			OwnerCopy->SlotRemoved(SlotName);
+		});
+	}
 }
 
 void FLimenReplicatedInventorySlotsArray::PostReplicatedAdd(const TArrayView<int32>& AddedIndices, int32 FinalSize)
 {
+	for (const int32 Idx : AddedIndices)
+	{
+		const FName SlotName = Items[Idx].SlotName;
+		const TWeakObjectPtr OwnerCopy = Owner;
+		AsyncTask(ENamedThreads::GameThread, [OwnerCopy, SlotName]
+		{
+			if (!OwnerCopy.IsValid()) { return; }
+			OwnerCopy->SlotAdded(SlotName);
+		});	
+	}
 }
 
 void FLimenReplicatedInventorySlotsArray::PostReplicatedChange(const TArrayView<int32>& ChangedIndices, int32 FinalSize)
 {
+	for (const int32 Idx : ChangedIndices)
+	{
+		const FName SlotName = Items[Idx].SlotName;
+		const TScriptInterface<ILimenSlotInventoryItem> Item = Items[Idx].Item;
+		const TWeakObjectPtr OwnerCopy = Owner;
+		AsyncTask(ENamedThreads::GameThread, [OwnerCopy, SlotName, Item]
+		{
+			if (!OwnerCopy.IsValid()) { return; }
+			OwnerCopy->SlotItemUpdated(SlotName, Item);
+		});	
+	}
 }

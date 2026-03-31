@@ -162,6 +162,10 @@ struct FLimenReplicatedInventorySlot : public FFastArraySerializerItem
 	bool operator==(const FLimenReplicatedInventorySlot& Other) const;
 	bool operator==(const TScriptInterface<ILimenSlotInventoryItem>& InItem) const;
 };
+FORCEINLINE uint32 GetTypeHash(const FLimenReplicatedInventorySlot& Slot)
+{
+	return GetTypeHash(Slot.SlotName);
+}
 
 
 USTRUCT()
@@ -171,6 +175,8 @@ struct FLimenReplicatedInventorySlotsArray : public FFastArraySerializer
 
 	UPROPERTY()
 	TArray<FLimenReplicatedInventorySlot> Items;
+	UPROPERTY()
+	TWeakObjectPtr<ULimenSlotInventoryComponent> Owner;
 
 	bool NetDeltaSerialize(FNetDeltaSerializeInfo & DeltaParms)
 	{

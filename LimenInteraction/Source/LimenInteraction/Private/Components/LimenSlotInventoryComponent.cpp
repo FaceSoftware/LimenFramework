@@ -68,18 +68,58 @@ FInventoryItemUpdate& ULimenSlotInventoryComponent::GetOnItemUpdated()
 	return Temp;
 }
 
-void ULimenSlotInventoryComponent::AddSlot(const FName SlotName)
+FLimenInventorySlot& ULimenSlotInventoryComponent::FindOrAddSlot(const FName& SlotName)
 {
-	Server_AddSlot(SlotName);
+	check(!HasBegunPlay())
+	return Slots.FindOrAdd(FLimenInventorySlot(SlotName));
 }
 
-void ULimenSlotInventoryComponent::RemoveSlot(const FName SlotName)
-{	
-	Server_RemoveSlot(SlotName);
+void ULimenSlotInventoryComponent::RemoveSlot(const FName& SlotName)
+{
+	check(!HasBegunPlay())
+	Slots.Remove(FLimenInventorySlot(SlotName));
+}
+
+void ULimenSlotInventoryComponent::DynamicAddSlot(const FName SlotName)
+{
+	check(HasBegunPlay())
+	check(GetOwner())
+	check(GetOwner()->HasAuthority())
+
+	const int32 Index = ReplicatedSlots.Items.Add(FLimenReplicatedInventorySlot(SlotName));
+	ReplicatedSlots.MarkItemDirty(ReplicatedSlots.Items[Index]);
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
+	
+	SlotAdded(SlotName);
+}
+
+void ULimenSlotInventoryComponent::DynamicRemoveSlot(const FName SlotName)
+{
+	check(HasBegunPlay())
+	check(GetOwner())
+	check(GetOwner()->HasAuthority())
+	
+	const int32 SlotIndex = ReplicatedSlots.Items.IndexOfByKey(SlotName);
+	if (SlotIndex == INDEX_NONE) { return; }
+	ReplicatedSlots.Items.RemoveAt(SlotIndex);
+
+	ReplicatedSlots.MarkArrayDirty();
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
+	
+	SlotRemoved(SlotName);
+}
+
+bool ULimenSlotInventoryComponent::DoesSlotExist(const FName& SlotName) const
+{
+	return ReplicatedSlotsSet.Contains(FLimenReplicatedInventorySlot(SlotName));
 }
 
 bool ULimenSlotInventoryComponent::AddItem(const FName& SlotName, const TScriptInterface<ILimenSlotInventoryItem>& Item)
 {
+	check(HasBegunPlay())
+	check(GetOwner())
+	check(GetOwner()->HasAuthority())
+
 	if (!Item) { return false; }
 	if (!Item->CompatibleSlots().Contains(SlotName)) { return false; }
 	
@@ -88,26 +128,34 @@ bool ULimenSlotInventoryComponent::AddItem(const FName& SlotName, const TScriptI
 	if (Slot->Item != nullptr) { return false; }
 
 	Slot->Item = Item;
-
-	SlotUpdateInternal(SlotName, Item);
-	OnSlotItemAdded.Broadcast(Slot->SlotName, Item);
+	
+	ReplicatedSlots.MarkItemDirty(*Slot);
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
+	
+	SlotItemUpdated(SlotName, Item);
 	return true;
 }
 
 bool ULimenSlotInventoryComponent::GetItem(const TScriptInterface<ILimenSlotInventoryItem>& Item)
 {
+	check(HasBegunPlay())
+	check(GetOwner())
+	check(GetOwner()->HasAuthority())
+
 	if (!Item) { return false; }
 	FLimenReplicatedInventorySlot* Slot = ReplicatedSlots.Items.FindByKey(Item);
 	if (!Slot) { return false; }
 	const TScriptInterface TempItem = Slot->Item;
 	Slot->Item = nullptr;
 
-	SlotUpdateInternal(Slot->SlotName, Item);
-	OnSlotItemRemoved.Broadcast(Slot->SlotName, TempItem);
+	ReplicatedSlots.MarkItemDirty(*Slot);
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
+	
+	SlotItemUpdated(Slot->SlotName, nullptr);
 	return true;
 }
 
-TScriptInterface<ILimenSlotInventoryItem> ULimenSlotInventoryComponent::GetItemFromSlot(const FName SlotName)
+TScriptInterface<ILimenSlotInventoryItem> ULimenSlotInventoryComponent::GetItemFromSlot(const FName& SlotName)
 {
 	FLimenReplicatedInventorySlot* Slot = ReplicatedSlots.Items.FindByKey(SlotName);
 	if (!Slot) { return nullptr; }
@@ -115,61 +163,59 @@ TScriptInterface<ILimenSlotInventoryItem> ULimenSlotInventoryComponent::GetItemF
 	
 	TScriptInterface<ILimenSlotInventoryItem> TempItem = Slot->Item;
 	Slot->Item = nullptr;
-
-	SlotUpdateInternal(Slot->SlotName, nullptr);
-	OnSlotItemRemoved.Broadcast(SlotName, TempItem);
+	
+	ReplicatedSlots.MarkItemDirty(*Slot);
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
+	
+	SlotItemUpdated(Slot->SlotName, nullptr);
 	return TempItem;
 }
 
 TScriptInterface<ILimenSlotInventoryItem> ULimenSlotInventoryComponent::PeekItemFromSlot(const FName SlotName) const
 {
-	const FLimenReplicatedInventorySlot* Slot = ReplicatedSlots.Items.FindByKey(SlotName);
+	const FLimenReplicatedInventorySlot* Slot = ReplicatedSlotsSet.Find(FLimenReplicatedInventorySlot(SlotName));
 	if (!Slot) { return nullptr; }
 
 	return Slot->Item;
 }
 
-void ULimenSlotInventoryComponent::SlotUpdateInternal(const FName& SlotName,
-	const TScriptInterface<ILimenSlotInventoryItem>& Item)
-{
-	if (GetOwner() && GetOwner()->HasAuthority())
-	{
-		FLimenReplicatedInventorySlot* SlotPtr = ReplicatedSlots.Items.FindByKey(SlotName);
-		check(SlotPtr) // It shouldn't update a non-existent slot, if this hits, something is wrong elsewhere
-
-		ReplicatedSlots.MarkItemDirty(*SlotPtr);
-		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
-	}
-}
-
 void ULimenSlotInventoryComponent::CreateSlots()
 {
-	if (!GetOwner() || !GetOwner()->HasAuthority()) { return; }
+	ReplicatedSlots.Owner = this;
 
-	ReplicatedSlots.Items.Empty(Slots.Num());
-	ReplicatedSlots.Items.AddDefaulted(Slots.Num());
-	for (int i = 0; i < Slots.Num(); ++i)
+	if (GetOwner() && GetOwner()->HasAuthority())
 	{
-		ReplicatedSlots.Items[i].SlotName = Slots[i].SlotName;
-		ReplicatedSlots.MarkItemDirty(ReplicatedSlots.Items[i]);
+		ReplicatedSlots.Items.Empty(Slots.Num());
+		ReplicatedSlots.Items.AddDefaulted(Slots.Num());
+		int32 Idx = 0;
+		for (const auto& Slot : Slots)
+		{
+			ReplicatedSlots.Items[Idx].SlotName = Slot.SlotName;
+			ReplicatedSlots.MarkItemDirty(ReplicatedSlots.Items[Idx]);
+			Idx++;
+		}
 	}
-
+	
 	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
 }
 
-void ULimenSlotInventoryComponent::Server_AddSlot_Implementation(const FName& SlotName)
+void ULimenSlotInventoryComponent::SlotAdded(const FName& SlotName)
 {
-	const int32 Index = ReplicatedSlots.Items.Add(FLimenReplicatedInventorySlot(SlotName));
-	ReplicatedSlots.MarkItemDirty(ReplicatedSlots.Items[Index]);
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
+	ReplicatedSlotsSet.Add(FLimenReplicatedInventorySlot(SlotName));
+	OnSlotCreated.Broadcast(SlotName, nullptr);
 }
 
-void ULimenSlotInventoryComponent::Server_RemoveSlot_Implementation(const FName SlotName)
+void ULimenSlotInventoryComponent::SlotRemoved(const FName& SlotName)
 {
-	const int32 SlotIndex = ReplicatedSlots.Items.IndexOfByKey(SlotName);
-	if (SlotIndex == INDEX_NONE) { return; }
-	ReplicatedSlots.Items.RemoveAt(SlotIndex);
+	ReplicatedSlotsSet.Remove(FLimenReplicatedInventorySlot(SlotName));
+	OnSlotRemoved.Broadcast(SlotName, nullptr);
+}
 
-	ReplicatedSlots.MarkArrayDirty();
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedSlots, this)
+void ULimenSlotInventoryComponent::SlotItemUpdated(const FName& SlotName,
+	const TScriptInterface<ILimenSlotInventoryItem>& Item)
+{
+	FLimenReplicatedInventorySlot& Slot = *ReplicatedSlotsSet.Find(FLimenReplicatedInventorySlot(SlotName));
+	Slot.Item = Item;
+	
+	OnSlotItemUpdated.Broadcast(Slot.SlotName, Item);
 }

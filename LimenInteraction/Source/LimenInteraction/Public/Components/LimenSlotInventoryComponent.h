@@ -37,20 +37,24 @@ struct FLimenInventorySlot
 		return SlotName == InSlotName;
 	}
 };
-
-
-
+FORCEINLINE uint32 GetTypeHash(const FLimenInventorySlot& Slot)
+{
+	return GetTypeHash(Slot.SlotName);
+}
 
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class LIMENINTERACTION_API ULimenSlotInventoryComponent : public UActorComponent, public ILimenInventory
 {
 	GENERATED_BODY()
+	
+	friend FLimenReplicatedInventorySlotsArray;
 
 public:
 	DECLARE_MULTICAST_DELEGATE_TwoParams(FSlotUpdate, const FName& /* SlotName */, const TScriptInterface<ILimenSlotInventoryItem>& /* Item */)
-	FSlotUpdate OnSlotItemAdded;
-	FSlotUpdate OnSlotItemRemoved;
+	FSlotUpdate OnSlotItemUpdated;
+	FSlotUpdate OnSlotCreated;
+	FSlotUpdate OnSlotRemoved;
 	
 	ULimenSlotInventoryComponent();
 	virtual void InitializeComponent() override;
@@ -63,27 +67,56 @@ public:
 	virtual FInventoryItemUpdate& GetOnItemRemoved() override;
 	virtual FInventoryItemUpdate& GetOnItemUpdated() override;
 	
-	void AddSlot(const FName SlotName);
-	void RemoveSlot(const FName SlotName);
+	FLimenInventorySlot& FindOrAddSlot(const FName& SlotName);
+	void RemoveSlot(const FName& SlotName);
+	
+	void DynamicAddSlot(const FName SlotName);
+	void DynamicRemoveSlot(const FName SlotName);
+	
+	bool DoesSlotExist(const FName& SlotName) const;
 	
 	bool AddItem(const FName& SlotName, const TScriptInterface<ILimenSlotInventoryItem>& Item);
 	bool GetItem(const TScriptInterface<ILimenSlotInventoryItem>& Item);
-	TScriptInterface<ILimenSlotInventoryItem> GetItemFromSlot(FName SlotName);
+	TScriptInterface<ILimenSlotInventoryItem> GetItemFromSlot(const FName& SlotName);
+	template<typename T>
+	T* GetItemFromSlot(const FName& SlotName)
+	{
+		static_assert(TIsDerivedFrom<T, UObject>::Value);		
+		return Cast<T>(GetItemFromSlot(SlotName));
+	}
+	template<typename T>
+	TScriptInterface<T> GetItemInterfaceFromSlot(const FName& SlotName)
+	{
+		static_assert(TIsIInterface<T>::Value);		
+		return TScriptInterface<T>(GetItemFromSlot(SlotName)).GetObject();
+	}
+
 	TScriptInterface<ILimenSlotInventoryItem> PeekItemFromSlot(FName SlotName) const;
+	template<typename T>
+	T* PeekItemFromSlot(const FName& SlotName)
+	{
+		static_assert(TIsDerivedFrom<T, UObject>::Value);		
+		return Cast<T>(PeekItemFromSlot(SlotName));
+	}
+	template<typename T>
+	TScriptInterface<T> PeekItemInterfaceFromSlot(const FName& SlotName)
+	{
+		static_assert(TIsIInterface<T>::Value);		
+		return TScriptInterface<T>(PeekItemFromSlot(SlotName)).GetObject();
+	}
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<FLimenInventorySlot> Slots;
+	TSet<FLimenInventorySlot> Slots;
 
-public:
+private:
 	UPROPERTY(Replicated)
 	FLimenReplicatedInventorySlotsArray ReplicatedSlots;
+	TSet<FLimenReplicatedInventorySlot> ReplicatedSlotsSet;
 	
-	void SlotUpdateInternal(const FName& SlotName, const TScriptInterface<ILimenSlotInventoryItem>& Item);
 	void CreateSlots();
 	
-	UFUNCTION(Server, Reliable)
-	void Server_AddSlot(const FName& SlotName);
-	UFUNCTION(Server, Reliable)
-	void Server_RemoveSlot(const FName SlotName);
+	void SlotAdded(const FName& SlotName);
+	void SlotRemoved(const FName& SlotName);
+	void SlotItemUpdated(const FName& SlotName, const TScriptInterface<ILimenSlotInventoryItem>& Item);
 };
