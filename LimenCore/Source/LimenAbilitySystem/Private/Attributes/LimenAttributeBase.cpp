@@ -23,6 +23,8 @@ ULimenAttributeBase::ULimenAttributeBase() : Super()
 #if WITH_EDITORONLY_DATA
 	bLogValue = false;
 #endif
+	bIsBeingUpdatedByRecharge = false;
+	RechargeDelay = FFloatRange(0.f, 0.f);
 }
 
 void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -177,9 +179,15 @@ void ULimenAttributeBase::Tick(float DeltaTime)
 	}
 #endif
 
-	if (!HasAuthority() || FMath::IsNearlyZero(RechargeRate)) return;
-
-	ModifyValueBy(RechargeRate * DeltaTime);
+	check(HasAuthority())
+	check(RechargeRate != 0.f)
+	
+	if (!GetWorld()->GetTimerManager().IsTimerActive(RechargeDelayTimer))
+	{
+		bIsBeingUpdatedByRecharge = true;
+		Recharge(DeltaTime);
+		bIsBeingUpdatedByRecharge = false;
+	}
 }
 
 ETickableTickType ULimenAttributeBase::GetTickableTickType() const
@@ -189,7 +197,7 @@ ETickableTickType ULimenAttributeBase::GetTickableTickType() const
 
 bool ULimenAttributeBase::IsTickable() const
 {
-	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority() && !bIsFrozen;
+	return !HasAnyFlags(RF_ClassDefaultObject) && HasAuthority() && !bIsFrozen && RechargeRate != 0.f;
 }
 
 TStatId ULimenAttributeBase::GetStatId() const
@@ -456,6 +464,16 @@ ULimenAttributeBase& ULimenAttributeBase::operator-=(const float Value)
 	return *this;
 }
 
+bool ULimenAttributeBase::IsBeingUpdatedByRecharge() const
+{
+	return bIsBeingUpdatedByRecharge;
+}
+
+void ULimenAttributeBase::Recharge(const float DeltaTime)
+{
+	ModifyValueBy(RechargeRate * DeltaTime);
+}
+
 void ULimenAttributeBase::AttributeEmpty()
 {
 }
@@ -466,6 +484,13 @@ void ULimenAttributeBase::AttributeFull()
 
 void ULimenAttributeBase::AttributeUpdated()
 {
+	if (!bIsBeingUpdatedByRecharge && RechargeDelay.HasLowerBound())
+	{
+		const float Min = RechargeDelay.GetLowerBoundValue();
+		const float Max = RechargeDelay.HasUpperBound() ? RechargeDelay.GetUpperBoundValue() : TNumericLimits<float>::Max();
+		const float RandomTime = FMath::RandRange(Min, Max);
+		GetWorld()->GetTimerManager().SetTimer(RechargeDelayTimer, RandomTime, false);
+	}
 }
 
 void ULimenAttributeBase::OnRep_CurrentValue()

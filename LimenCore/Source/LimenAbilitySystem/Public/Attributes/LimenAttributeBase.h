@@ -235,6 +235,8 @@ public:
 	ULimenAttributeBase& operator-=(const float Value);
 
 protected:
+	static constexpr float MinValue = 0.f;
+	
 	/**
 	 * @brief The amount to recharge every second.
 	 */
@@ -252,6 +254,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Attribute")
 	bool bLogValue;
 #endif WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category="Attribute")
+	FFloatRange RechargeDelay;
+	
+	bool IsBeingUpdatedByRecharge() const;
+	
+	virtual void Recharge(float DeltaTime);
 
 	virtual void AttributeEmpty();
 	virtual void AttributeFull();
@@ -261,8 +269,6 @@ protected:
 	virtual void OnRep_CurrentValue();
 	
 private:
-	static constexpr float MinValue = 0.f;
-
 	UPROPERTY(SaveGame, ReplicatedUsing=OnRep_CurrentValue)
 	float CurrentValue;
 
@@ -270,4 +276,8 @@ private:
 	TWeakObjectPtr<ULimenAbilityComponent> OwnerAbilityComponent;
 	bool bIsInitialized;
 	bool bIsFrozen;
+	
+	bool bIsBeingUpdatedByRecharge;
+	
+	FTimerHandle RechargeDelayTimer;
 };
