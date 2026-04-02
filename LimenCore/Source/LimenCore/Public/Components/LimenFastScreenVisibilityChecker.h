@@ -29,9 +29,11 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		virtual void PrePostProcessPass_RenderThread(FRDGBuilder& GraphBuilder, const FSceneView& InView, const FPostProcessingInputs& Inputs) override;
 
 		FORCEINLINE FIntRect GetViewRect() const { return ViewRect; }
-		
 		void Deactivate();
 		void Activate();
+		
+	protected:
+		virtual bool IsActiveThisFrame_Internal(const FSceneViewExtensionContext& Context) const override;
 
 	private:		
 		TWeakObjectPtr<ULimenFastScreenVisibilityChecker> Owner; // read-only on RT
@@ -47,8 +49,6 @@ class LIMENCORE_API ULimenFastScreenVisibilityChecker : public UActorComponent
 		
 		void DispatchVisibilityCheck(FRDGBuilder& GraphBuilder, const FSceneView& InView);
 		void ReadbackVisibilityFlags();
-		
-		virtual bool IsActiveThisFrame_Internal(const FSceneViewExtensionContext& Context) const override;
 	};
 
 public:
@@ -58,12 +58,12 @@ public:
 		explicit FData(uint32 Flags);
 
 		bool bIsRendered;
-		bool bIsOccluded;
+		bool bIsVisible;
 		
-		bool IsVisible() const { return bIsRendered && !bIsOccluded; }
+		bool IsVisible() const { return bIsVisible; }
 		bool operator==(const FData& Other) const
 		{
-			return bIsRendered == Other.bIsRendered && bIsOccluded == Other.bIsOccluded;
+			return IsVisible() == Other.IsVisible();
 		}
 	};
 	
@@ -77,7 +77,6 @@ public:
 							   FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void Activate(bool bReset = false) override;
 	virtual void Deactivate() override;
-	virtual bool ShouldActivate() const override;
 
 	UFUNCTION(BlueprintCallable, Category="Screen Visibility Checker")
 	bool IsVisible(uint8 Mask) const;
@@ -93,6 +92,8 @@ protected:
 	bool bEnableDebug;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Screen Visibility Checker")
 	int32 MaximumFrameBuffering;
+	
+	virtual bool ShouldActivate() const override;
 	
 private:
 	TSharedPtr<FFastScreenVisibilityCheckViewExtension> ViewExt; 

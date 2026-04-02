@@ -47,6 +47,13 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
     VisibilityStates.AddZeroed(256);
 }
 
+bool ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::IsActiveThisFrame_Internal(
+    const FSceneViewExtensionContext& Context) const
+{
+    FScopeLock Lock(&ActiveSection);
+    return !bShouldSkip;
+}
+
 void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::DispatchVisibilityCheck(FRDGBuilder& GraphBuilder, const FSceneView& InView)
 {
     check(!bShouldSkip)
@@ -138,13 +145,6 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
     }
 }
 
-bool ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::IsActiveThisFrame_Internal(
-    const FSceneViewExtensionContext& Context) const
-{
-    FScopeLock Lock(&ActiveSection);
-    return !bShouldSkip;
-}
-
 ///
 ///
 ///
@@ -152,7 +152,7 @@ bool ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
 ULimenFastScreenVisibilityChecker::FData::FData(const uint32 Flags)
 {
     bIsRendered = (Flags & 1) != 0;
-    bIsOccluded = (Flags & 2) != 0;
+    bIsVisible = (Flags & 2) != 0;
 }
 
 ULimenFastScreenVisibilityChecker::ULimenFastScreenVisibilityChecker(const FObjectInitializer& ObjectInitializer)
