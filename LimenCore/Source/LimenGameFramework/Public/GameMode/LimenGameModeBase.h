@@ -24,10 +24,8 @@ public:
 
 	explicit ALimenGameModeBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
-	virtual void BeginPlay() override;
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	virtual void Logout(AController* Exiting) override;
-	virtual void InitSeamlessTravelPlayer(AController* NewController) override;
 	virtual bool SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate = FCanUnpause()) override;
 	virtual bool ClearPause() override;
 	
@@ -53,6 +51,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Classes")
 	TArray<TSoftClassPtr<ALimenGameplayManager>> ManagersClassList;
 	
+	virtual void BeginPlay() override;
+	virtual void InitSeamlessTravelPlayer(AController* NewController) override;
 	virtual void InitialLevelStreamingComplete();
 
 private:
