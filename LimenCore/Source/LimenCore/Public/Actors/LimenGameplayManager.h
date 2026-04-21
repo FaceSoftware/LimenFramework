@@ -90,6 +90,13 @@ protected:
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Manager")
 	AGameModeBase* GetGameMode() const;
+	
+	template<typename T>
+	T* GetGameMode() const
+	{
+		static_assert(TIsDerivedFrom<T, AGameModeBase>::IsDerived);
+		return Cast<T>(GetGameMode());
+	}
 
 
 	/**
