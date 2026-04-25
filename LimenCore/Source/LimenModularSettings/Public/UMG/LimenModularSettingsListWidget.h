@@ -27,16 +27,26 @@ class LIMENMODULARSETTINGS_API ULimenSettingWidget : public ULimenWidget
 public:
 	virtual void NativeConstruct() override;
 	virtual void BindSetting(ULimenSetting* InSetting);
+	template<typename T>
+	T* GetBoundSetting()
+	{
+		static_assert(TIsDerivedFrom<T, ULimenSetting>::Value, "T must be derived from ULimenSetting");
+		return CastChecked<T>(SettingPtr.Get());
+	}
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintNativeEvent)
 	void SettingUpdated(const ULimenSetting* Setting);
-	UFUNCTION(BlueprintImplementableEvent)
+	virtual void SettingUpdated_Implementation(const ULimenSetting* Setting) {}
+	UFUNCTION(BlueprintNativeEvent)
 	void SettingApplied(const ULimenSetting* Setting);
-	UFUNCTION(BlueprintImplementableEvent)
+	virtual void SettingApplied_Implementation(const ULimenSetting* Setting) {}
+	UFUNCTION(BlueprintNativeEvent)
 	void SettingEditableStateChanged(const ULimenSetting* Setting);
-	UFUNCTION(BlueprintImplementableEvent)
+	virtual void SettingEditableStateChanged_Implementation(const ULimenSetting* Setting) {}
+	UFUNCTION(BlueprintNativeEvent)
 	void SettingBound(const ULimenSetting* Setting);
+	virtual void SettingBound_Implementation(const ULimenSetting* Setting) {}
 
 private:
 	TWeakObjectPtr<ULimenSetting> SettingPtr;
@@ -49,6 +59,8 @@ class LIMENMODULARSETTINGS_API ULimenValueSettingWidget : public ULimenSettingWi
 
 public:
 	virtual void BindSetting(ULimenSetting* InSetting) override;
+	FORCEINLINE ULimenValueSetting* GetValueSetting() const { return BoundSetting.Get(); }
+	
 
 protected:
 
@@ -65,6 +77,7 @@ class LIMENMODULARSETTINGS_API ULimenSelectionSettingWidget : public ULimenSetti
 
 public:
 	virtual void BindSetting(ULimenSetting* InSetting) override;
+	FORCEINLINE ULimenSelectionSetting* GetSelectionSetting() const { return BoundSetting.Get(); }
 
 protected:
 
@@ -81,6 +94,7 @@ class LIMENMODULARSETTINGS_API ULimenToggleSettingWidget : public ULimenSettingW
 
 public:
 	virtual void BindSetting(ULimenSetting* InSetting) override;
+	FORCEINLINE ULimenToggleSetting* GetToggleSetting() const { return BoundSetting.Get(); }
 
 protected:
 

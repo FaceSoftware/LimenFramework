@@ -7,6 +7,8 @@
 
 ULimenMenuWidget::ULimenMenuWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
+	DefaultVisibleState = ESlateVisibility::Visible;
+	DefaultHiddenState = ESlateVisibility::Collapsed;
 	SetWidgetLevel(10);
 }
 

@@ -50,7 +50,7 @@ void ALimenPlayerControllerBase::BeginPlay()
 
 	if (ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>(); LevelTransitionHandler != nullptr)
 	{
-		LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::LoadingScreenVisibilityChanged);
+		LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUObject(this, &ThisClass::LoadingScreenVisibilityChanged);
 		LoadingScreenVisibilityChanged(LevelTransitionHandler->IsLoadingScreenActive());
 	}
 	

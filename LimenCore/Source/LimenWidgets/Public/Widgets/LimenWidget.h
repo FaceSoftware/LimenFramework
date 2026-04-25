@@ -13,7 +13,7 @@
 /// 20 to 39 - Popups
 /// 40 to 49 - Loading Screens
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FLimenWidgetVisibilityChanged, const bool, bIsVisible);
+DECLARE_MULTICAST_DELEGATE_OneParam(FLimenWidgetVisibilityChanged, const bool /* bIsVisible */);
 DECLARE_DYNAMIC_DELEGATE(FLimenBlueprintWidgetHidden);
 DECLARE_DELEGATE(FLimenWidgetHidden);
 
@@ -43,10 +43,7 @@ public:
 	}
 
 public:
-	UPROPERTY(BlueprintAssignable, Category="Limen|Widgets")
 	FLimenWidgetVisibilityChanged OnLimenVisibilityChanged;
-	
-	UPROPERTY(BlueprintAssignable, Category="Limen|Widgets")
 	FLimenWidgetVisibilityChanged OnLimenAnimationFinished;
 
 	explicit ULimenWidget(const FObjectInitializer& ObjectInitializer);

@@ -27,7 +27,7 @@ void ULimenSaveSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 														  TEXT("SaveWidget"));
 
 		SaveWidgetStrongPtr = TStrongObjectPtr(SaveWidget);
-		SaveWidgetStrongPtr->OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::SaveWidgetAnimationFinished);
+		SaveWidgetStrongPtr->OnLimenAnimationFinished.AddUObject(this, &ThisClass::SaveWidgetAnimationFinished);
 	}
 }
 
@@ -37,7 +37,7 @@ void ULimenSaveSubsystem::Deinitialize()
 
 	if (SaveWidgetStrongPtr.IsValid())
 	{
-		SaveWidgetStrongPtr->OnLimenAnimationFinished.RemoveDynamic(this, &ThisClass::SaveWidgetAnimationFinished);
+		SaveWidgetStrongPtr->OnLimenAnimationFinished.AddUObject(this, &ThisClass::SaveWidgetAnimationFinished);
 		SaveWidgetStrongPtr->DestroyWidget();
 		SaveWidgetStrongPtr.Reset();
 	}

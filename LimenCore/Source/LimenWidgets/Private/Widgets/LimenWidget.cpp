@@ -15,7 +15,7 @@ ULimenWidget::ULimenWidget(const FObjectInitializer& ObjectInitializer) : Super(
 	SetIsFocusable(false);
 	DefaultVisibleState = ESlateVisibility::Visible;
 	DefaultHiddenState = ESlateVisibility::Collapsed;
-	Visibility = DefaultVisibleState;
+	SetVisibilityInternal(DefaultHiddenState);
 	WidgetLevel = 0;
 }
 
@@ -24,8 +24,8 @@ void ULimenWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	TakeWidget()->SetCanTick(true);
-	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::WidgetAnimationEnd_Internal);
-	OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::WidgetVisibilityChanged_Internal);
+	OnLimenAnimationFinished.AddUObject(this, &ThisClass::WidgetAnimationEnd_Internal);
+	OnLimenVisibilityChanged.AddUObject(this, &ThisClass::WidgetVisibilityChanged_Internal);
 }
 
 bool ULimenWidget::ShowWidget()
@@ -151,7 +151,7 @@ void ULimenWidget::DestroyWidget(const bool bWaitForHideAnimation)
 		return;
 	}
 
-	OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::DestroyWidgetInternal);
+	OnLimenAnimationFinished.AddUObject(this, &ThisClass::DestroyWidgetInternal);
 	HideWidget();
 }
 

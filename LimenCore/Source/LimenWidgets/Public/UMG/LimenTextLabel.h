@@ -28,6 +28,8 @@ public:
 	virtual void SetLabelValuePadding(const FMargin& InPadding);
 	virtual void SetLabelValueTextColor(const FSlateColor& InColor);
 	
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+	
 protected:
 	UPROPERTY(EditAnywhere, Category="Label")
 	FText LabelTitle;
@@ -37,6 +39,10 @@ protected:
 	FMargin LabelTitlePadding;
 	UPROPERTY(EditAnywhere, Category="Label")
 	FSlateColor LabelTitleTextColor;
+	UPROPERTY(EditAnywhere, Category="Label")
+	TEnumAsByte<EVerticalAlignment> LabelTitleVerticalAlignment;
+	UPROPERTY(EditAnywhere, Category="Label")
+	TEnumAsByte<EHorizontalAlignment> LabelTitleHorizontalAlignment;
 
 	UPROPERTY(EditAnywhere, Category="Label")
 	FText LabelValue;
@@ -46,6 +52,10 @@ protected:
 	FMargin LabelValuePadding;
 	UPROPERTY(EditAnywhere, Category="Label")
 	FSlateColor LabelValueTextColor;
+	UPROPERTY(EditAnywhere, Category="Label")
+	TEnumAsByte<EVerticalAlignment> LabelValueVerticalAlignment;
+	UPROPERTY(EditAnywhere, Category="Label")
+	TEnumAsByte<EHorizontalAlignment> LabelValueHorizontalAlignment;
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	
@@ -66,14 +76,19 @@ public:
 	virtual void SetLabelTitleFont(const FSlateFontInfo& InTitleFont);
 	virtual void SetLabelTitlePadding(const FMargin& InPadding);
 	
-	virtual void SetLabelValue(UWidget* InWidget);
-	virtual UWidget* GetLabelValue() const;
+	virtual void SetLabelValue(UUserWidget* InWidget);
+	virtual UUserWidget* GetLabelValue() const;
+	UFUNCTION(BlueprintCallable, meta=(DeterminesOutputType="Class"))
+	UUserWidget* GetLabelValue(TSubclassOf<UUserWidget> Class) const;
 	template<typename T>
 	T* GetLabelValue() const
 	{
-		static_assert(TIsDerivedFrom<T, UWidget>::Value, "T must be derived from UWidget");
+		static_assert(TIsDerivedFrom<T, UUserWidget>::Value, "T must be derived from UUserWidget");
 		return Cast<T>(GetLabelValue());
 	}
+	
+	
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 	
 protected:
 	UPROPERTY(EditAnywhere, Category="Label")
@@ -82,15 +97,23 @@ protected:
 	FSlateFontInfo LabelTitleFont;
 	UPROPERTY(EditAnywhere, Category="Label")
 	FMargin LabelTitlePadding;
+	UPROPERTY(EditAnywhere, Category="Label")
+	TEnumAsByte<EVerticalAlignment> LabelTitleVerticalAlignment;
+	UPROPERTY(EditAnywhere, Category="Label")
+	TEnumAsByte<EHorizontalAlignment> LabelTitleHorizontalAlignment;
 
+	UPROPERTY(EditAnywhere, Category="Label")
+	TSubclassOf<UUserWidget> LabelValue;
 	UPROPERTY(EditAnywhere, Category="Label")
 	FMargin LabelValuePadding;
-
 	UPROPERTY(EditAnywhere, Category="Label")
-	TObjectPtr<UWidget> LabelValue;
+	TEnumAsByte<EVerticalAlignment> LabelValueVerticalAlignment;
+	UPROPERTY(EditAnywhere, Category="Label")
+	TEnumAsByte<EHorizontalAlignment> LabelValueHorizontalAlignment;
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 	
 private:
+	TStrongObjectPtr<UUserWidget> LabelValueWidget;
 	TSharedPtr<STextBlock> TitleTextBlock;
 };

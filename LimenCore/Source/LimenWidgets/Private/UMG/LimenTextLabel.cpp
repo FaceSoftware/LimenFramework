@@ -3,6 +3,8 @@
 
 #include "UMG/LimenTextLabel.h"
 
+#include "Blueprint/UserWidget.h"
+
 
 ULimenTextLabel::ULimenTextLabel()
 {
@@ -110,6 +112,14 @@ void ULimenTextLabel::SetLabelValueTextColor(const FSlateColor& InColor)
 	}
 }
 
+void ULimenTextLabel::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+	
+	TitleTextBlock.Reset();
+	ValueTextBlock.Reset();
+}
+
 TSharedRef<SWidget> ULimenTextLabel::RebuildWidget()
 {
 	// return Super::RebuildWidget();
@@ -127,10 +137,14 @@ TSharedRef<SWidget> ULimenTextLabel::RebuildWidget()
 	TSharedRef<SHorizontalBox> Root = SNew(SHorizontalBox)
 		+SHorizontalBox::Slot()
 		.Padding(LabelTitlePadding)
+		.VAlign(LabelTitleVerticalAlignment)
+		.HAlign(LabelValueHorizontalAlignment)
 		[
 			TitleTextBlock.ToSharedRef()
 		]
 		+SHorizontalBox::Slot()
+		.VAlign(LabelValueVerticalAlignment)
+		.HAlign(LabelValueHorizontalAlignment)
 		.Padding(LabelValuePadding)
 		[
 			ValueTextBlock.ToSharedRef()
@@ -161,20 +175,37 @@ void ULimenLabel::SetLabelTitlePadding(const FMargin& InPadding)
 {
 }
 
-void ULimenLabel::SetLabelValue(UWidget* InWidget)
+void ULimenLabel::SetLabelValue(UUserWidget* InWidget)
 {
-	LabelValue = InWidget;
+	LabelValueWidget = TStrongObjectPtr(InWidget);
 	InvalidateLayoutAndVolatility();
 }
 
-UWidget* ULimenLabel::GetLabelValue() const
+UUserWidget* ULimenLabel::GetLabelValue() const
 {
-	return LabelValue.Get();
+	return LabelValueWidget.Get();
+}
+
+UUserWidget* ULimenLabel::GetLabelValue(TSubclassOf<UUserWidget> Class) const
+{
+	return LabelValueWidget.Get();
+}
+
+void ULimenLabel::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+	TitleTextBlock.Reset();
 }
 
 TSharedRef<SWidget> ULimenLabel::RebuildWidget()
 {
 	// return Super::RebuildWidget();
+
+	if (LabelValue)
+	{
+		auto* ValueWidget = UUserWidget::CreateWidgetInstance(*this, LabelValue, NAME_None);
+		LabelValueWidget = TStrongObjectPtr(ValueWidget);
+	}
 	
 	TitleTextBlock = SNew(STextBlock)
 		.Text(LabelTitle)
@@ -183,13 +214,17 @@ TSharedRef<SWidget> ULimenLabel::RebuildWidget()
 	TSharedRef<SHorizontalBox> Root = SNew(SHorizontalBox)
 		+SHorizontalBox::Slot()
 		.Padding(LabelTitlePadding)
+		.VAlign(LabelTitleVerticalAlignment)
+		.HAlign(LabelValueHorizontalAlignment)
 		[
 			TitleTextBlock.ToSharedRef()
 		]
 		+SHorizontalBox::Slot()
 		.Padding(LabelValuePadding)
+		.VAlign(LabelValueVerticalAlignment)
+		.HAlign(LabelValueHorizontalAlignment)
 		[
-			LabelValue->TakeWidget()
+			LabelValueWidget.IsValid() ? LabelValueWidget->TakeWidget() : SNew(SSpacer)
 		];
 	
 	return Root;

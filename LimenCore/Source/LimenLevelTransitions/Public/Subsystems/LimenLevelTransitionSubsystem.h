@@ -27,7 +27,6 @@ class LIMENLEVELTRANSITIONS_API ULimenLevelTransitionSubsystem : public UGameIns
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShaderCompilingProgress, const float, CompletedPercentage, const int32, ShadersLeft);
 
 public:
-	UPROPERTY(BlueprintAssignable)
 	FLimenWidgetVisibilityChanged OnLoadingScreenVisibilityChanged; 
 	UPROPERTY(BlueprintAssignable)
 	FShaderCompilingProgress OnShaderCompilationUpdated;

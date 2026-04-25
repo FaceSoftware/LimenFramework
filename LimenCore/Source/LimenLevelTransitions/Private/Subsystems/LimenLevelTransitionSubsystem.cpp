@@ -188,8 +188,8 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 		UUserWidget* Instance = UUserWidget::CreateWidgetInstance(*GetGameInstance(), CurrentLoadingScreenSettings->GetLoadingScreenWidgetClass(), NAME_None);
 		LoadingScreenWidget = CastChecked<ULimenLoadingScreenWidget>(Instance);
 
-		LoadingScreenWidget->OnLimenVisibilityChanged.AddUniqueDynamic(this, &ThisClass::LoadingScreenVisibilityChanged);
-		LoadingScreenWidget->OnLimenAnimationFinished.AddUniqueDynamic(this, &ThisClass::LoadingScreenAnimationFinished);
+		LoadingScreenWidget->OnLimenVisibilityChanged.AddUObject(this, &ThisClass::LoadingScreenVisibilityChanged);
+		LoadingScreenWidget->OnLimenAnimationFinished.AddUObject(this, &ThisClass::LoadingScreenAnimationFinished);
 	}
 	
 	LoadingScreenWidget->ShowWidget();

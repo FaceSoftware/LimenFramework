@@ -105,7 +105,6 @@ protected:
 	virtual void BindWidgetDelegates();
 	virtual void UnbindWidgetDelegates();
 	virtual void CurrentPawnReady();
-	UFUNCTION()
 	virtual void LoadingScreenVisibilityChanged(const bool bIsVisible);
 	virtual void BlendViewTargetSet(AActor* NewViewTarget);
 	

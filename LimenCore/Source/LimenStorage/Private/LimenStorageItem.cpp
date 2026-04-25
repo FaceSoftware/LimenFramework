@@ -3,17 +3,17 @@
 
 #include "LimenStorageItem.h"
 
-const FName& ULimenStorageItem::GetDevelopmentName() const
+FName ULimenStorageItem::GetDevelopmentName() const
 {
 	return DevelopmentName;
 }
 
-const FText& ULimenStorageItem::GetCategory() const
+FText ULimenStorageItem::GetCategory() const
 {
 	return Category;
 }
 
-const FText& ULimenStorageItem::GetDisplayName() const
+FText ULimenStorageItem::GetDisplayName() const
 {
 	return DisplayName;
 }

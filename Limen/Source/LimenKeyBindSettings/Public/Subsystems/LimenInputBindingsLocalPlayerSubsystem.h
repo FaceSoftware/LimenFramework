@@ -17,14 +17,14 @@ class LIMENKEYBINDSETTINGS_API ULimenInputBindingsLocalPlayerSubsystem : public 
 	
 public:
 	ULimenInputBindingsLocalPlayerSubsystem();
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
+	
 	void AddPawnMappingContext();
 	void RemovePawnMappingContext();
 
 protected:
 	int32 PawnMappingContextPriority;
 	int32 PlayerControllerMappingContextPriority;
-
-	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 	
 private:
 	TWeakObjectPtr<APlayerController> OldPlayerController;

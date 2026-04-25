@@ -15,6 +15,15 @@ ULimenInputBindingsLocalPlayerSubsystem::ULimenInputBindingsLocalPlayerSubsystem
 	PlayerControllerMappingContextPriority = 1;
 }
 
+void ULimenInputBindingsLocalPlayerSubsystem::PlayerControllerChanged(APlayerController* NewPlayerController)
+{
+	Super::PlayerControllerChanged(NewPlayerController);
+
+	OldPlayerController = CurrentPlayerController;
+	CurrentPlayerController = NewPlayerController;
+	UpdateControllerBindings(CurrentPlayerController.Get());
+}
+
 void ULimenInputBindingsLocalPlayerSubsystem::AddPawnMappingContext()
 {
 	if (!GetLocalPlayerChecked()->PlayerController) return;
@@ -45,15 +54,6 @@ void ULimenInputBindingsLocalPlayerSubsystem::RemovePawnMappingContext()
 	if (!MappingContext) return;
 
 	InputSystem->RemoveMappingContext(MappingContext);
-}
-
-void ULimenInputBindingsLocalPlayerSubsystem::PlayerControllerChanged(APlayerController* NewPlayerController)
-{
-	Super::PlayerControllerChanged(NewPlayerController);
-
-	OldPlayerController = CurrentPlayerController;
-	CurrentPlayerController = NewPlayerController;
-	UpdateControllerBindings(CurrentPlayerController.Get());
 }
 
 void ULimenInputBindingsLocalPlayerSubsystem::UpdateControllerBindings(APlayerController* PC)

@@ -24,11 +24,11 @@ public:
 	FText DisplayName;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
-	const FName& GetDevelopmentName() const;
+	FName GetDevelopmentName() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
-	const FText& GetCategory() const;
+	FText GetCategory() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Archives")
-	const FText& GetDisplayName() const;
+	FText GetDisplayName() const;
 
 	virtual bool ShouldSaveData() const override;
 	virtual bool ShouldLoadData() const override;
