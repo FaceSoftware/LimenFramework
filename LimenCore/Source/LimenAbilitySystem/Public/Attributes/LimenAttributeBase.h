@@ -10,7 +10,7 @@
 
 class UReplicationSystem;
 class ULimenAbilityComponent;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAttributeUpdate, class ULimenAttributeBase*, Attribute, const float, NewValue);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FAttributeUpdate, class ULimenAttributeBase* /* Attribute */ , const float /* NewValue */);
 
 /**
  * This class behaves as a meter,
@@ -25,20 +25,17 @@ public:
 	/**
 	 * @brief Delegate fired when the attribute is empty.
 	 */
-	UPROPERTY(BlueprintAssignable)
 	FAttributeUpdate OnAttributeEmpty;
 
 	/**
 	 * @brief Delegate fired when the attribute is full.
 	 */
-	UPROPERTY(BlueprintAssignable)
 	FAttributeUpdate OnAttributeFull;
 
 	/**
 	 * @brief Delegate fired when the attribute is updated.
 	 * This also fires when the attribute is full or empty.
 	 */
-	UPROPERTY(BlueprintAssignable)
 	FAttributeUpdate OnAttributeChanged;
 	
 	ULimenAttributeBase();

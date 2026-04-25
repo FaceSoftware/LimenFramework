@@ -35,17 +35,11 @@ class LIMENINTERACTION_API ULimenInventoryComponent : public UActorComponent, pu
 	friend FLimenReplicatedInventoryItemRegistryArray;
 
 public:
-	UPROPERTY(BlueprintAssignable)
 	FInventoryUpdate OnInventoryUpdated;
-	UPROPERTY(BlueprintAssignable)
 	FInventoryUpdate OnInventoryRefreshed;
-	UPROPERTY(BlueprintAssignable)
 	FInventoryItemUpdate OnItemFailedToAdd;
-	UPROPERTY(BlueprintAssignable)
 	FInventoryItemUpdate OnItemAdded;
-	UPROPERTY(BlueprintAssignable)
 	FInventoryItemUpdate OnItemRemoved;
-	UPROPERTY(BlueprintAssignable)
 	FInventoryItemUpdate OnItemUpdated;
 	
 	ULimenInventoryComponent();
@@ -103,6 +97,20 @@ public:
 		if (!ItemClass->ImplementsInterface(ULimenInventoryItem::StaticClass())) { return nullptr; }
 
 		return Cast<T>(GetItem(ItemClass).GetObject());
+	}
+	/**
+	 * @brief Retrieves an item of the specified type from the inventory.
+	 * @tparam T The type of the item to retrieve.
+	 * @return A pointer to the item interface. Returns nullptr if the item is not found.
+	 */
+	template<typename T>
+	TScriptInterface<ILimenInventoryItem> GetItemInterface()
+	{
+		static_assert(TIsDerivedFrom<T, AActor>::Value);
+		UClass* ItemClass = T::StaticClass();
+		if (!ItemClass->ImplementsInterface(ULimenInventoryItem::StaticClass())) { return nullptr; }
+
+		return GetItem(ItemClass);
 	}
 	template<typename T = AActor>
 	TArray<T*> GetAllItems()

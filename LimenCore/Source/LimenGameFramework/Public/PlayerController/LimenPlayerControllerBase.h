@@ -15,7 +15,6 @@ class UInputAction;
 class UInputMappingContext;
 class ULimenBaseHudWidget;
 class ULimenGameMenuWidget;
-class ULimenPauseMenuWidget;
 class FLimenNotification;
 struct FNotificationParams;
 struct FInputActionInstance;

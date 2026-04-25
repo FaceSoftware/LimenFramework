@@ -10,6 +10,8 @@
 ULimenBaseHudWidget::ULimenBaseHudWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	SetWidgetLevel(1);
+	DefaultVisibleState = ESlateVisibility::HitTestInvisible;
+	DefaultHiddenState = ESlateVisibility::Collapsed;
 }
 
 void ULimenBaseHudWidget::BindPlayerController(APlayerController* InPlayerController)

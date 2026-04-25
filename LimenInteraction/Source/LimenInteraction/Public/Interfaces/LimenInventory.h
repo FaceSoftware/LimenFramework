@@ -6,6 +6,7 @@
 #include "UObject/Interface.h"
 #include "LimenInventory.generated.h"
 
+class ILimenInventory;
 class ILimenInventoryItem;
 // This class does not need to be modified.
 UINTERFACE()
@@ -16,8 +17,8 @@ class ULimenInventory : public UInterface
 
 
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, const TScriptInterface<ILimenInventoryItem>&, Item);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryUpdate, const TScriptInterface<ILimenInventory>&, Inventory);
+DECLARE_MULTICAST_DELEGATE_OneParam(FInventoryItemUpdate, const TScriptInterface<ILimenInventoryItem>& /* Item */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FInventoryUpdate, const TScriptInterface<ILimenInventory>& /* Inventory */);
 
 /**
  * 

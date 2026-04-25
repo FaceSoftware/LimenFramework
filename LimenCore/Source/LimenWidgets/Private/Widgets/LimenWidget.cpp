@@ -15,6 +15,7 @@ ULimenWidget::ULimenWidget(const FObjectInitializer& ObjectInitializer) : Super(
 	SetIsFocusable(false);
 	DefaultVisibleState = ESlateVisibility::Visible;
 	DefaultHiddenState = ESlateVisibility::Collapsed;
+	Visibility = DefaultVisibleState;
 	WidgetLevel = 0;
 }
 
@@ -129,12 +130,12 @@ void ULimenWidget::ToggleWidgetVisibility()
 
 bool ULimenWidget::IsShowing() const
 {	
-	return GetVisibility() == DefaultVisibleState;
+	return IsInViewport() && GetVisibility() == DefaultVisibleState;
 }
 
 bool ULimenWidget::IsHiding() const
 {
-	return GetVisibility() == DefaultHiddenState;
+	return !IsInViewport() || GetVisibility() == DefaultHiddenState;
 }
 
 bool ULimenWidget::IsAnimating() const
