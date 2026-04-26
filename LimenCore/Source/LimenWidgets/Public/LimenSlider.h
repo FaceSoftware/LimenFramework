@@ -20,6 +20,7 @@ UENUM(BlueprintType)
 enum class ELimenSliderInput : uint8
 {
 	Undefined = 0,
+	Code = 0,
 	Typed,
 	MouseDrag,
 };

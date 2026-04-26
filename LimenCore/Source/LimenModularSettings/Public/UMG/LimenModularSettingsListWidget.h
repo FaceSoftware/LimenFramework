@@ -25,6 +25,7 @@ class LIMENMODULARSETTINGS_API ULimenSettingWidget : public ULimenWidget
 	GENERATED_BODY()
 
 public:
+	explicit ULimenSettingWidget(const FObjectInitializer& ObjectInitializer);
 	virtual void NativeConstruct() override;
 	virtual void BindSetting(ULimenSetting* InSetting);
 	template<typename T>

@@ -70,25 +70,25 @@ float ULimenSlider::GetValue() const
 
 void ULimenSlider::SetValue(const float NewValue)
 {
-	SetValueInternal(ELimenSliderInput::Undefined, NewValue, false);
+	SetValueInternal(ELimenSliderInput::Code, NewValue, false);
 }
 
 void ULimenSlider::SetMaxValue(const float NewMax)
 {
 	SliderMaxValue = FMath::Max(NewMax, SliderMinValue);
-	SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
+	SetValueInternal(ELimenSliderInput::Code, CurrentSliderValue, false);
 }
 
 void ULimenSlider::SetMinValue(const float NewMin)
 {
 	SliderMinValue = FMath::Min(NewMin, SliderMaxValue);
-	SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
+	SetValueInternal(ELimenSliderInput::Code, CurrentSliderValue, false);
 }
 
 void ULimenSlider::SetDecimalDigitsCount(const int32 NewDecimalDigits)
 {
 	DecimalDigits = NewDecimalDigits;
-	SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
+	SetValueInternal(ELimenSliderInput::Code, CurrentSliderValue, false);
 }
 
 int32 ULimenSlider::GetDecimalDigitsCount() const
@@ -253,7 +253,7 @@ TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 			HorizontalBox
 		];
 
-	SetValueInternal(ELimenSliderInput::Undefined, InitialSliderValue, false);
+	SetValueInternal(ELimenSliderInput::Code, InitialSliderValue, false);
 
 	return Root.ToSharedRef();
 }
@@ -382,14 +382,14 @@ void ULimenSlider::TextValueCommited(const FText& InText, const ETextCommit::Typ
 {
 	if (!InText.IsNumeric())
 	{
-		SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
+		SetValueInternal(ELimenSliderInput::Typed, CurrentSliderValue, false);
 		return;
 	}
 
 	const FString NewValueString = InText.ToString();
 	if (!ValidateTextInput(NewValueString))
 	{
-		SetValueInternal(ELimenSliderInput::Undefined, CurrentSliderValue, false);
+		SetValueInternal(ELimenSliderInput::Typed, CurrentSliderValue, false);
 		return;
 	}
 	

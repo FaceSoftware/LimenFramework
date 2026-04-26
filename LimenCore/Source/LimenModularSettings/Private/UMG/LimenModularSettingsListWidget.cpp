@@ -15,6 +15,11 @@
 #include "Widgets/Text/STextBlock.h"
 
 
+ULimenSettingWidget::ULimenSettingWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+	SetVisibilityInternal(ESlateVisibility::Visible);
+}
+
 void ULimenSettingWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -92,11 +97,11 @@ TSharedRef<SWidget> ULimenSettingsListWidget::RebuildWidget()
 
 			// Since this does not have a widget tree,
 			// we have to manually initialize the user widget
-			if (GetOwningLocalPlayer())
-			{
-				TempWidget->SetPlayerContext(FLocalPlayerContext(GetOwningLocalPlayer(), GetWorld()));
-			}
-			TempWidget->Initialize();
+			// if (ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController())
+			// {
+			// 	TempWidget->SetPlayerContext(FLocalPlayerContext(LocalPlayer, GetWorld()));
+			// }
+			// TempWidget->Initialize();
 
 			TempWidget->BindSetting(Setting);
 

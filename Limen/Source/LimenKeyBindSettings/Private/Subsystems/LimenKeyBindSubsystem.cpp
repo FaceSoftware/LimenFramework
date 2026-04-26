@@ -72,7 +72,7 @@ void ULimenKeyBindSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		auto PlayerController = PlayerMappingContext.Key;
 		auto* MappingContext = PlayerMappingContext.Value.LoadSynchronous();
 		
-		auto* MappingContextObject = NewObject<UInputMappingContext>(this, MappingContext->GetClass(), NAME_None, RF_NoFlags, MappingContext);
+		auto* MappingContextObject = NewObject<UInputMappingContext>(this, MappingContext->GetClass(), NAME_None, RF_Transient, MappingContext);
 		TStrongObjectPtr MappingContextPtr(MappingContextObject);
 		
 		PlayerMappingContexts.Add(PlayerController, MappingContextPtr.Get());
@@ -84,7 +84,7 @@ void ULimenKeyBindSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 		auto Pawn = PawnMappingContext.Key;
 		auto* MappingContext = PawnMappingContext.Value.LoadSynchronous();
 		
-		auto* MappingContextObject = NewObject<UInputMappingContext>(this, MappingContext->GetClass(), NAME_None, RF_NoFlags, MappingContext);
+		auto* MappingContextObject = NewObject<UInputMappingContext>(this, MappingContext->GetClass(), NAME_None, RF_Transient, MappingContext);
 		TStrongObjectPtr MappingContextPtr(MappingContextObject);
 		
 		PawnMappingContexts.Add(Pawn, MappingContextPtr.Get());

@@ -37,11 +37,15 @@ void ULimenResolutionSetting::SubsystemInitialized(ULimenModularSettingsSubsyste
 {
 	Super::SubsystemInitialized(ModularSettingsSubsystem);
 
-	ULimenSetting* WindowModeSetting = ModularSettingsSubsystem->GetItem<ULimenSetting>(ULimenWindowModeSetting::StaticClass());
-	WindowModeSetting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::OnWindowModeUpdated);
+	if (ULimenSetting* WindowModeSetting = ModularSettingsSubsystem->GetItem<ULimenSetting>(ULimenWindowModeSetting::StaticClass()))
+	{
+		WindowModeSetting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::OnWindowModeUpdated);
+	}
 	
-	ULimenSetting* MonitorDisplaySetting = ModularSettingsSubsystem->GetItem<ULimenSetting>(ULimenWindowModeSetting::StaticClass());
-	MonitorDisplaySetting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::OnMonitorDisplayUpdated);
+	if (ULimenSetting* MonitorDisplaySetting = ModularSettingsSubsystem->GetItem<ULimenSetting>(ULimenWindowModeSetting::StaticClass()))
+	{
+		MonitorDisplaySetting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::OnMonitorDisplayUpdated);
+	}
 }
 
 bool ULimenResolutionSetting::CanEdit() const

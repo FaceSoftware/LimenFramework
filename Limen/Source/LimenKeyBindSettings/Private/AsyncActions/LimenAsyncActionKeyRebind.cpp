@@ -152,11 +152,14 @@ void ULimenAsyncActionKeyRebind::TimedOut()
 
 void ULimenAsyncActionKeyRebind::UpdateModal()
 {
-	const int32 RemainingTime = TimeoutTime - TotalTickTime;
-	const FString NewContent = Content.Replace(*TimeRemainingKeyword, *FString::Printf(TEXT("%d"), RemainingTime));
-
-	ModalParams.Content = FText::FromString(NewContent);
-	DisplayModal->SetParams(ModalParams);
+	if (DisplayModal)
+	{
+		const int32 RemainingTime = TimeoutTime - TotalTickTime;
+		const FString NewContent = Content.Replace(*TimeRemainingKeyword, *FString::Printf(TEXT("%d"), RemainingTime));
+	
+		ModalParams.Content = FText::FromString(NewContent);
+		DisplayModal->SetParams(ModalParams);
+	}
 }
 
 void ALimenInputListener::EnableInput(APlayerController* PlayerController)
