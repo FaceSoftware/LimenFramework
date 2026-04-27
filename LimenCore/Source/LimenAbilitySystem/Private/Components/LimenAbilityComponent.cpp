@@ -277,13 +277,14 @@ void ULimenAbilityComponent::InstantiateAbilities()
 	Abilities->Reserve(AbilityClasses.Num());
 	for (auto& AbilityClass : AbilityClasses)
 	{
-		check(!AbilityClass.IsNull());
-		
-		ULimenAbilityBase* Ability = NewObject<ULimenAbilityBase>(this, AbilityClass.LoadSynchronous());
-		AddReplicatedSubObject(Ability);
+		if (ensure(!AbilityClass.IsNull()))
+		{
+			ULimenAbilityBase* Ability = NewObject<ULimenAbilityBase>(this, AbilityClass.LoadSynchronous());
+			AddReplicatedSubObject(Ability);
 
-		const int32 Index = Abilities->Add(FAbilityArrayItem(Ability));
-		Abilities.MarkItemDirty(Abilities[Index]);
+			const int32 Index = Abilities->Add(FAbilityArrayItem(Ability));
+			Abilities.MarkItemDirty(Abilities[Index]);
+		}
 	}
 	bAbilitiesInstantiated = true;
 	AuthAbilityCount = Abilities->Num();
@@ -297,14 +298,15 @@ void ULimenAbilityComponent::InstantiateAttributes()
 	Attributes->Reserve(AttributeClasses.Num());
 	for (auto& AttributeClass : AttributeClasses)
 	{
-		check(!AttributeClass.IsNull());
-		
-		ULimenAttributeBase* Attribute = NewObject<ULimenAttributeBase>(this,
-			AttributeClass.LoadSynchronous());
-		AddReplicatedSubObject(Attribute);
+		if (ensure(!AttributeClass.IsNull()))
+		{
+			ULimenAttributeBase* Attribute = NewObject<ULimenAttributeBase>(this,
+				AttributeClass.LoadSynchronous());
+			AddReplicatedSubObject(Attribute);
 
-		const int32 Index = Attributes->Add(FAttributeArrayItem(Attribute));
-		Attributes.MarkItemDirty(Attributes[Index]);
+			const int32 Index = Attributes->Add(FAttributeArrayItem(Attribute));
+			Attributes.MarkItemDirty(Attributes[Index]);
+		}
 	}
 	bAttributesInstantiated = true;
 	AuthAttributeCount = Attributes->Num();
