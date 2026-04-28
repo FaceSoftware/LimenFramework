@@ -314,7 +314,7 @@ public:
 	 * @return A pointer to the matching ability if found; otherwise, returns nullptr.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities", meta=(DeterminesOutputType="AbilityClass"))
-	ULimenAbilityBase* GetAbility(const TSubclassOf<ULimenAbilityBase> AbilityClass) const;
+	ULimenAbilityBase* GetAbility(const TSubclassOf<ULimenAbilityBase> AbilityClass, const FName& DevelopmentName = NAME_None) const;
 	/**
 	 * Retrieves an attribute of the specified class type from the managed attributes.
 	 * This method searches for an attribute that matches the provided class or any
@@ -324,7 +324,7 @@ public:
 	 * @return A pointer to the matching attribute if found, otherwise nullptr.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities", meta=(DeterminesOutputType="AttributeClass"))
-	ULimenAttributeBase* GetAttribute(const TSubclassOf<ULimenAttributeBase> AttributeClass) const;
+	ULimenAttributeBase* GetAttribute(const TSubclassOf<ULimenAttributeBase> AttributeClass, const FName& DevelopmentName = NAME_None) const;
 	/**
 	 * Retrieves an ability of the specified type managed by the component.
 	 *
@@ -336,7 +336,7 @@ public:
 	 * @return A pointer to the matching ability if found; otherwise, nullptr.
 	 */
 	template<typename AbilityClass = ULimenAbilityBase>
-	AbilityClass* GetAbility();
+	AbilityClass* GetAbility(const FName& DevelopmentName = NAME_None);
 	/**
 	 * Retrieves an attribute of the specified type managed by the component.
 	 *
@@ -348,7 +348,7 @@ public:
 	 * @return A pointer to the matching attribute if found; otherwise, nullptr.
 	 */
 	template<typename AttributeClass = ULimenAttributeBase>
-	AttributeClass* GetAttribute() const;
+	AttributeClass* GetAttribute(const FName& DevelopmentName = NAME_None) const;
 	/**S 
 	 * Retrieves a list of abilities currently associated with the component.
 	 *
@@ -423,17 +423,17 @@ private:
 
 
 template <typename AbilityClass>
-AbilityClass* ULimenAbilityComponent::GetAbility()
+AbilityClass* ULimenAbilityComponent::GetAbility(const FName& DevelopmentName)
 {
 	static_assert(std::is_base_of_v<ULimenAbilityBase, AbilityClass>);
-	return CastChecked<AbilityClass>(GetAbility(AbilityClass::StaticClass()), ECastCheckedType::NullAllowed);
+	return CastChecked<AbilityClass>(GetAbility(AbilityClass::StaticClass(), DevelopmentName), ECastCheckedType::NullAllowed);
 }
 
 template <typename AttributeClass>
-AttributeClass* ULimenAbilityComponent::GetAttribute() const
+AttributeClass* ULimenAbilityComponent::GetAttribute(const FName& DevelopmentName) const
 {
 	static_assert(std::is_base_of_v<ULimenAttributeBase, AttributeClass>);
-	return CastChecked<AttributeClass>(GetAttribute(AttributeClass::StaticClass()), ECastCheckedType::NullAllowed);
+	return CastChecked<AttributeClass>(GetAttribute(AttributeClass::StaticClass(), DevelopmentName), ECastCheckedType::NullAllowed);
 }
 
 template <typename AbilityClass>

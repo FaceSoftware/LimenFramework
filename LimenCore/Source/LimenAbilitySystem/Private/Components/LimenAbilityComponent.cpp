@@ -189,28 +189,36 @@ void ULimenAbilityComponent::DestroyAllAttributes()
 	bAttributesInstantiated = false;
 }
 
-ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAbilityBase> AbilityClass) const
+ULimenAbilityBase* ULimenAbilityComponent::GetAbility(const TSubclassOf<ULimenAbilityBase> AbilityClass, const FName& DevelopmentName) const
 {
 	if (AbilityClass)
 	{
 		for (const FAbilityArrayItem& Ability : Abilities.Items)
 		{
 			if (*Ability == nullptr) continue;
-			if (Ability->IsA(AbilityClass)) return *Ability;
+			if (Ability->IsA(AbilityClass) && 
+			   (DevelopmentName.IsNone() || Ability->GetDevelopmentName() == DevelopmentName))
+			{
+				return *Ability;
+			}
 		}
 	}
 
 	return nullptr;
 }
 
-ULimenAttributeBase* ULimenAbilityComponent::GetAttribute(const TSubclassOf<ULimenAttributeBase> AttributeClass) const
+ULimenAttributeBase* ULimenAbilityComponent::GetAttribute(const TSubclassOf<ULimenAttributeBase> AttributeClass, const FName& DevelopmentName) const
 {
 	if (AttributeClass)
 	{
 		for (const FAttributeArrayItem& Attribute : Attributes.Items)
 		{
 			if (*Attribute == nullptr) continue;
-			if (Attribute->IsA(AttributeClass)) return *Attribute;
+			if (Attribute->IsA(AttributeClass) &&
+			   (DevelopmentName.IsNone() || Attribute->GetDevelopmentName() == DevelopmentName))
+			{
+				return *Attribute;
+			}
 		}
 	}
 
