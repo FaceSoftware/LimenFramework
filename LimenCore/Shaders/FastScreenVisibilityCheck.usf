@@ -24,29 +24,46 @@ void MainCS(uint3 Tid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID)
 	}
 
 	GroupMemoryBarrierWithGroupSync();
+	
+	uint StencilValue = 0;
+	uint Flags = 0;
 
 	// Bounds check
-	if (LocalPixel.x >= ViewRectSize.x || LocalPixel.y >= ViewRectSize.y) { return; }
+	if (LocalPixel.x < ViewRectSize.x && LocalPixel.y < ViewRectSize.y)
+	{
+		// Render
+		StencilValue = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
+		const bool bRendered = StencilValue > 0 && StencilValue < 256;		
+		if (bRendered)
+		{
+			Flags = 1u;
+
+			// Occlusion
+			const float SceneZ  = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
+			const float CustomZ = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
+
+			const float SceneLinearDepth  = ConvertFromDeviceZ(SceneZ);
+			const float CustomLinearDepth = ConvertFromDeviceZ(CustomZ);
+
+			const float Bias = 1e-4; // small bias in linear space
+			const bool bVisible = CustomLinearDepth < (SceneLinearDepth + Bias);
+			Flags |= (bVisible << 1);
+		}
+	}
 	
-	// Render
-	const uint StencilValue = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
-	const bool bRendered = StencilValue > 0 && StencilValue < 256;
-	if (!bRendered) { return; }
-	uint Flags = 1u;
-
-	// Occlusion
-	const float SceneZ  = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
-	const float CustomZ = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
-
-	const float SceneLinearDepth  = ConvertFromDeviceZ(SceneZ);
-	const float CustomLinearDepth = ConvertFromDeviceZ(CustomZ);
-
-	const float Bias = 1e-4; // small bias in linear space
-	const bool bVisible = CustomLinearDepth < (SceneLinearDepth + Bias);
-	Flags |= (bVisible << 1);
-
-	InterlockedOr(LocalFlags[StencilValue], Flags);
+	if (Flags != 0)
+	{
+		InterlockedOr(LocalFlags[StencilValue], Flags);
+	}
+	
 	GroupMemoryBarrierWithGroupSync();
 	
-	InterlockedOr(OutFlag[StencilValue], LocalFlags[StencilValue]);
+	for (int i = LinearTid; i < 256; i += 64)
+	{
+		uint Value = LocalFlags[i];
+		if (Value != 0)
+		{
+			InterlockedOr(OutFlag[i], Value);
+		}
+	}
 }
