@@ -45,8 +45,8 @@ void ULimenMotionBlurSetting::SetDefaults()
 
 void ULimenMotionBlurSetting::GlobalPostProcessFound(APostProcessVolume* GlobalPostProcess)
 {
-	check(GlobalPostProcess->Settings.bOverride_MotionBlurAmount)
 	check(GetCurrentValue() >= ValueRange[0] && GetCurrentValue() <= ValueRange[1]);
 
+	GlobalPostProcess->Settings.bOverride_MotionBlurAmount = true;
 	GlobalPostProcess->Settings.MotionBlurAmount = GetCurrentValue();
 }

@@ -36,11 +36,8 @@ protected:
 	virtual void WorldInitializedActors(const FActorsInitializedParams& InitParams) override;
 
 private:
-	UPROPERTY()
-	TObjectPtr<const ULimenGraphicalSettingsDeveloperSettings> SubsystemSettings;
-	UPROPERTY()
-	TObjectPtr<APostProcessVolume> GlobalPostProcess;
-
+	TWeakObjectPtr<const ULimenGraphicalSettingsDeveloperSettings> SubsystemSettings;
+	TWeakObjectPtr<APostProcessVolume> GlobalPostProcess;
 	FTimerHandle FindPostProcessHandle;
 
 	void FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag);

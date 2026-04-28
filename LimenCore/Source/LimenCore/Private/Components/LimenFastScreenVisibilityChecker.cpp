@@ -273,7 +273,7 @@ void ULimenFastScreenVisibilityChecker::RemoveStencilMask(const uint8 InMask)
 void ULimenFastScreenVisibilityChecker::VisibilityResultFromRender(const uint8 Mask, const uint32 VisibilityFlags)
 {
     check(IsInGameThread())
-    check(VisibilityStates.Contains(Mask))
+    if (!VisibilityStates.Contains(Mask)) { return; }
 
     if (!IsActive()) return;
 

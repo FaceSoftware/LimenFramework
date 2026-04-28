@@ -16,6 +16,12 @@ ULimenVolumeLevelSetting::ULimenVolumeLevelSetting()
 	Category = FText();
 	DecimalsDisplayed = 2;
 	FmodBus = nullptr;
+	
+	ValueRange.Reserve(2);
+	ValueRange.Push(0.f);
+	ValueRange.Push(1.f);
+	
+	DefaultSettingValue = 1.f;
 }
 
 void ULimenVolumeLevelSetting::ApplyCurrentSetting(const bool bUserRequest)
@@ -29,12 +35,7 @@ void ULimenVolumeLevelSetting::ApplyCurrentSetting(const bool bUserRequest)
 void ULimenVolumeLevelSetting::SetDefaults()
 {
 	Super::SetDefaults();
-
-	ValueRange.Reserve(2);
-	ValueRange.Push(0.f);
-	ValueRange.Push(1.f);
-	DefaultSettingValue = 1.f;
-
+	
 	const FMOD::Studio::System* StudioSystem = IFMODStudioModule::Get().GetStudioSystem(EFMODSystemContext::Runtime);
 	const FString BusPath = TEXT("bus:/") + FmodBusName;
 	const FMOD_RESULT Result = StudioSystem->getBus(TCHAR_TO_UTF8(*BusPath), &FmodBus);
