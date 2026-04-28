@@ -73,16 +73,14 @@ void ULimenSlider::SetValue(const float NewValue)
 	SetValueInternal(ELimenSliderInput::Code, NewValue, false);
 }
 
-void ULimenSlider::SetMaxValue(const float NewMax)
+void ULimenSlider::SetValueRange(const FFloatRange& NewRange)
 {
-	SliderMaxValue = FMath::Max(NewMax, SliderMinValue);
-	SetValueInternal(ELimenSliderInput::Code, CurrentSliderValue, false);
-}
-
-void ULimenSlider::SetMinValue(const float NewMin)
-{
-	SliderMinValue = FMath::Min(NewMin, SliderMaxValue);
-	SetValueInternal(ELimenSliderInput::Code, CurrentSliderValue, false);
+	if (NewRange.HasLowerBound() && NewRange.HasUpperBound())
+	{
+		SliderMaxValue = NewRange.GetUpperBoundValue();
+		SliderMinValue = NewRange.GetLowerBoundValue();
+		SetValueInternal(ELimenSliderInput::Code, CurrentSliderValue, false);
+	}
 }
 
 void ULimenSlider::SetDecimalDigitsCount(const int32 NewDecimalDigits)

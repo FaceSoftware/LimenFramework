@@ -48,8 +48,8 @@ ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayTimedModal(const FModalP
 
 ULimenGenericModalWidget* ULimenModalsSubsystem::DisplayModalInternal(const TSubclassOf<ULimenGenericModalWidget>& ModalClass, const FModalParams& InParams) const
 {
+	if (!ModalClass) { return nullptr; }
 	ULimenGenericModalWidget* ModalWidgetInstance = CreateWidget<ULimenGenericModalWidget>(GetWorld(), ModalClass);
-	if (!ModalWidgetInstance) return nullptr;
 
 	ModalWidgetInstance->ShowWidget();
 	ModalWidgetInstance->SetParams(InParams);

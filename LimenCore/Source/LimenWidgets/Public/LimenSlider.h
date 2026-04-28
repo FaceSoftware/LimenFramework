@@ -75,9 +75,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetValue(const float NewValue);
 	UFUNCTION(BlueprintCallable)
-	void SetMaxValue(const float NewMax);
-	UFUNCTION(BlueprintCallable)
-	void SetMinValue(const float NewMin);
+	void SetValueRange(const FFloatRange& NewRange);
 	UFUNCTION(BlueprintCallable)
 	void SetDecimalDigitsCount(const int32 NewDecimalDigits);
 	UFUNCTION(BlueprintCallable)

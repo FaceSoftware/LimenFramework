@@ -135,7 +135,7 @@ bool ULimenWidget::IsShowing() const
 
 bool ULimenWidget::IsHiding() const
 {
-	return !IsInViewport() || GetVisibility() == DefaultHiddenState;
+	return (GetParent() || IsInViewport()) && GetVisibility() == DefaultHiddenState;
 }
 
 bool ULimenWidget::IsAnimating() const
