@@ -56,7 +56,12 @@ bool ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
 
 void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::DispatchVisibilityCheck(FRDGBuilder& GraphBuilder, const FSceneView& InView)
 {
-    check(!bShouldSkip)
+#if WITH_EDITOR
+    {
+        FScopeLock Lock(&ActiveSection);
+        check(!bShouldSkip)
+    }
+#endif
    
     ViewRect = InView.CameraConstrainedViewRect;
     if (ViewRect.IsEmpty()) { return; }
@@ -115,7 +120,12 @@ void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension:
 
 void ULimenFastScreenVisibilityChecker::FFastScreenVisibilityCheckViewExtension::ReadbackVisibilityFlags()
 {
-    check(!bShouldSkip)
+#if WITH_EDITOR
+    {
+        FScopeLock Lock(&ActiveSection);
+        check(!bShouldSkip)
+    }
+#endif
 
     for (int32 i = Readbacks.Num() - 1; i >= 0; --i)
     {
