@@ -17,15 +17,23 @@ class LIMENWIDGETS_API ULimenTextLabel : public UWidget
 public:
 	ULimenTextLabel();
 	
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLabelTitle(const FText& InTitle);
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLabelTitleFont(const FSlateFontInfo& InTitleFont);
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLabelTitlePadding(const FMargin& InPadding);
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLabelTitleTextColor(const FSlateColor& InColor);
 
 	
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLabelValue(const FText& InValue);
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLabelValueFont(const FSlateFontInfo& InValueFont);
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLabelValuePadding(const FMargin& InPadding);
+	UFUNCTION(BlueprintCallable)
 	virtual void SetLabelValueTextColor(const FSlateColor& InColor);
 	
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;

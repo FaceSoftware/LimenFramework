@@ -3,6 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequence.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "MovieSceneSequencePlaybackSettings.h"
 
 
 template<typename... TArgs>
@@ -67,3 +71,47 @@ private:
 	FDelegateHandle Handle;
 	mutable bool bLazyIsTicking;
 };
+
+namespace LimenLevelSequenceHelpers
+{
+	static ULevelSequencePlayer* CreateLevelSequencePlayerWithInstanceData(UObject* WorldContextObject, ULevelSequence* InLevelSequence, UObject* InInstanceData, FMovieSceneSequencePlaybackSettings Settings, ALevelSequenceActor*& OutActor)
+	{
+		if (InLevelSequence == nullptr)
+		{
+			return nullptr;
+		}
+
+		UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+		if (World == nullptr || World->bIsTearingDown)
+		{
+			return nullptr;
+		}
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.ObjectFlags |= RF_Transient;
+		SpawnParams.bAllowDuringConstructionScript = true;
+
+		// Defer construction for autoplay so that BeginPlay() is called
+		SpawnParams.bDeferConstruction = true;
+
+		ALevelSequenceActor* Actor = World->SpawnActor<ALevelSequenceActor>(SpawnParams);
+
+		Actor->PlaybackSettings = Settings;
+		Actor->GetSequencePlayer()->SetPlaybackSettings(Settings);
+
+		Actor->SetSequence(InLevelSequence);
+		
+		Actor->bOverrideInstanceData = true;
+		Actor->DefaultInstanceData = InInstanceData;
+	
+		Actor->InitializePlayer();
+	
+		FTransform DefaultTransform;
+		Actor->FinishSpawning(DefaultTransform);
+
+		OutActor = Actor;
+
+		return Actor->GetSequencePlayer();
+	}
+}

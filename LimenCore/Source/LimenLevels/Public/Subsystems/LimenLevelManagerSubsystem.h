@@ -48,6 +48,8 @@ public:
 	void ResetCurrentLevel(ELevelOpenContext Context = ELevelOpenContext::Local);
 
 	bool IsGameLevelIndexValid(const int32 Index) const;
+	
+	int32 GetGameLevelIndex(const UWorld* InLevel) const;
 
 private:
 	void OpenServerLevel_Internal(const FString& LevelName, const FString& Options = TEXT(""));

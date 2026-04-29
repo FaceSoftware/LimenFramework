@@ -19,7 +19,7 @@ void ULimenLoadingScreenWidget::NativeConstruct()
 
 	if (auto* LevelTransition = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>())
 	{
-		LevelTransition->OnShaderCompilationUpdated.AddUniqueDynamic(this, &ThisClass::PSOBatchingUpdated);
+		LevelTransition->OnPSOBatchingUpdated.AddUniqueDynamic(this, &ThisClass::PSOBatchingUpdated);
 	}
 }
 
@@ -29,7 +29,7 @@ void ULimenLoadingScreenWidget::NativeDestruct()
 
 	if (auto* LevelTransition = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>())
 	{
-		LevelTransition->OnShaderCompilationUpdated.RemoveDynamic(this, &ThisClass::PSOBatchingUpdated);
+		LevelTransition->OnPSOBatchingUpdated.RemoveDynamic(this, &ThisClass::PSOBatchingUpdated);
 	}
 }
 

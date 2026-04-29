@@ -26,6 +26,7 @@ class ULimenWidget;
 		auto* Widget = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
 		WidgetPtr = TStrongObjectPtr(Widget); \
 		WidgetPtr->BindPlayerController(GetOwningPlayerController()); \
+		AddWidgetToList(Widget); \
 	} \
 
 #define CREATE_HUD_WIDGET_STRONG(Typename, WidgetPtr, WidgetClass) \
@@ -34,17 +35,20 @@ class ULimenWidget;
 		auto* Widget = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
 		WidgetPtr = TStrongObjectPtr(Widget); \
 		WidgetPtr->BindPlayerController(GetOwningPlayerController()); \
+		AddWidgetToList(Widget); \
 	} \
 
 #define CREATE_WIDGET(Typename, WidgetPtr, WidgetClass) \
 	if (WidgetClass) \
 	{ \
 		WidgetPtr = CreateWidget<Typename>(GetOwningPlayerController(), WidgetClass); \
+		AddWidgetToList(Widget); \
 	} \
 
 #define CLEANUP_WIDGET_STRONG(WidgetPtr) \
 	if (WidgetPtr) \
 	{ \
+		RemoveWidgetFormList(WidgetPtr.Get()); \
 		WidgetPtr->DestroyWidget(false); \
 		WidgetPtr.Reset(); \
 	} \
@@ -87,6 +91,7 @@ public:
 	ULimenNotificationComponent* GetNotificationsComponent() const;
 
 	virtual ULimenWidget* GetActiveWidget() const;
+	virtual TArray<TWeakObjectPtr<ULimenWidget>> GetWidgetList() const;
 	
 protected:
 	
@@ -103,6 +108,8 @@ protected:
 
 	void ShowWidget_Internal(ULimenWidget* Widget);
 	void HideWidget_Internal(ULimenWidget* Widget);
+	virtual void AddWidgetToList(ULimenWidget* InWidget);
+	virtual void RemoveWidgetFormList(ULimenWidget* InWidget);
 
 private:
 	UPROPERTY(EditDefaultsOnly)
@@ -118,4 +125,5 @@ private:
 
 #endif
 	
+	TArray<TWeakObjectPtr<ULimenWidget>> WidgetList;
 };

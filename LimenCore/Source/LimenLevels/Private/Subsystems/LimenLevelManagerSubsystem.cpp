@@ -117,6 +117,11 @@ bool ULimenLevelManagerSubsystem::IsGameLevelIndexValid(const int32 Index) const
 	return Settings->IsGameLevelIndexValid(Index);
 }
 
+int32 ULimenLevelManagerSubsystem::GetGameLevelIndex(const UWorld* InLevel) const
+{
+	return ULimenLevelsDeveloperSettings::GetGameLevelIndex(InLevel);
+}
+
 void ULimenLevelManagerSubsystem::OpenServerLevel_Internal(const FString& LevelName, const FString& Options)
 {
 	GetWorld()->ServerTravel(LevelName + "?listen"+ Options , false, false);

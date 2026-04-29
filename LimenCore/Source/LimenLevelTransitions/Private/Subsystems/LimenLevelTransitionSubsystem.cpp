@@ -4,6 +4,7 @@
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
 
 #include "EngineUtils.h"
+#include "ShaderCompiler.h"
 #include "ShaderPipelineCache.h"
 #include "UMG/LimenLoadingScreenWidget.h"
 #include "Developer/LimenLoadingScreenSettings.h"
@@ -29,8 +30,8 @@ ULimenLevelTransitionSubsystem::ULimenLevelTransitionSubsystem()
 	bIsPreLoadingLevel = false;
 	bIsLoadingScreenNotifiedToHide = false;
 	TransientMasterVolumeCachedValue = 0;
-	TotalPrecompiles = 0;
-	CurrentPrecompileDonePercentage = 0;
+	TotalPSOs = 0;
+	PSOsLeft = 0;
 }
 
 bool ULimenLevelTransitionSubsystem::ShouldCreateSubsystem(UObject* Outer) const
@@ -91,11 +92,7 @@ UWorld* ULimenLevelTransitionSubsystem::GetTickableGameObjectWorld() const
 
 bool ULimenLevelTransitionSubsystem::IsLoadingScreenActive() const
 {
-	if (!LoadingScreenWidget)
-	{
-		return false;
-	}
-
+	if (!LoadingScreenWidget.IsValid()) { return false; }
 	return LoadingScreenWidget->IsShowing();
 }
 
@@ -112,8 +109,8 @@ bool ULimenLevelTransitionSubsystem::PlayLoadingScreenForCurrentLevel()
 	{
 		if (MapLoadingScreen.Key.GetLongPackageName().Contains(MapName))
 		{
-			CurrentLoadingScreenSettings = MapLoadingScreen.Value.LoadSynchronous();
-			if (CurrentLoadingScreenSettings == nullptr)
+			CurrentLoadingScreenSettings = TStrongObjectPtr(MapLoadingScreen.Value.LoadSynchronous());
+			if (!CurrentLoadingScreenSettings.IsValid())
 			{
 				return false;
 			}
@@ -127,9 +124,19 @@ bool ULimenLevelTransitionSubsystem::PlayLoadingScreenForCurrentLevel()
 	return true;
 }
 
+int32 ULimenLevelTransitionSubsystem::GetPSOsLeft() const
+{
+	return PSOsLeft;
+}
+
+int32 ULimenLevelTransitionSubsystem::GetTotalPSOs() const
+{
+	return TotalPSOs;
+}
+
 void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 {
-	if (CurrentLoadingScreenSettings == nullptr)
+	if (!CurrentLoadingScreenSettings.IsValid())
 	{
 		return;
 	}
@@ -139,20 +146,20 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 		SecondsShown += DeltaTime;
 
 #if !WITH_EDITOR
-		const uint32 ShadersLeft = FShaderPipelineCache::NumPrecompilesRemaining();
-		if (FShaderPipelineCache::IsBatchingPaused() && ShadersLeft > 0)
+		if (uint32 NewPSOsLeft = FShaderPipelineCache::NumPrecompilesRemaining(); NewPSOsLeft != PSOsLeft)
+		{
+			PSOsLeft = NewPSOsLeft;
+			if (PSOsLeft > TotalPSOs)
+			{
+				TotalPSOs = PSOsLeft;
+			}
+			OnPSOBatchingUpdated.Broadcast(TotalPSOs, PSOsLeft);
+		}
+		if (FShaderPipelineCache::IsBatchingPaused() && PSOsLeft > 0)
 		{
 			// Somehow it pauses sometimes, even though resume was called...
 			FShaderPipelineCache::ResumeBatching();
 		}
-			
-		if (ShadersLeft > TotalPrecompiles)
-		{
-			TotalPrecompiles = ShadersLeft;
-		}
-
-		CurrentPrecompileDonePercentage = 1.f - static_cast<float>(ShadersLeft) / static_cast<float>(TotalPrecompiles);
-		OnShaderCompilationUpdated.Broadcast(CurrentPrecompileDonePercentage, ShadersLeft);
 #endif
 	}
 	
@@ -165,9 +172,9 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 	else if (!ShouldShowLoadingScreen() && IsLoadingScreenActive() && !bIsLoadingScreenNotifiedToHide)
 	{
 		bIsLoadingScreenNotifiedToHide = true;
-		TotalPrecompiles = 0;
+		TotalPSOs = 0;
 #if !WITH_EDITOR
-		if (!FShaderPipelineCache::IsBatchingPaused())
+		if (!FShaderPipelineCache::IsBatchingPaused() && FShaderPipelineCache::NumPrecompilesRemaining() > 0)
 		{
 			FShaderPipelineCache::PauseBatching();
 		}
@@ -178,12 +185,12 @@ void ULimenLevelTransitionSubsystem::UpdateLoadingScreen(float DeltaTime)
 
 void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 {
-	if (CurrentLoadingScreenSettings == nullptr || CurrentLoadingScreenSettings->GetLoadingScreenWidgetClass() == nullptr)
+	if (!CurrentLoadingScreenSettings.IsValid()|| !CurrentLoadingScreenSettings->GetLoadingScreenWidgetClass())
 	{
 		return;
 	}
 	
-	if (LoadingScreenWidget == nullptr)
+	if (!LoadingScreenWidget.IsValid())
 	{
 		UUserWidget* Instance = UUserWidget::CreateWidgetInstance(*GetGameInstance(), CurrentLoadingScreenSettings->GetLoadingScreenWidgetClass(), NAME_None);
 		LoadingScreenWidget = CastChecked<ULimenLoadingScreenWidget>(Instance);
@@ -201,22 +208,11 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 
 #if !WITH_EDITOR
 	FShaderPipelineCache::PauseBatching();
-
 	FShaderPipelineCache::SetBatchMode(FShaderPipelineCache::BatchMode::Precompile);
 	
-	TotalPrecompiles = FShaderPipelineCache::NumPrecompilesRemaining();
-	
-	if (TotalPrecompiles == 0)
-	{
-		OnShaderCompilationUpdated.Broadcast(1.f, FShaderPipelineCache::NumPrecompilesRemaining());
-		CurrentPrecompileDonePercentage = 1.f;
-	}
-	else
-	{
-		OnShaderCompilationUpdated.Broadcast(0.f, FShaderPipelineCache::NumPrecompilesRemaining());
-		CurrentPrecompileDonePercentage = 0.f;
-		FShaderPipelineCache::ResumeBatching();
-	}
+	TotalPSOs = FShaderPipelineCache::NumPrecompilesRemaining();
+	PSOsLeft = TotalPSOs;
+	OnPSOBatchingUpdated.Broadcast(TotalPSOs, PSOsLeft);
 #endif
 }
 
@@ -224,7 +220,7 @@ void ULimenLevelTransitionSubsystem::HideLoadingScreen()
 {
 	ChangePerformanceSettings(false);
 	bIsLoadingScreenNotifiedToHide = true;
-	if (LoadingScreenWidget)
+	if (LoadingScreenWidget.IsValid())
 	{
 		LoadingScreenWidget->DestroyWidget(true);
 		LoadingScreenWidget = nullptr;
@@ -233,8 +229,8 @@ void ULimenLevelTransitionSubsystem::HideLoadingScreen()
 	UnblockInput();
 	EnableAudio();
 
-	CurrentLoadingScreenSettings = nullptr;
-	OnShaderCompilationUpdated.Broadcast(1.f, FShaderPipelineCache::NumPrecompilesRemaining());
+	CurrentLoadingScreenSettings.Reset();
+	OnPSOBatchingUpdated.Broadcast(1.f, FShaderPipelineCache::NumPrecompilesRemaining());
 }
 
 bool ULimenLevelTransitionSubsystem::ShouldShowLoadingScreen() const
@@ -288,8 +284,8 @@ void ULimenLevelTransitionSubsystem::HandlePreLoadMap(const FWorldContext& World
 		if (MapName.Contains(MapLoadingScreen.Key.GetLongPackageName()) &&
 			MapName.Contains(MapLoadingScreen.Key.GetAssetName()))
 		{
-			CurrentLoadingScreenSettings = MapLoadingScreen.Value.LoadSynchronous();
-			if (CurrentLoadingScreenSettings == nullptr)
+			CurrentLoadingScreenSettings = TStrongObjectPtr(MapLoadingScreen.Value.LoadSynchronous());
+			if (!CurrentLoadingScreenSettings.IsValid())
 			{
 				return;
 			}

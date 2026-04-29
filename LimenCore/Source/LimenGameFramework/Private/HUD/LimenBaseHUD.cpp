@@ -80,6 +80,11 @@ ULimenWidget* ALimenBaseHUD::GetActiveWidget() const
 	return ActiveWidget.Get();
 }
 
+TArray<TWeakObjectPtr<ULimenWidget>> ALimenBaseHUD::GetWidgetList() const
+{
+	return WidgetList;
+}
+
 void ALimenBaseHUD::DestroyWidgets()
 {
 }
@@ -121,4 +126,14 @@ void ALimenBaseHUD::HideWidget_Internal(ULimenWidget* Widget)
 {
 	if (!Widget || !CanSwitchWidgetVisibility(Widget)) return;
 	if (Widget->IsShowing() && Widget->HideWidget()) ActiveWidget = nullptr;
+}
+
+void ALimenBaseHUD::AddWidgetToList(ULimenWidget* InWidget)
+{
+	WidgetList.AddUnique(TWeakObjectPtr(InWidget));
+}
+
+void ALimenBaseHUD::RemoveWidgetFormList(ULimenWidget* InWidget)
+{
+	WidgetList.Remove(TWeakObjectPtr(InWidget));
 }

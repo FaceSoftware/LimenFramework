@@ -24,8 +24,9 @@ public:
 	virtual bool IsHiding() const override;
 	
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
-	void PSOBatchingUpdated(const float CompletedPercentage, const int32 PSOsLeft);
+	UFUNCTION(BlueprintNativeEvent)
+	void PSOBatchingUpdated(const int32 Total, const int32 Left);
+	virtual void PSOBatchingUpdated_Implementation(const int32 Total, const int32 Left) {}
 
 private:
 	/**

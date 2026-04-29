@@ -24,12 +24,12 @@ class LIMENLEVELTRANSITIONS_API ULimenLevelTransitionSubsystem : public UGameIns
 {
 	GENERATED_BODY()
 
-	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FShaderCompilingProgress, const float, CompletedPercentage, const int32, ShadersLeft);
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FProgress, const int32, Total, const int32, Left);
 
 public:
 	FLimenWidgetVisibilityChanged OnLoadingScreenVisibilityChanged; 
 	UPROPERTY(BlueprintAssignable)
-	FShaderCompilingProgress OnShaderCompilationUpdated;
+	FProgress OnPSOBatchingUpdated;
 
 	ULimenLevelTransitionSubsystem();
 	
@@ -48,6 +48,11 @@ public:
 	bool IsLoadingScreenActive() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Level Transition Subsystem")
 	bool PlayLoadingScreenForCurrentLevel();
+	
+	UFUNCTION(BlueprintCallable, Category="Limen|Level Transition Subsystem")
+	int32 GetPSOsLeft() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Level Transition Subsystem")
+	int32 GetTotalPSOs() const;
 
 protected:
 	void UpdateLoadingScreen(float DeltaTime);
@@ -66,18 +71,13 @@ protected:
 	void ChangePerformanceSettings(bool bEnablingLoadingScreen) const;
 
 private:
-	UPROPERTY()
 	TMap<TSoftObjectPtr<UWorld>, TSoftObjectPtr<ULimenLoadingScreenParameters>> LoadingScreens;
-
-	UPROPERTY()
-	TObjectPtr<ULimenLoadingScreenParameters> CurrentLoadingScreenSettings;
-
-	UPROPERTY()
-	TObjectPtr<ULimenLoadingScreenWidget> LoadingScreenWidget;
+	TStrongObjectPtr<ULimenLoadingScreenParameters> CurrentLoadingScreenSettings;
+	
+	TWeakObjectPtr<ULimenLoadingScreenWidget> LoadingScreenWidget;
 	TSharedPtr<IInputProcessor> InputPreProcessor;
-
-	UPROPERTY()
-	TObjectPtr<UWorld> LoadedWorld;
+	
+	TWeakObjectPtr<UWorld> LoadedWorld;
 	
 	bool bIsPreLoadingLevel;
 	bool bIsLoadingScreenNotifiedToHide;
@@ -91,8 +91,8 @@ private:
 
 	double TransientMasterVolumeCachedValue;
 
-	uint32 TotalPrecompiles;
-	float CurrentPrecompileDonePercentage;
+	uint32 TotalPSOs;
+	uint32 PSOsLeft;
 
 	void EnableAudio();
 	void DisableAudio();

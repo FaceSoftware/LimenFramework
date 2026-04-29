@@ -16,6 +16,7 @@ public class LimenCore : ModuleRules
 				"Engine",
 				"AIModule",
 				"EnhancedInput",
+				"LevelSequence",
 			}
 		);
 
