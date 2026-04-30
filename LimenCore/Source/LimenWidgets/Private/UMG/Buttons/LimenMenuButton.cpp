@@ -33,6 +33,50 @@ void ULimenMenuButton::ReleaseSlateResources(bool bReleaseChildren)
 	RetainerBox.Reset();
 }
 
+void ULimenMenuButton::Tick(float DeltaTime)
+{
+	if (bIsPlayingDistortionEffect)
+	{
+		HoverEffectElapsedTime += DeltaTime;
+	}
+	
+	if (HoverEffectElapsedTime > EffectDurationSeconds)
+	{
+		HoverEffectElapsedTime = 0;
+		StopDistortionEffect();
+	}
+}
+
+ETickableTickType ULimenMenuButton::GetTickableTickType() const
+{
+	return ETickableTickType::Always;
+}
+
+bool ULimenMenuButton::IsTickable() const
+{
+	return true;
+}
+
+TStatId ULimenMenuButton::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(ULimenMenuButton, STATGROUP_Tickables);
+}
+
+bool ULimenMenuButton::IsTickableWhenPaused() const
+{
+	return true;
+}
+
+bool ULimenMenuButton::IsTickableInEditor() const
+{
+	return false;
+}
+
+UWorld* ULimenMenuButton::GetTickableGameObjectWorld() const
+{
+	return GetWorld();
+}
+
 TSharedRef<SWidget> ULimenMenuButton::RebuildWidget()
 {
 	if (bUseIcon)
@@ -178,48 +222,4 @@ void ULimenMenuButton::StopDistortionEffect()
 	}
 
 	bIsPlayingDistortionEffect = false;
-}
-
-void ULimenMenuButton::Tick(float DeltaTime)
-{
-	if (bIsPlayingDistortionEffect)
-	{
-		HoverEffectElapsedTime += DeltaTime;
-	}
-	
-	if (HoverEffectElapsedTime > EffectDurationSeconds)
-	{
-		HoverEffectElapsedTime = 0;
-		StopDistortionEffect();
-	}
-}
-
-ETickableTickType ULimenMenuButton::GetTickableTickType() const
-{
-	return ETickableTickType::Always;
-}
-
-bool ULimenMenuButton::IsTickable() const
-{
-	return true;
-}
-
-TStatId ULimenMenuButton::GetStatId() const
-{
-	RETURN_QUICK_DECLARE_CYCLE_STAT(ULimenMenuButton, STATGROUP_Tickables);
-}
-
-bool ULimenMenuButton::IsTickableWhenPaused() const
-{
-	return true;
-}
-
-bool ULimenMenuButton::IsTickableInEditor() const
-{
-	return false;
-}
-
-UWorld* ULimenMenuButton::GetTickableGameObjectWorld() const
-{
-	return GetWorld();
 }

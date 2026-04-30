@@ -29,6 +29,7 @@ public:
 	FLGButtonHover OnButtonUnhoveredEvent;
 
 	ULimenStandardButton();
+	virtual void ReleaseSlateResources(const bool bReleaseChildren) override;
 	
 	UFUNCTION(BlueprintCallable)
 	virtual void SetButtonText(const FText& NewText);
@@ -45,26 +46,25 @@ public:
 	const FText& GetButtonText() const;
 	
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Button")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Button")
 	FButtonStyle ButtonStyle;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Text")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Button|Text")
 	FText Text;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Text")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Button|Text")
 	TEnumAsByte<EHorizontalAlignment> TextHorizontalAlignment;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Text")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Button|Text")
 	TEnumAsByte<EVerticalAlignment> TextVerticalAlignment;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Text")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Button|Text")
 	FSlateFontInfo Font;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Text")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Button|Text")
 	FSlateColor TextColor;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Text")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Button|Text")
 	FMargin TextMargin;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="LG|Text")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Button|Text")
 	TEnumAsByte<ETextJustify::Type> TextJustification;
 	
 	virtual TSharedRef<SWidget> RebuildWidget() override;
-	virtual void ReleaseSlateResources(const bool bReleaseChildren) override;
 
 	virtual FReply OnClicked();
 	virtual void OnHovered();

@@ -22,6 +22,12 @@ ULimenStandardButton::ULimenStandardButton() : Super()
 	TextJustification = ETextJustify::Center;
 }
 
+void ULimenStandardButton::ReleaseSlateResources(const bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+
+	TextBlock.Reset();
+}
 
 void ULimenStandardButton::SetButtonText(const FText& NewText)
 {
@@ -85,13 +91,6 @@ TSharedRef<SWidget> ULimenStandardButton::RebuildWidget()
 	];
 	
 	return Root;
-}
-
-void ULimenStandardButton::ReleaseSlateResources(const bool bReleaseChildren)
-{
-	Super::ReleaseSlateResources(bReleaseChildren);
-
-	TextBlock.Reset();
 }
 
 FReply ULimenStandardButton::OnClicked()
