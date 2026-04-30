@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DefaultLevelSequenceInstanceData.h"
 #include "LevelSequence.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
@@ -74,8 +75,10 @@ private:
 
 namespace LimenLevelSequenceHelpers
 {
+	
 	static ULevelSequencePlayer* CreateLevelSequencePlayerWithInstanceData(UObject* WorldContextObject, ULevelSequence* InLevelSequence, UObject* InInstanceData, FMovieSceneSequencePlaybackSettings Settings, ALevelSequenceActor*& OutActor)
 	{
+		static_assert(true, "DO NOT USE THIS FUNCTION -> Does not achieve desired result");
 		if (InLevelSequence == nullptr)
 		{
 			return nullptr;
@@ -106,8 +109,9 @@ namespace LimenLevelSequenceHelpers
 		Actor->DefaultInstanceData = InInstanceData;
 	
 		Actor->InitializePlayer();
-	
-		FTransform DefaultTransform;
+
+		const auto* InstanceData = Cast<UDefaultLevelSequenceInstanceData>(Actor->DefaultInstanceData.Get());
+		const FTransform DefaultTransform = InstanceData ? InstanceData->NativeGetTransformOrigin() : FTransform::Identity;
 		Actor->FinishSpawning(DefaultTransform);
 
 		OutActor = Actor;
