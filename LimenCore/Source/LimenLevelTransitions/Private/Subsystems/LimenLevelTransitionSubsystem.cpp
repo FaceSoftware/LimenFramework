@@ -208,7 +208,7 @@ void ULimenLevelTransitionSubsystem::DisplayLoadingScreen()
 
 #if !WITH_EDITOR
 	FShaderPipelineCache::PauseBatching();
-	FShaderPipelineCache::SetBatchMode(FShaderPipelineCache::BatchMode::Precompile);
+	FShaderPipelineCache::SetBatchMode(FShaderPipelineCache::BatchMode::Background);
 	
 	TotalPSOs = FShaderPipelineCache::NumPrecompilesRemaining();
 	PSOsLeft = TotalPSOs;
