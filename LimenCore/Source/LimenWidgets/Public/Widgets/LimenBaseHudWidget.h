@@ -22,12 +22,14 @@ public:
 
 protected:
 	UFUNCTION(BlueprintNativeEvent, Category="Limen|Menus|Player Controller")
-	void OnPlayerControllerBound(APlayerController* InPlayerController);
-	virtual void OnPlayerControllerBound_Implementation(APlayerController* InPlayerController) {}
+	void PlayerControllerBound(APlayerController* InPlayerController);
+	virtual void PlayerControllerBound_Implementation(APlayerController* InPlayerController) {}
 
 	UFUNCTION(BlueprintNativeEvent, Category="Limen|Events")
 	void PawnBoundUpdated(APawn* NewPawn);
 	virtual void PawnBoundUpdated_Implementation(APawn* NewPawn) {}
+	
+	APlayerController* GetBoundPlayerController() const;
 
 private:
 	TWeakObjectPtr<APlayerController> BoundPlayerController;

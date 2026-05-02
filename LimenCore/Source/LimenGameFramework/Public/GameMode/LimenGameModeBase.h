@@ -28,6 +28,7 @@ public:
 	virtual void Logout(AController* Exiting) override;
 	virtual bool SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate = FCanUnpause()) override;
 	virtual bool ClearPause() override;
+	virtual void Tick(float DeltaSeconds) override;
 	
 
 	ALimenGameStateBase* GetLimenGameState();
@@ -54,6 +55,8 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void InitSeamlessTravelPlayer(AController* NewController) override;
 	virtual void InitialLevelStreamingComplete();
+	virtual void TickGameState(AGameStateBase* InGameState, float DeltaSeconds);
+	virtual void TickPlayerState(APlayerState* InPlayerState, float DeltaSeconds);
 
 private:
 	TArray<TWeakObjectPtr<ALimenGameplayManager>> ManagersList;

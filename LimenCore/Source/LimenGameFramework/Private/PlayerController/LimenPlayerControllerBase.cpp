@@ -14,7 +14,6 @@
 #include "HUD/LimenBaseHUD.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
-#include "UMG/LimenLoadingScreenWidget.h"
 #include "EngineUtils.h"
 
 
@@ -44,23 +43,69 @@ ALimenPlayerControllerBase::ALimenPlayerControllerBase(const FObjectInitializer&
 	MouseInputSensitivityComponent = CreateDefaultSubobject<ULimenMouseSensitivityComponent>(TEXT("MouseInputSensitivityComponent"));
 }
 
-void ALimenPlayerControllerBase::BeginPlay()
+void ALimenPlayerControllerBase::SetPawn(APawn* InPawn)
 {
-	Super::BeginPlay();
+	APawn* PrevPawn = GetPawn();
 
-	if (ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>(); LevelTransitionHandler != nullptr)
+	Super::SetPawn(InPawn);
+
+	if (PrevPawn) UnbindPawnDelegates(PrevPawn);
+
+	if (!InPawn) return;
+
+	BindPawnDelegates(InPawn);
+
+	if (!GetWorld()->bIsTearingDown && LimenBaseHUD.IsValid())
 	{
-		LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUObject(this, &ThisClass::LoadingScreenVisibilityChanged);
-		LoadingScreenVisibilityChanged(LevelTransitionHandler->IsLoadingScreenActive());
+		UnbindWidgetDelegates();
+		LimenBaseHUD->UpdateWidgets(this, InPawn);
+		BindWidgetDelegates();
 	}
-	
-	MouseInputSensitivityComponent->OnSensitivityUpdated.AddUniqueDynamic(this, &ThisClass::SensitivityUpdated);
-	SensitivityUpdated(MouseInputSensitivityComponent.Get());
 
-	if (HasAuthority() && LimenBaseHUD.IsValid() && GetPawn() == nullptr)
+	if (!InPawn->HasActorBegunPlay())
+	{
+		InPawn->OnPawnBeginPlay.AddUObject(this, &ThisClass::CurrentPawnReadyInternal);
+	}
+	else
+	{
+		CurrentPawnReadyInternal(InPawn);
+	}
+}
+
+void ALimenPlayerControllerBase::ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass)
+{
+	Super::ClientSetHUD_Implementation(NewHUDClass);
+
+	LimenBaseHUD = Cast<ALimenBaseHUD>(GetHUD());
+}
+
+void ALimenPlayerControllerBase::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (!GetWorld()->bIsTearingDown && LimenBaseHUD.IsValid())
 	{
 		LimenBaseHUD->UpdateWidgets(this, GetPawn());
 		BindWidgetDelegates();
+	}
+}
+
+void ALimenPlayerControllerBase::SetViewTargetWithBlend(AActor* NewViewTarget, const float BlendTime,
+	const EViewTargetBlendFunction BlendFunc, const float BlendExp, const bool bLockOutgoing)
+{
+	Super::SetViewTargetWithBlend(NewViewTarget, BlendTime, BlendFunc, BlendExp, bLockOutgoing);
+
+	if (FMath::IsNearlyEqual(BlendTime, 0.f))
+	{
+		BlendViewTargetSet(NewViewTarget);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(ViewTargetTransitionTimerHandle, [this, NewViewTarget]
+		{
+			BlendViewTargetSet(NewViewTarget);
+		}
+		, BlendTime, false);
 	}
 }
 
@@ -235,6 +280,26 @@ void ALimenPlayerControllerBase::AddPitchInput(const float Val)
 	Super::AddPitchInput(Val * MousePitchMultiplier);
 }
 
+void ALimenPlayerControllerBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>(); LevelTransitionHandler != nullptr)
+	{
+		LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUObject(this, &ThisClass::LoadingScreenVisibilityChanged);
+		LoadingScreenVisibilityChanged(LevelTransitionHandler->IsLoadingScreenActive());
+	}
+	
+	MouseInputSensitivityComponent->OnSensitivityUpdated.AddUniqueDynamic(this, &ThisClass::SensitivityUpdated);
+	SensitivityUpdated(MouseInputSensitivityComponent.Get());
+
+	if (HasAuthority() && LimenBaseHUD.IsValid() && GetPawn() == nullptr)
+	{
+		LimenBaseHUD->UpdateWidgets(this, GetPawn());
+		BindWidgetDelegates();
+	}
+}
+
 void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
 {
 	check(NewPawn)
@@ -247,17 +312,6 @@ void ALimenPlayerControllerBase::BindPawnDelegates(APawn* NewPawn)
 void ALimenPlayerControllerBase::UnbindPawnDelegates(APawn* InPawn)
 {
 	check(InPawn)
-}
-
-void ALimenPlayerControllerBase::QueueNotification(const FNotificationParams& InParams)
-{
-	auto* HUDInstance = Cast<ALimenBaseHUD>(GetHUD());
-	if (!IsValid(HUDInstance))
-	{
-		return;
-	}
-
-	HUDInstance->QueueNotification(InParams);
 }
 
 void ALimenPlayerControllerBase::LoadingScreenVisibilityChanged(const bool bIsVisible)
@@ -279,72 +333,6 @@ void ALimenPlayerControllerBase::BlendViewTargetSet(AActor* NewViewTarget)
 void ALimenPlayerControllerBase::SetCurrentInputMode(const ELimenInputMode InInputMode)
 {
 	CurrentInputMode = InInputMode;
-}
-
-void ALimenPlayerControllerBase::SetPawn(APawn* InPawn)
-{
-	APawn* PrevPawn = GetPawn();
-
-	Super::SetPawn(InPawn);
-
-	if (PrevPawn) UnbindPawnDelegates(PrevPawn);
-
-	if (!InPawn) return;
-
-	BindPawnDelegates(InPawn);
-
-	if (!GetWorld()->bIsTearingDown && LimenBaseHUD.IsValid())
-	{
-		UnbindWidgetDelegates();
-		LimenBaseHUD->UpdateWidgets(this, InPawn);
-		BindWidgetDelegates();
-	}
-
-	if (!InPawn->HasActorBegunPlay())
-	{
-		InPawn->OnPawnBeginPlay.AddUObject(this, &ThisClass::CurrentPawnReadyInternal);
-	}
-	else
-	{
-		CurrentPawnReadyInternal(InPawn);
-	}
-}
-
-void ALimenPlayerControllerBase::ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass)
-{
-	Super::ClientSetHUD_Implementation(NewHUDClass);
-
-	LimenBaseHUD = Cast<ALimenBaseHUD>(GetHUD());
-}
-
-void ALimenPlayerControllerBase::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
-	if (!GetWorld()->bIsTearingDown && LimenBaseHUD.IsValid())
-	{
-		LimenBaseHUD->UpdateWidgets(this, GetPawn());
-		BindWidgetDelegates();
-	}
-}
-
-void ALimenPlayerControllerBase::SetViewTargetWithBlend(AActor* NewViewTarget, const float BlendTime,
-	const EViewTargetBlendFunction BlendFunc, const float BlendExp, const bool bLockOutgoing)
-{
-	Super::SetViewTargetWithBlend(NewViewTarget, BlendTime, BlendFunc, BlendExp, bLockOutgoing);
-
-	if (FMath::IsNearlyEqual(BlendTime, 0.f))
-	{
-		BlendViewTargetSet(NewViewTarget);
-	}
-	else
-	{
-		GetWorld()->GetTimerManager().SetTimer(ViewTargetTransitionTimerHandle, [this, NewViewTarget]
-		{
-			BlendViewTargetSet(NewViewTarget);
-		}
-		, BlendTime, false);
-	}
 }
 
 void ALimenPlayerControllerBase::BindWidgetDelegates()

@@ -103,6 +103,16 @@ bool ALimenGameModeBase::ClearPause()
 	return true;
 }
 
+void ALimenGameModeBase::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	if (GameState)
+	{
+		TickGameState(GameState, DeltaSeconds);
+	}
+}
+
 ALimenGameStateBase* ALimenGameModeBase::GetLimenGameState()
 {
 	LimenGameState = GetGameState<ALimenGameStateBase>();
@@ -125,6 +135,18 @@ bool ALimenGameModeBase::IsInitialLevelStreamingComplete() const
 }
 
 void ALimenGameModeBase::InitialLevelStreamingComplete()
+{
+}
+
+void ALimenGameModeBase::TickGameState(AGameStateBase* InGameState, float DeltaSeconds)
+{
+	for (auto& Player : InGameState->PlayerArray)
+	{
+		TickPlayerState(Player.Get(), DeltaSeconds);
+	}
+}
+
+void ALimenGameModeBase::TickPlayerState(APlayerState* InPlayerState, float DeltaSeconds)
 {
 }
 

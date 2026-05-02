@@ -11,18 +11,9 @@
 ALimenBaseHUD::ALimenBaseHUD() : Super()
 {
 	PrimaryActorTick.bTickEvenWhenPaused = true;
-	
-	NotificationComponent = CreateDefaultSubobject<ULimenNotificationComponent>(TEXT("NotificationComponent"));
 	bAreWidgetsInitialized = false;
 	SetTickableWhenPaused(true);
-	bForceHideHud = 0;
-
-#if WITH_EDITORONLY_DATA
-
-	bDisableLoadingScreenInPIE = false;
-
-#endif
-	
+	bForceHideHud = 0;	
 }
 
 void ALimenBaseHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -33,6 +24,7 @@ void ALimenBaseHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ALimenBaseHUD::ShowHUD()
 {
+	ShowActiveWidget();
 }
 
 void ALimenBaseHUD::HideHUD()
@@ -52,27 +44,16 @@ bool ALimenBaseHUD::GetForcedHudState() const
 
 void ALimenBaseHUD::ShowActiveWidget()
 {
-	if (!ActiveWidget)
-	{
-		return;
-	}
+	if (!ActiveWidget.IsValid()) { return; }
 	
 	ShowWidget_Internal(ActiveWidget.Get());
 }
 
 void ALimenBaseHUD::HideActiveWidget()
 {
-	if (!ActiveWidget)
-	{
-		return;
-	}
+	if (!ActiveWidget.IsValid()) { return; }
 	
 	HideWidget_Internal(ActiveWidget.Get());
-}
-
-ULimenNotificationComponent* ALimenBaseHUD::GetNotificationsComponent() const
-{
-	return NotificationComponent.Get();
 }
 
 ULimenWidget* ALimenBaseHUD::GetActiveWidget() const
@@ -95,11 +76,6 @@ void ALimenBaseHUD::InitializeWidgets()
 
 void ALimenBaseHUD::HudInitialized(APlayerController* PlayerController)
 {
-}
-
-void ALimenBaseHUD::QueueNotification(const FNotificationParams& InParams)
-{	
-	NotificationComponent->QueueNotification(MakeShared<FLimenNotification>(InParams));
 }
 
 void ALimenBaseHUD::UpdateWidgets(APlayerController* PlayerController, APawn* Pawn)

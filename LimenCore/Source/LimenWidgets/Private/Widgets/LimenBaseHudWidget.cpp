@@ -22,7 +22,7 @@ void ULimenBaseHudWidget::BindPlayerController(APlayerController* InPlayerContro
 	}
 	
 	BoundPlayerController = InPlayerController;
-	OnPlayerControllerBound(BoundPlayerController.Get());
+	PlayerControllerBound(BoundPlayerController.Get());
 	
 	if (BoundPlayerController.IsValid())
 	{
@@ -35,6 +35,11 @@ void ULimenBaseHudWidget::BindPlayerController(APlayerController* InPlayerContro
 	}
 
 	PawnBoundUpdated(BoundPawn.Get());
+}
+
+APlayerController* ULimenBaseHudWidget::GetBoundPlayerController() const
+{
+	return BoundPlayerController.Get();
 }
 
 void ULimenBaseHudWidget::PossessedPawnChanged(APawn* OldPawn, APawn* NewPawn)

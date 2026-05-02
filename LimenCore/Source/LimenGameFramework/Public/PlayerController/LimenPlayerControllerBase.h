@@ -55,20 +55,16 @@ public:
 	static ALimenPlayerControllerBase* GetLimenPlayerControllerBase(UObject* Caller, int32 PlayerIndex = 0);
 
 	explicit ALimenPlayerControllerBase(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
-	virtual void BeginPlay() override;
+	virtual void SetPawn(APawn* InPawn) override;
+	virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
+	virtual void OnRep_PlayerState() override;
+	virtual void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime = 0, EViewTargetBlendFunction BlendFunc = VTBlend_Linear, float BlendExp = 0, bool bLockOutgoing = false) override;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Controller")
 	void RequestPause(const EPauseReason Reason);
 	UFUNCTION(BlueprintCallable, Category="Limen|Controller")
 	void RequestUnPause();
 	void ToggleRequestPause(const EPauseReason Reason);
-
-	/**
-	 * @brief Queues a notification for this player.
-	 * @param InParams 
-	 */
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic)
-	void QueueNotification(const FNotificationParams& InParams);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void SetGameInput();
@@ -94,11 +90,8 @@ protected:
 	TObjectPtr<ULimenMouseSensitivityComponent> MouseInputSensitivityComponent;
 
 	TWeakObjectPtr<ALimenBaseHUD> LimenBaseHUD;
-
-	virtual void SetPawn(APawn* InPawn) override;
-	virtual void ClientSetHUD_Implementation(TSubclassOf<AHUD> NewHUDClass) override;
-	virtual void OnRep_PlayerState() override;
-	virtual void SetViewTargetWithBlend(AActor* NewViewTarget, float BlendTime = 0, EViewTargetBlendFunction BlendFunc = VTBlend_Linear, float BlendExp = 0, bool bLockOutgoing = false) override;
+	
+	virtual void BeginPlay() override;
 
 	virtual void BindPawnDelegates(APawn* NewPawn);
 	virtual void UnbindPawnDelegates(APawn* InPawn);
