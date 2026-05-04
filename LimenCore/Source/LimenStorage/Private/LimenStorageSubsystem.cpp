@@ -154,6 +154,11 @@ void ULimenStorageSubsystem::AddItem(ULimenStorageItem* NewItem)
 	StorageItems.Push(TStrongObjectPtr(NewItem));
 }
 
+void ULimenStorageSubsystem::RemoveItem(ULimenStorageItem* NewItem)
+{
+	StorageItems.Remove(TStrongObjectPtr(NewItem));
+}
+
 ULimenStorageSaveData* ULimenStorageSubsystem::GetCurrentSaveData() const
 {
 	return CurrentSaveData.Get();

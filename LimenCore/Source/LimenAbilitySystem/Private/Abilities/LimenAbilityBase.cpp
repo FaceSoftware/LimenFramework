@@ -135,6 +135,11 @@ void ULimenAbilityBase::ForceDeactivateAbility()
 	bShouldForcefullyDeactivate = true;
 }
 
+bool ULimenAbilityBase::ShouldForcefullyDeactivate() const
+{
+	return bShouldForcefullyDeactivate;
+}
+
 void ULimenAbilityBase::Tick(float DeltaTime)
 {
 }

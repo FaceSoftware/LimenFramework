@@ -102,6 +102,7 @@ protected:
 	FString SaveDataName;
 	
 	void AddItem(ULimenStorageItem* NewItem);
+	void RemoveItem(ULimenStorageItem* NewItem);
 
 	ULimenStorageSaveData* GetCurrentSaveData() const;
 	ULimenStorageSaveData* GenerateNewSaveData();

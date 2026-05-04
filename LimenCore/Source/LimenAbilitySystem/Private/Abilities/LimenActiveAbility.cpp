@@ -14,12 +14,15 @@ ULimenActiveAbility::ULimenActiveAbility() : Super()
 	bIsActive = false;
 	AbilityActivationDelay = 0;
 	bIsOneShot = false;
+	bStartEnabled = true;
+	bIsEnabled = true;
 }
 
 void ULimenActiveAbility::Initialize(AActor* InOwner)
 {
 	Super::Initialize(InOwner);
-
+	
+	bStartEnabled ? Enable() : Disable();
 	bIsCooldownOver = true;
 }
 
@@ -27,9 +30,18 @@ void ULimenActiveAbility::ForceDeactivateAbility()
 {
 	Super::ForceDeactivateAbility();
 
-	bIsActive = false;
-	GetWorld()->GetTimerManager().ClearTimer(AbilityTimerHandle);
-	GetWorld()->GetTimerManager().ClearTimer(AbilityCooldownTimer);
+	DeactivateAbility(nullptr, nullptr);
+}
+
+void ULimenActiveAbility::Enable()
+{
+	bIsEnabled = true;
+}
+
+void ULimenActiveAbility::Disable()
+{
+	bIsEnabled = false;
+	ForceDeactivateAbility();
 }
 
 void ULimenActiveAbility::ActivateAbility(AController* Controller, APawn* Pawn)
@@ -67,12 +79,14 @@ void ULimenActiveAbility::DeactivateAbility(AController* Controller, APawn* Pawn
 
 bool ULimenActiveAbility::CanActivateAbility() const
 {
-	return bIsCooldownOver && !bIsActive && IsInitialized();
+	return IsInitialized() && IsEnabled() && !IsOnCooldown() && !IsActive();
 }
 
 bool ULimenActiveAbility::CanDeactivateAbility() const
 {
-	return bIsActive && IsInitialized();
+	if (ShouldForcefullyDeactivate()) { return true; }
+	
+	return IsActive() && IsInitialized();
 }
 
 float ULimenActiveAbility::GetFullCooldownTime() const
@@ -91,6 +105,16 @@ float ULimenActiveAbility::GetRemainingCooldownTime() const
 bool ULimenActiveAbility::IsActive() const
 {
 	return bIsActive;
+}
+
+bool ULimenActiveAbility::IsEnabled() const
+{
+	return bIsEnabled;
+}
+
+bool ULimenActiveAbility::IsOnCooldown() const
+{
+	return !bIsCooldownOver;
 }
 
 void ULimenActiveAbility::SetCooldownOver()

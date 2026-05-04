@@ -138,7 +138,7 @@ TSharedRef<SWidget> ULimenTextLabel::RebuildWidget()
 		+SHorizontalBox::Slot()
 		.Padding(LabelTitlePadding)
 		.VAlign(LabelTitleVerticalAlignment)
-		.HAlign(LabelValueHorizontalAlignment)
+		.HAlign(LabelTitleHorizontalAlignment)
 		[
 			TitleTextBlock.ToSharedRef()
 		]

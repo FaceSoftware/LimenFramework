@@ -30,6 +30,8 @@ public:
 
 	virtual void Initialize(AActor* InOwner) override;
 	virtual void ForceDeactivateAbility() override;
+	virtual void Enable();
+	virtual void Disable();
 	
 	/**
 	 * @brief Called to activate an ability (e.g. jumping).
@@ -66,6 +68,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
 	bool IsActive() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
+	bool IsEnabled() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Abilities")
+	bool IsOnCooldown() const;
 	
 protected:
 	/**
@@ -81,6 +87,8 @@ protected:
 	 */
 	UPROPERTY(EditDefaultsOnly, Category="Ability Parameters")
 	bool bIsOneShot;
+	UPROPERTY(EditDefaultsOnly, Category="Ability Parameters")
+	bool bStartEnabled;
 
 	void SetCooldownOver();
 
@@ -92,6 +100,7 @@ private:
 	FTimerHandle AbilityTimerHandle;
 	bool bIsCooldownOver;
 	bool bIsActive;
+	bool bIsEnabled;
 
 	void AbilityActivated_Wrapper(AController* Controller, APawn* Pawn);
 	void StartCooldownTimer();

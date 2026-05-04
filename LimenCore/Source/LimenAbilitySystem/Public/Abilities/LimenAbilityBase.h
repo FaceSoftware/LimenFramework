@@ -37,6 +37,8 @@ public:
 	 * Should be overriden. Default implementation disables the Tick() function.
 	 */
 	virtual void ForceDeactivateAbility();
+	
+	bool ShouldForcefullyDeactivate() const;
 
 #pragma region FTickableGameObject Interface Start
 
