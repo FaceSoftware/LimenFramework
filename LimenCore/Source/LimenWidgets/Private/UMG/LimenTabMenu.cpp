@@ -9,7 +9,37 @@
 #include "Widgets/Layout/SWidgetSwitcher.h"
 
 
-void ULimenTabMenu::AddTab(const FTabData& TabData, const int32 Index)
+
+
+void ULimenTabMenu::ReleaseSlateResources(const bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+	
+	TabSwitcher.Reset();
+	ButtonsContainer.Reset();
+
+	for (auto& InstanceData : TabInstanceData)
+	{
+		if (InstanceData.TabButtonInstance.IsValid())
+		{
+			InstanceData.TabButtonInstance->ReleaseSlateResources(bReleaseChildren);
+			InstanceData.TabButtonInstance.Reset();
+		}
+		if (InstanceData.TabInstance.IsValid())
+		{
+			InstanceData.TabInstance->ReleaseSlateResources(bReleaseChildren);
+			InstanceData.TabInstance.Reset();
+		}
+	}
+}
+
+void ULimenTabMenu::BeginDestroy()
+{
+	TabInstanceData.Empty();
+	Super::BeginDestroy();
+}
+
+UWidget* ULimenTabMenu::AddTab(const FTabData& TabData, const int32 Index)
 {
 	if (!Tabs.IsValidIndex(Index))
 	{
@@ -20,7 +50,7 @@ void ULimenTabMenu::AddTab(const FTabData& TabData, const int32 Index)
 		Tabs.Insert(TabData, Index);
 	}
 
-	AddTab_Internal(TabData);
+	return AddTab_Internal(TabData);
 }
 
 UWidget* ULimenTabMenu::GetTabWidget(const FName TabId) const
@@ -29,6 +59,17 @@ UWidget* ULimenTabMenu::GetTabWidget(const FName TabId) const
 	if (!Data) return nullptr;
 
 	return Data->TabInstance.Get();
+}
+
+void ULimenTabMenu::ClearTabs()
+{
+	ButtonsContainer->ClearChildren();
+	for (auto& Data : TabInstanceData)
+	{
+		TabSwitcher->RemoveSlot(Data.TabInstance->TakeWidget());
+	}
+	TabInstanceData.Empty();
+	ActiveTabWidget.Reset();
 }
 
 TSharedRef<SWidget> ULimenTabMenu::RebuildWidget()
@@ -64,34 +105,6 @@ TSharedRef<SWidget> ULimenTabMenu::RebuildWidget()
 	return Root;
 }
 
-void ULimenTabMenu::ReleaseSlateResources(const bool bReleaseChildren)
-{
-	Super::ReleaseSlateResources(bReleaseChildren);
-	
-	TabSwitcher.Reset();
-	ButtonsContainer.Reset();
-
-	for (auto& InstanceData : TabInstanceData)
-	{
-		if (InstanceData.TabButtonInstance.IsValid())
-		{
-			InstanceData.TabButtonInstance->ReleaseSlateResources(bReleaseChildren);
-			InstanceData.TabButtonInstance.Reset();
-		}
-		if (InstanceData.TabInstance.IsValid())
-		{
-			InstanceData.TabInstance->ReleaseSlateResources(bReleaseChildren);
-			InstanceData.TabInstance.Reset();
-		}
-	}
-}
-
-void ULimenTabMenu::BeginDestroy()
-{
-	TabInstanceData.Empty();
-	Super::BeginDestroy();
-}
-
 void ULimenTabMenu::ButtonClicked(ULimenStandardButton* Button)
 {
 	const int32 Index = TabInstanceData.IndexOfByKey(Button);
@@ -115,9 +128,9 @@ void ULimenTabMenu::ButtonUnselected(ULimenSelectableMenuButton* Button)
 	OnButtonUnselected.Broadcast(Button);
 }
 
-void ULimenTabMenu::AddTab_Internal(const FTabData& TabData)
+UWidget* ULimenTabMenu::AddTab_Internal(const FTabData& TabData)
 {
-	if (!TabData.TabButtonClass) { return; }
+	if (!TabData.TabButtonClass) { return nullptr; }
 
 	auto* TempButton = NewObject<ULimenSelectableMenuButton>(this, TabData.TabButtonClass.Get());
 	TempButton->SetClipping(EWidgetClipping::ClipToBounds);
@@ -149,6 +162,8 @@ void ULimenTabMenu::AddTab_Internal(const FTabData& TabData)
 	TabInstanceData.Push(FTabInstanceData(TempButton, TempMenu, TabData.Id));
 
 	if (!ActiveTabWidget.IsValid()) { SetActiveTab_Internal(0); }
+	
+	return TempMenu;
 }
 
 bool ULimenTabMenu::SetActiveTab_Internal(const int32 Index)

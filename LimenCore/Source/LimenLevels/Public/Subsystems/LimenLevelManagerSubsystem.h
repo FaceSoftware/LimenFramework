@@ -45,6 +45,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void OpenGameLevel(ELevelOpenContext Context = ELevelOpenContext::Local, const int32 Index = 0, FString Options = TEXT(""));
 	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
+	void OpenLevel(const TSoftObjectPtr<UWorld>& Level, ELevelOpenContext Context = ELevelOpenContext::Local, FString Options = TEXT(""));
+	UFUNCTION(BlueprintCallable, Category="Limen|Levels")
 	void ResetCurrentLevel(ELevelOpenContext Context = ELevelOpenContext::Local);
 
 	bool IsGameLevelIndexValid(const int32 Index) const;

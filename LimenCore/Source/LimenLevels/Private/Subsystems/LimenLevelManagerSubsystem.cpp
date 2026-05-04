@@ -77,8 +77,11 @@ void ULimenLevelManagerSubsystem::OpenGameLevel(const ELevelOpenContext Context,
 	if (!IsGameLevelIndexValid(Index)) return;
 
 	const TSoftObjectPtr<UWorld> Level = ULimenLevelsDeveloperSettings::GetGameLevel(Index);
-	if (Level.IsNull()) return;
+	OpenLevel(Level, Context, Options);
+}
 
+void ULimenLevelManagerSubsystem::OpenLevel(const TSoftObjectPtr<UWorld>& Level, const ELevelOpenContext Context, FString Options)
+{
 	const FString LevelPath = Level.ToSoftObjectPath().GetLongPackageName();
 	switch (Context)
 	{

@@ -42,9 +42,18 @@ public:
 	FButtonSelectedDelegate OnButtonSelected;
 	UPROPERTY(BlueprintAssignable)
 	FButtonSelectedDelegate OnButtonUnselected;
+	
+	virtual void ReleaseSlateResources(const bool bReleaseChildren) override;
+	virtual void BeginDestroy() override;
 
 	UFUNCTION(BlueprintCallable)
-	void AddTab(const FTabData& TabData, int32 Index = -1);
+	UWidget* AddTab(const FTabData& TabData, int32 Index = -1);
+	template<typename T>
+	T* AddTab(const FTabData& TabData, const int32 Index = -1)
+	{
+		static_assert(TIsDerivedFrom<T, UWidget>::IsDerived);
+		return Cast<T>(AddTab(TabData, Index));
+	}
 	UFUNCTION(BlueprintCallable)
 	UWidget* GetTabWidget(const FName TabId) const;
 	template<typename T>
@@ -53,14 +62,14 @@ public:
 		static_assert(TIsDerivedFrom<T, UWidget>::IsDerived);
 		return Cast<T>(GetTabWidget(TabId));
 	}
+	
+	void ClearTabs();
 
 protected:
 	UPROPERTY(EditAnywhere)
 	TArray<FTabData> Tabs;
 
 	virtual TSharedRef<SWidget> RebuildWidget() override;
-	virtual void ReleaseSlateResources(const bool bReleaseChildren) override;
-	virtual void BeginDestroy() override;
 
 	UFUNCTION()
 	virtual void ButtonClicked(ULimenStandardButton* Button);
@@ -94,16 +103,18 @@ private:
 	};
 
 	TArray<FTabInstanceData> TabInstanceData;
+	
 	TSharedPtr<SWidgetSwitcher> TabSwitcher;
-	TWeakPtr<SWidget> ActiveTabWidget;
 	TSharedPtr<SHorizontalBox> ButtonsContainer;
+	
+	TWeakPtr<SWidget> ActiveTabWidget;
 
 	UFUNCTION()
 	void ButtonSelected(ULimenSelectableMenuButton* Button);
 	UFUNCTION()
 	void ButtonUnselected(ULimenSelectableMenuButton* Button);
 
-	void AddTab_Internal(const FTabData& TabData);
+	UWidget* AddTab_Internal(const FTabData& TabData);
 	bool SetActiveTab_Internal(const int32 Index);
 	void SetFirstActiveTab_Internal();
 };
