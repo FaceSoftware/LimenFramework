@@ -22,11 +22,8 @@ public:
 	ULimenGlobalIlluminationSetting();
 	
 protected:
-	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 	virtual void SetDefaults() override;
 	
-private:
-	TConsoleSetting<int32> LumenSetting;
-	TConsoleSetting<int32> ScreenSpaceSetting;
-	TConsoleSetting<int32> NoneSetting;
+private:	
+	void PostProcessSettingEvaluate(FPostProcessSettings& Settings);
 };

@@ -3,6 +3,8 @@
 
 #include "Settings/LimenGlobalIlluminationSetting.h"
 
+#include "Subsystems/LimenGraphicalSettingsSubsystem.h"
+
 
 ULimenGlobalIlluminationSetting::ULimenGlobalIlluminationSetting()
 {
@@ -12,39 +14,39 @@ ULimenGlobalIlluminationSetting::ULimenGlobalIlluminationSetting()
 	Description = FText::FromString(TEXT(""));
 }
 
-void ULimenGlobalIlluminationSetting::ApplyCurrentSetting(bool bUserRequest)
-{
-	Super::ApplyCurrentSetting(bUserRequest);
-
-	if (const FString CurrentSetting = GetCurrentValue(); CurrentSetting == None)
-	{
-		NoneSetting.ApplyCVars();
-	}
-	else if (CurrentSetting == Lumen)
-	{
-		LumenSetting.ApplyCVars();
-	}
-	else if (CurrentSetting == ScreenSpace)
-	{
-		ScreenSpaceSetting.ApplyCVars();
-	}
-}
-
 void ULimenGlobalIlluminationSetting::SetDefaults()
 {
 	Super::SetDefaults();
 
-	NoneSetting.AddCVar(TEXT("r.DynamicGlobalIlluminationMethod"), 0);
-	NoneSetting.AddCVar(TEXT("r.ReflectionMethod"), 0);
-
-	LumenSetting.AddCVar(TEXT("r.DynamicGlobalIlluminationMethod"), 1);
-	LumenSetting.AddCVar(TEXT("r.ReflectionMethod"), 1);
-
-	ScreenSpaceSetting.AddCVar(TEXT("r.DynamicGlobalIlluminationMethod"), 2);
-	ScreenSpaceSetting.AddCVar(TEXT("r.ReflectionMethod"), 2);
-
-	PossibleSelections.Push(ScreenSpace);
 	PossibleSelections.Push(Lumen);
+	PossibleSelections.Push(ScreenSpace);
+	PossibleSelections.Push(None);
 
 	DefaultSelection = Lumen;
+	
+	if (auto* Subsystem = GetOwnerSubsystem<ULimenGraphicalSettingsSubsystem>())
+	{
+		Subsystem->OnPostProcessSettingEvaluate.AddUObject(this, &ThisClass::PostProcessSettingEvaluate);
+	}
+}
+
+void ULimenGlobalIlluminationSetting::PostProcessSettingEvaluate(FPostProcessSettings& Settings)
+{
+	const FString AppliedValue = GetAppliedValue();
+	check(PossibleSelections.Contains(AppliedValue))
+
+	Settings.bOverride_DynamicGlobalIlluminationMethod = true;
+	
+	EDynamicGlobalIlluminationMethod::Type Method = EDynamicGlobalIlluminationMethod::None;
+	
+	if (AppliedValue == Lumen)
+	{
+		Method = EDynamicGlobalIlluminationMethod::Lumen;
+	}
+	else if (AppliedValue == ScreenSpace)
+	{
+		Method = EDynamicGlobalIlluminationMethod::ScreenSpace;
+	}
+	
+	Settings.DynamicGlobalIlluminationMethod = Method;
 }

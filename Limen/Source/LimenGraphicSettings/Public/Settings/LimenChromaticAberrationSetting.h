@@ -23,6 +23,6 @@ public:
 protected:
 	virtual void SetDefaults() override;
 
-private:	
+private:
 	void PostProcessSettingEvaluate(FPostProcessSettings& Settings);
 };
