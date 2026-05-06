@@ -16,9 +16,7 @@ class LIMENGRAPHICSETTINGS_API ULimenGraphicalSettingsDeveloperSettings : public
 {
 	GENERATED_BODY()
 
-public:	
-	UPROPERTY(EditAnywhere, Config, Category="Graphical Settings")
-	FName GlobalPostProcessTag;
+public:
 	UPROPERTY(EditAnywhere, Config, Category="Graphical Settings")
 	TSoftClassPtr<ULimenGraphicalSettingsCameraModifier> CameraModifierClass;
 	
@@ -26,7 +24,6 @@ public:
 	ULimenGraphicalSettingsDeveloperSettings()
 	{
 		SectionName = TEXT("Limen - Graphic Settings");
-		GlobalPostProcessTag = TEXT("GlobalPostProcess");
 		CameraModifierClass = ULimenGraphicalSettingsCameraModifier::StaticClass();
 	}
 };

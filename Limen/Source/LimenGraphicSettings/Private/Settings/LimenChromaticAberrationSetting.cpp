@@ -17,21 +17,6 @@ ULimenChromaticAberrationSetting::ULimenChromaticAberrationSetting()
 	DecimalsDisplayed = 2;
 }
 
-void ULimenChromaticAberrationSetting::ApplyCurrentSetting(bool bUserRequest)
-{
-	Super::ApplyCurrentSetting(bUserRequest);
-
-	ULimenGraphicalSettingsSubsystem* GraphicalSettings = GetWorld()->GetGameInstance()->GetSubsystem<ULimenGraphicalSettingsSubsystem>();
-	if (APostProcessVolume* GlobalPostProcess = GraphicalSettings->GetGlobalPostProcess(); GlobalPostProcess != nullptr)
-	{
-		GlobalPostProcessFound(GlobalPostProcess);
-	}
-	else
-	{
-		GraphicalSettings->OnGlobalPostProcessFound.AddUObject(this, &ThisClass::GlobalPostProcessFound);
-	}
-}
-
 void ULimenChromaticAberrationSetting::SetDefaults()
 {
 	Super::SetDefaults();
@@ -40,13 +25,18 @@ void ULimenChromaticAberrationSetting::SetDefaults()
 	ValueRange.Push(0.f);
 	ValueRange.Push(1.f);
 
-	DefaultSettingValue = 0.5f;
+	DefaultSettingValue = 0.5f;	
+	
+	if (auto* Subsystem = GetOwnerSubsystem<ULimenGraphicalSettingsSubsystem>())
+	{
+		Subsystem->OnPostProcessSettingEvaluate.AddUObject(this, &ThisClass::PostProcessSettingEvaluate);
+	}
 }
 
-void ULimenChromaticAberrationSetting::GlobalPostProcessFound(APostProcessVolume* GlobalPostProcess)
+void ULimenChromaticAberrationSetting::PostProcessSettingEvaluate(FPostProcessSettings& Settings)
 {
-	check(GlobalPostProcess->Settings.bOverride_SceneFringeIntensity)
 	check(GetCurrentValue() >= ValueRange[0] && GetCurrentValue() <= ValueRange[1]);
 
-	GlobalPostProcess->Settings.SceneFringeIntensity = GetCurrentValue();
+	Settings.bOverride_SceneFringeIntensity = true;
+	Settings.SceneFringeIntensity = GetAppliedValue();
 }

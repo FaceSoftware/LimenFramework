@@ -129,6 +129,7 @@ void ULimenKeyBind::ApplyCurrentSetting(bool bUserRequest)
 	Super::ApplyCurrentSetting(bUserRequest);
 	
 	*ActionKeyMappingPtr = CurrentKeyMapping;
+	AppliedKeyMapping = FSaveableEnhancedActionKeyMapping(CurrentKeyMapping);
 	OnSettingApplied.Broadcast(this);
 }
 

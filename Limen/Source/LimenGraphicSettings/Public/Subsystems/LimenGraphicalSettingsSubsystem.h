@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Camera/CameraModifier.h"
 #include "Engine/PostProcessVolume.h"
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 #include "LimenGraphicalSettingsSubsystem.generated.h"
@@ -31,18 +30,12 @@ public:
 	ULimenGraphicalSettingsSubsystem();
 	
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
-	
-	APostProcessVolume* GetGlobalPostProcess() const;
 
 protected:
-	virtual void WorldInitializedActors(const FActorsInitializedParams& InitParams) override;
+	virtual void GameModePostLogin(APlayerController* PlayerController) override;
 	virtual void LoadDefaultSettingsList() override;
 
 private:
 	TWeakObjectPtr<const ULimenGraphicalSettingsDeveloperSettings> SubsystemSettings;
-	TWeakObjectPtr<APostProcessVolume> GlobalPostProcess;
-	FTimerHandle FindPostProcessHandle;
 	TWeakObjectPtr<ULimenGraphicalSettingsCameraModifier> CameraModifier;
-
-	void FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag);
 };

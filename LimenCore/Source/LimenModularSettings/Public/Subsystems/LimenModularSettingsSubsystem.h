@@ -83,8 +83,10 @@ protected:
 	virtual void SettingUpdated(const ULimenSetting* UpdatedSetting);
 	
 	virtual void WorldInitializedActors(const FActorsInitializedParams& InitParams);
+	virtual void GameModePostLogin(APlayerController* PlayerController);
 	
 private:
+	void GameModePostLogin(AGameModeBase* GameMode, APlayerController* NewPlayer);
 
 };
 

@@ -66,16 +66,6 @@ bool ULimenBrightnessSetting::SetNewValue(const FBrightnessSettingValues& NewSel
 void ULimenBrightnessSetting::ApplyCurrentSetting(bool bUserRequest)
 {
 	Super::ApplyCurrentSetting(bUserRequest);
-
-	auto* GraphicsSubsystem = GetOwnerSubsystem<ULimenGraphicalSettingsSubsystem>();
-	if (APostProcessVolume* GlobalPostProcess = GraphicsSubsystem->GetGlobalPostProcess(); GlobalPostProcess == nullptr)
-	{
-		GraphicsSubsystem->OnGlobalPostProcessFound.AddUObject(this, &ThisClass::GlobalPostProcessFound);
-	}
-	else
-	{
-		GlobalPostProcessFound(GlobalPostProcess);
-	}
 }
 
 void ULimenBrightnessSetting::SetDefaults()
@@ -83,6 +73,11 @@ void ULimenBrightnessSetting::SetDefaults()
 	Super::SetDefaults();
 
 	DefaultSelection = FBrightnessSettingValues();
+	
+	if (auto* Subsystem = GetOwnerSubsystem<ULimenGraphicalSettingsSubsystem>())
+	{
+		Subsystem->OnPostProcessSettingEvaluate.AddUObject(this, &ThisClass::PostProcessSettingEvaluate);
+	}
 }
 
 void ULimenBrightnessSetting::SetDefaultValue()
@@ -98,13 +93,12 @@ void ULimenBrightnessSetting::PostDataLoaded()
 	Super::PostDataLoaded();
 }
 
-void ULimenBrightnessSetting::GlobalPostProcessFound(APostProcessVolume* InGlobalPostProcess) const
+void ULimenBrightnessSetting::PostProcessSettingEvaluate(FPostProcessSettings& Settings) const
 {
-	InGlobalPostProcess->Settings.bOverride_ColorGainHighlights = true;
-	InGlobalPostProcess->Settings.ColorGainHighlights.W = CurrentSelection.HighToneValue;
-
-	InGlobalPostProcess->Settings.bOverride_ColorGainShadows = true;
-	InGlobalPostProcess->Settings.ColorGainShadows.W = CurrentSelection.LowToneValue;
+	Settings.bOverride_ColorGainHighlights = true;
+	Settings.ColorGainHighlights.W = AppliedSelection.HighToneValue;
+	Settings.bOverride_ColorGainShadows = true;
+	Settings.ColorGainShadows.W = AppliedSelection.LowToneValue;
 
 	OnSettingApplied.Broadcast(this);
 }

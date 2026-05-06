@@ -105,7 +105,14 @@ protected:
 		return nullptr;
 	}
 	template<typename T>
-	TStrongObjectPtr<T> CreateHudWidget(const TSoftClassPtr<T>& InWidgetClass)
+	TStrongObjectPtr<T> CreateHudWidgetStrongPtr(UClass* InWidgetClass)
+	{
+		static_assert(TIsDerivedFrom<T, ULimenBaseHudWidget>::IsDerived);
+		T* Widget = CreateHudWidget<T>(InWidgetClass);
+		return TStrongObjectPtr<T>(Widget);
+	}
+	template<typename T>
+	TStrongObjectPtr<T> CreateHudWidgetStrongPtr(const TSoftClassPtr<T>& InWidgetClass)
 	{
 		static_assert(TIsDerivedFrom<T, ULimenBaseHudWidget>::IsDerived);
 		return TStrongObjectPtr(CreateHudWidget<T>(InWidgetClass.LoadSynchronous()));
@@ -124,7 +131,13 @@ protected:
 		return nullptr;
 	}
 	template<typename T>
-	TStrongObjectPtr<T> CreateMenuWidget(const TSoftClassPtr<T>& InWidgetClass)
+	TStrongObjectPtr<T> CreateMenuWidgetStrongPtr(UClass* InWidgetClass)
+	{
+		static_assert(TIsDerivedFrom<T, ULimenMenuWidget>::IsDerived);
+		return TStrongObjectPtr(CreateMenuWidget<T>(InWidgetClass));
+	}
+	template<typename T>
+	TStrongObjectPtr<T> CreateMenuWidgetStrongPtr(const TSoftClassPtr<T>& InWidgetClass)
 	{
 		static_assert(TIsDerivedFrom<T, ULimenMenuWidget>::IsDerived);
 		return TStrongObjectPtr(CreateMenuWidget<T>(InWidgetClass.LoadSynchronous()));

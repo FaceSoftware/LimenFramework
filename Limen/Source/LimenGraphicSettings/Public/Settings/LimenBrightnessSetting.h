@@ -70,5 +70,5 @@ private:
 	FBrightnessSettingValues DefaultSelection;
 	TArray<FBrightnessSettingValues> DummyData;
 
-	void GlobalPostProcessFound(APostProcessVolume* InGlobalPostProcess) const;
+	void PostProcessSettingEvaluate(FPostProcessSettings& Settings) const;
 };

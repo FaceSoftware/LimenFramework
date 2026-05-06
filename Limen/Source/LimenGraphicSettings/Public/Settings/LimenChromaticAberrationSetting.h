@@ -21,9 +21,8 @@ public:
 	ULimenChromaticAberrationSetting();
 
 protected:
-	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 	virtual void SetDefaults() override;
 
 private:	
-	void GlobalPostProcessFound(APostProcessVolume* GlobalPostProcess);
+	void PostProcessSettingEvaluate(FPostProcessSettings& Settings);
 };

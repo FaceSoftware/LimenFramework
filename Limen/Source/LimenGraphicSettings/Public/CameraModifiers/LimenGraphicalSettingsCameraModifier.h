@@ -21,6 +21,9 @@ public:
 	void BindSubsystem(ULimenGraphicalSettingsSubsystem* GraphicalSettingsSubsystem);
 	
 protected:
+	UPROPERTY(EditAnywhere, Category = "Graphical Settings Camera Modifier")
+	FPostProcessSettings BasePostProcessSettings;
+	
 	virtual void ModifyPostProcess(float DeltaTime, float& PostProcessBlendWeight, FPostProcessSettings& PostProcessSettings) override;
 	
 private:

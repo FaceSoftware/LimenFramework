@@ -16,6 +16,7 @@ void ULimenGraphicalSettingsCameraModifier::ModifyPostProcess(const float DeltaT
 {
 	Super::ModifyPostProcess(DeltaTime, PostProcessBlendWeight, PostProcessSettings);
 	
+	PostProcessSettings = BasePostProcessSettings;
 	PostProcessBlendWeight = 1.f;
 	
 	if (const auto* SubsystemPtr = Subsystem.Get())
