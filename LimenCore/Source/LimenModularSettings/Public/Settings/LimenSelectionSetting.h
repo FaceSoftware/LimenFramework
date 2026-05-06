@@ -28,18 +28,24 @@ public:
 	virtual FString GetCurrentValue() const override final;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	virtual FString GetPreviousValue() const override final;
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	virtual FString GetAppliedValue() const override final;
 
 	/// Editable Interface
+protected:
 	virtual bool IsValueValid(const FString& Test) override;
+public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")	
 	virtual bool CanEdit() const override;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")	
 	virtual bool SetNewValue(const FString& NewSelection) override;
 	
 	/// LimenSetting
+protected:
 	virtual void SetDefaults() override;
-	virtual void SetDefaultValue() override final;
 	virtual void PostDataLoaded() override final;
+public:
+	virtual void SetDefaultValue() override final;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	bool IsEnabled() const;
@@ -50,9 +56,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 	FString DefaultSelection;
 
-
+	virtual void ApplyCurrentSetting(bool bUserRequest = false) override;
+	
 private:
-	UPROPERTY(SaveGame)
 	FString CurrentSelection;
 	FString PreviousSelection;
+	
+	UPROPERTY(SaveGame)
+	FString AppliedSelection;
 };

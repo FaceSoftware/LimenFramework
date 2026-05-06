@@ -6,7 +6,7 @@
 #include "Components/VerticalBox.h"
 #include "Engine/GameInstance.h"
 #include "Settings/LimenSelectionSetting.h"
-#include "Settings/LimenToggleSetting.h"
+#include "Settings/DEPRECATED_LimenToggleSetting.h"
 #include "Settings/LimenValueSetting.h"
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 #include "Widgets/DeclarativeSyntaxSupport.h"
@@ -49,9 +49,9 @@ void ULimenSelectionSettingWidget::BindSetting(ULimenSetting* InSetting)
 	Super::BindSetting(InSetting);
 }
 
-void ULimenToggleSettingWidget::BindSetting(ULimenSetting* InSetting)
+void UDEPRECATED_LimenToggleSettingWidget::BindSetting(ULimenSetting* InSetting)
 {
-	BoundSetting = CastChecked<ULimenToggleSetting>(InSetting, ECastCheckedType::NullAllowed);
+	BoundSetting = CastChecked<UDEPRECATED_LimenToggleSetting>(InSetting, ECastCheckedType::NullAllowed);
 	Super::BindSetting(InSetting);
 }
 

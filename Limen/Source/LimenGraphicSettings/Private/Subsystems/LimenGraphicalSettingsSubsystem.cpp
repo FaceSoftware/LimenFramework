@@ -3,17 +3,13 @@
 
 #include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 
-#include "EngineUtils.h"
-#include "TimerManager.h"
 #include "Developer/LimenGraphicalSettingsDeveloperSettings.h"
-#include "Engine/PostProcessVolume.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Settings/LimenSetting.h"
 
 
 ULimenGraphicalSettingsSubsystem::ULimenGraphicalSettingsSubsystem()
 {
-	GlobalPostProcess = nullptr;
 	SaveDataName = TEXT("GraphicSettings");
 }
 
@@ -26,6 +22,22 @@ bool ULimenGraphicalSettingsSubsystem::ShouldCreateSubsystem(UObject* Outer) con
 
 	const auto* DeveloperSettings = GetDefault<ULimenGraphicalSettingsDeveloperSettings>();
 	return DeveloperSettings->bUseSubsystem;
+}
+
+void ULimenGraphicalSettingsSubsystem::GameModePostLogin(APlayerController* PlayerController)
+{
+	Super::GameModePostLogin(PlayerController);
+
+	if (APlayerCameraManager* CameraManager = PlayerController->PlayerCameraManager.Get();
+		ensureAlways(CameraManager != nullptr))
+	{
+		if (SubsystemSettings.IsValid() && ensureAlways(!SubsystemSettings->CameraModifierClass.IsNull()))
+		{
+			auto* Modifier = CameraManager->AddNewCameraModifier(SubsystemSettings->CameraModifierClass.LoadSynchronous());
+			CameraModifier = CastChecked<ULimenGraphicalSettingsCameraModifier>(Modifier);
+			CameraModifier->BindSubsystem(this);
+		}
+	}
 }
 
 void ULimenGraphicalSettingsSubsystem::LoadDefaultSettingsList()
@@ -52,35 +64,4 @@ void ULimenGraphicalSettingsSubsystem::LoadDefaultSettingsList()
 	{
 		Setting->InitializeSetting(this);
 	}
-}
-
-APostProcessVolume* ULimenGraphicalSettingsSubsystem::GetGlobalPostProcess() const
-{
-	return GlobalPostProcess.Get();
-}
-
-void ULimenGraphicalSettingsSubsystem::WorldInitializedActors(const FActorsInitializedParams& InitParams)
-{
-	Super::WorldInitializedActors(InitParams);
-	
-	GetWorld()->GetTimerManager().ClearTimer(FindPostProcessHandle);
-	FindGlobalPostProcessVolume(InitParams.World, SubsystemSettings->GlobalPostProcessTag);
-}
-
-void ULimenGraphicalSettingsSubsystem::FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag)
-{
-	for (APostProcessVolume* PostProcess : TActorRange<APostProcessVolume>(World))
-	{
-		if (PostProcess->ActorHasTag(Tag))
-		{
-			GlobalPostProcess = PostProcess;
-			OnGlobalPostProcessFound.Broadcast(GlobalPostProcess.Get());
-			return;
-		}
-	}
-
-	FindPostProcessHandle = GetWorld()->GetTimerManager().SetTimerForNextTick([this, World, Tag]
-	{
-		FindGlobalPostProcessVolume(World, Tag);
-	});
 }

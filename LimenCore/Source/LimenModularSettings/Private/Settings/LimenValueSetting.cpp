@@ -39,6 +39,11 @@ float ULimenValueSetting::GetPreviousValue() const
 	return PreviousSettingValue;
 }
 
+float ULimenValueSetting::GetAppliedValue() const
+{
+	return AppliedSettingValue;
+}
+
 bool ULimenValueSetting::IsValueValid(const float& Test)
 {
 	// Parent is pure virtual, do NOT call it!
@@ -58,19 +63,11 @@ bool ULimenValueSetting::SetNewValue(const float& NewSelection)
 		return false;
 	}
  	
+	SetIsApplied(false);
 	PreviousSettingValue = CurrentSettingValue;
 	CurrentSettingValue = NewSelection;
-	StringValue = FString::Printf(TEXT("%f"), CurrentSettingValue);
 	OnSettingUpdated.Broadcast(this);
 	return true;
-}
-
-void ULimenValueSetting::SetDefaults()
-{
-	Super::SetDefaults();
-	
-	PreviousSettingValue = CurrentSettingValue;
-	MinValuePerChange = FMath::Pow(10.f, -DecimalsDisplayed);
 }
 
 void ULimenValueSetting::SetDefaultValue()
@@ -82,11 +79,24 @@ void ULimenValueSetting::SetDefaultValue()
 	Super::SetDefaultValue();
 }
 
+void ULimenValueSetting::SetDefaults()
+{
+	Super::SetDefaults();
+	
+	PreviousSettingValue = CurrentSettingValue;
+	MinValuePerChange = FMath::Pow(10.f, -DecimalsDisplayed);
+}
+
 void ULimenValueSetting::PostDataLoaded()
 {
-	CurrentSettingValue = FCString::Atof(*StringValue);
-	PreviousSettingValue = CurrentSettingValue;
-
+	PreviousSettingValue = CurrentSettingValue = AppliedSettingValue = FCString::Atof(*StringValue);
 	Super::PostDataLoaded();
 }
 
+void ULimenValueSetting::ApplyCurrentSetting(bool bUserRequest)
+{
+	Super::ApplyCurrentSetting(bUserRequest);
+	
+	AppliedSettingValue = GetCurrentValue();
+	StringValue = FString::Printf(TEXT("%f"), AppliedSettingValue);
+}

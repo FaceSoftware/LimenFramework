@@ -48,7 +48,7 @@ void ULimenKeyBind::Serialize(FArchive& Ar)
 {
 	Super::Serialize(Ar);
 
-	CurrentKeyMapping.Serialize(Ar);
+	AppliedKeyMapping.Serialize(Ar);
 }
 
 void ULimenKeyBind::InitializeSetting(ULimenModularSettingsSubsystem* InOwnerSubsystem, FEnhancedActionKeyMapping* InActionKeyMapping)
@@ -89,6 +89,11 @@ FEnhancedActionKeyMapping ULimenKeyBind::GetPreviousValue() const
 	return PreviousKeyMapping;
 }
 
+FEnhancedActionKeyMapping ULimenKeyBind::GetAppliedValue() const
+{
+	return AppliedKeyMapping;
+}
+
 bool ULimenKeyBind::IsValueValid(const FEnhancedActionKeyMapping& Test)
 {
 	return Test.Key != EKeys::Invalid;
@@ -124,6 +129,7 @@ void ULimenKeyBind::ApplyCurrentSetting(bool bUserRequest)
 	Super::ApplyCurrentSetting(bUserRequest);
 	
 	*ActionKeyMappingPtr = CurrentKeyMapping;
+	AppliedKeyMapping = FSaveableEnhancedActionKeyMapping(CurrentKeyMapping);
 	OnSettingApplied.Broadcast(this);
 }
 
@@ -170,7 +176,7 @@ void ULimenKeyBind::SetDefaultValue()
 
 void ULimenKeyBind::PostDataLoaded()
 {
-	PreviousKeyMapping = CurrentKeyMapping;
+	PreviousKeyMapping = CurrentKeyMapping = AppliedKeyMapping;
 	
 	ULimenPlayerMappableKeySettings* Settings = CurrentKeyMapping.GetPlayerMappableKeySettings<ULimenPlayerMappableKeySettings>();
 	if (Settings != nullptr && Settings->bCanOverrideActionHandlingType)

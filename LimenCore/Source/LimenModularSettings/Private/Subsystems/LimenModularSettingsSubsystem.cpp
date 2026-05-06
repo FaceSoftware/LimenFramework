@@ -3,6 +3,8 @@
 
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 
+#include "GameFramework/GameModeBase.h"
+
 
 void ULimenModularSettingsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -15,7 +17,9 @@ void ULimenModularSettingsSubsystem::Initialize(FSubsystemCollectionBase& Collec
 		Setting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::SettingUpdated);
 		Setting->SubsystemInitialized(this);
 	}
+	
 	FWorldDelegates::OnWorldInitializedActors.AddUObject(this, &ThisClass::WorldInitializedActors);
+	FGameModeEvents::OnGameModePostLoginEvent().AddUObject(this, &ThisClass::GameModePostLogin);
 	
 	Super::Initialize(Collection);
 }
@@ -128,4 +132,19 @@ void ULimenModularSettingsSubsystem::WorldInitializedActors(const FActorsInitial
 	{
 		Setting->ApplySetting(false);
 	}
+}
+
+void ULimenModularSettingsSubsystem::GameModePostLogin(APlayerController* PlayerController)
+{
+	for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
+	{
+		Setting->ApplySetting(false);
+	}
+}
+
+void ULimenModularSettingsSubsystem::GameModePostLogin(AGameModeBase* GameMode, APlayerController* NewPlayer)
+{
+	if (GetWorld()->GetFirstPlayerController() != NewPlayer) { return; }
+	
+	GameModePostLogin(NewPlayer);
 }

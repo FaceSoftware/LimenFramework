@@ -3,7 +3,6 @@
 
 #include "Settings/LimenMotionBlurSetting.h"
 
-#include "EngineUtils.h"
 #include "Engine/GameInstance.h"
 #include "Subsystems/LimenGraphicalSettingsSubsystem.h"
 
@@ -17,21 +16,6 @@ ULimenMotionBlurSetting::ULimenMotionBlurSetting()
 	DecimalsDisplayed = 2;
 }
 
-void ULimenMotionBlurSetting::ApplyCurrentSetting(bool bUserRequest)
-{
-	Super::ApplyCurrentSetting(bUserRequest);
-
-	ULimenGraphicalSettingsSubsystem* GraphicalSettings = GetWorld()->GetGameInstance()->GetSubsystem<ULimenGraphicalSettingsSubsystem>();
-	if (APostProcessVolume* GlobalPostProcess = GraphicalSettings->GetGlobalPostProcess(); GlobalPostProcess != nullptr)
-	{
-		GlobalPostProcessFound(GlobalPostProcess);
-	}
-	else
-	{
-		GraphicalSettings->OnGlobalPostProcessFound.AddUObject(this, &ThisClass::GlobalPostProcessFound);
-	}
-}
-
 void ULimenMotionBlurSetting::SetDefaults()
 {
 	Super::SetDefaults();
@@ -41,12 +25,16 @@ void ULimenMotionBlurSetting::SetDefaults()
 	ValueRange.Push(1.f);
 
 	DefaultSettingValue = 0.5f;
+	
+	ULimenGraphicalSettingsSubsystem* GraphicalSettings = GetWorld()->GetGameInstance()->GetSubsystem<ULimenGraphicalSettingsSubsystem>();
+	GraphicalSettings->OnPostProcessSettingEvaluate.AddUObject(this, &ThisClass::PostProcessSettingsEvaluate);
 }
 
-void ULimenMotionBlurSetting::GlobalPostProcessFound(APostProcessVolume* GlobalPostProcess)
+void ULimenMotionBlurSetting::PostProcessSettingsEvaluate(FPostProcessSettings& Settings)
 {
-	check(GetCurrentValue() >= ValueRange[0] && GetCurrentValue() <= ValueRange[1]);
+	const float Value = GetAppliedValue();
+	check(Value >= ValueRange[0] && Value <= ValueRange[1]);
 
-	GlobalPostProcess->Settings.bOverride_MotionBlurAmount = true;
-	GlobalPostProcess->Settings.MotionBlurAmount = GetCurrentValue();
+	Settings.bOverride_MotionBlurAmount = true;
+	Settings.MotionBlurAmount = Value;
 }

@@ -206,7 +206,7 @@ bool ULimenKeyBindSubsystem::SetActionKeyMappingByAction(const UInputAction* Act
 
 void ULimenKeyBindSubsystem::SettingApplied(const ULimenSetting* Setting)
 {
-	const FEnhancedActionKeyMapping KeyMapping = CastChecked<ULimenKeyBind>(Setting)->GetCurrentValue();
+	const FEnhancedActionKeyMapping KeyMapping = CastChecked<ULimenKeyBind>(Setting)->GetAppliedValue();
 	check(KeyMapping.Action != nullptr);
 	OnKeyBindUpdate.Broadcast(KeyMapping);
 }

@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CameraModifiers/LimenGraphicalSettingsCameraModifier.h"
 #include "Developer/LimenModularSettingsSubsystemDeveloperSettings.h"
 #include "LimenGraphicalSettingsDeveloperSettings.generated.h"
 
-class ULimenSetting;
+
 /**
  * 
  */
@@ -15,12 +16,14 @@ class LIMENGRAPHICSETTINGS_API ULimenGraphicalSettingsDeveloperSettings : public
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	UPROPERTY(EditAnywhere, Config, Category="Graphical Settings")
-	FName GlobalPostProcessTag = TEXT("GlobalPostProcess");
-
+	TSoftClassPtr<ULimenGraphicalSettingsCameraModifier> CameraModifierClass;
+	
+	
 	ULimenGraphicalSettingsDeveloperSettings()
 	{
 		SectionName = TEXT("Limen - Graphic Settings");
+		CameraModifierClass = ULimenGraphicalSettingsCameraModifier::StaticClass();
 	}
 };

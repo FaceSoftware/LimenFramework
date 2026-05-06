@@ -29,18 +29,24 @@ public:
 	virtual float GetCurrentValue() const override final;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	virtual float GetPreviousValue() const override final;
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	virtual float GetAppliedValue() const override final;
 
 	/// Editable Interface
+protected:
 	virtual bool IsValueValid(const float& Test) override;
+public:
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")	
 	virtual bool CanEdit() const override;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")	
 	virtual bool SetNewValue(const float& NewSelection) override;
 	
 	/// LimenSetting
+protected:
 	virtual void SetDefaults() override;
-	virtual void SetDefaultValue() override final;
 	virtual void PostDataLoaded() override final;
+public:
+	virtual void SetDefaultValue() override final;
 
 protected:
 	/**
@@ -54,9 +60,12 @@ protected:
 	UPROPERTY(EditAnywhere, meta=(ClampMin="0"))
 	int32 DecimalsDisplayed;
 	
+	virtual void ApplyCurrentSetting(bool bUserRequest = false) override;
+	
 private:	
 	float CurrentSettingValue;
 	float PreviousSettingValue;
+	float AppliedSettingValue;
 
 	// For serialization.
 	// A float doesn't override its value after loading if it's 0, don't know why...

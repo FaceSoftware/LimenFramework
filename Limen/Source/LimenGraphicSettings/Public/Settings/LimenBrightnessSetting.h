@@ -45,6 +45,8 @@ public:
 	virtual FBrightnessSettingValues GetCurrentValue() const override final;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	virtual FBrightnessSettingValues GetPreviousValue() const override final;
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	virtual FBrightnessSettingValues GetAppliedValue() const override final;
 
 	/// Editable Interface
 	virtual bool IsValueValid(const FBrightnessSettingValues& Test) override;
@@ -60,12 +62,13 @@ public:
 	virtual void PostDataLoaded() override final;
 
 private:
-	UPROPERTY(SaveGame)
 	FBrightnessSettingValues CurrentSelection;
 	FBrightnessSettingValues PreviousSelection;
+	UPROPERTY(SaveGame)
+	FBrightnessSettingValues AppliedSelection;
 
 	FBrightnessSettingValues DefaultSelection;
 	TArray<FBrightnessSettingValues> DummyData;
 
-	void GlobalPostProcessFound(APostProcessVolume* InGlobalPostProcess) const;
+	void PostProcessSettingEvaluate(FPostProcessSettings& Settings) const;
 };

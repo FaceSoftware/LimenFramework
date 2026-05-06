@@ -21,9 +21,8 @@ public:
 	ULimenMotionBlurSetting();
 
 protected:
-	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 	virtual void SetDefaults() override;
 
 private:	
-	void GlobalPostProcessFound(APostProcessVolume* GlobalPostProcess);
+	void PostProcessSettingsEvaluate(FPostProcessSettings& Settings);
 };

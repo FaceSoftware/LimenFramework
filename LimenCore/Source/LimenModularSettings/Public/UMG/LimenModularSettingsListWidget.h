@@ -13,7 +13,7 @@ namespace ETextJustify
 }
 
 class ULimenSetting;
-class ULimenToggleSetting;
+class UDEPRECATED_LimenToggleSetting;
 class ULimenValueSetting;
 class ULimenSelectionSetting;
 class ULimenModularSettingsSubsystem;
@@ -88,20 +88,21 @@ private:
 };
 
 
-UCLASS(Blueprintable)
-class LIMENMODULARSETTINGS_API ULimenToggleSettingWidget : public ULimenSettingWidget
+UCLASS(Blueprintable, Deprecated)
+class LIMENMODULARSETTINGS_API UDEPRECATED_LimenToggleSettingWidget : public ULimenSettingWidget
 {
 	GENERATED_BODY()
 
 public:
 	virtual void BindSetting(ULimenSetting* InSetting) override;
-	FORCEINLINE ULimenToggleSetting* GetToggleSetting() const { return BoundSetting.Get(); }
+	UE_DEPRECATED(5.7, TEXT("Toggle settings have been deprecated, use selection setting with on/off"))
+	FORCEINLINE UDEPRECATED_LimenToggleSetting* GetToggleSetting() const { return BoundSetting.Get(); }
 
 protected:
 
 private:
-	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
-	TWeakObjectPtr<ULimenToggleSetting> BoundSetting;
+	UE_DEPRECATED(5.7, TEXT("Toggle settings have been deprecated, use selection setting with on/off"))
+	TWeakObjectPtr<UDEPRECATED_LimenToggleSetting> BoundSetting;
 };
 
 
