@@ -29,6 +29,11 @@ FString ULimenSelectionSetting::GetPreviousValue() const
 	return PreviousSelection;
 }
 
+FString ULimenSelectionSetting::GetAppliedValue() const
+{
+	return AppliedSelection;
+}
+
 bool ULimenSelectionSetting::IsValueValid(const FString& Test)
 {
 	for (const auto& Selection : PossibleSelections)
@@ -54,6 +59,7 @@ bool ULimenSelectionSetting::SetNewValue(const FString& NewSelection)
 		return false;
 	}
 	
+	SetIsApplied(false);
 	PreviousSelection = CurrentSelection;
 	CurrentSelection = NewSelection;
 	OnSettingUpdated.Broadcast(this);
@@ -77,12 +83,18 @@ void ULimenSelectionSetting::SetDefaultValue()
 
 void ULimenSelectionSetting::PostDataLoaded()
 {
-	PreviousSelection = CurrentSelection;
-	
+	PreviousSelection = CurrentSelection = AppliedSelection;	
 	Super::PostDataLoaded();
 }
 
 bool ULimenSelectionSetting::IsEnabled() const
 {
 	return CurrentSelection == EnabledString;
+}
+
+void ULimenSelectionSetting::ApplyCurrentSetting(bool bUserRequest)
+{
+	Super::ApplyCurrentSetting(bUserRequest);
+	
+	AppliedSelection = GetCurrentValue();
 }

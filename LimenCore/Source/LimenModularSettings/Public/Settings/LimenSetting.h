@@ -39,6 +39,8 @@ public:
 	const FText& GetDescription() const;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")	
 	void ApplySetting(bool bUserRequest = false);
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	bool IsApplied() const;
 	
 	virtual void SetDefaultValue();
 
@@ -82,6 +84,8 @@ protected:
 	 */
 	virtual void ApplyCurrentSetting(bool bUserRequest = false);
 	
+	void SetIsApplied(bool bNewIsApplied);
+	
 	virtual void PostDataLoaded() override;
 	virtual bool ShouldLoadData() const override;
 	
@@ -94,6 +98,7 @@ protected:
 private:
 	bool bHasInitialized;
 	bool bShouldLoadData;
+	bool bIsApplied;
 };
 
 
@@ -181,6 +186,8 @@ public:
 	virtual SettingType GetCurrentValue() const = 0;
 
 	virtual SettingType GetPreviousValue() const = 0;
+
+	virtual SettingType GetAppliedValue() const = 0;
 };
 
 struct FConsoleSetting

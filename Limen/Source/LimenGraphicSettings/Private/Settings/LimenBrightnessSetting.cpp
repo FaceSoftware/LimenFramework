@@ -35,6 +35,11 @@ FBrightnessSettingValues ULimenBrightnessSetting::GetPreviousValue() const
 	return PreviousSelection;
 }
 
+FBrightnessSettingValues ULimenBrightnessSetting::GetAppliedValue() const
+{
+	return AppliedSelection;
+}
+
 bool ULimenBrightnessSetting::IsValueValid(const FBrightnessSettingValues& Test)
 {
 	return FMath::IsFinite(Test.HighToneValue) && FMath::IsFinite(Test.LowToneValue);
@@ -89,9 +94,8 @@ void ULimenBrightnessSetting::SetDefaultValue()
 
 void ULimenBrightnessSetting::PostDataLoaded()
 {
+	PreviousSelection = CurrentSelection = AppliedSelection;
 	Super::PostDataLoaded();
-
-	PreviousSelection = CurrentSelection;
 }
 
 void ULimenBrightnessSetting::GlobalPostProcessFound(APostProcessVolume* InGlobalPostProcess) const

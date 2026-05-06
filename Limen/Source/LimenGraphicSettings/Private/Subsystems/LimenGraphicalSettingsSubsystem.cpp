@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "Developer/LimenGraphicalSettingsDeveloperSettings.h"
 #include "Engine/PostProcessVolume.h"
+#include "Kismet/GameplayStatics.h"
 #include "LogMacros/LimenLogMacros.h"
 #include "Settings/LimenSetting.h"
 
@@ -26,6 +27,31 @@ bool ULimenGraphicalSettingsSubsystem::ShouldCreateSubsystem(UObject* Outer) con
 
 	const auto* DeveloperSettings = GetDefault<ULimenGraphicalSettingsDeveloperSettings>();
 	return DeveloperSettings->bUseSubsystem;
+}
+
+APostProcessVolume* ULimenGraphicalSettingsSubsystem::GetGlobalPostProcess() const
+{
+	return GlobalPostProcess.Get();
+}
+
+void ULimenGraphicalSettingsSubsystem::WorldInitializedActors(const FActorsInitializedParams& InitParams)
+{
+	Super::WorldInitializedActors(InitParams);
+	
+	GetWorld()->GetTimerManager().ClearTimer(FindPostProcessHandle);
+	FindGlobalPostProcessVolume(InitParams.World, SubsystemSettings->GlobalPostProcessTag);
+	
+	APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
+	if (ensureAlways(CameraManager != nullptr))
+	{
+		const auto* DeveloperSettings = GetDefault<ULimenGraphicalSettingsDeveloperSettings>();
+		if (ensureAlways(!DeveloperSettings->CameraModifierClass.IsNull()))
+		{
+			auto* Modifier = CameraManager->AddNewCameraModifier(DeveloperSettings->CameraModifierClass.LoadSynchronous());
+			CameraModifier = CastChecked<ULimenGraphicalSettingsCameraModifier>(Modifier);
+		}
+	}
+	
 }
 
 void ULimenGraphicalSettingsSubsystem::LoadDefaultSettingsList()
@@ -52,19 +78,6 @@ void ULimenGraphicalSettingsSubsystem::LoadDefaultSettingsList()
 	{
 		Setting->InitializeSetting(this);
 	}
-}
-
-APostProcessVolume* ULimenGraphicalSettingsSubsystem::GetGlobalPostProcess() const
-{
-	return GlobalPostProcess.Get();
-}
-
-void ULimenGraphicalSettingsSubsystem::WorldInitializedActors(const FActorsInitializedParams& InitParams)
-{
-	Super::WorldInitializedActors(InitParams);
-	
-	GetWorld()->GetTimerManager().ClearTimer(FindPostProcessHandle);
-	FindGlobalPostProcessVolume(InitParams.World, SubsystemSettings->GlobalPostProcessTag);
 }
 
 void ULimenGraphicalSettingsSubsystem::FindGlobalPostProcessVolume(const UWorld* World, const FName& Tag)

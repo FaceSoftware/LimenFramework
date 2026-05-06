@@ -5,19 +5,19 @@
 
 #include "CoreMinimal.h"
 #include "Settings/LimenSetting.h"
-#include "LimenToggleSetting.generated.h"
+#include "DEPRECATED_LimenToggleSetting.generated.h"
 
 /**
  * Base class for a setting that can be toggled (on or off)
  */
-UCLASS(Abstract, Blueprintable, BlueprintType)
-class LIMENMODULARSETTINGS_API ULimenToggleSetting : public ULimenSetting, public TLimenEditableSetting<bool>, public TLimenReadableSetting<bool>
+UCLASS(Abstract, Blueprintable, BlueprintType, Deprecated)
+class LIMENMODULARSETTINGS_API UDEPRECATED_LimenToggleSetting : public ULimenSetting, public TLimenEditableSetting<bool>, public TLimenReadableSetting<bool>
 {
 	GENERATED_BODY()
 
 public:
 	
-	ULimenToggleSetting();
+	UDEPRECATED_LimenToggleSetting();
 
 	/// Readable Interface
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
@@ -26,6 +26,7 @@ public:
 	virtual bool GetCurrentValue() const override final;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	virtual bool GetPreviousValue() const override final;
+	virtual bool GetAppliedValue() const override final { return false; }
 
 	/// Editable Interface
 	virtual bool IsValueValid(const bool& Test) override;

@@ -16,6 +16,7 @@ ULimenSetting::ULimenSetting()
 	Description = FText::FromString(TEXT("Override this in a child class of ULimenSetting"));
 	bHasInitialized = false;
 	bShouldLoadData = false;
+	bIsApplied = false;
 }
 
 const FText& ULimenSetting::GetDescription() const
@@ -26,13 +27,21 @@ const FText& ULimenSetting::GetDescription() const
 void ULimenSetting::ApplySetting(const bool bUserRequest)
 {
 	ApplyCurrentSetting(bUserRequest);
+	
+	bIsApplied = true;
 	OnSettingApplied.Broadcast(this);
 
 	LIMEN_LOG(LogLimen, Log, this, TEXT("Applying setting %s"), *GetDevelopmentName().ToString());
 }
 
+bool ULimenSetting::IsApplied() const
+{
+	return bIsApplied;
+}
+
 void ULimenSetting::SetDefaultValue()
 {
+	bIsApplied = false;
 	OnSettingUpdated.Broadcast(this);
 }
 
@@ -66,6 +75,11 @@ void ULimenSetting::SetDefaults()
 
 void ULimenSetting::ApplyCurrentSetting(bool bUserRequest)
 {
+}
+
+void ULimenSetting::SetIsApplied(bool bNewIsApplied)
+{
+	bIsApplied = bNewIsApplied;
 }
 
 void ULimenSetting::PostDataLoaded()

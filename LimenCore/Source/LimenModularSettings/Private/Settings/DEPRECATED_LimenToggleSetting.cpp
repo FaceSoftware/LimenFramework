@@ -1,12 +1,12 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
-#include "Settings/LimenToggleSetting.h"
+#include "Settings/DEPRECATED_LimenToggleSetting.h"
 
 #include "BlueprintLibraries/LimenCoreStatics.h"
 
 
-ULimenToggleSetting::ULimenToggleSetting() : bDefaultSettingState(false),
+UDEPRECATED_LimenToggleSetting::UDEPRECATED_LimenToggleSetting() : bDefaultSettingState(false),
 											 bCurrentSettingState(false),
 											 bPreviousSettingState(false)
 {
@@ -14,35 +14,35 @@ ULimenToggleSetting::ULimenToggleSetting() : bDefaultSettingState(false),
 	PossibleStates.Push(true);
 }
 
-const TArray<bool>& ULimenToggleSetting::GetSettingValues() const
+const TArray<bool>& UDEPRECATED_LimenToggleSetting::GetSettingValues() const
 {
 	/// I know this is a laughing matter but I guess it's good to keep tradition with the other classes.
 	/// Probably no one will ever use this function but here it is just in case.
 	return PossibleStates;
 }
 
-bool ULimenToggleSetting::GetCurrentValue() const
+bool UDEPRECATED_LimenToggleSetting::GetCurrentValue() const
 {
 	return bCurrentSettingState;
 }
 
-bool ULimenToggleSetting::GetPreviousValue() const
+bool UDEPRECATED_LimenToggleSetting::GetPreviousValue() const
 {
 	return bPreviousSettingState;
 }
 
-bool ULimenToggleSetting::IsValueValid(const bool& Test)
+bool UDEPRECATED_LimenToggleSetting::IsValueValid(const bool& Test)
 {
 	// Parent is pure virtual, do NOT call it!
 	return true;
 }
 
-bool ULimenToggleSetting::CanEdit() const
+bool UDEPRECATED_LimenToggleSetting::CanEdit() const
 {
 	return true;
 }
 
-bool ULimenToggleSetting::SetNewValue(const bool& NewSelection)
+bool UDEPRECATED_LimenToggleSetting::SetNewValue(const bool& NewSelection)
 {
 	if (!TLimenEditableSetting::SetNewValue(NewSelection))
 	{
@@ -56,14 +56,14 @@ bool ULimenToggleSetting::SetNewValue(const bool& NewSelection)
 	return true;
 }
 
-void ULimenToggleSetting::SetDefaults()
+void UDEPRECATED_LimenToggleSetting::SetDefaults()
 {
 	Super::SetDefaults();
 
 	bPreviousSettingState = bCurrentSettingState;
 }
 
-void ULimenToggleSetting::SetDefaultValue()
+void UDEPRECATED_LimenToggleSetting::SetDefaultValue()
 {
 	bPreviousSettingState = bCurrentSettingState;
 	bCurrentSettingState = bDefaultSettingState;
@@ -71,7 +71,7 @@ void ULimenToggleSetting::SetDefaultValue()
 	Super::SetDefaultValue();
 }
 
-void ULimenToggleSetting::PostDataLoaded()
+void UDEPRECATED_LimenToggleSetting::PostDataLoaded()
 {
 	bPreviousSettingState = bCurrentSettingState;
 	

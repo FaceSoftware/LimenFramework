@@ -43,6 +43,8 @@ public:
 	virtual FEnhancedActionKeyMapping GetCurrentValue() const override final;
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	virtual FEnhancedActionKeyMapping GetPreviousValue() const override final;
+	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
+	virtual FEnhancedActionKeyMapping GetAppliedValue() const override final;
 
 	/// Editable Interface
 	virtual bool IsValueValid(const FEnhancedActionKeyMapping& Test) override;
@@ -65,9 +67,10 @@ protected:
 	bool bCanEdit;
 
 private:
-	UPROPERTY(SaveGame)
-	FSaveableEnhancedActionKeyMapping CurrentKeyMapping;
+	FEnhancedActionKeyMapping CurrentKeyMapping;
 	FEnhancedActionKeyMapping PreviousKeyMapping;
+	UPROPERTY(SaveGame)
+	FSaveableEnhancedActionKeyMapping AppliedKeyMapping;
 
 	UPROPERTY(SaveGame)
 	EInputActionHandlingType SavedInputHandlingType;
