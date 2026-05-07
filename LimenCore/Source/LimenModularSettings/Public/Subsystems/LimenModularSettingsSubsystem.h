@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/LimenSaveObjectInterface.h"
 #include "Engine/World.h"
 #include "LimenStorageSubsystem.h"
 #include "Settings/LimenSetting.h"
@@ -19,16 +18,20 @@ class ULimenSettingsSaveData;
  * It should not contain any specific information regarding a setting. 
  */
 UCLASS(Abstract, BlueprintType)
-class LIMENMODULARSETTINGS_API ULimenModularSettingsSubsystem : public ULimenStorageSubsystem, public ILimenSaveObjectInterface
+class LIMENMODULARSETTINGS_API ULimenModularSettingsSubsystem : public ULimenLocalPlayerStorageSubsystem
 {
 	GENERATED_BODY()
 
 public:
+	DECLARE_MULTICAST_DELEGATE_OneParam(FPlayerPostLoginDelegate, APlayerController* /* PlayerController */)
+	FPlayerPostLoginDelegate OnPlayerPostLogin;
+	
 	UPROPERTY(BlueprintAssignable)
 	FSettingUpdated OnSettingUpdated; 
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	bool CanEditSetting(const TSubclassOf<ULimenSetting>& Class) const;
@@ -60,14 +63,6 @@ public:
 	template<typename SettingType>
 	bool ReapplySetting(const TSubclassOf<ULimenSetting>& Class);
 	
-	virtual bool ShouldSaveData() const override;
-	virtual bool ShouldLoadData() const override;
-	virtual void PreDataSaved() override;
-	virtual void PostDataSaved() override;
-	virtual void PreDataLoaded() override;
-	virtual void PostDataLoaded() override;
-	virtual FName GetUniqueDeterministicId() const override;
-	
 protected:
 
 	/**
@@ -75,18 +70,14 @@ protected:
 	 * Needs to be implemented in a child class.
 	 * It is recommended to load from a custom ULimenModularSettingsSubsystemDeveloperSettings-derived class but not mandatory.
 	 * Called before loading the settings so we know which settings still exist.
-	 * @warning Must be overriden
+	 * @warning Must be overriden.
 	 */
 	virtual void LoadDefaultSettingsList();
-
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 	UFUNCTION()
 	virtual void SettingUpdated(const ULimenSetting* UpdatedSetting);
 	
-	virtual void WorldInitializedActors(const FActorsInitializedParams& InitParams);
-	virtual void GameModePostLogin(APlayerController* PlayerController);
-	
 private:
-	void GameModePostLogin(AGameModeBase* GameMode, APlayerController* NewPlayer);
 
 };
 

@@ -25,39 +25,6 @@ bool ULimenKeyBindSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	return GetDefault<ULimenKeyBindDeveloperSettings>()->bUseSubsystem;
 }
 
-void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
-{
-	Super::LoadDefaultSettingsList();
-	
-	for (const auto& SettingClass : SubsystemSettings->SettingsList)
-	{
-		if (SettingClass.IsNull())
-		{
-			// Don't crash the editor if the class is not set
-			continue;
-		}
-		
-		ULimenSetting* NewSetting = NewObject<ULimenSetting>(this, SettingClass.LoadSynchronous());
-		
-		NewSetting->InitializeSetting(this);
-		AddItem(NewSetting);
-	}
-
-	for (const auto& MappingContext : MappingContexts)
-	{
-		for (int i = 0; i < MappingContext->GetMappings().Num(); ++i)
-		{
-			FEnhancedActionKeyMapping& MappingRef = MappingContext->GetMapping(i);
-			if (!MappingRef.IsPlayerMappable()) continue;
-			
-			ULimenKeyBind* KeyBindSetting = NewObject<ULimenKeyBind>(this);
-			KeyBindSetting->InitializeSetting(this, &MappingRef);
-			KeyBindSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
-			AddItem(KeyBindSetting);
-		}
-	}
-}
-
 void ULimenKeyBindSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	SubsystemSettings = GetDefault<ULimenKeyBindDeveloperSettings>();
@@ -202,6 +169,39 @@ bool ULimenKeyBindSubsystem::SetActionKeyMappingByAction(const UInputAction* Act
 	}
 	
 	return false;
+}
+
+void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
+{
+	Super::LoadDefaultSettingsList();
+	
+	for (const auto& SettingClass : SubsystemSettings->SettingsList)
+	{
+		if (SettingClass.IsNull())
+		{
+			// Don't crash the editor if the class is not set
+			continue;
+		}
+		
+		ULimenSetting* NewSetting = NewObject<ULimenSetting>(this, SettingClass.LoadSynchronous());
+		
+		NewSetting->InitializeSetting(this);
+		AddItem(NewSetting);
+	}
+
+	for (const auto& MappingContext : MappingContexts)
+	{
+		for (int i = 0; i < MappingContext->GetMappings().Num(); ++i)
+		{
+			FEnhancedActionKeyMapping& MappingRef = MappingContext->GetMapping(i);
+			if (!MappingRef.IsPlayerMappable()) continue;
+			
+			ULimenKeyBind* KeyBindSetting = NewObject<ULimenKeyBind>(this);
+			KeyBindSetting->InitializeSetting(this, &MappingRef);
+			KeyBindSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
+			AddItem(KeyBindSetting);
+		}
+	}
 }
 
 void ULimenKeyBindSubsystem::SettingApplied(const ULimenSetting* Setting)

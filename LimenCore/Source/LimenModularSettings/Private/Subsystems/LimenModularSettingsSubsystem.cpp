@@ -3,8 +3,6 @@
 
 #include "Subsystems/LimenModularSettingsSubsystem.h"
 
-#include "GameFramework/GameModeBase.h"
-
 
 void ULimenModularSettingsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -18,9 +16,6 @@ void ULimenModularSettingsSubsystem::Initialize(FSubsystemCollectionBase& Collec
 		Setting->SubsystemInitialized(this);
 	}
 	
-	FWorldDelegates::OnWorldInitializedActors.AddUObject(this, &ThisClass::WorldInitializedActors);
-	FGameModeEvents::OnGameModePostLoginEvent().AddUObject(this, &ThisClass::GameModePostLogin);
-	
 	Super::Initialize(Collection);
 }
 
@@ -30,6 +25,12 @@ void ULimenModularSettingsSubsystem::Deinitialize()
 	Save();
 	
 	Super::Deinitialize();
+}
+
+bool ULimenModularSettingsSubsystem::ShouldCreateSubsystem(UObject* Outer) const
+{
+	if (!Super::ShouldCreateSubsystem(Outer)) { return false; }
+	return !IsRunningDedicatedServer();
 }
 
 bool ULimenModularSettingsSubsystem::CanEditSetting(const TSubclassOf<ULimenSetting>& Class) const
@@ -85,66 +86,22 @@ ULimenSetting* ULimenModularSettingsSubsystem::GetSetting(const TSubclassOf<ULim
 	return GetItem<ULimenSetting>(Class);
 }
 
-bool ULimenModularSettingsSubsystem::ShouldSaveData() const
-{
-	return true;
-}
-
-bool ULimenModularSettingsSubsystem::ShouldLoadData() const
-{
-	return true;
-}
-
-void ULimenModularSettingsSubsystem::PreDataSaved()
-{
-}
-
-void ULimenModularSettingsSubsystem::PostDataLoaded()
-{
-}
-
-FName ULimenModularSettingsSubsystem::GetUniqueDeterministicId() const
-{
-	return GetClass()->GetFName();
-}
-
-void ULimenModularSettingsSubsystem::PostDataSaved()
-{
-}
-
-void ULimenModularSettingsSubsystem::PreDataLoaded()
-{
-}
-
 void ULimenModularSettingsSubsystem::LoadDefaultSettingsList()
 {
+}
+
+void ULimenModularSettingsSubsystem::PlayerControllerChanged(APlayerController* NewPlayerController)
+{
+	if (!NewPlayerController) { return; }
+	
+	for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
+	{
+		Setting->ApplySetting(false);
+	}
 }
 
 void ULimenModularSettingsSubsystem::SettingUpdated(const ULimenSetting* UpdatedSetting)
 {
 	Save();
 	OnSettingUpdated.Broadcast(UpdatedSetting);
-}
-
-void ULimenModularSettingsSubsystem::WorldInitializedActors(const FActorsInitializedParams& InitParams)
-{
-	for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
-	{
-		Setting->ApplySetting(false);
-	}
-}
-
-void ULimenModularSettingsSubsystem::GameModePostLogin(APlayerController* PlayerController)
-{
-	for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
-	{
-		Setting->ApplySetting(false);
-	}
-}
-
-void ULimenModularSettingsSubsystem::GameModePostLogin(AGameModeBase* GameMode, APlayerController* NewPlayer)
-{
-	if (GetWorld()->GetFirstPlayerController() != NewPlayer) { return; }
-	
-	GameModePostLogin(NewPlayer);
 }

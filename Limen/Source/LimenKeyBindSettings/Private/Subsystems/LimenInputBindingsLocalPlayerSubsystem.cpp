@@ -31,7 +31,7 @@ void ULimenInputBindingsLocalPlayerSubsystem::AddPawnMappingContext()
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayerChecked()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	if (!InputSystem) return;
 
-	const ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
+	const ULimenKeyBindSubsystem* KeyBindSubsystem = GetLocalPlayerChecked()->GetSubsystem<ULimenKeyBindSubsystem>();
 	if (!KeyBindSubsystem) return;
 
 	const UInputMappingContext* MappingContext = KeyBindSubsystem->GetPawnInputMappingContext(GetLocalPlayerChecked()->PlayerController->GetPawn().Get());
@@ -47,7 +47,7 @@ void ULimenInputBindingsLocalPlayerSubsystem::RemovePawnMappingContext()
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayerChecked()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	if (!InputSystem) return;
 
-	const ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
+	const ULimenKeyBindSubsystem* KeyBindSubsystem = GetLocalPlayerChecked()->GetSubsystem<ULimenKeyBindSubsystem>();
 	if (!KeyBindSubsystem) return;
 
 	const UInputMappingContext* MappingContext = KeyBindSubsystem->GetPawnInputMappingContext(GetLocalPlayerChecked()->PlayerController->GetPawn().Get());
@@ -62,7 +62,7 @@ void ULimenInputBindingsLocalPlayerSubsystem::UpdateControllerBindings(APlayerCo
 
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayerChecked()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	if (!InputSystem) return;
-	ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
+	ULimenKeyBindSubsystem* KeyBindSubsystem = GetLocalPlayerChecked()->GetSubsystem<ULimenKeyBindSubsystem>();
 	if (!KeyBindSubsystem) return;
 
 	if (const UInputMappingContext* PlayerMappings = KeyBindSubsystem->GetPlayerInputMappingContext(PC);
@@ -111,7 +111,7 @@ void ULimenInputBindingsLocalPlayerSubsystem::NewPawnNotify(APawn* NewPawn)
 {
 	UEnhancedInputLocalPlayerSubsystem* InputSystem = GetLocalPlayerChecked()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 	if (InputSystem == nullptr) return;
-	ULimenKeyBindSubsystem* KeyBindSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenKeyBindSubsystem>();
+	ULimenKeyBindSubsystem* KeyBindSubsystem = GetLocalPlayerChecked()->GetSubsystem<ULimenKeyBindSubsystem>();
 	if (KeyBindSubsystem == nullptr) return;
 
 	if (const UInputMappingContext* PreviousPawnMappings = KeyBindSubsystem->GetPawnInputMappingContext(CurrentPawn.Get()))

@@ -10,35 +10,27 @@
 #include "LimenStorageSubsystem.generated.h"
 
 
+class ULimenSaveSubsystem;
 class ULimenStorageSaveData;
 class ULimenSettingsSaveData;
 
-/**
- * 
- */
-UCLASS(Abstract)
-class LIMENSTORAGE_API ULimenStorageSubsystem : public UGameInstanceSubsystem
+
+class LIMENSTORAGE_API FLimenStorageSubsystem
 {
-	GENERATED_BODY()
+public:
+	FLimenStorageSubsystem();
+	virtual ~FLimenStorageSubsystem();
 	
-public:	
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual void Deinitialize() override;
-
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
-	TArray<FText> GetCategories() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
-	TArray<FText> GetCategoriesInAlphabeticalOrder() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
-	int32 GetItemCount() const;
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
-	bool IsStorageEmpty() const;
-
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem", meta=(DeterminesOutputType="ItemClass"))
-	ULimenStorageItem* GetItemWithDisplayName(TSubclassOf<ULimenStorageItem> ItemClass, const FText& InDisplayName) const;
-
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem", meta=(DeterminesOutputType="ItemClass"))
-	TArray<ULimenStorageItem*> GetAllItemsOfCategory(TSubclassOf<ULimenStorageItem> ItemClass, const FText& InCategory) const;
+	virtual void InitializeStorage(ULimenSaveSubsystem* InSaveSubsystem);
+	virtual void DeinitializeStorage();
+	
+	virtual TArray<FText> GetCategories() const;
+	virtual TArray<FText> GetCategoriesInAlphabeticalOrder() const;
+	virtual int32 GetItemCount() const;
+	virtual bool IsStorageEmpty() const;
+	
+	virtual ULimenStorageItem* GetItemWithDisplayName(TSubclassOf<ULimenStorageItem> ItemClass, const FText& InDisplayName) const;
+	virtual TArray<ULimenStorageItem*> GetAllItemsOfCategory(TSubclassOf<ULimenStorageItem> ItemClass, const FText& InCategory) const;
 
 	template<typename ItemType = ULimenStorageItem>
 	TArray<ItemType*> GetAllItemsOfCategory(const FText& InCategory) const
@@ -56,15 +48,11 @@ public:
 		return CategorySettings;
 	}
 
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
-	void Save();
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
-	void Load();
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem")
-	bool HasSavedData() const;
-
-	UFUNCTION(BlueprintCallable, Category="Limen|Storage Subsystem", meta=(DeterminesOutputType=Class))
-	TArray<ULimenStorageItem*> GetItems(TSubclassOf<ULimenStorageItem> Class) const;
+	virtual void Save();
+	virtual void Load();
+	virtual bool HasSavedData() const;
+	
+	virtual TArray<ULimenStorageItem*> GetItems(TSubclassOf<ULimenStorageItem> Class) const;
 	template<typename ItemType = ULimenStorageItem>
 	TArray<ItemType*> GetItems() const
 	{
@@ -110,6 +98,7 @@ protected:
 	const TArray<TStrongObjectPtr<ULimenStorageItem>>& GetStorageItems() const;
 	
 private:
+	TWeakObjectPtr<ULimenSaveSubsystem> SaveSubsystem;
 	TArray<TStrongObjectPtr<ULimenStorageItem>> StorageItems;
 	TStrongObjectPtr<ULimenStorageSaveData> CurrentSaveData;
 
@@ -117,4 +106,28 @@ private:
 
 	virtual void Save_Internal();
 	virtual void Load_Internal();
+};
+
+
+
+UCLASS(Abstract)
+class LIMENSTORAGE_API ULimenGameInstanceStorageSubsystem : public UGameInstanceSubsystem, public FLimenStorageSubsystem
+{
+	GENERATED_BODY()
+	
+public:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+};
+
+
+
+UCLASS(Abstract)
+class LIMENSTORAGE_API ULimenLocalPlayerStorageSubsystem : public ULocalPlayerSubsystem, public FLimenStorageSubsystem
+{
+	GENERATED_BODY()
+	
+public:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 };

@@ -26,7 +26,7 @@ void ULimenMotionBlurSetting::SetDefaults()
 
 	DefaultSettingValue = 0.5f;
 	
-	ULimenGraphicalSettingsSubsystem* GraphicalSettings = GetWorld()->GetGameInstance()->GetSubsystem<ULimenGraphicalSettingsSubsystem>();
+	auto* GraphicalSettings = GetOwnerSubsystem<ULimenGraphicalSettingsSubsystem>();
 	GraphicalSettings->OnPostProcessSettingEvaluate.AddUObject(this, &ThisClass::PostProcessSettingsEvaluate);
 }
 

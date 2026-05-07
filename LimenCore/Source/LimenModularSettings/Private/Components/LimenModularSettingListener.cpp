@@ -17,11 +17,11 @@ void ULimenModularSettingListener::Activate(const bool bReset)
 {
 	Super::Activate(bReset);
 	
-	if (bReset || ShouldActivate()==true)
+	if (auto* PC = GetOwner<APlayerController>(); PC && (bReset || ShouldActivate()==true))
 	{
-		if (!ModularSettingsSubsystem.IsValid())
+		if (const auto* LocalPlayer = PC->GetLocalPlayer(); LocalPlayer && !ModularSettingsSubsystem.IsValid())
 		{
-			ModularSettingsSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<ULimenModularSettingsSubsystem>();
+			ModularSettingsSubsystem = LocalPlayer->GetSubsystem<ULimenModularSettingsSubsystem>();
 			ModularSettingsSubsystem->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::SettingUpdated);
 		}
 	}

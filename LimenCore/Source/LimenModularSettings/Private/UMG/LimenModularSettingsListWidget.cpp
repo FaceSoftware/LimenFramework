@@ -49,12 +49,6 @@ void ULimenSelectionSettingWidget::BindSetting(ULimenSetting* InSetting)
 	Super::BindSetting(InSetting);
 }
 
-void UDEPRECATED_LimenToggleSettingWidget::BindSetting(ULimenSetting* InSetting)
-{
-	BoundSetting = CastChecked<UDEPRECATED_LimenToggleSetting>(InSetting, ECastCheckedType::NullAllowed);
-	Super::BindSetting(InSetting);
-}
-
 ULimenSettingsListWidget::ULimenSettingsListWidget()
 {
 	SettingVerticalAlignment = VAlign_Top;
@@ -132,8 +126,8 @@ void ULimenSettingsListWidget::ResolveSubsystem()
 	if (!ModularSettingsSubsystem) return;
 	if (!GetWorld()) return;
 	if (!GetWorld()->GetGameInstance()) return;
-
-	const auto SubsystemBasePtr = GetWorld()->GetGameInstance()->GetSubsystemBase(ModularSettingsSubsystem);
+	
+	const auto SubsystemBasePtr = GetOwningLocalPlayer()->GetSubsystemBase(ModularSettingsSubsystem);
 	Subsystem = CastChecked<ULimenModularSettingsSubsystem>(SubsystemBasePtr, ECastCheckedType::NullAllowed);
 }
 

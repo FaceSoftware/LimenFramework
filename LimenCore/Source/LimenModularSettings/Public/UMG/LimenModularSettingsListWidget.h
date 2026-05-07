@@ -88,25 +88,6 @@ private:
 };
 
 
-UCLASS(Blueprintable, Deprecated)
-class LIMENMODULARSETTINGS_API UDEPRECATED_LimenToggleSettingWidget : public ULimenSettingWidget
-{
-	GENERATED_BODY()
-
-public:
-	virtual void BindSetting(ULimenSetting* InSetting) override;
-	UE_DEPRECATED(5.7, TEXT("Toggle settings have been deprecated, use selection setting with on/off"))
-	FORCEINLINE UDEPRECATED_LimenToggleSetting* GetToggleSetting() const { return BoundSetting.Get(); }
-
-protected:
-
-private:
-	UE_DEPRECATED(5.7, TEXT("Toggle settings have been deprecated, use selection setting with on/off"))
-	TWeakObjectPtr<UDEPRECATED_LimenToggleSetting> BoundSetting;
-};
-
-
-
 UCLASS(Blueprintable, BlueprintType)
 class LIMENMODULARSETTINGS_API ULimenSettingsListWidget : public UWidget
 {

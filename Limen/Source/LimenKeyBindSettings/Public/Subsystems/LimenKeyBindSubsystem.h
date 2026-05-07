@@ -31,7 +31,6 @@ public:
 	
 	ULimenKeyBindSubsystem();
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
-	virtual void LoadDefaultSettingsList() override;
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
@@ -47,6 +46,9 @@ public:
 	UInputMappingContext* GetInputMappingByAction(const UInputAction* Action) const;
 	FEnhancedActionKeyMapping& GetActionKeyMappingByAction(const UInputAction* Action);
 	bool SetActionKeyMappingByAction(const UInputAction* Action, const FEnhancedActionKeyMapping& InActionKeyMapping);
+	
+protected:
+	virtual void LoadDefaultSettingsList() override;
 
 private:
 	UPROPERTY()

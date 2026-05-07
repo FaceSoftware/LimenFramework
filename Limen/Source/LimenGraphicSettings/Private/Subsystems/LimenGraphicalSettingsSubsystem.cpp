@@ -24,11 +24,13 @@ bool ULimenGraphicalSettingsSubsystem::ShouldCreateSubsystem(UObject* Outer) con
 	return DeveloperSettings->bUseSubsystem;
 }
 
-void ULimenGraphicalSettingsSubsystem::GameModePostLogin(APlayerController* PlayerController)
+void ULimenGraphicalSettingsSubsystem::PlayerControllerChanged(APlayerController* NewPlayerController)
 {
-	Super::GameModePostLogin(PlayerController);
+	Super::PlayerControllerChanged(NewPlayerController);
+	
+	if (!NewPlayerController) { return; }
 
-	if (APlayerCameraManager* CameraManager = PlayerController->PlayerCameraManager.Get();
+	if (APlayerCameraManager* CameraManager = NewPlayerController->PlayerCameraManager.Get();
 		ensureAlways(CameraManager != nullptr))
 	{
 		if (SubsystemSettings.IsValid() && ensureAlways(!SubsystemSettings->CameraModifierClass.IsNull()))

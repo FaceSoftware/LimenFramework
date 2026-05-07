@@ -18,7 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FArchiveEvent, ULimenArchive*, Archi
  * 
  */
 UCLASS()
-class LIMENARCHIVES_API ULimenArchiveSubsystem : public ULimenStorageSubsystem
+class LIMENARCHIVES_API ULimenArchiveSubsystem : public ULimenGameInstanceStorageSubsystem
 {
 	GENERATED_BODY()
 

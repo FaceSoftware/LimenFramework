@@ -3,10 +3,8 @@
 
 #include "Settings/LimenSensitivitySetting.h"
 
-#include "TimerManager.h"
 #include "Components/LimenMouseSensitivityComponent.h"
 #include "Engine/World.h"
-#include "PlayerController/LimenPlayerControllerBase.h"
 
 
 ULimenSensitivitySetting::ULimenSensitivitySetting()
@@ -33,18 +31,9 @@ void ULimenSensitivitySetting::ApplyCurrentSetting(bool bUserRequest)
 	Super::ApplyCurrentSetting(bUserRequest);
 
 	const APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	if (PlayerController == nullptr)
-	{
-		// Player controller should never be null. This means it was not initialized yet
-		GetWorld()->GetTimerManager().SetTimerForNextTick([this, bUserRequest]
-		{
-			ApplyCurrentSetting(bUserRequest);
-		});
-
-		return;
-	}
+	if (!ensureAlways(PlayerController)) { return; }
 
 	auto* MouseSensitivityComponent = PlayerController->GetComponentByClass<ULimenMouseSensitivityComponent>();
-	if (!MouseSensitivityComponent) return;
+	if (!MouseSensitivityComponent) { return; }
 	MouseSensitivityComponent->SetSensitivity(GetCurrentValue());
 }

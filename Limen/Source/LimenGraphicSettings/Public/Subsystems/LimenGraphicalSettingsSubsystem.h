@@ -32,7 +32,7 @@ public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
 
 protected:
-	virtual void GameModePostLogin(APlayerController* PlayerController) override;
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 	virtual void LoadDefaultSettingsList() override;
 
 private:
