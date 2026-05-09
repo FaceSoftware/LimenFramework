@@ -20,6 +20,7 @@ class LIMENABILITYSYSTEM_API ULimenAbilityBase : public ULimenStorageItem, publi
 
 public:
 	ULimenAbilityBase();
+	virtual void PostInitProperties() override;
 	virtual bool IsSupportedForNetworking() const override;
 	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
 	virtual bool CallRemoteFunction(UFunction* Function, void* Parameters, FOutParmRec* OutParms, FFrame* Stack) override;

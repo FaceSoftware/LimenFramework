@@ -30,10 +30,13 @@ void ULimenSettingWidget::BindSetting(ULimenSetting* InSetting)
 {
 	if (!InSetting) return;
 
+	check(!SettingPtr.IsValid())
+	
 	SettingPtr = InSetting;
 	InSetting->OnSettingUpdated.AddUniqueDynamic(this, &ThisClass::SettingUpdated);
 	InSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
 	InSetting->OnSettingEditableStateChanged.AddUniqueDynamic(this, &ThisClass::SettingEditableStateChanged);
+	
 	if (IsConstructed()) SettingBound(InSetting);
 }
 
@@ -124,11 +127,28 @@ bool ULimenSettingsListWidget::AreParamsValid() const
 void ULimenSettingsListWidget::ResolveSubsystem()
 {
 	if (!ModularSettingsSubsystem) return;
-	if (!GetWorld()) return;
-	if (!GetWorld()->GetGameInstance()) return;
+	const ULocalPlayer* LocalPlayer = GetOwningLocalPlayer();
+	if (!LocalPlayer)
+	{
+		if (!GetWorld()) return;
+		LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	}
+	if (!LocalPlayer) { return; }
 	
-	const auto SubsystemBasePtr = GetOwningLocalPlayer()->GetSubsystemBase(ModularSettingsSubsystem);
-	Subsystem = CastChecked<ULimenModularSettingsSubsystem>(SubsystemBasePtr, ECastCheckedType::NullAllowed);
+	const TArray<ULimenModularSettingsSubsystem*> SubsystemArray = LocalPlayer->GetSubsystemArrayCopy<ULimenModularSettingsSubsystem>();
+	ULimenModularSettingsSubsystem* const* SubsystemPtr = SubsystemArray.FindByPredicate([this] (const ULimenModularSettingsSubsystem* Test)
+	{
+		return Test->GetClass() == ModularSettingsSubsystem.Get();
+	});
+	
+	if (!SubsystemPtr)
+	{
+		Subsystem.Reset();
+	}
+	else
+	{
+		Subsystem = *SubsystemPtr;
+	}
 }
 
 TSubclassOf<ULimenSettingWidget> ULimenSettingsListWidget::GetSettingWidget(const ULimenSetting* Setting)

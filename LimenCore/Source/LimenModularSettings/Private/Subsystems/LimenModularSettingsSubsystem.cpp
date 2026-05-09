@@ -33,6 +33,17 @@ bool ULimenModularSettingsSubsystem::ShouldCreateSubsystem(UObject* Outer) const
 	return !IsRunningDedicatedServer();
 }
 
+void ULimenModularSettingsSubsystem::PlayerControllerChanged(APlayerController* NewPlayerController)
+{
+	CurrentPlayerController = NewPlayerController;
+	if (!CurrentPlayerController.IsValid()) { return; }
+	
+	for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
+	{
+		Setting->ApplySetting(false);
+	}
+}
+
 bool ULimenModularSettingsSubsystem::CanEditSetting(const TSubclassOf<ULimenSetting>& Class) const
 {
 	ULimenSetting* Setting = GetItem<ULimenSetting>(Class);
@@ -88,16 +99,6 @@ ULimenSetting* ULimenModularSettingsSubsystem::GetSetting(const TSubclassOf<ULim
 
 void ULimenModularSettingsSubsystem::LoadDefaultSettingsList()
 {
-}
-
-void ULimenModularSettingsSubsystem::PlayerControllerChanged(APlayerController* NewPlayerController)
-{
-	if (!NewPlayerController) { return; }
-	
-	for (ULimenSetting* const& Setting : GetItems<ULimenSetting>())
-	{
-		Setting->ApplySetting(false);
-	}
 }
 
 void ULimenModularSettingsSubsystem::SettingUpdated(const ULimenSetting* UpdatedSetting)

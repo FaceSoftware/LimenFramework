@@ -23,16 +23,6 @@ void ULimenLoadingScreenWidget::NativeConstruct()
 	}
 }
 
-void ULimenLoadingScreenWidget::NativeDestruct()
-{
-	Super::NativeDestruct();
-
-	if (auto* LevelTransition = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>())
-	{
-		LevelTransition->OnPSOBatchingUpdated.RemoveDynamic(this, &ThisClass::PSOBatchingUpdated);
-	}
-}
-
 bool ULimenLoadingScreenWidget::IsShowing() const
 {
 	return GetVisibility() == GetDefaultVisibleState() && bIsShowing;
@@ -41,6 +31,16 @@ bool ULimenLoadingScreenWidget::IsShowing() const
 bool ULimenLoadingScreenWidget::IsHiding() const
 {
 	return GetVisibility() == GetDefaultHiddenState() || !bIsShowing;
+}
+
+void ULimenLoadingScreenWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+
+	if (auto* LevelTransition = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>())
+	{
+		LevelTransition->OnPSOBatchingUpdated.RemoveDynamic(this, &ThisClass::PSOBatchingUpdated);
+	}
 }
 
 void ULimenLoadingScreenWidget::ShowWidgetMethod()

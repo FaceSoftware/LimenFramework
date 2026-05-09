@@ -3,13 +3,11 @@
 
 #include "Settings/LimenAntiAliasingSetting.h"
 
-#include "Subsystems/LimenGraphicalSettingsSubsystem.h"
-#include "Subsystems/LimenModularSettingsSubsystem.h"
-
 
 const FString ULimenAntiAliasingSetting::NONE		= TEXT("Disabled");
 const FString ULimenAntiAliasingSetting::FXAA		= TEXT("Fast Aproximate Anti-Aliasing (FXAA)");
 const FString ULimenAntiAliasingSetting::TAA		= TEXT("Temporal Anti-Aliasing (TAA)");
+const FString ULimenAntiAliasingSetting::MSAA		= TEXT("Multi Sample Anti-Aliasing (MSAA)");
 const FString ULimenAntiAliasingSetting::TSR		= TEXT("Temporal Super Resolution (TSR)");
 
 ULimenAntiAliasingSetting::ULimenAntiAliasingSetting()
@@ -37,20 +35,34 @@ void ULimenAntiAliasingSetting::ApplyCurrentSetting(const bool bUserRequest)
 void ULimenAntiAliasingSetting::SetDefaults()
 {
 	Super::SetDefaults();
+	
+	PossibleSelections.Reserve(7);
 
 	TConsoleSetting<int32> NONESetting(NONE);
 	NONESetting.AddCVar("r.AntiAliasingMethod", 0);
 	SettingsDescription.Push(NONESetting);
+	PossibleSelections.Push(NONE);
 	
 	TConsoleSetting<int32> FXAASetting(FXAA);
 	FXAASetting.AddCVar("r.AntiAliasingMethod", 1);
 	FXAASetting.AddCVar("r.FXAA.Quality", 5);
 	SettingsDescription.Push(FXAASetting);
+	PossibleSelections.Push(FXAA);
 	
 	TConsoleSetting<int32> TAASetting(TAA);
 	TAASetting.AddCVar("r.AntiAliasingMethod", 2);
 	TAASetting.AddCVar("r.TemporalAA.Quality", 2);
 	SettingsDescription.Push(TAASetting);
+	PossibleSelections.Push(TAA);
+	
+	if (IsMSAASupported())
+	{
+		TConsoleSetting<int32> MSAASetting(MSAA);
+		TAASetting.AddCVar("r.AntiAliasingMethod", 3);
+		TAASetting.AddCVar("r.MSAACount", 8);
+		SettingsDescription.Push(MSAASetting);
+		PossibleSelections.Push(MSAA);
+	}
 	
 	TConsoleSetting<int32> TSRSetting(TSR);
 	TSRSetting.AddCVar("r.AntiAliasingMethod", 4);
@@ -62,12 +74,13 @@ void ULimenAntiAliasingSetting::SetDefaults()
 	TSRSetting.AddCVar("r.TSR.RejectionAntiAliasingQuality", 1);
 	TSRSetting.AddCVar("r.TSR.Resurrection", 1);
 	SettingsDescription.Push(TSRSetting);
-
-	PossibleSelections.Reserve(7);
-	PossibleSelections.Push(NONE);
-	PossibleSelections.Push(FXAA);
-	PossibleSelections.Push(TAA);
 	PossibleSelections.Push(TSR);
 
 	DefaultSelection = TSR;
+}
+
+bool ULimenAntiAliasingSetting::IsMSAASupported() const
+{
+	static IConsoleVariable* CVarForwardShading = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ForwardShading"));
+	return CVarForwardShading && CVarForwardShading->GetInt() != 0;
 }

@@ -124,7 +124,6 @@ protected:
 	virtual void ResolveSubsystem();
 
 private:
-	UPROPERTY()
 	TWeakObjectPtr<ULimenModularSettingsSubsystem> Subsystem;
 
 	TSubclassOf<ULimenSettingWidget> GetSettingWidget(const ULimenSetting* Setting);

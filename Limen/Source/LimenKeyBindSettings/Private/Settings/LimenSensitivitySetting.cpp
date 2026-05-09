@@ -5,6 +5,7 @@
 
 #include "Components/LimenMouseSensitivityComponent.h"
 #include "Engine/World.h"
+#include "Subsystems/LimenModularSettingsSubsystem.h"
 
 
 ULimenSensitivitySetting::ULimenSensitivitySetting()
@@ -26,12 +27,12 @@ void ULimenSensitivitySetting::SetDefaults()
 	DefaultSettingValue = 1.f;
 }
 
-void ULimenSensitivitySetting::ApplyCurrentSetting(bool bUserRequest)
+void ULimenSensitivitySetting::ApplyCurrentSetting(const bool bUserRequest)
 {
 	Super::ApplyCurrentSetting(bUserRequest);
 
-	const APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	if (!ensureAlways(PlayerController)) { return; }
+	const APlayerController* PlayerController = GetOwnerSubsystem()->GetCurrentPlayerController();
+	if (!PlayerController) { return; }
 
 	auto* MouseSensitivityComponent = PlayerController->GetComponentByClass<ULimenMouseSensitivityComponent>();
 	if (!MouseSensitivityComponent) { return; }

@@ -362,6 +362,8 @@ FString ULimenCoreStatics::GetProjectVersion()
 
 FString ULimenCoreStatics::GetCopyrightNotice()
 {
+	if (!GConfig) { return TEXT(""); }
+
 	FString CopyrightNotice;
 	verify(GConfig->GetString(
 		TEXT("/Script/EngineSettings.GeneralProjectSettings"),

@@ -6,6 +6,7 @@
 #include "Widgets/LimenBaseHudWidget.h"
 #include "LimenLoadingScreenWidget.generated.h"
 
+
 class ALimenBaseHUD;
 /**
  * 
@@ -18,12 +19,13 @@ class LIMENLEVELTRANSITIONS_API ULimenLoadingScreenWidget : public ULimenWidget
 public:
 	explicit ULimenLoadingScreenWidget(const FObjectInitializer& ObjectInitializer);
 	virtual void NativeConstruct() override;
-	virtual void NativeDestruct() override;
 	
 	virtual bool IsShowing() const override;
 	virtual bool IsHiding() const override;
 	
 protected:
+	virtual void NativeDestruct() override;
+	
 	UFUNCTION(BlueprintNativeEvent)
 	void PSOBatchingUpdated(const int32 Total, const int32 Left);
 	virtual void PSOBatchingUpdated_Implementation(const int32 Total, const int32 Left) {}

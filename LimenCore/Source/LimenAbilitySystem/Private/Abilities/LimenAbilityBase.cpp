@@ -8,11 +8,22 @@
 #include "GameFramework/Actor.h"
 
 
-ULimenAbilityBase::ULimenAbilityBase() : Super()
+ULimenAbilityBase::ULimenAbilityBase() : Super(), FTickableGameObject(ETickableTickType::Never)
 {
 	Owner = nullptr;
 	bIsInitialized = false;
 	bShouldForcefullyDeactivate = false;
+}
+
+void ULimenAbilityBase::PostInitProperties()
+{
+	Super::PostInitProperties();
+	
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		check(IsInGameThread())
+		SetTickableTickType(ETickableTickType::Conditional);
+	}
 }
 
 bool ULimenAbilityBase::IsSupportedForNetworking() const
@@ -146,12 +157,12 @@ void ULimenAbilityBase::Tick(float DeltaTime)
 
 ETickableTickType ULimenAbilityBase::GetTickableTickType() const
 {
-	return ETickableTickType::Conditional;
+	return HasAnyFlags(RF_ClassDefaultObject) ? ETickableTickType::Never : ETickableTickType::Conditional;
 }
 
 bool ULimenAbilityBase::IsTickable() const
 {
-	return !HasAnyFlags(RF_ClassDefaultObject) || bIsInitialized;
+	return bIsInitialized;
 }
 
 TStatId ULimenAbilityBase::GetStatId() const

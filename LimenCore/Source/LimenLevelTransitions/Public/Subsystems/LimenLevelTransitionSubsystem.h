@@ -72,6 +72,7 @@ protected:
 
 private:
 	TMap<TSoftObjectPtr<UWorld>, TSoftObjectPtr<ULimenLoadingScreenParameters>> LoadingScreens;
+	TSoftObjectPtr<ULimenLoadingScreenParameters> DefaultLoadingScreen;
 	TStrongObjectPtr<ULimenLoadingScreenParameters> CurrentLoadingScreenSettings;
 	
 	TWeakObjectPtr<ULimenLoadingScreenWidget> LoadingScreenWidget;

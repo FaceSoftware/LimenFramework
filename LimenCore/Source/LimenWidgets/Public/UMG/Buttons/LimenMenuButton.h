@@ -23,6 +23,7 @@ class LIMENWIDGETS_API ULimenMenuButton : public ULimenStandardButton, public FT
 
 public:
 	ULimenMenuButton();
+	virtual void PostInitProperties() override;
 	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
 	
 #pragma region FTickableGameObject

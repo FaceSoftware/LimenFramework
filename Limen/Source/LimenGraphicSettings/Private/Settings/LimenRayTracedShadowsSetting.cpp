@@ -87,5 +87,5 @@ void ULimenRayTracedShadowsSetting::RayTracingSettingApplied(const ULimenSetting
 		bCanEditOverride = false;
 	}
 	
-	OnSettingEditableStateChanged.Broadcast(Setting);
+	OnSettingEditableStateChanged.Broadcast(this);
 }

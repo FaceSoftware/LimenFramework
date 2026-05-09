@@ -4,7 +4,6 @@
 #include "Subsystems/LimenLevelTransitionSubsystem.h"
 
 #include "EngineUtils.h"
-#include "ShaderCompiler.h"
 #include "ShaderPipelineCache.h"
 #include "UMG/LimenLoadingScreenWidget.h"
 #include "Developer/LimenLoadingScreenSettings.h"
@@ -19,6 +18,7 @@
 
 class FLimenLoadingScreenInputPreProcessor final : public IInputProcessor
 {
+public:
 	virtual void Tick(const float DeltaTime, FSlateApplication& SlateApp, TSharedRef<ICursor> Cursor) override {}
 
 protected:
@@ -50,6 +50,7 @@ void ULimenLevelTransitionSubsystem::Initialize(FSubsystemCollectionBase& Collec
 	Super::Initialize(Collection);
 
 	LoadingScreens = GetDefault<ULimenLoadingScreenSettings>()->LoadingScreens;
+	DefaultLoadingScreen = GetDefault<ULimenLoadingScreenSettings>()->DefaultLoadingScreen;
 	
 	FCoreUObjectDelegates::PreLoadMapWithContext.AddUObject(this, &ThisClass::HandlePreLoadMap);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::HandlePostLoadMap);
@@ -105,23 +106,27 @@ bool ULimenLevelTransitionSubsystem::PlayLoadingScreenForCurrentLevel()
 	
 	const FSoftObjectPath LevelPath = GetWorld();
 	const FString MapName = UWorld::RemovePIEPrefix(LevelPath.GetAssetName());
+	
 	for (const auto& MapLoadingScreen : LoadingScreens)
 	{
 		if (MapLoadingScreen.Key.GetLongPackageName().Contains(MapName))
 		{
 			CurrentLoadingScreenSettings = TStrongObjectPtr(MapLoadingScreen.Value.LoadSynchronous());
-			if (!CurrentLoadingScreenSettings.IsValid())
-			{
-				return false;
-			}
-			
 			break;
 		}
 	}
-
-	DisplayLoadingScreen();
 	
-	return true;
+	if (!CurrentLoadingScreenSettings.IsValid())
+	{
+		CurrentLoadingScreenSettings = TStrongObjectPtr(DefaultLoadingScreen.LoadSynchronous());
+	}
+
+	if (CurrentLoadingScreenSettings.IsValid())
+	{
+		DisplayLoadingScreen();
+	}
+	
+	return CurrentLoadingScreenSettings.IsValid();
 }
 
 int32 ULimenLevelTransitionSubsystem::GetPSOsLeft() const
@@ -285,13 +290,17 @@ void ULimenLevelTransitionSubsystem::HandlePreLoadMap(const FWorldContext& World
 			MapName.Contains(MapLoadingScreen.Key.GetAssetName()))
 		{
 			CurrentLoadingScreenSettings = TStrongObjectPtr(MapLoadingScreen.Value.LoadSynchronous());
-			if (!CurrentLoadingScreenSettings.IsValid())
-			{
-				return;
-			}
-			
 			break;
 		}
+	}
+	
+	if (!CurrentLoadingScreenSettings.IsValid())
+	{
+		CurrentLoadingScreenSettings = TStrongObjectPtr(DefaultLoadingScreen.LoadSynchronous());
+	}
+	if (!CurrentLoadingScreenSettings.IsValid())
+	{
+		return;
 	}
 	
 	bIsPreLoadingLevel = true;

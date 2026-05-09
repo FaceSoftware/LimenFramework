@@ -19,6 +19,7 @@ public:
 	static const FString NONE;
 	static const FString FXAA;
 	static const FString TAA;
+	static const FString MSAA;
 	static const FString TSR;
 	
 	ULimenAntiAliasingSetting();
@@ -26,6 +27,8 @@ public:
 protected:
 	virtual void ApplyCurrentSetting(bool bUserRequest) override;
 	virtual void SetDefaults() override;
+	
+	virtual bool IsMSAASupported() const;
 	
 private:
 	TArray<TConsoleSetting<int32>> SettingsDescription;

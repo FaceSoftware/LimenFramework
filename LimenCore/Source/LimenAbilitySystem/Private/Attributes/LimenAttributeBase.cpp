@@ -11,7 +11,7 @@
 #include "Net/UnrealNetwork.h"
 
 
-ULimenAttributeBase::ULimenAttributeBase() : Super()
+ULimenAttributeBase::ULimenAttributeBase() : Super(), FTickableGameObject(ETickableTickType::Never)
 {
 	MaxValue = 100.f;
 	InitialValue = 100.f;
@@ -25,6 +25,17 @@ ULimenAttributeBase::ULimenAttributeBase() : Super()
 #endif
 	bIsBeingUpdatedByRecharge = false;
 	RechargeDelay = FFloatRange(0.f, 0.f);
+}
+
+void ULimenAttributeBase::PostInitProperties()
+{
+	Super::PostInitProperties();
+	
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		check(IsInGameThread())
+		SetTickableTickType(ETickableTickType::Conditional);
+	}
 }
 
 void ULimenAttributeBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

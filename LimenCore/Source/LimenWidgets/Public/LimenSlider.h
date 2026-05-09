@@ -86,6 +86,10 @@ public:
 	void SetBlinkColor(const FSlateColor InColor);
 	UFUNCTION(BlueprintCallable)
 	bool IsBlinking() const;
+	UFUNCTION(BlueprintCallable)
+	void SetUserCanEditValue(bool bCanEdit);
+	UFUNCTION(BlueprintCallable)
+	bool UserCanEditValue() const;
 
 protected:
 	UPROPERTY(EditAnywhere)

@@ -57,7 +57,11 @@ bool ULimenValueSetting::CanEdit() const
 
 bool ULimenValueSetting::SetNewValue(const float& NewSelection)
 {
-	if (!TLimenEditableSetting::SetNewValue(NewSelection))
+	const float Multiplier = FMath::Pow(10.0f, DecimalsDisplayed);
+	const float RelevantNumbers = FMath::FloorToFloat(NewSelection * Multiplier);
+	const float SanitizedSelection = RelevantNumbers / Multiplier;
+	
+	if (!TLimenEditableSetting::SetNewValue(SanitizedSelection))
 	{
 		ULimenCoreStatics::LimenLog(this, FString::Printf(TEXT("Error setting '%s' to '%f'"), *GetDisplayName().ToString(), NewSelection), ELogType::Error);
 		return false;
@@ -65,7 +69,7 @@ bool ULimenValueSetting::SetNewValue(const float& NewSelection)
  	
 	SetIsApplied(false);
 	PreviousSettingValue = CurrentSettingValue;
-	CurrentSettingValue = NewSelection;
+	CurrentSettingValue = SanitizedSelection;
 	OnSettingUpdated.Broadcast(this);
 	return true;
 }

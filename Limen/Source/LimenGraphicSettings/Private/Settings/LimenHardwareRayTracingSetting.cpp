@@ -88,5 +88,5 @@ void ULimenHardwareRayTracingSetting::RayTracingSettingApplied(const ULimenSetti
 		bCanEditOverride = false;
 	}
 
-	OnSettingEditableStateChanged.Broadcast(Setting);
+	OnSettingEditableStateChanged.Broadcast(this);
 }

@@ -19,6 +19,8 @@ class LIMENLEVELTRANSITIONS_API ULimenLoadingScreenSettings : public UDeveloperS
 public:	
 	UPROPERTY(EditAnywhere, Config)
 	TMap<TSoftObjectPtr<UWorld>, TSoftObjectPtr<ULimenLoadingScreenParameters>> LoadingScreens;
+	UPROPERTY(EditAnywhere, Config)
+	TSoftObjectPtr<ULimenLoadingScreenParameters> DefaultLoadingScreen;
 	
 	UPROPERTY(EditAnywhere, Config)
 	FVector SilentLocation;

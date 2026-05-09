@@ -127,6 +127,22 @@ bool ULimenSlider::IsBlinking() const
 	return bIsBlinking;
 }
 
+void ULimenSlider::SetUserCanEditValue(const bool bCanEdit)
+{
+	if (bUserCanEditValue == bCanEdit) { return; }
+	
+	bUserCanEditValue = bCanEdit;
+	if (const TSharedPtr<SWidget> SafeWidget = GetCachedWidget(); SafeWidget.IsValid())
+	{
+		SafeWidget->Invalidate(EInvalidateWidgetReason::Paint);
+	}
+}
+
+bool ULimenSlider::UserCanEditValue() const
+{
+	return bUserCanEditValue;
+}
+
 TSharedRef<SWidget> ULimenSlider::RebuildWidget()
 {
 	// return Super::RebuildWidget();

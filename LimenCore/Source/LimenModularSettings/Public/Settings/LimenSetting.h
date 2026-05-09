@@ -56,9 +56,10 @@ public:
 	
 protected:
 
-	template<typename SubsystemClass>
+	template<typename SubsystemClass = ULimenModularSettingsSubsystem>
 	SubsystemClass* GetOwnerSubsystem() const
 	{
+		static_assert(TIsDerivedFrom<SubsystemClass, ULimenModularSettingsSubsystem>::Value);
 		SubsystemClass* Subsystem = Cast<SubsystemClass>(OwnerSubsystem.Get());
 		check(Subsystem != nullptr);
 		return Subsystem;

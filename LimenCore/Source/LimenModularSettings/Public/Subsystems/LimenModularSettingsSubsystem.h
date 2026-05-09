@@ -32,6 +32,7 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 
 	UFUNCTION(BlueprintCallable, Category="Limen|Modular Settings")
 	bool CanEditSetting(const TSubclassOf<ULimenSetting>& Class) const;
@@ -63,6 +64,19 @@ public:
 	template<typename SettingType>
 	bool ReapplySetting(const TSubclassOf<ULimenSetting>& Class);
 	
+	template<typename T = APlayerController>
+	T* GetCurrentPlayerController() const
+	{
+		static_assert(TIsDerivedFrom<T, APlayerController>::Value);
+		
+		// Minor optimization, we only resolve the ptr once with Get().
+		if (auto* PC = CurrentPlayerController.Get())
+		{
+			return Cast<T>(PC);
+		}
+		return nullptr;
+	}
+	
 protected:
 
 	/**
@@ -73,12 +87,11 @@ protected:
 	 * @warning Must be overriden.
 	 */
 	virtual void LoadDefaultSettingsList();
-	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 	UFUNCTION()
 	virtual void SettingUpdated(const ULimenSetting* UpdatedSetting);
 	
 private:
-
+	TWeakObjectPtr<APlayerController> CurrentPlayerController;
 };
 
 template <typename SettingType>

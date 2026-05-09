@@ -11,8 +11,9 @@
 #include "Widgets/Text/STextBlock.h"
 
 
-ULimenMenuButton::ULimenMenuButton() : Super(), bUseIcon(true)
+ULimenMenuButton::ULimenMenuButton() : Super(), FTickableGameObject(ETickableTickType::Never)
 {
+	bUseIcon = true;
 	TextHorizontalAlignment = HAlign_Left;
 	TextVerticalAlignment = VAlign_Center;
 	TextureParameter = TEXT("Texture");
@@ -22,6 +23,16 @@ ULimenMenuButton::ULimenMenuButton() : Super(), bUseIcon(true)
 	HoverEffectElapsedTime = 0.f;
 
 	bIsPlayingDistortionEffect = false;
+}
+
+void ULimenMenuButton::PostInitProperties()
+{
+	Super::PostInitProperties();
+	
+	if (!HasAnyFlags(RF_ClassDefaultObject))
+	{
+		SetTickableTickType(ETickableTickType::Always);
+	}
 }
 
 void ULimenMenuButton::ReleaseSlateResources(bool bReleaseChildren)
@@ -49,7 +60,7 @@ void ULimenMenuButton::Tick(float DeltaTime)
 
 ETickableTickType ULimenMenuButton::GetTickableTickType() const
 {
-	return ETickableTickType::Always;
+	return HasAnyFlags(RF_ClassDefaultObject) ? ETickableTickType::Never : ETickableTickType::Always;
 }
 
 bool ULimenMenuButton::IsTickable() const

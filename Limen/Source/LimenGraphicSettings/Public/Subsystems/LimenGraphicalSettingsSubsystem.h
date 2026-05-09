@@ -28,11 +28,10 @@ public:
 	FPostProcessSettingsDelegate OnPostProcessSettingEvaluate;
 	
 	ULimenGraphicalSettingsSubsystem();
-	
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 
 protected:
-	virtual void PlayerControllerChanged(APlayerController* NewPlayerController) override;
 	virtual void LoadDefaultSettingsList() override;
 
 private:

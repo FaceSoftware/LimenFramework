@@ -39,6 +39,7 @@ public:
 	FAttributeUpdate OnAttributeChanged;
 	
 	ULimenAttributeBase();
+	virtual void PostInitProperties() override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual bool IsSupportedForNetworking() const override;
 	virtual int32 GetFunctionCallspace(UFunction* Function, FFrame* Stack) override;
