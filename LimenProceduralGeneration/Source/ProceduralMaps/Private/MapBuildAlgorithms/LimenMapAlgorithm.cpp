@@ -59,17 +59,6 @@ ULimenProceduralMap* ULimenMapAlgorithm::CreateMap(const FGuid& MapId, const UPr
 	return GeneratedMap.Get();
 }
 
-TSubclassOf<ULimenProceduralMap> ULimenMapAlgorithm::GetGeneratedMapClass() const
-{ 
-	PURE_VIRTUAL(ULimenMapAlgorithm::GetGeneratedMapClass);
-	return nullptr;
-}
-
-void ULimenMapAlgorithm::GenerateMap(const UProceduralMapParameters* MapParameters, ULimenProceduralMap* OutGeneratedMap)
-{
-	PURE_VIRTUAL(ULimenMapAlgorithm::GenerateMap);
-}
-
 bool ULimenMapAlgorithm::Init()
 {
 #if WITH_EDITOR

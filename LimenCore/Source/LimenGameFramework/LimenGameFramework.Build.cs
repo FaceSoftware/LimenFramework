@@ -13,6 +13,7 @@ public class LimenGameFramework : ModuleRules
                 "Engine",
                 "LimenCore",
                 "AIModule",
+                "GameplayTags",
             }
         );
 

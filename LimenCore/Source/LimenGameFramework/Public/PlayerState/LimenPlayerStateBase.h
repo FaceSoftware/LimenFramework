@@ -14,9 +14,23 @@ class LIMENGAMEFRAMEWORK_API ALimenPlayerStateBase : public APlayerState
 	GENERATED_BODY()
 
 public:
+	DECLARE_MULTICAST_DELEGATE_OneParam(FLimenPlayerStateDelegate, ALimenPlayerStateBase*)
+	FLimenPlayerStateDelegate OnClientReady;
+	
 	explicit ALimenPlayerStateBase(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	UFUNCTION(BlueprintCallable)
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	bool IsLocalPlayerState() const;
+	void SetClientReady(bool bIsReady = true);
+	bool IsClientReady() const;
+	
+protected:
+
 
 private:
+	UPROPERTY(ReplicatedUsing=OnRep_ClientReady)
+	bool bIsClientReady;
+	
+	UFUNCTION()
+	void OnRep_ClientReady();
 };

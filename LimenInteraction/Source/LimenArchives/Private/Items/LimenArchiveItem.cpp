@@ -5,7 +5,7 @@
 
 #include "TimerManager.h"
 #include "Archives/LimenArchive.h"
-#include "Components/Interactable/LimenInteractableAreaComponent.h"
+#include "Components/Interactable/LimenInteractableComponent.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Subsystems/LimenArchiveSubsystem.h"
@@ -63,7 +63,7 @@ void ALimenArchiveItem::Interact(AController* InController, APawn* InPawn)
 	ArchivesManager->AddArchive(ArchivePtr.Get());
 	InteractionStopped(InController, InPawn);
 
-	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
+	for (ULimenInteractableComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableComponent>())
 	{
 		InteractableComponent->Deactivate();
 	}

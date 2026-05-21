@@ -3,6 +3,7 @@
 
 #include "GameMode/LimenGameModeBase.h"
 
+#include "EngineUtils.h"
 #include "Actors/LimenGameplayManager.h"
 #include "BlueprintLibraries/LimenCoreStatics.h"
 #include "GameState/LimenGameStateBase.h"
@@ -27,8 +28,9 @@ ALimenGameModeBase::ALimenGameModeBase(const FObjectInitializer& ObjectInitializ
 void ALimenGameModeBase::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
+	
+	SetupManuallyPlacedManagers();
 	SpawnManagers();
-	// OverrideLimenClasses();
 
 	if (!ErrorMessage.IsEmpty())
 	{
@@ -62,6 +64,10 @@ void ALimenGameModeBase::PostLogin(APlayerController* NewPlayer)
 	if (GetLimenGameState())
 	{
 		LimenGameState->AddPlayerToPlayerList(NewPlayer->PlayerState.Get());
+	}
+	if (ALimenPlayerControllerBase* PC = Cast<ALimenPlayerControllerBase>(NewPlayer))
+	{
+		PC->OnClientReady.AddUObject(this, &ThisClass::ClientReady);
 	}
 }
 
@@ -123,7 +129,7 @@ ALimenGameStateBase* ALimenGameModeBase::GetLimenGameState()
 
 void ALimenGameModeBase::ResetManagers()
 {
-	for (const TWeakObjectPtr<ALimenGameplayManager>& Manager : ManagersList)
+	for (auto& [Class, Manager] : ManagersList)
 	{
 		Manager->Reset();
 	}
@@ -134,7 +140,19 @@ bool ALimenGameModeBase::IsInitialLevelStreamingComplete() const
 	return InitialStreamingLevelsList.IsEmpty();
 }
 
+void ALimenGameModeBase::RegisterActorWithManager(AActor* Actor, const FGameplayTag& Id)
+{
+	for (ALimenGameplayManager* ManagerPtr : GetManagers<ALimenGameplayManager>())
+	{
+		ManagerPtr->NotifyActorRegistry(Id, Actor);
+	}
+}
+
 void ALimenGameModeBase::InitialLevelStreamingComplete()
+{
+}
+
+void ALimenGameModeBase::ClientReady(ALimenPlayerControllerBase* PlayerController)
 {
 }
 
@@ -150,6 +168,15 @@ void ALimenGameModeBase::TickPlayerState(APlayerState* InPlayerState, float Delt
 {
 }
 
+void ALimenGameModeBase::SetupManuallyPlacedManagers()
+{
+	for (TActorIterator<ALimenGameplayManager> It(GetWorld()); It; ++It)
+	{
+		It->BindGameMode(this);
+		ManagersList.Add(It->GetClass(), TWeakObjectPtr(*It));
+	}
+}
+
 void ALimenGameModeBase::SpawnManagers()
 {
 	for (auto& ManagerSoftClassPtr : ManagersClassList)
@@ -163,7 +190,7 @@ void ALimenGameModeBase::SpawnManagers()
 		checkf(IsValid(ManagerInstance), TEXT("Failed to spawn Manager of class %s"), *ManagerClass->GetName())
 		
 		ManagerInstance->BindGameMode(this);
-		ManagersList.Push(TObjectPtr<ALimenGameplayManager>(ManagerInstance));
+		ManagersList.Add(ManagerClass, TWeakObjectPtr(ManagerInstance));
 	}
 }
 

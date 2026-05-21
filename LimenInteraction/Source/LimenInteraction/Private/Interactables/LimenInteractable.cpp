@@ -5,6 +5,7 @@
 
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#include "Components/Interactable/LimenInteractableComponent.h"
 
 
 ALimenInteractable::ALimenInteractable(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -13,14 +14,14 @@ ALimenInteractable::ALimenInteractable(const FObjectInitializer& InObjectInitial
 	bIsBeingContinuouslyInteracted = false;
 }
 
-void ALimenInteractable::BeginPlay()
+void ALimenInteractable::PostInitializeComponents()
 {
-	Super::BeginPlay();
-
-	for (ILimenInteractableComponent* InteractableAreaComponent : GetInteractableComponents())
+	Super::PostInitializeComponents();
+	
+	for (ULimenInteractableComponent* InteractableAreaComponent : GetInteractableComponents())
 	{
-		InteractableAreaComponent->GetInteractionDelegate()->AddUObject(this, &ThisClass::OnInteract_Internal);
-		InteractableAreaComponent->GetInteractionStoppedDelegate()->AddUObject(this, &ThisClass::OnInteractionStopped_Internal);
+		InteractableAreaComponent->OnInteract.AddUObject(this, &ThisClass::OnInteract_Internal);
+		InteractableAreaComponent->OnInteractionStopped.AddUObject(this, &ThisClass::OnInteractionStopped_Internal);
 	}
 }
 
@@ -29,20 +30,11 @@ bool ALimenInteractable::HasBeenInteracted() const
 	return bWasInteracted;
 }
 
-TArray<ILimenInteractableComponent*> ALimenInteractable::GetInteractableComponents() const
+TArray<ULimenInteractableComponent*> ALimenInteractable::GetInteractableComponents() const
 {
-	TArray<UActorComponent*> InteractableComponents = GetComponentsByInterface(ULimenInteractableComponent::StaticClass());
-
-	TArray<ILimenInteractableComponent*> OutComponents;
-	OutComponents.Reserve(InteractableComponents.Num());
-	
-	for (UActorComponent* InteractableComponent : InteractableComponents)
-	{
-		checkf(InteractableComponent->Implements<ULimenInteractableComponent>(), TEXT("Interactable components must inherit ILimenInteractableComponent interface"));
-		OutComponents.Push(CastChecked<ILimenInteractableComponent>(InteractableComponent));
-	}
-	
-	return OutComponents;
+	TArray<ULimenInteractableComponent*> InteractableComponents;
+	GetComponents<ULimenInteractableComponent>(InteractableComponents);
+	return InteractableComponents;
 }
 
 bool ALimenInteractable::ShouldSaveData() const

@@ -1,34 +1,45 @@
 ﻿// Copyright Face Software. All Rights Reserved.
 
 
-#include "Components/Interactable/LimenInteractableAreaComponent.h"
+#include "Components/Interactable/LimenInteractableComponent.h"
 
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 
 
-ULimenInteractableAreaComponent::ULimenInteractableAreaComponent() : Super()
+ULimenInteractableComponent::ULimenInteractableComponent() : Super()
 {
+	bWantsInitializeComponent = true;
 	PrimaryComponentTick.bCanEverTick = false;
 	SetGenerateOverlapEvents(true);
+	SetIsReplicatedByDefault(true);
+	SetIsReplicated(true);
+	bAutoActivate = true;
 }
 
-void ULimenInteractableAreaComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void ULimenInteractableComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	FDoRepLifetimeParams Params(COND_None, REPNOTIFY_OnChanged, true);
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, InteractionParams, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, ReplicatedGuid, Params)
 }
 
-void ULimenInteractableAreaComponent::OnComponentCreated()
+void ULimenInteractableComponent::InitializeComponent()
 {
-	Super::OnComponentCreated();
+	Super::InitializeComponent();
 	SetCollisionProfileName(TEXT("OverlapAllDynamic"));
+	
+	if (GetOwner() && GetOwner()->HasAuthority())
+	{
+		ReplicatedGuid = FGuid::NewGuid();
+		MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, ReplicatedGuid, this)
+	}
 }
 
-void ULimenInteractableAreaComponent::Activate(const bool bReset)
+void ULimenInteractableComponent::Activate(const bool bReset)
 {
 	Super::Activate(bReset);
 
@@ -42,7 +53,7 @@ void ULimenInteractableAreaComponent::Activate(const bool bReset)
 	SetCollisionResponseToChannels(CachedCollisionResponse.GetValue());
 }
 
-void ULimenInteractableAreaComponent::Deactivate()
+void ULimenInteractableComponent::Deactivate()
 {
 	Super::Deactivate();
 
@@ -53,52 +64,32 @@ void ULimenInteractableAreaComponent::Deactivate()
 	SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
 }
 
-void ULimenInteractableAreaComponent::NotifyHover(AController* Controller, APawn* Pawn)
+void ULimenInteractableComponent::NotifyHover(AController* Controller, APawn* Pawn)
 {
-	BP_OnHoverStart.Broadcast(Controller, Pawn);
+	OnHoverStart.Broadcast(Controller, Pawn);
 }
 
-void ULimenInteractableAreaComponent::NotifyUnHover(AController* Controller, APawn* Pawn)
+void ULimenInteractableComponent::NotifyUnHover(AController* Controller, APawn* Pawn)
 {
-	BP_OnHoverEnd.Broadcast(Controller, Pawn);
+	OnHoverEnd.Broadcast(Controller, Pawn);
 }
 
-bool ULimenInteractableAreaComponent::AllowPhysicsInteraction() const
+bool ULimenInteractableComponent::AllowPhysicsInteraction() const
 {
 	return false;
 }
 
-bool ULimenInteractableAreaComponent::IsBeingInteracted() const
+bool ULimenInteractableComponent::IsBeingInteracted() const
 {
 	return InteractionParams.bIsBeingInteracted;
 }
 
-FInteractableComponentDelegate* ULimenInteractableAreaComponent::GetInteractionDelegate()
+const FGuid& ULimenInteractableComponent::GetReplicatedGuid() const
 {
-	return &OnInteract;
+	return ReplicatedGuid;
 }
 
-FInteractableComponentDelegate* ULimenInteractableAreaComponent::GetInteractionStoppedDelegate()
-{
-	return &OnInteractionStopped;
-}
-
-FBPInteractableComponentDelegate* ULimenInteractableAreaComponent::GetBlueprintInteractionDelegate()
-{
-	return &BP_OnInteract;
-}
-
-FBPInteractableComponentDelegate* ULimenInteractableAreaComponent::GetBlueprintInteractionStoppedDelegate()
-{
-	return &BP_OnInteractionStopped;
-}
-
-UPrimitiveComponent* ULimenInteractableAreaComponent::GetPrimitiveComponent()
-{
-	return this;
-}
-
-void ULimenInteractableAreaComponent::Interact(AController* InController, APawn* InPawn)
+void ULimenInteractableComponent::Interact(AController* InController, APawn* InPawn)
 {
 	if (GetOwner()->HasAuthority())
 	{
@@ -107,10 +98,9 @@ void ULimenInteractableAreaComponent::Interact(AController* InController, APawn*
 	}
 
 	OnInteract.Broadcast(InController, InPawn);
-	BP_OnInteract.Broadcast(InController, InPawn);
 }
 
-void ULimenInteractableAreaComponent::StopInteraction(AController* InController, APawn* InPawn)
+void ULimenInteractableComponent::StopInteraction(AController* InController, APawn* InPawn)
 {
 	if (GetOwner()->HasAuthority())
 	{
@@ -119,10 +109,9 @@ void ULimenInteractableAreaComponent::StopInteraction(AController* InController,
 	}
 
 	OnInteractionStopped.Broadcast(InController, InPawn);
-	BP_OnInteractionStopped.Broadcast(InController, InPawn);
 }
 
-void ULimenInteractableAreaComponent::OnRep_IsBeingInteracted()
+void ULimenInteractableComponent::OnRep_IsBeingInteracted()
 {
 	if (InteractionParams.bIsBeingInteracted)
 	{

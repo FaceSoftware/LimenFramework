@@ -414,13 +414,13 @@ AInitializerProxyActor::AInitializerProxyActor()
 	bIsWorking = true;
 }
 
+bool AInitializerProxyActor::IsWorking_Implementation() const
+{
+	return bIsWorking;
+}
+
 void AInitializerProxyActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	bIsWorking = false;
 	Super::EndPlay(EndPlayReason);
-}
-
-bool AInitializerProxyActor::IsWorking_Implementation() const
-{
-	return bIsWorking;
 }

@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "Actors/LimenGameplayManager.h"
 #include "MapBuildAlgorithms/LimenMapAlgorithm.h"
+#include "Managers/LimenProceduralMapManager.h"
+#include "Maps/LimenProceduralMap.h"
+#include "DataAssets/ProceduralMapParameters.h"
 #include "LimenProceduralMapBuilder.generated.h"
 
-
-class ALimenProceduralMapManager;
-class UProceduralMapParameters;
 
 USTRUCT(BlueprintType)
 struct FProceduralMapGroup
@@ -38,8 +38,7 @@ public:
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnMapUpdate, const FGuid& Map);
 	
 	explicit ALimenProceduralMapBuilder(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void NotifyActorRegistry(const FGameplayTag& Id, AActor* Actor) override;
 
 	FGuid LoadMap(const FName GroupName, const int32 Index);
 	void BuildMap(const FGuid& MapId);
@@ -111,6 +110,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Maps")
 	TArray<FProceduralMapGroup> MapCollections;
+	
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	virtual void MapBeingLoad(const FGuid& MapId);
 	virtual void MapFinishLoad(const FGuid& MapId, ULimenProceduralMap* Map);

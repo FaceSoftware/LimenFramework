@@ -9,7 +9,7 @@
 #include "LimenPhysicsInteractionComponent.generated.h"
 
 
-class ULimenInteractableAreaComponent;
+class ULimenInteractableComponent;
 struct FCollisionQueryParams;
 class UPhysicsHandleComponent;
 
@@ -39,8 +39,8 @@ protected:
 
 	virtual void SetupInteraction() override;
 	virtual void UpdateInteraction(const float DeltaTime) override;
-	virtual void Interacted(UActorComponent* Component) override;
-	virtual void InteractionStopped(UActorComponent* Component) override;
+	virtual void Interacted(ULimenInteractableComponent* Component) override;
+	virtual void InteractionStopped(ULimenInteractableComponent* Component) override;
 
 private:
 	TWeakObjectPtr<UPhysicsHandleComponent> PhysicsHandle;

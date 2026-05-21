@@ -31,6 +31,30 @@ ALimenGameplayManager::ALimenGameplayManager(const FObjectInitializer& ObjectIni
 	bHasInitialized = false;
 }
 
+void ALimenGameplayManager::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (!CanStart())
+	{
+		ULimenCoreStatics::LimenLog(this, TEXT("Error initializing manager"), ELogType::Error);
+		FTimerDelegate DestroyDelegate;
+		DestroyDelegate.BindLambda([this]
+		{
+			verify(Destroy());
+		});
+		
+		GetWorld()->GetTimerManager().SetTimerForNextTick(DestroyDelegate);
+	}
+	else
+	{
+		RegisterActors(ActorsRegistrations);
+		Start();
+		BP_Start();
+		bHasInitialized = true;
+	}
+}
+
 TArray<ALimenGameplayManager*> ALimenGameplayManager::GetGameplayManagers(const UWorld* World, const TSubclassOf<ALimenGameplayManager>& ManagerClass)
 {
 	check(ManagerClass)
@@ -46,27 +70,14 @@ TArray<ALimenGameplayManager*> ALimenGameplayManager::GetGameplayManagers(const 
 	return OutManagers;
 }
 
-void ALimenGameplayManager::BeginPlay()
-{	
-	Super::BeginPlay();
+void ALimenGameplayManager::RegisterActors(TMap<FGameplayTag, TFunction<void(AActor*)>>& OutRegistrations)
+{
+}
 
-	if (!CanStart())
-	{
-		ULimenCoreStatics::LimenLog(this, TEXT("Error initializing manager"), ELogType::Error);
-		FTimerDelegate DestroyDelegate;
-		DestroyDelegate.BindLambda([this]
-		{
-			verify(Destroy());
-		});
-		
-		GetWorld()->GetTimerManager().SetTimerForNextTick(DestroyDelegate);
-	}
-	else
-	{
-		Start();
-		BP_Start();
-		bHasInitialized = true;
-	}
+void ALimenGameplayManager::AddOrReplaceRegistration(const FGameplayTag& Id,
+                                                     const TFunction<void(AActor*)>& RegistrationFunction)
+{
+	ActorsRegistrations.FindOrAdd(Id, RegistrationFunction) = RegistrationFunction;
 }
 
 void ALimenGameplayManager::Start()
@@ -82,6 +93,16 @@ bool ALimenGameplayManager::CanStart() const
 void ALimenGameplayManager::BindGameMode(AGameModeBase* InGameMode)
 {
 	GameModeWeakPtr = InGameMode;
+}
+
+void ALimenGameplayManager::NotifyActorRegistry(const FGameplayTag& Id, AActor* Actor)
+{
+	if (const TFunction<void(AActor*)>* RegisterFunctionPtr = ActorsRegistrations.Find(Id);
+		UNLIKELY(RegisterFunctionPtr))
+	{
+		const TFunction<void(AActor*)>& RegisterFunction = *RegisterFunctionPtr;
+		RegisterFunction(Actor);
+	}
 }
 
 bool ALimenGameplayManager::HasInitialized() const

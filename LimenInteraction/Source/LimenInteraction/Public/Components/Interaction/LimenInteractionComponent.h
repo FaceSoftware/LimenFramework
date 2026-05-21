@@ -4,14 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Interfaces/LimenInteractableComponent.h"
 #include "LimenInteractionComponent.generated.h"
 
 
+class ULimenInteractableComponent;
 class AController;
 class ALimenInteractable;
-class ULimenInteractableComponent;
-class ILimenInteractableComponent;
 
 USTRUCT()
 struct FRepInteractionParams
@@ -29,8 +27,18 @@ struct FRepInteractionParams
 	TObjectPtr<APawn> Pawn;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInteractableHover, AActor*, InteractableActor, const TScriptInterface<ILimenInteractableComponent>&, Interactable);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBPInteractionDelegate, AActor*, InteractableActor, const TScriptInterface<ILimenInteractableComponent>&, Interactable);
+USTRUCT()
+struct FRepInteractionUpdateData
+{
+	GENERATED_BODY()
+
+	FRepInteractionUpdateData() = default;
+	
+	UPROPERTY()
+	TObjectPtr<AActor> InteractableActor;
+	UPROPERTY()
+	FGuid ReplicatedGuid;
+};
 
 /**
  * @brief Abstract class that provides interaction logic for actors and components.
@@ -38,7 +46,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FBPInteractionDelegate, AActor*, In
  * ULimenInteractionComponent serves as a base class for defining interaction mechanics,
  * including hover and interact events, as well as interaction-specific logic such as handling line of sight
  * and interaction ranges.
- * It supports integration with components that implement the ILimenInteractableComponent interface.
  */
 UCLASS(Abstract)
 class LIMENINTERACTION_API ULimenInteractionComponent : public UActorComponent
@@ -46,6 +53,7 @@ class LIMENINTERACTION_API ULimenInteractionComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
+	DECLARE_MULTICAST_DELEGATE_TwoParams(FInteractableHover, AActor* /* InteractableActor */, ULimenInteractableComponent* /* Interactable */);
 	/**
 	 * @brief Delegate event triggered when an interactable component enters or exits hover state.
 	 *
@@ -57,7 +65,6 @@ public:
 	 * The event passes information about the involved interactable, providing hooks for initiating
 	 * or ceasing hover-based interactions, such as highlighting UI elements or playing sound effects.
 	 */
-	UPROPERTY(BlueprintAssignable)
 	FInteractableHover OnInteractableHover;
 	/**
 	 * @brief Delegate event triggered when an interaction occurs.
@@ -72,29 +79,18 @@ public:
 	 * The event passes relevant information, including the owner actor of the interactable and the associated
 	 * interactable component interface.
 	 */
-	UPROPERTY(BlueprintAssignable)
 	FInteractableHover OnInteract;
 
 	/**
 	 * @brief Determines if the specified actor is interactable.
 	 *
-	 * This method checks if the provided actor contains any component that implements the
-	 * ILimenInteractableComponent interface, indicating that the actor is capable of interaction.
+	 * This method checks if the provided actor contains any interactable component,
+	 * indicating that the actor is capable of interaction.
 	 *
 	 * @param InActor Pointer to the actor being checked for interactability.
 	 * @return true if the actor contains an interactable component, false otherwise.
 	 */
 	static bool IsInteractableActor(const AActor* InActor);
-	/**
-	 * @brief Determines if the specified component is interactable.
-	 *
-	 * This method checks whether the given component implements the ULimenInteractableComponent
-	 * interface and is valid for interaction purposes.
-	 *
-	 * @param InComponent The actor component to be checked.
-	 * @return true if the component is interactable, false otherwise.
-	 */
-	static bool IsInteractableComponent(const UActorComponent* InComponent);
 
 	explicit ULimenInteractionComponent(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -111,6 +107,7 @@ public:
 	 * @return The interaction range as a floating-point value.
 	 */
 	FORCEINLINE float GetInteractionRange() const;
+	FORCEINLINE void SetInteractionRange(const float NewValue);
 	/**
 	 * 
 	 * @return 
@@ -138,8 +135,7 @@ public:
 	/**
 	 * @brief Attempts to perform an interaction with a specific interactable actor.
 	 *
-	 * This method checks if the specified actor has a valid interactable component implementing
-	 * the ILimenInteractableComponent interface.
+	 * This method checks if the specified actor has a valid interactable component.
 	 * If a valid interactable component is found, it triggers the OnInteract delegate event,
 	 * passing relevant interaction information.
 	 * The interaction logic can be customized by overriding or extending this method in derived classes.
@@ -151,16 +147,15 @@ public:
 	/**
 	 * @brief Attempts to perform an interaction with a specified interactable component.
 	 *
-	 * Executes an interaction with the provided SpecificInteractableComponent
-	 * if it implements the ILimenInteractableComponent interface.
+	 * Executes an interaction with the provided SpecificInteractableComponent.
 	 * This method triggers the OnInteract delegate upon successful interaction
 	 * and returns a boolean status based on the result.
 	 *
-	 * @param SpecificInteractableComponent The specific component to interact with, expected to implement the ILimenInteractableComponent interface.
+	 * @param SpecificInteractableComponent The specific component to interact with.
 	 * @return true if the interaction is successful, false otherwise (e.g.,
 	 * if the component does not implement the required interface).
 	 */
-	virtual bool Interact(UActorComponent* SpecificInteractableComponent);
+	virtual bool Interact(ULimenInteractableComponent* SpecificInteractableComponent);
 
 	/**
 	 * @brief Stops the current interaction process by notifying the interactable component and updating interaction states.
@@ -174,8 +169,7 @@ public:
 
 	AController* GetInteractionController() const;
 	APawn* GetInteractionPawn() const;
-	FORCEINLINE TScriptInterface<ILimenInteractableComponent> GetCurrentInteractableInterface() const;
-	FORCEINLINE UActorComponent* GetCurrentInteractableComponent() const;
+	FORCEINLINE ULimenInteractableComponent* GetCurrentInteractableComponent() const;
 
 protected:
 #if WITH_EDITORONLY_DATA
@@ -234,25 +228,23 @@ protected:
 	 *
 	 * @param DeltaTime The time elapsed since the last frame, used for frame-dependent calculations.
 	 */
-	virtual void UpdateInteraction(const float DeltaTime);
+	virtual void UpdateInteraction(const float DeltaTime) PURE_VIRTUAL(ULimenInteractionComponent::UpdateInteraction, );
 
-	void SetCurrentInteractableInterface(UActorComponent* InComponent);
+	void SetCurrentInteractable(ULimenInteractableComponent* InComponent);
 
-	virtual void Interacted(UActorComponent* Component);
-	virtual void InteractionStopped(UActorComponent* Component);
+	virtual void Interacted(ULimenInteractableComponent* Component);
+	virtual void InteractionStopped(ULimenInteractableComponent* Component);
 
 private:
-	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess="true"))
-	TScriptInterface<ILimenInteractableComponent> CurrentInteractableInterface;
-	TScriptInterface<ILimenInteractableComponent> PreviousInteractableInterface;
+	TWeakObjectPtr<ULimenInteractableComponent> CurrentInteractable;
+	TWeakObjectPtr<ULimenInteractableComponent> PreviousInteractable;
 
 	bool bIsInteracting;
 
 	UPROPERTY(Replicated)
 	FRepInteractionParams InteractionParams;
-
-	UFUNCTION(Client, Reliable)
-	void Client_InteractableComponentHoveredChanged(UActorComponent* Component);
+	UPROPERTY(ReplicatedUsing=OnRep_InteractionUpdateData)
+	FRepInteractionUpdateData InteractionUpdateData;
 	
 	UFUNCTION(Server, Reliable)
 	void Server_Interact();
@@ -260,9 +252,12 @@ private:
 	void Server_StopInteract();
 
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_Interact(UActorComponent* Component);
+	void Multicast_Interact(ULimenInteractableComponent* Component);
 	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_StopInteract(UActorComponent* Component);
+	void Multicast_StopInteract(ULimenInteractableComponent* Component);
+	
+	UFUNCTION()
+	void OnRep_InteractionUpdateData();
 
 	void InteractInternal();
 	void StopInteractInternal();

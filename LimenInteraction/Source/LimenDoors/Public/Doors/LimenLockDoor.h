@@ -7,6 +7,7 @@
 #include "CppClasses/LimenNotification.h"
 #include "LimenLockDoor.generated.h"
 
+
 class ULimenLock;
 
 UCLASS()
@@ -36,10 +37,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<ULimenLock> OutsideLock;
 
-	UPROPERTY()
-	TScriptInterface<ILimenInteractableComponent> InsideHandleInteraction;
-	UPROPERTY()
-	TScriptInterface<ILimenInteractableComponent> OutsideHandleInteraction;
+	TWeakObjectPtr<ULimenInteractableComponent> InsideHandleInteraction;
+	TWeakObjectPtr<ULimenInteractableComponent> OutsideHandleInteraction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Limen|Config")
 	FName InsideHandleInteractionTag;

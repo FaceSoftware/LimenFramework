@@ -35,8 +35,8 @@ public:
 		ULimenProceduralMap* OutMap = CreateMap(MapId, MapParameters);
 		return CastChecked<T>(OutMap);
 	}
-
-	virtual TSubclassOf<ULimenProceduralMap> GetGeneratedMapClass() const;
+	
+	virtual TSubclassOf<ULimenProceduralMap> GetGeneratedMapClass() const PURE_VIRTUAL(ULimenMapAlgorithm::GetGeneratedMapClass, return nullptr;)
 	
 protected:
 	/**
@@ -45,12 +45,7 @@ protected:
 	 * @param MapParameters The parameters for the map generation.
 	 * @param OutGeneratedMap A pointer to the generated map.
 	 */
-	virtual void GenerateMap(const UProceduralMapParameters* MapParameters, ULimenProceduralMap* OutGeneratedMap);
-
-	virtual bool Init() override;
-	virtual uint32 Run() override;
-	virtual void Stop() override;
-	virtual void Exit() override;
+	virtual void GenerateMap(const UProceduralMapParameters* MapParameters, ULimenProceduralMap* OutGeneratedMap) PURE_VIRTUAL(ULimenMapAlgorithm::GenerateMap);
 
 private:
 	TStrongObjectPtr<ULimenProceduralMap> GeneratedMap;
@@ -60,4 +55,9 @@ private:
 	FAlgorithmFinish* OnAlgorithmFinished;
 	
 	TUniquePtr<FRunnableThread> MapGenerationThread;
+	
+	bool Init() final override;
+	uint32 Run() final override;
+	void Stop() final override;
+	void Exit() final override;
 };

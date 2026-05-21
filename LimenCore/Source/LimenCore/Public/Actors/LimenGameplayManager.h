@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EngineUtils.h"
+#include "GameFramework/Info.h"
+#include "GameplayTagContainer.h"
 #include "LimenGameplayManager.generated.h"
 
 
@@ -57,7 +58,7 @@ public:
 	}
 	
 	explicit ALimenGameplayManager(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
 	/**
 	 * Binds the specified GameMode instance to this gameplay manager.
@@ -68,6 +69,7 @@ public:
 	 *                   This can be used to access or link the manager's functionality with the game mode logic.
 	 */
 	void BindGameMode(AGameModeBase* InGameMode);
+	virtual void NotifyActorRegistry(const FGameplayTag& Id, AActor* Actor);
 
 	/**
 	 * Checks whether the gameplay manager has been initialized.
@@ -79,7 +81,6 @@ public:
 	 * @return True if the manager has been initialized, otherwise false.
 	 */
 	bool HasInitialized() const;
-	
 
 protected:
 	/**
@@ -97,7 +98,44 @@ protected:
 		static_assert(TIsDerivedFrom<T, AGameModeBase>::IsDerived);
 		return Cast<T>(GetGameMode());
 	}
-
+	
+	virtual void RegisterActors(TMap<FGameplayTag, TFunction<void(AActor*)>>& OutRegistrations);
+	
+	void AddOrReplaceRegistration(const FGameplayTag& Id, const TFunction<void(AActor*)>& RegistrationFunction);
+	template<typename T>
+	void AddOrReplaceRegistration(const FGameplayTag& Id, const TFunction<void(T*)>& RegistrationFunction)
+	{
+		AddOrReplaceRegistration(Id, [RegistrationFunction](AActor* Actor)
+		{
+			if (RegistrationFunction)
+			{
+				T* Instance = Cast<T>(Actor);
+				RegistrationFunction(Instance);
+			}
+		});
+	}
+	template<typename T>
+	void AddOrReplaceRegistration(const FGameplayTag& Id, TWeakObjectPtr<T>* OutPtr)
+	{
+		AddOrReplaceRegistration(Id, [OutPtr] (AActor* Actor)
+		{
+			if (LIKELY(OutPtr))
+			{
+				*OutPtr = TWeakObjectPtr<T>(Cast<T>(Actor));
+			}
+		});
+	}
+	template<typename RegisteredActorType, typename ObjectType>
+	void AddOrReplaceRegistration(const FGameplayTag& Id, ObjectType* Object, TMemFunPtrType<false, ObjectType, void(RegisteredActorType*)>::Type RegistrationFunction)
+	{
+		AddOrReplaceRegistration(Id, [Object, RegistrationFunction] (AActor* Actor)
+		{
+			if (LIKELY(Object && RegistrationFunction))
+			{
+				(Object->*RegistrationFunction)(Cast<RegisteredActorType>(Actor));
+			}
+		});
+	}
 
 	/**
 	 * Starts the gameplay manager logic. This is a virtual method intended to be overridden by derived classes
@@ -142,6 +180,7 @@ protected:
 	void BP_Start();
 
 private:
+	TMap<FGameplayTag, TFunction<void(AActor*)>> ActorsRegistrations;
 	TWeakObjectPtr<AGameModeBase> GameModeWeakPtr;
 
 	bool bHasInitialized;
@@ -158,5 +197,4 @@ private:
 	 * @return An array of gameplay manager instances matching the specified class within the given world.
 	 */
 	static TArray<ALimenGameplayManager*> GetGameplayManagers(const UWorld* World, const TSubclassOf<ALimenGameplayManager>& ManagerClass);
-
 };

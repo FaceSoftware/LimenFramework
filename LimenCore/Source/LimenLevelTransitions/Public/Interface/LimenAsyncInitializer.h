@@ -22,7 +22,7 @@ class LIMENLEVELTRANSITIONS_API ILimenAsyncInitializer
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	UFUNCTION(BlueprintNativeEvent, Category="Limen|Level Transitiona")
+	UFUNCTION(BlueprintNativeEvent, Category="Limen|Level Transitions")
 	bool IsWorking() const;
 	virtual bool IsWorking_Implementation() const = 0;
 };

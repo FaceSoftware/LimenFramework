@@ -5,9 +5,10 @@
 
 #include "EngineUtils.h"
 #include "Components/SphereComponent.h"
+#include "Components/Interactable/LimenInteractableComponent.h"
 
 
-const TArray<UPrimitiveComponent*>& ULimenProximityInteractionComponent::GetAllInteractablesInRange() const
+const TArray<ULimenInteractableComponent*>& ULimenProximityInteractionComponent::GetAllInteractablesInRange() const
 {
 	return ComponentsInSphere;
 }
@@ -57,27 +58,24 @@ void ULimenProximityInteractionComponent::UpdateInteraction(const float DeltaTim
 		return;
 	}
 
-	UPrimitiveComponent* ClosestComponent = nullptr;
+	ULimenInteractableComponent* ClosestComponent = nullptr;
 	float ClosestDistance = TNumericLimits<double>::Max();
 	for (auto* Component : ComponentsInSphere)
 	{
-		if (Component == nullptr)
-		{
-			// For some reason there was a null component inside the sphere
-			continue;
-		}
+		auto* TempComponent = Cast<ULimenInteractableComponent>(Component);
+		if (TempComponent == nullptr) { continue; }
 		
-		const float CurrentDistance = FVector::DistSquared(End, Component->GetComponentLocation());
+		const float CurrentDistance = FVector::DistSquared(End, TempComponent->GetComponentLocation());
 		if (CurrentDistance > ClosestDistance)
 		{
 			continue;
 		}
 
-		ClosestComponent = Component;
+		ClosestComponent = TempComponent;
 		ClosestDistance = CurrentDistance;
 	}
 
-	SetCurrentInteractableInterface(ClosestComponent);
+	SetCurrentInteractable(ClosestComponent);
 
 	if (DebugMode())
 	{
@@ -90,36 +88,26 @@ void ULimenProximityInteractionComponent::OnInteractionSphereBeginOverlap(UPrimi
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 	const FHitResult& SweepResult)
 {
-	if (!IsInteractableComponent(OtherComp))
-	{
-		return;
-	}
+	auto* Interactable = Cast<ULimenInteractableComponent>(OtherComp);
+	if (!Interactable) { return; }
 
-	const auto PrimitiveComponent = Cast<UPrimitiveComponent>(OtherComp);
-	check(PrimitiveComponent)
-
-	if (!IsInsideSphere(PrimitiveComponent))
+	if (!IsInsideSphere(Interactable))
 	{
-		ComponentsInSphere.AddUnique(PrimitiveComponent);
-		ActorsInSphere.AddUnique(PrimitiveComponent->GetOwner());
+		ComponentsInSphere.AddUnique(Interactable);
+		ActorsInSphere.AddUnique(Interactable->GetOwner());
 	}
 }
 
 void ULimenProximityInteractionComponent::OnInteractionSphereEndOverlap(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!IsInteractableComponent(OtherComp))
-	{
-		return;
-	}
+	auto* Interactable = Cast<ULimenInteractableComponent>(OtherComp);
+	if (!Interactable) { return; }
 
-	const auto PrimitiveComponent = Cast<UPrimitiveComponent>(OtherComp);
-	check(PrimitiveComponent)
-
-	if (!IsInsideSphere(PrimitiveComponent))
+	if (!IsInsideSphere(Interactable))
 	{
-		ComponentsInSphere.Remove(PrimitiveComponent);
-		ActorsInSphere.Remove(PrimitiveComponent->GetOwner());
+		ComponentsInSphere.Remove(Interactable);
+		ActorsInSphere.Remove(Interactable->GetOwner());
 	}
 }
 
@@ -148,10 +136,10 @@ void ULimenProximityInteractionComponent::CheckActorsInInsideRadius()
 		It->GetComponents<UPrimitiveComponent>(PrimitiveComponents);
 		for (auto* Component : PrimitiveComponents)
 		{
-			if (IsInteractableComponent(Component))
+			if (auto* Interactable = Cast<ULimenInteractableComponent>(Component))
 			{
-				ComponentsInSphere.Push(Component);
-				ActorsInSphere.Push(Component->GetOwner());
+				ComponentsInSphere.Push(Interactable);
+				ActorsInSphere.Push(Interactable->GetOwner());
 				break;
 			}	
 		}

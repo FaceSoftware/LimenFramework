@@ -45,7 +45,6 @@ public:
 	 * @brief Removes the actor from gameplay by disabling its key functionalities.
 	 *
 	 * This method hides the actor, disables its collision, and marks it as removed from gameplay.
-	 * Additionally, it disables network replication for the actor.
 	 * This can be used to handle cases where the actor is no longer active in the gameplay or intended to
 	 * be removed logically while maintaining its instance in the world for potential reactivation or other purposes.
 	 *
@@ -53,11 +52,11 @@ public:
 	 * marked as removed from gameplay.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay Actor")
-	virtual void RemoveFromGameplay();
+	void RemoveFromGameplay();
 	/**
 	 * @brief Adds the actor back into gameplay by enabling its key functionalities.
 	 *
-	 * This method unhides the actor, enables its collision, and sets it to replicate over the network.
+	 * This method unhides the actor, enables its collision (optional).
 	 * The actor's state is updated to indicate it is no longer removed from gameplay.
 	 *
 	 * Typically, this is used to reactivate actors that were previously removed from gameplay
@@ -66,7 +65,7 @@ public:
 	 * The method has no effect if the actor is already active in gameplay.
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay Actor")
-	virtual void AddToGameplay(const bool bEnableCollision = true);
+	void AddToGameplay(const bool bEnableCollision = true);
 	/**
 	 * @brief Checks whether the actor is marked as removed from gameplay.
 	 *
@@ -77,8 +76,14 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay Actor")
 	bool IsRemovedFromGameplay() const;
+	UFUNCTION(BlueprintCallable, Category="Limen|Gameplay Actor")
+	ELimenGameplayActorState GetGameplayState() const;
 
 protected:
+	/**
+	 * @brief Called on the server & the client after the gameplay state has changed.
+	 */
+	virtual void GameplayStateChanged();
 	
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_GameplayState)
@@ -93,6 +98,4 @@ private:
 
 	void RemoveFromGameplayInternal();
 	void AddToGameplayInternal(const bool bEnableCollision);
-
-	void GameplayStateChanged();
 };

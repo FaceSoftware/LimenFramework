@@ -37,19 +37,21 @@ enum class ELimenInputMode : uint8
 	UIOnly,
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FPauseRequestDelegate, ALimenPlayerControllerBase*, Player, const EPauseReason, PauseReason);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FUnPauseRequestDelegate, ALimenPlayerControllerBase*, Player);
 
 UCLASS(Blueprintable)
 class LIMENGAMEFRAMEWORK_API ALimenPlayerControllerBase : public APlayerController
 {
 	GENERATED_BODY()
-
-public:	
+	
 	friend FLimenNotification;
 
+public:
+	DECLARE_MULTICAST_DELEGATE_OneParam(FLimenPlayerControllerDelegate, ALimenPlayerControllerBase*);
+	DECLARE_MULTICAST_DELEGATE_TwoParams(FPauseRequestDelegate, ALimenPlayerControllerBase*, const EPauseReason);
+	
+	FLimenPlayerControllerDelegate OnClientReady;
+	FLimenPlayerControllerDelegate OnUnPauseRequested;
 	FPauseRequestDelegate OnPauseRequested;
-	FUnPauseRequestDelegate OnUnPauseRequested;
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, meta=(WorldContext="Caller"))
 	static ALimenPlayerControllerBase* GetLimenPlayerControllerBase(UObject* Caller, int32 PlayerIndex = 0);
@@ -111,9 +113,14 @@ private:
 	float MousePitchMultiplier;
 
 	FTimerHandle ViewTargetTransitionTimerHandle;
+	FDelegateHandle LoadingScreenVisibilityChangedDelegateHandle;
 
 	UFUNCTION()
 	virtual void SensitivityUpdated(ULimenMouseSensitivityComponent* Component);
 
 	void CurrentPawnReadyInternal(APawn* InPawn);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_NotifyClientReady();
+	void NotifyClientReady();
 };

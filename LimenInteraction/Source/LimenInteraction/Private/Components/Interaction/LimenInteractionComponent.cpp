@@ -3,10 +3,12 @@
 
 #include "Components/Interaction/LimenInteractionComponent.h"
 
-#include "Components/Interactable/LimenInteractableAreaComponent.h"
+#include "BlueprintLibraries/LimenCoreStatics.h"
+#include "Components/Interactable/LimenInteractableComponent.h"
 #include "GameFramework/Pawn.h"
 #include "LogMacros/LimenInteractionLogMacros.h"
 #include "LogMacros/LimenLogMacros.h"
+#include "Microsoft/AllowMicrosoftPlatformTypes.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Utils/LimenReplicationUtils.h"
@@ -15,11 +17,6 @@
 bool ULimenInteractionComponent::IsInteractableActor(const AActor* InActor)
 {
 	return InActor && !InActor->GetComponentsByInterface(ULimenInteractableComponent::StaticClass()).IsEmpty();
-}
-
-bool ULimenInteractionComponent::IsInteractableComponent(const UActorComponent* InComponent)
-{	
-	return InComponent && InComponent->Implements<ULimenInteractableComponent>();
 }
 
 ULimenInteractionComponent::ULimenInteractionComponent(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer)
@@ -47,6 +44,7 @@ void ULimenInteractionComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	constexpr FDoRepLifetimeParams Params(COND_OwnerOnly, REPNOTIFY_OnChanged, true);
 
 	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, InteractionParams, Params)
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, InteractionUpdateData, Params)
 }
 
 void ULimenInteractionComponent::OnComponentCreated()
@@ -71,46 +69,45 @@ void ULimenInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickT
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (GetOwner() && GetOwner()->HasAuthority())
+	if (UNLIKELY(!GetOwner())) { return; }
+
+	CurrentInteractable.Reset();
+	UpdateInteraction(DeltaTime);
+
+	if (CurrentInteractable != PreviousInteractable)
 	{
-		UpdateInteraction(DeltaTime);
-
-		if (CurrentInteractableInterface != PreviousInteractableInterface)
+		AActor* TempOwner = nullptr;
+		if (CurrentInteractable.IsValid())
 		{
-			AActor* TempOwner = nullptr;
-			if (CurrentInteractableInterface)
-			{
-				TempOwner = CurrentInteractableInterface->GetPrimitiveComponent()->GetOwner();
-				check(TempOwner);
-			}
-
-			APawn* Pawn = Cast<APawn>(GetOwner());
-			AController* Controller = Pawn ? Pawn->GetController() : nullptr;
-
-			if (bIsInteracting)
-			{
-				StopInteraction();
-			}
-
-			Client_InteractableComponentHoveredChanged(CurrentInteractableInterface
-				? CurrentInteractableInterface->GetPrimitiveComponent()
-				: nullptr);
-
-
-			if (CurrentInteractableInterface)
-			{
-				CurrentInteractableInterface->NotifyHover(Controller, Pawn);
-			}
-			if (PreviousInteractableInterface)
-			{
-				PreviousInteractableInterface->NotifyUnHover(Controller, Pawn);
-			}
-
-			OnInteractableHover.Broadcast(TempOwner, CurrentInteractableInterface);
+			TempOwner = CurrentInteractable->GetOwner();
+			check(TempOwner)
+		}
+		
+		if (UNLIKELY(bIsInteracting)) { StopInteraction(); }
+		
+		/// Replicate the state to the client, this way the state will rollback in case it detects anything not matching properly
+		/// Change this on both client and server, so the OnRep is only called on the client if the value is different from the server
+		{
+			InteractionUpdateData.InteractableActor = TempOwner;
+			InteractionUpdateData.ReplicatedGuid = CurrentInteractable.IsValid() ? CurrentInteractable->GetReplicatedGuid() : FGuid();
+			MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, InteractionUpdateData, this)
+		}
+		
+		APawn* Pawn = InteractionParams.Pawn.Get();
+		AController* Controller = InteractionParams.Controller.Get();
+		if (CurrentInteractable.IsValid())
+		{
+			CurrentInteractable->NotifyHover(Controller, Pawn);
+		}
+		if (PreviousInteractable.IsValid())
+		{
+			PreviousInteractable->NotifyUnHover(Controller, Pawn);
 		}
 
-		PreviousInteractableInterface = CurrentInteractableInterface;
+		OnInteractableHover.Broadcast(TempOwner, CurrentInteractable.Get());
 	}
+
+	PreviousInteractable = CurrentInteractable;
 }
 
 void ULimenInteractionComponent::SetupInteractionParams(AController* Controller, APawn* Pawn)
@@ -123,6 +120,11 @@ void ULimenInteractionComponent::SetupInteractionParams(AController* Controller,
 float ULimenInteractionComponent::GetInteractionRange() const
 {
 	return InteractionRange;
+}
+
+void ULimenInteractionComponent::SetInteractionRange(const float NewValue)
+{
+	InteractionRange = NewValue;
 }
 
 bool ULimenInteractionComponent::DebugMode() const
@@ -158,33 +160,27 @@ bool ULimenInteractionComponent::Interact(const AActor* SpecificInteractable)
 		return false;
 	}
 
-	TArray<UActorComponent*> Components = SpecificInteractable->GetComponentsByInterface(ULimenInteractableComponent::StaticClass());
-	auto* InteractableComponent = Cast<ILimenInteractableComponent>(Components[0]);
+	TArray<ULimenInteractableComponent*> Components;
+	SpecificInteractable->GetComponents<ULimenInteractableComponent>(Components);
+	check(!Components.IsEmpty()) // Validated by IsInteractableActor
+	
+	ULimenInteractableComponent* InteractableComponent = Components[0];
 	check(InteractableComponent)
-
+	if (InteractableComponent) { return false; }
+	
 	InteractableComponent->Interact(InteractionParams.Controller.Get(), InteractionParams.Pawn.Get());
-	Multicast_Interact(InteractableComponent->GetPrimitiveComponent());
+	Multicast_Interact(InteractableComponent);
 	return true;
 }
 
-bool ULimenInteractionComponent::Interact(UActorComponent* SpecificInteractableComponent)
+bool ULimenInteractionComponent::Interact(ULimenInteractableComponent* SpecificInteractableComponent)
 {
 	check(GetOwner()->HasAuthority())
 
-	if (bIsInteracting)
-	{
-		return false;
-	}
+	if (bIsInteracting) { return false; }
+	if (!SpecificInteractableComponent) { return false; }
 	
-	if (!ensureAlways(IsInteractableComponent(SpecificInteractableComponent)))
-	{
-		LIMEN_LOG(LogLimenInteraction, Error, this, TEXT("Cannot interact with %s because it does not have an interactable component"), *SpecificInteractableComponent->GetOwner()->GetName());
-		return false;
-	}
-
-	auto* InteractableComponent = Cast<ILimenInteractableComponent>(SpecificInteractableComponent);
-	check(InteractableComponent)
-	InteractableComponent->Interact(InteractionParams.Controller.Get(), InteractionParams.Pawn.Get());
+	SpecificInteractableComponent->Interact(InteractionParams.Controller.Get(), InteractionParams.Pawn.Get());
 	Multicast_Interact(SpecificInteractableComponent);
 	return true;
 }
@@ -204,14 +200,9 @@ APawn* ULimenInteractionComponent::GetInteractionPawn() const
 	return InteractionParams.Pawn.Get();
 }
 
-TScriptInterface<ILimenInteractableComponent> ULimenInteractionComponent::GetCurrentInteractableInterface() const
+ULimenInteractableComponent* ULimenInteractionComponent::GetCurrentInteractableComponent() const
 {
-	return CurrentInteractableInterface;
-}
-
-UActorComponent* ULimenInteractionComponent::GetCurrentInteractableComponent() const
-{
-	return Cast<UActorComponent>(CurrentInteractableInterface.GetObject());
+	return CurrentInteractable.Get();
 }
 
 bool ULimenInteractionComponent::GetOwnerViewPoint(FVector& Start, FVector& End) const
@@ -242,39 +233,18 @@ void ULimenInteractionComponent::SetupInteraction()
 	check(GetOwner()->HasAuthority());
 }
 
-void ULimenInteractionComponent::UpdateInteraction(const float DeltaTime)
+void ULimenInteractionComponent::SetCurrentInteractable(ULimenInteractableComponent* InComponent)
 {
+	CurrentInteractable = InComponent;
 }
 
-void ULimenInteractionComponent::SetCurrentInteractableInterface(UActorComponent* InComponent)
+void ULimenInteractionComponent::Interacted(ULimenInteractableComponent* Component)
 {
-	if (InComponent && InComponent->Implements<ULimenInteractableComponent>())
-	{
-		CurrentInteractableInterface = TScriptInterface<ILimenInteractableComponent>(InComponent);
-	}
-	else
-	{
-		CurrentInteractableInterface = nullptr;
-	}
+	OnInteract.Broadcast(Component ? Component->GetOwner() : nullptr, Component);
 }
 
-void ULimenInteractionComponent::Interacted(UActorComponent* Component)
+void ULimenInteractionComponent::InteractionStopped(ULimenInteractableComponent* Component)
 {
-	const TScriptInterface<ILimenInteractableComponent> Interface(Component);
-	OnInteract.Broadcast(Component ? Component->GetOwner() : nullptr, Interface);
-}
-
-void ULimenInteractionComponent::InteractionStopped(UActorComponent* Component)
-{
-}
-
-void ULimenInteractionComponent::Client_InteractableComponentHoveredChanged_Implementation(UActorComponent* Component)
-{
-	const TScriptInterface<ILimenInteractableComponent> Interface(Component);
-	PreviousInteractableInterface = CurrentInteractableInterface;
-	CurrentInteractableInterface = Interface;
-
-	OnInteractableHover.Broadcast(Component ? Component->GetOwner() : nullptr, Interface);
 }
 
 void ULimenInteractionComponent::Server_Interact_Implementation()
@@ -287,14 +257,38 @@ void ULimenInteractionComponent::Server_StopInteract_Implementation()
 	StopInteractInternal();
 }
 
-void ULimenInteractionComponent::Multicast_Interact_Implementation(UActorComponent* Component)
+void ULimenInteractionComponent::Multicast_Interact_Implementation(ULimenInteractableComponent* Component)
 {
 	Interacted(Component);
 }
 
-void ULimenInteractionComponent::Multicast_StopInteract_Implementation(UActorComponent* Component)
+void ULimenInteractionComponent::Multicast_StopInteract_Implementation(ULimenInteractableComponent* Component)
 {
 	InteractionStopped(Component);
+}
+
+void ULimenInteractionComponent::OnRep_InteractionUpdateData()
+{
+	AActor* Actor = InteractionUpdateData.InteractableActor.Get();
+	ULimenInteractableComponent* Component = nullptr;
+	if (Actor)
+	{
+		const FGuid& Id = InteractionUpdateData.ReplicatedGuid;
+		
+		TArray<ULimenInteractableComponent*> Components;
+		Actor->GetComponents<ULimenInteractableComponent>(Components);
+		const auto* ClientComponent = Components.FindByPredicate([&Id] (const ULimenInteractableComponent* Component)
+		{
+			return Component && Component->GetReplicatedGuid() == Id;
+		});
+		
+		checkf(ClientComponent, TEXT("Internal error, the component does not exist on the client. May be due to it's ReplicatedGuid not matching the client."))
+		if (ClientComponent)
+		{
+			Component = *ClientComponent;
+		}
+	}
+	OnInteractableHover.Broadcast(Actor, Component);
 }
 
 void ULimenInteractionComponent::InteractInternal()
@@ -302,10 +296,10 @@ void ULimenInteractionComponent::InteractInternal()
 	bIsInteracting = true;
 	UpdateInteraction(0.f);
 	
-	if (CurrentInteractableInterface)
+	if (CurrentInteractable.IsValid())
 	{
-		CurrentInteractableInterface->Interact(InteractionParams.Controller.Get(), InteractionParams.Pawn.Get());
-		const AActor* ComponentOwner = CurrentInteractableInterface->GetPrimitiveComponent()->GetOwner();
+		CurrentInteractable->Interact(InteractionParams.Controller.Get(), InteractionParams.Pawn.Get());
+		const AActor* ComponentOwner = CurrentInteractable->GetOwner();
 		check(ComponentOwner);
 
 		LIMEN_LOG(LogLimenInteraction, Log, this, TEXT("Interacted with: %s"), *ComponentOwner->GetName());
@@ -318,12 +312,12 @@ void ULimenInteractionComponent::StopInteractInternal()
 {
 	if (!bIsInteracting) { return; }
 	
-	if (PreviousInteractableInterface != nullptr)
+	if (PreviousInteractable != nullptr)
 	{
-		PreviousInteractableInterface->StopInteraction(InteractionParams.Controller.Get(),
+		PreviousInteractable->StopInteraction(InteractionParams.Controller.Get(),
 													   InteractionParams.Pawn.Get());
 	}
 	
 	bIsInteracting = false;
-	Multicast_StopInteract(PreviousInteractableInterface ? PreviousInteractableInterface->GetPrimitiveComponent() : nullptr);
+	Multicast_StopInteract(PreviousInteractable.Get());
 }

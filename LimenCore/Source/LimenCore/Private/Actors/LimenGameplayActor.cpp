@@ -42,31 +42,9 @@ bool ALimenGameplayActor::IsRemovedFromGameplay() const
 	return GameplayState == ELimenGameplayActorState::OutOfGameplay;
 }
 
-void ALimenGameplayActor::OnRep_GameplayState()
+ELimenGameplayActorState ALimenGameplayActor::GetGameplayState() const
 {
-	GameplayStateChanged();
-}
-
-void ALimenGameplayActor::RemoveFromGameplayInternal()
-{
-	if (IsRemovedFromGameplay()) { return; }
-
-	GameplayState = ELimenGameplayActorState::OutOfGameplay;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
-	
-	GameplayStateChanged();
-}
-
-void ALimenGameplayActor::AddToGameplayInternal(const bool bEnableCollision)
-{
-	if (bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplayCollisionEnabled) { return; }
-	if (!bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplayCollisionDisabled) { return; }
-
-	GameplayState = bEnableCollision ? ELimenGameplayActorState::InGameplayCollisionEnabled
-									 : ELimenGameplayActorState::InGameplayCollisionDisabled;
-	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
-
-	GameplayStateChanged();
+	return GameplayState;
 }
 
 void ALimenGameplayActor::GameplayStateChanged()
@@ -94,6 +72,33 @@ void ALimenGameplayActor::GameplayStateChanged()
 	default:
 		break;
 	}
+}
+
+void ALimenGameplayActor::OnRep_GameplayState()
+{
+	GameplayStateChanged();
+}
+
+void ALimenGameplayActor::RemoveFromGameplayInternal()
+{
+	if (IsRemovedFromGameplay()) { return; }
+
+	GameplayState = ELimenGameplayActorState::OutOfGameplay;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
+	
+	GameplayStateChanged();
+}
+
+void ALimenGameplayActor::AddToGameplayInternal(const bool bEnableCollision)
+{
+	if (bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplayCollisionEnabled) { return; }
+	if (!bEnableCollision && GameplayState == ELimenGameplayActorState::InGameplayCollisionDisabled) { return; }
+
+	GameplayState = bEnableCollision ? ELimenGameplayActorState::InGameplayCollisionEnabled
+									 : ELimenGameplayActorState::InGameplayCollisionDisabled;
+	MARK_PROPERTY_DIRTY_FROM_NAME(ThisClass, GameplayState, this);
+
+	GameplayStateChanged();
 }
 
 void ALimenGameplayActor::Server_RemoveFromGameplay_Implementation()

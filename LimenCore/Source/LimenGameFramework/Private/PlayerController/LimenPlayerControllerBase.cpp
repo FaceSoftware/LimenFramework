@@ -286,8 +286,13 @@ void ALimenPlayerControllerBase::BeginPlay()
 
 	if (ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>(); LevelTransitionHandler != nullptr)
 	{
-		LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUObject(this, &ThisClass::LoadingScreenVisibilityChanged);
+		const FDelegateHandle Handle = LevelTransitionHandler->OnLoadingScreenVisibilityChanged.AddUObject(this, &ThisClass::LoadingScreenVisibilityChanged);
+		LoadingScreenVisibilityChangedDelegateHandle = Handle;
 		LoadingScreenVisibilityChanged(LevelTransitionHandler->IsLoadingScreenActive());
+	}
+	else if (IsLocalController())
+	{
+		NotifyClientReady();
 	}
 	
 	MouseInputSensitivityComponent->OnSensitivityUpdated.AddUniqueDynamic(this, &ThisClass::SensitivityUpdated);
@@ -322,7 +327,13 @@ void ALimenPlayerControllerBase::LoadingScreenVisibilityChanged(const bool bIsVi
 	}
 	else // Is hidden
 	{
+		if (ULimenLevelTransitionSubsystem* LevelTransitionHandler = GetGameInstance()->GetSubsystem<ULimenLevelTransitionSubsystem>(); LevelTransitionHandler != nullptr)
+		{
+			LevelTransitionHandler->OnLoadingScreenVisibilityChanged.Remove(LoadingScreenVisibilityChangedDelegateHandle);
+		}
 		EnableInput(this);
+		
+		NotifyClientReady();
 	}
 }
 
@@ -380,4 +391,21 @@ void ALimenPlayerControllerBase::CurrentPawnReadyInternal(APawn* InPawn)
 	}
 
 	CurrentPawnReady();
+}
+
+void ALimenPlayerControllerBase::Server_NotifyClientReady_Implementation()
+{
+	OnClientReady.Broadcast(this);
+}
+
+void ALimenPlayerControllerBase::NotifyClientReady()
+{
+	check(IsLocalController())
+	
+	if (!HasAuthority())
+	{
+		Server_NotifyClientReady();
+	}
+	
+	OnClientReady.Broadcast(this);
 }

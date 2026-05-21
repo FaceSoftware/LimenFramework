@@ -5,7 +5,7 @@
 
 #include "DrawDebugHelpers.h"
 #include "Items/LimenItemBase.h"
-#include "Components/Interactable/LimenInteractableAreaComponent.h"
+#include "Components/Interactable/LimenInteractableComponent.h"
 #include "Engine/World.h"
 
 
@@ -18,17 +18,6 @@ ULimenLineTraceInteractionComponent::ULimenLineTraceInteractionComponent(
 	InteractionCollisionChannel = ECC_EngineTraceChannel1;
 	InteractionResults.Reserve(32);
 	// LineTraceRadius = 1.f;
-}
-
-bool ULimenLineTraceInteractionComponent::GetInteractionHitResult(FHitResult& OutHit) const
-{
-	if (!InteractionHitResult.IsSet())
-	{
-		return false;
-	}
-
-	OutHit = InteractionHitResult.GetValue();
-	return true;
 }
 
 ECollisionChannel ULimenLineTraceInteractionComponent::GetTraceChannel() const
@@ -45,79 +34,34 @@ void ULimenLineTraceInteractionComponent::SetupInteraction()
 }
 
 void ULimenLineTraceInteractionComponent::UpdateInteraction(const float DeltaTime)
-{
+{	
 	FVector Start, End;
-	if (!GetOwnerViewPoint(Start, End))
-	{
-		return;
-	}
+	if (UNLIKELY(!GetOwnerViewPoint(Start, End))) { return; }
 
 	GetWorld()->LineTraceMultiByChannel(InteractionResults, Start, End, InteractionCollisionChannel, QueryParams);
-	// Line trace goes through some objects for some reason...
-	// GetWorld()->SweepMultiByChannel(InteractionResults, Start, End, FQuat::Identity, InteractionCollisionChannel, FCollisionShape::MakeSphere(LineTraceRadius), CollisionQueryParams, CollisionResponseParams);
+	const FHitResult* InteractionHit = nullptr;
+	if (!InteractionResults.IsEmpty())
+	{
+		for (FHitResult& Result : InteractionResults)
+		{
+			auto* InteractableComponent = Cast<ULimenInteractableComponent>(Result.GetComponent());
+			if (LIKELY(!InteractableComponent)) { continue; }
+			InteractionHit = &Result;
+			SetCurrentInteractable(InteractableComponent);
+			break;
+		}
+	}
 
 #if WITH_EDITORONLY_DATA
-	
 	if (DebugMode())
 	{
 		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, DeltaTime, 0, 0);
 	}
 	
-#endif
-	
-	SetCurrentInteractableInterface(nullptr);
-	InteractionHitResult.Reset();
-
-	if (!InteractionResults.IsEmpty())
-	{
-		InteractionHitResult = InteractionResults[0];
-		FHitResult* InteractionHit = nullptr;
-		bool bIsHoveringItem = false;
-		UPrimitiveComponent* FirstInteractableComponent = nullptr;
-		for (FHitResult& Result : InteractionResults)
-		{
-			// For better compatibility, we only check for the interactable component
-			if (!IsInteractableComponent(Result.GetComponent()))
-			{
-				continue;
-			}
-
-			// We give priority to items, and then to other things
-			if (Result.GetActor()->GetClass()->IsChildOf(ALimenItemBase::StaticClass()))
-			{
-				bIsHoveringItem = true;
-				InteractionHit = &Result;
-
-				SetCurrentInteractableInterface(Result.GetComponent());
-				break;
-			}
-
-			if (FirstInteractableComponent == nullptr)
-			{
-				FirstInteractableComponent = Result.GetComponent();
-				InteractionHit = &Result;
-			}
-		}
-
-		if (!bIsHoveringItem)
-		{
-			SetCurrentInteractableInterface(FirstInteractableComponent);
-		}
-
-		if (InteractionHit != nullptr)
-		{
-			InteractionHitResult = *InteractionHit;
-		}
-	}
-
-#if WITH_EDITORONLY_DATA
-	
 	if (DebugMode())
 	{
-		DrawDebugSphere(GetWorld(), InteractionHitResult.IsSet() ? InteractionHitResult.GetValue().ImpactPoint : End,
+		DrawDebugSphere(GetWorld(), InteractionHit != nullptr ? FVector(InteractionHit->ImpactPoint) : End,
 						16.f, 4, FColor::Blue, false, DeltaTime, 0.f, 0.f);
 	}
-	
 #endif
-	
 }

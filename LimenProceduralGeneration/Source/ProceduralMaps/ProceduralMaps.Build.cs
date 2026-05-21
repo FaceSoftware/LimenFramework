@@ -24,6 +24,7 @@ public class ProceduralMaps : ModuleRules
                 "Slate",
                 "SlateCore",
                 "NavigationSystem",
+                "GameplayTags",
                 
                 "LimenCore",
                 "LimenGlobalRandomStream",

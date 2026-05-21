@@ -4,7 +4,6 @@
 #include "MapBuilders/LimenProceduralMapBuilder.h"
 
 #include "DataAssets/ProceduralMapParameters.h"
-#include "Managers/LimenProceduralMapManager.h"
 #include "MapBuildAlgorithms/LimenMapAlgorithm.h"
 #include "Maps/LimenProceduralMap.h"
 
@@ -19,30 +18,11 @@ ALimenProceduralMapBuilder::ALimenProceduralMapBuilder(const FObjectInitializer&
 	AlgorithmFinishDelegate.BindUObject(this, &ThisClass::AlgorithmFinish);
 }
 
-void ALimenProceduralMapBuilder::BeginPlay()
+void ALimenProceduralMapBuilder::NotifyActorRegistry(const FGameplayTag& Id, AActor* Actor)
 {
-	Super::BeginPlay();
+	Super::NotifyActorRegistry(Id, Actor);
 
-#if WITH_EDITOR
-
-	for (const FProceduralMapGroup& Collection : MapCollections)
-	{
-		for (auto& Map : Collection.GroupMaps)
-		{
-			ensureMsgf(!Map.IsNull(), TEXT("Map builder contains an invalid data asset"));
-		}
-	}
-
-#endif
-}
-
-void ALimenProceduralMapBuilder::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	MapInstances.Empty();
-	
-	AlgorithmFinishDelegate.Unbind();
-
-	Super::EndPlay(EndPlayReason);
+	// Todo: Feed data to map managers
 }
 
 FGuid ALimenProceduralMapBuilder::LoadMap(const FName GroupName, const int32 Index)
@@ -186,6 +166,32 @@ ALimenProceduralMapBuilder::FOnMapUpdate& ALimenProceduralMapBuilder::GetOnMapFi
 	return OnMapFinishDestroy;
 }
 
+void ALimenProceduralMapBuilder::BeginPlay()
+{
+	Super::BeginPlay();
+
+#if WITH_EDITOR
+
+	for (const FProceduralMapGroup& Collection : MapCollections)
+	{
+		for (auto& Map : Collection.GroupMaps)
+		{
+			ensureMsgf(!Map.IsNull(), TEXT("Map builder contains an invalid data asset"));
+		}
+	}
+
+#endif
+}
+
+void ALimenProceduralMapBuilder::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	MapInstances.Empty();
+	
+	AlgorithmFinishDelegate.Unbind();
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void ALimenProceduralMapBuilder::MapBeingLoad(const FGuid& MapId)
 {
 	check(!IsMapLoaded(MapId));
@@ -208,7 +214,6 @@ void ALimenProceduralMapBuilder::MapBeginBuild(const FGuid& MapId, ULimenProcedu
 	
 	UClass* ManagerClass = Instance.MapParameters->GetManagerClass();
 	ALimenProceduralMapManager* Manager = GetWorld()->SpawnActor<ALimenProceduralMapManager>(ManagerClass);
-	
 	Instance.MapManager = TStrongObjectPtr(Manager);
 	
 	GetOnMapBeginBuild().Broadcast(MapId);

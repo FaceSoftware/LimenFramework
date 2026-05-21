@@ -17,10 +17,7 @@ class LIMENINTERACTION_API ULimenLineTraceInteractionComponent : public ULimenIn
 
 public:
 	explicit ULimenLineTraceInteractionComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
-
-	UFUNCTION(BlueprintCallable)
-	bool GetInteractionHitResult(FHitResult& OutHit) const;
-
+	
 	ECollisionChannel GetTraceChannel() const;
 	
 protected:
@@ -28,13 +25,12 @@ protected:
 	TEnumAsByte<ECollisionChannel> InteractionCollisionChannel;
 
 	virtual void SetupInteraction() override;
-	virtual void UpdateInteraction(const float DeltaTime) override;
+	virtual void UpdateInteraction(const float DeltaTime) override final;
 
 private:
 	TArray<FHitResult> InteractionResults;
 
 	FCollisionQueryParams QueryParams;
-	TOptional<FHitResult> InteractionHitResult;
 
 	static FCollisionResponseParams CollisionResponseParams;
 	static FCollisionQueryParams CollisionQueryParams;

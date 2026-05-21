@@ -6,6 +6,7 @@
 #include "Components/LimenInventoryComponent.h"
 #include "Components/LimenLock.h"
 #include "Components/LimenNotificationComponent.h"
+#include "Components/Interactable/LimenInteractableComponent.h"
 #include "CppClasses/LimenNotification.h"
 #include "GameFramework/HUD.h"
 #include "GameFramework/Pawn.h"
@@ -36,20 +37,17 @@ void ALimenLockDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (ILimenInteractableComponent* Component : GetInteractableComponents())
+	for (ULimenInteractableComponent* Component : GetInteractableComponents())
 	{
-		UActorComponent* ActorComponent = Cast<UActorComponent>(Component);
-		check(ActorComponent != nullptr);
-
-		if (ActorComponent->ComponentHasTag(InsideHandleInteractionTag))
+		if (Component->ComponentHasTag(InsideHandleInteractionTag))
 		{
-			InsideHandleInteraction = ActorComponent;
-			InsideHandleInteraction->GetInteractionDelegate()->AddUObject(this, &ThisClass::InteractInsideHandle);
+			InsideHandleInteraction = Component;
+			InsideHandleInteraction->OnInteract.AddUObject(this, &ThisClass::InteractInsideHandle);
 		}
-		else if (ActorComponent->ComponentHasTag(OutsideHandleInteractionTag))
+		else if (Component->ComponentHasTag(OutsideHandleInteractionTag))
 		{
-			OutsideHandleInteraction = ActorComponent;
-			OutsideHandleInteraction->GetInteractionDelegate()->AddUObject(this, &ThisClass::InteractOutsideHandle);
+			OutsideHandleInteraction = Component;
+			OutsideHandleInteraction->OnInteract.AddUObject(this, &ThisClass::InteractOutsideHandle);
 		}
 	}
 }

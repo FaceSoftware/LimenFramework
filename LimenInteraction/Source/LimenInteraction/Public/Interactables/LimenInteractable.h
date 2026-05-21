@@ -4,14 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Actors/LimenGameplayActor.h"
-#include "Interfaces/LimenInteractableComponent.h"
 #include "Interfaces/LimenSaveObjectInterface.h"
 #include "LimenInteractable.generated.h"
 
 
 class ULimenInteractableComponent;
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FInteractableDelegate, AController*, Controller, APawn*, Pawn);
 
 UCLASS(BlueprintType, Blueprintable)
 class LIMENINTERACTION_API ALimenInteractable : public ALimenGameplayActor, public ILimenSaveObjectInterface
@@ -19,29 +16,34 @@ class LIMENINTERACTION_API ALimenInteractable : public ALimenGameplayActor, publ
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintAssignable, DisplayName="On Interact", Category="Interactable")
+	DECLARE_MULTICAST_DELEGATE_TwoParams(FInteractableDelegate, AController* /* Controller */, APawn* /* Pawn */);
+	
 	FInteractableDelegate OnInteract;
-	UPROPERTY(BlueprintAssignable, DisplayName="On Interaction Stopped", Category="Interactable")
 	FInteractableDelegate OnInteractionStopped;
 	
 	explicit ALimenInteractable(const FObjectInitializer& InObjectInitializer = FObjectInitializer::Get());
-	virtual void BeginPlay() override;
+	virtual void PostInitializeComponents() override;
 
-	template<typename ComponentClass>
+	template<typename ComponentClass = ULimenInteractableComponent>
 	TArray<ComponentClass*> GetInteractableComponents() const
 	{
-		TArray<UActorComponent*> InteractableComponents = GetComponentsByInterface(ULimenInteractableComponent::StaticClass());
+		TArray<ULimenInteractableComponent*> InteractableComponents;
+		GetComponents<ULimenInteractableComponent>(InteractableComponents);
+		if (std::is_same_v<ULimenInteractableComponent, ComponentClass>)
+		{
+			return InteractableComponents;
+		}
 
 		TArray<ComponentClass*> OutComponents;
 		OutComponents.Reserve(InteractableComponents.Num());
-		for (UActorComponent* InteractableComponent : InteractableComponents)
+		
+		for (auto* InteractableComponent : InteractableComponents)
 		{
-			checkf(InteractableComponent->Implements<ULimenInteractableComponent>(), TEXT("Interactable components must inherit ILimenInteractableComponent interface"));
-			OutComponents.Push(CastChecked<ComponentClass>(InteractableComponent));
+			OutComponents.Push(Cast<ComponentClass>(InteractableComponent));
 		}
 		return OutComponents;
 	}
-	TArray<ILimenInteractableComponent*> GetInteractableComponents() const;
+	TArray<ULimenInteractableComponent*> GetInteractableComponents() const;
 
 	bool IsBeingContinuouslyInteracted() const;
 	bool HasBeenInteracted() const;

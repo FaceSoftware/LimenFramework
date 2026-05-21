@@ -15,7 +15,7 @@ class LIMENINTERACTION_API ULimenProximityInteractionComponent : public ULimenIn
 	GENERATED_BODY()
 
 public:
-	const TArray<UPrimitiveComponent*>& GetAllInteractablesInRange() const;
+	const TArray<ULimenInteractableComponent*>& GetAllInteractablesInRange() const;
 	const TArray<AActor*>& GetAllInteractableActorsInRange() const;
 	
 	virtual void RestartInteraction() override;
@@ -37,7 +37,7 @@ private:
 	UPROPERTY()
 	TObjectPtr<USphereComponent> InteractionSphere;
 	UPROPERTY()
-	TArray<UPrimitiveComponent*> ComponentsInSphere;
+	TArray<ULimenInteractableComponent*> ComponentsInSphere;
 	UPROPERTY()
 	TArray<AActor*> ActorsInSphere;
 	

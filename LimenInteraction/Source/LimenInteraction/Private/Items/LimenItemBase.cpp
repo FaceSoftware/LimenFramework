@@ -7,7 +7,7 @@
 #include "TimerManager.h"
 #include "Components/PrimitiveComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
-#include "Components/Interactable/LimenInteractableAreaComponent.h"
+#include "Components/Interactable/LimenInteractableComponent.h"
 #include "Engine/Engine.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "GameFramework/Pawn.h"
@@ -175,7 +175,7 @@ void ALimenItemBase::PickedUp(AController* InController, APawn* InPawn)
 {
 	if (HasAuthority()) { SetOwner(InPawn); }
 
-	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
+	for (ULimenInteractableComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableComponent>())
 	{
 		InteractableComponent->Deactivate();
 	}
@@ -197,7 +197,7 @@ void ALimenItemBase::Dropped(AController* InController, APawn* InPawn)
 {
 	if (HasAuthority()) { SetOwner(nullptr); }
 
-	for (ULimenInteractableAreaComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableAreaComponent>())
+	for (ULimenInteractableComponent*& InteractableComponent : GetInteractableComponents<ULimenInteractableComponent>())
 	{
 		InteractableComponent->Activate(true);
 	}

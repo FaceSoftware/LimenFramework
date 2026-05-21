@@ -120,8 +120,10 @@ public:
 	
 	AInitializerProxyActor();
 
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual bool IsWorking_Implementation() const override;
+	
+protected:
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
 	bool bIsWorking;

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LimenInteractableAreaComponent.h"
+#include "LimenInteractableComponent.h"
 #include "LimenCinematicInteractableComponent.generated.h"
 
 
@@ -14,7 +14,7 @@ class UCameraComponent;
  * @brief Cinematic only work when a PlayerController interacts. For AIControllers this will behave as a normal.
  */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class LIMENINTERACTION_API ULimenCinematicInteractableComponent : public ULimenInteractableAreaComponent
+class LIMENINTERACTION_API ULimenCinematicInteractableComponent : public ULimenInteractableComponent
 {
 	GENERATED_BODY()
 
