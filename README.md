@@ -24,4 +24,4 @@ This framework provides seamless integration with FMOD.
 
 ## Getting Started
 
-For full documentation, setup guides, and system details, please visit our [official documentation website](#).
+For full documentation, setup guides, and system details, please visit our [official documentation website](https://facesoftware.github.io/LimenFramework/).
