@@ -1,0 +1,34 @@
+﻿using UnrealBuildTool;
+
+public class LimenAI : ModuleRules
+{
+    public LimenAI(ReadOnlyTargetRules Target) : base(Target)
+    {
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+
+        PublicDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "Core",
+                "AIModule",
+            }
+        );
+
+        PrivateDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "CoreUObject",
+                "Engine",
+                "Slate",
+                "SlateCore",
+                "NavigationSystem",
+                
+                "LimenCore",
+                "LimenDoors",
+                "LimenInteraction",
+                "Limen",
+                "LimenAbilitySystem", 
+            }
+        );
+    }
+}

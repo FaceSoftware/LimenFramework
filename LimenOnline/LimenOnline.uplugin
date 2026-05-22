@@ -1,0 +1,60 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "LimenOnline",
+	"Description": "Online features from LimenFramework",
+	"Category": "Other",
+	"CreatedBy": "FaceSoftware",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "LimenOnline",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenOnlineChat",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenOnlineManager",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "LimenCore",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "OnlineSubsystem",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "OnlineSubsystemUtils",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "OnlineSubsystemSteam",
+			"Enabled": true,
+			"Optional": false
+		},
+		{
+			"Name": "SteamSockets",
+			"Enabled": true,
+			"Optional": false
+		}
+	]
+}

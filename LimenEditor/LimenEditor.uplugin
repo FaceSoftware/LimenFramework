@@ -1,0 +1,38 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "LimenEditor",
+	"Description": "Limen Framework editor utilities.",
+	"Category": "Other",
+	"CreatedBy": "FaceSoftware",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "LimenEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "LimenLevelCollisionProxy",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	],
+    "Plugins": [
+        {
+          "Name": "EditorScriptingUtilities",
+          "Enabled": true
+        },
+        {
+          "Name": "LimenCore",
+          "Enabled": true
+        }
+    ]
+}

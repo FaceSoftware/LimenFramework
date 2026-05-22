@@ -1,0 +1,26 @@
+﻿// Copyright Face Software. All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Settings/LimenValueSetting.h"
+#include "LimenSensitivitySetting.generated.h"
+
+
+class ALimenPlayerCharacter;
+class ULimenRecurrentAction;
+/**
+ * 
+ */
+UCLASS()
+class LIMENKEYBINDSETTINGS_API ULimenSensitivitySetting : public ULimenValueSetting
+{
+	GENERATED_BODY()
+
+public:
+	ULimenSensitivitySetting();
+
+protected:
+	virtual void SetDefaults() override;
+	virtual void ApplyCurrentSetting(bool bUserRequest = false) override;
+};

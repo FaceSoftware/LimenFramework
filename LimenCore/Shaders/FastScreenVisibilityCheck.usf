@@ -1,0 +1,69 @@
+#include "/Engine/Private/Common.ush"
+#include "/Engine/Private/SceneTexturesCommon.ush"
+
+// Parameters
+int2 ViewRectMin;
+int2 ViewRectSize;
+StructuredBuffer<uint> Masks;      // array of mask IDs
+
+RWStructuredBuffer<uint> OutFlag;  // one element per mask - bit1 = Rendered, bit2 = Visible
+RWTexture2D<float4> DebugOut;
+
+groupshared uint LocalFlags[256]; // one per stencil ID - bit1 = Rendered, bit2 = Visible
+
+[numthreads(8,8,1)]
+void MainCS(uint3 Tid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID)
+{
+	const int2 LocalPixel  = int2(DTid.xy);
+	const int2 GlobalPixel = ViewRectMin + LocalPixel;
+	
+	const int LinearTid = Tid.y * 8 + Tid.x; // 0..63
+	for (int i = LinearTid; i < 256; i += 64)
+	{
+		LocalFlags[i] = 0;
+	}
+
+	GroupMemoryBarrierWithGroupSync();
+	
+	uint StencilValue = 0;
+	uint Flags = 0;
+
+	// Bounds check
+	if (LocalPixel.x < ViewRectSize.x && LocalPixel.y < ViewRectSize.y)
+	{
+		// Render
+		StencilValue = SceneTexturesStruct.CustomStencilTexture.Load(int3(GlobalPixel, 0)) STENCIL_COMPONENT_SWIZZLE;
+		const bool bRendered = StencilValue > 0 && StencilValue < 256;		
+		if (bRendered)
+		{
+			Flags = 1u;
+
+			// Occlusion
+			const float SceneZ  = SceneTexturesStruct.SceneDepthTexture.Load(int3(GlobalPixel, 0)).r;
+			const float CustomZ = SceneTexturesStruct.CustomDepthTexture.Load(int3(GlobalPixel, 0)).r;
+
+			const float SceneLinearDepth  = ConvertFromDeviceZ(SceneZ);
+			const float CustomLinearDepth = ConvertFromDeviceZ(CustomZ);
+
+			const float Bias = 1e-4; // small bias in linear space
+			const bool bVisible = CustomLinearDepth < (SceneLinearDepth + Bias);
+			Flags |= (bVisible << 1);
+		}
+	}
+	
+	if (Flags != 0)
+	{
+		InterlockedOr(LocalFlags[StencilValue], Flags);
+	}
+	
+	GroupMemoryBarrierWithGroupSync();
+	
+	for (int i = LinearTid; i < 256; i += 64)
+	{
+		uint Value = LocalFlags[i];
+		if (Value != 0)
+		{
+			InterlockedOr(OutFlag[i], Value);
+		}
+	}
+}

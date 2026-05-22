@@ -1,0 +1,212 @@
+﻿// Copyright © 2024 FaceSoftware. All rights reserved.
+
+
+#include "Subsystems/LimenKeyBindSubsystem.h"
+
+#include "Developer/LimenKeyBindDeveloperSettings.h"
+#include "GameFramework/PlayerController.h"
+#include "InputMappingContext.h"
+#include "GameFramework/Pawn.h"
+#include "Settings/LimenKeyBind.h"
+
+
+ULimenKeyBindSubsystem::ULimenKeyBindSubsystem()
+{
+	SaveDataName = TEXT("InputSettings");
+}
+
+bool ULimenKeyBindSubsystem::ShouldCreateSubsystem(UObject* Outer) const
+{
+	if (!Super::ShouldCreateSubsystem(Outer))
+	{
+		return false;
+	}
+
+	return GetDefault<ULimenKeyBindDeveloperSettings>()->bUseSubsystem;
+}
+
+void ULimenKeyBindSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	SubsystemSettings = GetDefault<ULimenKeyBindDeveloperSettings>();
+	
+	PlayerMappingContexts.Reserve(SubsystemSettings->PlayerMappingContexts.Num());
+	PawnMappingContexts.Reserve(SubsystemSettings->PawnMappingContexts.Num());
+
+	MappingContexts.Reserve(PlayerMappingContexts.Num() + PawnMappingContexts.Num());
+	
+	for (auto& PlayerMappingContext : SubsystemSettings->PlayerMappingContexts)
+	{
+		auto PlayerController = PlayerMappingContext.Key;
+		auto* MappingContext = PlayerMappingContext.Value.LoadSynchronous();
+		
+		auto* MappingContextObject = NewObject<UInputMappingContext>(this, MappingContext->GetClass(), NAME_None, RF_Transient, MappingContext);
+		TStrongObjectPtr MappingContextPtr(MappingContextObject);
+		
+		PlayerMappingContexts.Add(PlayerController, MappingContextPtr.Get());
+		MappingContexts.Push(MappingContextPtr);
+	}
+
+	for (auto& PawnMappingContext : SubsystemSettings->PawnMappingContexts)
+	{
+		auto Pawn = PawnMappingContext.Key;
+		auto* MappingContext = PawnMappingContext.Value.LoadSynchronous();
+		
+		auto* MappingContextObject = NewObject<UInputMappingContext>(this, MappingContext->GetClass(), NAME_None, RF_Transient, MappingContext);
+		TStrongObjectPtr MappingContextPtr(MappingContextObject);
+		
+		PawnMappingContexts.Add(Pawn, MappingContextPtr.Get());
+		MappingContexts.Push(TStrongObjectPtr(MappingContextPtr));
+	}
+	
+	Super::Initialize(Collection);
+}
+
+void ULimenKeyBindSubsystem::Deinitialize()
+{
+	Super::Deinitialize();
+
+	MappingContexts.Empty();
+}
+
+UInputMappingContext* ULimenKeyBindSubsystem::GetPlayerInputMappingContext(
+	const APlayerController* PlayerController) const
+{
+	if (!PlayerController) return nullptr;
+	return GetPlayerInputMappingContext(PlayerController->GetClass());
+}
+
+UInputMappingContext* ULimenKeyBindSubsystem::GetPawnInputMappingContext(const APawn* Pawn) const
+{
+	if (!Pawn) return nullptr;
+	return GetPawnInputMappingContext(Pawn->GetClass());
+}
+
+UInputMappingContext* ULimenKeyBindSubsystem::GetPlayerInputMappingContext(
+	const TSubclassOf<APlayerController>& PlayerControllerClass) const
+{
+	if (!PlayerControllerClass) return nullptr;
+
+	for (auto& PlayerMappingContext : PlayerMappingContexts)
+	{
+		if (PlayerControllerClass->IsChildOf(PlayerMappingContext.Key.LoadSynchronous()))
+		{
+			return PlayerMappingContext.Value;
+		}
+	}
+
+	return nullptr;
+}
+
+UInputMappingContext* ULimenKeyBindSubsystem::GetPawnInputMappingContext(const TSubclassOf<APawn>& Pawn) const
+{
+	if (!Pawn) return nullptr;
+
+	for (auto& Context : PawnMappingContexts)
+	{
+		if (Pawn->GetDefaultObject()->IsA(Context.Key.LoadSynchronous()))
+		{
+			return Context.Value;
+		}
+	}
+
+	return nullptr;
+}
+
+UInputMappingContext* ULimenKeyBindSubsystem::GetInputMappingByAction(const UInputAction* Action) const
+{
+	auto* Context = MappingContexts.FindByPredicate([this, &Action] (const TStrongObjectPtr<UInputMappingContext>& MappingContext)
+	{
+		return MappingContext->GetMappings().FindByPredicate([this, &Action] (const FEnhancedActionKeyMapping& KeyMapping)
+		{
+			return KeyMapping.Action == Action;
+		}) != nullptr;
+	});
+
+	if (Context == nullptr) { return nullptr; }
+
+	return Context->Get();
+}
+
+FEnhancedActionKeyMapping& ULimenKeyBindSubsystem::GetActionKeyMappingByAction(const UInputAction* Action)
+{
+	int32 Index = INDEX_NONE;
+	UInputMappingContext* MappingContextPtr = nullptr;
+	
+	for (auto& MappingContext : MappingContexts)
+	{
+		Index = MappingContext->GetMappings().IndexOfByPredicate([this, &Action] (const FEnhancedActionKeyMapping& KeyMapping)
+		{
+			return KeyMapping.Action == Action;
+		});
+
+		if (Index != INDEX_NONE)
+		{
+			MappingContextPtr = MappingContext.Get();
+			break;
+		}
+	}
+
+	return MappingContextPtr->GetMapping(Index);
+}
+
+bool ULimenKeyBindSubsystem::SetActionKeyMappingByAction(const UInputAction* Action,
+	const FEnhancedActionKeyMapping& InActionKeyMapping)
+{
+	for (const auto& MappingContext : MappingContexts)
+	{
+		const int32 Index = MappingContext->GetMappings().IndexOfByPredicate(
+			[this, &Action](const FEnhancedActionKeyMapping& KeyMapping)
+		{
+			return KeyMapping.Action == Action;
+		});
+
+		if (Index != INDEX_NONE)
+		{
+			FEnhancedActionKeyMapping& KeyMappingRef = MappingContext->GetMapping(Index);
+			KeyMappingRef = InActionKeyMapping;
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+void ULimenKeyBindSubsystem::LoadDefaultSettingsList()
+{
+	Super::LoadDefaultSettingsList();
+	
+	for (const auto& SettingClass : SubsystemSettings->SettingsList)
+	{
+		if (SettingClass.IsNull())
+		{
+			// Don't crash the editor if the class is not set
+			continue;
+		}
+		
+		ULimenSetting* NewSetting = NewObject<ULimenSetting>(this, SettingClass.LoadSynchronous());
+		
+		NewSetting->InitializeSetting(this);
+		AddItem(NewSetting);
+	}
+
+	for (const auto& MappingContext : MappingContexts)
+	{
+		for (int i = 0; i < MappingContext->GetMappings().Num(); ++i)
+		{
+			FEnhancedActionKeyMapping& MappingRef = MappingContext->GetMapping(i);
+			if (!MappingRef.IsPlayerMappable()) continue;
+			
+			ULimenKeyBind* KeyBindSetting = NewObject<ULimenKeyBind>(this);
+			KeyBindSetting->InitializeSetting(this, &MappingRef);
+			KeyBindSetting->OnSettingApplied.AddUniqueDynamic(this, &ThisClass::SettingApplied);
+			AddItem(KeyBindSetting);
+		}
+	}
+}
+
+void ULimenKeyBindSubsystem::SettingApplied(const ULimenSetting* Setting)
+{
+	const FEnhancedActionKeyMapping KeyMapping = CastChecked<ULimenKeyBind>(Setting)->GetAppliedValue();
+	check(KeyMapping.Action != nullptr);
+	OnKeyBindUpdate.Broadcast(KeyMapping);
+}
