@@ -1,3 +1,6 @@
+<div align="center">
+  <img src="LF_Logo.png" alt="Limen Framework Logo" width="512">
+</div>
 
 Limen Framework is a comprehensive collection of plugins for Unreal Engine 5 designed to accelerate development and provide robust, scalable systems for your projects.
 
