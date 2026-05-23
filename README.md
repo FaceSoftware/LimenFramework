@@ -8,7 +8,7 @@ Limen Framework is a comprehensive collection of plugins for Unreal Engine 5 des
 
 Limen Framework is a **Source-Available** project. Please review our licensing terms to understand how you can use and distribute the framework.
 
-- **License:** [PolyForm Noncommercial License 1.0.0](LICENSE)
+- **License:** [PolyForm Noncommercial License 1.0.0 (with Commercial Application Exception)](LICENSE)
 - **Compiled Application Exception:** You are permitted to use this framework in your own commercial or non-commercial video games/applications. You may distribute your application in compiled form, provided that the framework is an integrated part of the application and is not accessible or redistributable as a standalone plugin or library.
 - **Prohibited:** You may not sell, sublicense, or distribute the framework source code itself as a standalone product. You may not claim the framework as your own work.
 
