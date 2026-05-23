@@ -1,4 +1,4 @@
-# PolyForm Noncommercial License 1.0.0
+# PolyForm Noncommercial License 1.0.0 (with Commercial Application Exception)
 
 https://polyformproject.org/licenses/noncommercial/1.0.0
 
@@ -48,7 +48,7 @@ permitted purpose.
 
 ## Compiled Application Exception
 
-Notwithstanding the limitations on redistribution in these terms, you are permitted to 
+Notwithstanding the noncommercial limitations in these terms, you are permitted to 
 distribute your own proprietary software application (e.g., a video game) that 
 includes this framework in compiled or linked form, provided that the framework is 
 an integrated part of the application and is not accessible or redistributable as a 
